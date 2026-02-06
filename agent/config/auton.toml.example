@@ -1,0 +1,60 @@
+[llm]
+# Claude API configuration
+# Option 1: Set ANTHROPIC_API_KEY environment variable (recommended)
+# Option 2: Uncomment and set api_key below
+# api_key = "sk-ant-..."
+model = "claude-opus-4-6"
+max_tokens = 16384
+temperature = 0.0
+
+[llm.cost]
+# Budget limits per orchestration run
+max_cost_usd = 50.0
+warn_at_usd = 25.0
+
+[agents]
+# Number of parallel developer agents
+developer_count = 4
+# Number of parallel reviewer agents
+reviewer_count = 1
+# Number of parallel tester agents
+tester_count = 1
+
+[agents.models]
+# Override models per agent type (defaults to llm.model)
+# manager = "claude-opus-4-6"
+# architect = "claude-opus-4-6"
+# developer = "claude-sonnet-4-5-20250929"
+# reviewer = "claude-opus-4-6"
+# tester = "claude-sonnet-4-5-20250929"
+# integrator = "claude-sonnet-4-5-20250929"
+
+[workspace]
+# Path to the git workspace where agents write kernel code
+path = "workspace"
+# Branch naming convention
+branch_prefix = "agent"
+
+[kernel]
+# Target architecture
+arch = "x86_64"
+# Cross-compiler
+cc = "x86_64-elf-gcc"
+as = "nasm"
+# QEMU binary for testing
+qemu = "qemu-system-x86_64"
+
+[validation]
+# Build timeout in seconds
+build_timeout = 120
+# QEMU test timeout in seconds
+test_timeout = 60
+# Enable composition validation (slower but catches Frankenstein effect)
+composition_checks = true
+
+[logging]
+level = "INFO"
+# Log file for agent interactions
+agent_log = "logs/agents.jsonl"
+# Log file for orchestrator
+orchestrator_log = "logs/orchestrator.log"

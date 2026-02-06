@@ -1,8 +1,22 @@
-# Agent runtime directory (contains API keys, local state)
-agent/
+# Config files with secrets (use *.example as template)
+agent/config/auton.toml
+agent/config/*.toml
+!agent/config/*.toml.example
+
+# Environment files
+.env
+.env.*
 
 # AUTON runtime metadata (created by agents in workspace)
 .auton/
+
+# Agent workspace output (generated at runtime)
+agent/workspace/*
+!agent/workspace/.gitkeep
+
+# Logs
+agent/logs/
+logs/
 
 # Build artifacts
 build/
@@ -10,6 +24,23 @@ build/
 *.bin
 *.iso
 *.img
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+dist/
+agent/build/
+.eggs/
+*.egg
+.venv/
+venv/
+
+# Rust
+agent/tools/target/
+agent/tools/*/target/
 
 # IDE / Editor
 .vscode/

@@ -1,0 +1,44 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+dist/
+build/
+.eggs/
+*.egg
+.venv/
+venv/
+
+# Rust
+tools/target/
+tools/*/target/
+**/*.rs.bk
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Environment
+.env
+.env.local
+
+# Agent workspace (generated at runtime)
+workspace/*
+!workspace/.gitkeep
+
+# AUTON runtime state
+.auton/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build artifacts
+*.o
+*.bin
+*.iso
+*.img
