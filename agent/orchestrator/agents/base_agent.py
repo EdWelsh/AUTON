@@ -11,6 +11,7 @@ from enum import Enum
 from pathlib import Path
 from typing import Any
 
+from orchestrator.arch_registry import ArchProfile
 from orchestrator.comms.git_workspace import GitWorkspace
 from orchestrator.comms.message_bus import Message, MessageBus
 from orchestrator.llm.client import LLMClient
@@ -72,6 +73,7 @@ class Agent:
         message_bus: MessageBus,
         kernel_spec_path: Path,
         model_override: str | None = None,
+        arch_profile: ArchProfile | None = None,
     ):
         self.agent_id = agent_id
         self.role = role
@@ -82,6 +84,7 @@ class Agent:
         self.message_bus = message_bus
         self.kernel_spec_path = kernel_spec_path
         self.model_override = model_override
+        self.arch_profile = arch_profile
         self.state = AgentState.IDLE
         self._conversation: list[dict[str, Any]] = []
 
@@ -218,9 +221,20 @@ class Agent:
             return f"Error executing {tool_name}: {e}"
 
     def _read_spec(self, subsystem: str) -> str:
-        """Read a kernel specification document."""
+        """Read a kernel specification document.
+
+        Supports subsystem names like 'boot', 'mm', 'sched', etc.
+        Also supports 'architecture', 'hal', and arch-specific specs
+        like 'arch/x86_64', 'arch/aarch64', 'arch/riscv64'.
+        """
         if subsystem == "architecture":
             path = self.kernel_spec_path / "architecture.md"
+        elif subsystem == "hal":
+            path = self.kernel_spec_path / "arch" / "hal.md"
+        elif subsystem.startswith("arch/"):
+            # e.g. "arch/x86_64" -> kernel_spec/arch/x86_64.md
+            arch_name = subsystem.split("/", 1)[1]
+            path = self.kernel_spec_path / "arch" / f"{arch_name}.md"
         else:
             path = self.kernel_spec_path / "subsystems" / f"{subsystem}.md"
 

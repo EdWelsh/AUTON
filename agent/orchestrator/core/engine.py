@@ -20,6 +20,7 @@ from orchestrator.comms.message_bus import MessageBus
 from orchestrator.core.scheduler import Scheduler
 from orchestrator.core.state import OrchestratorState
 from orchestrator.core.task_graph import TaskGraph, TaskState
+from orchestrator.arch_registry import ArchProfile, get_arch_profile
 from orchestrator.llm.client import CostTracker, LLMClient, ProviderConfig
 
 logger = logging.getLogger(__name__)
@@ -50,6 +51,12 @@ class OrchestrationEngine:
         self.workspace_path = workspace_path
         self.kernel_spec_path = kernel_spec_path
         self.config = config
+
+        # Load architecture profile
+        kernel_config = config.get("kernel", {})
+        arch_name = kernel_config.get("arch", "x86_64")
+        self.arch_profile: ArchProfile = get_arch_profile(arch_name)
+        logger.info("Target architecture: %s", self.arch_profile.display_name)
 
         # Core components
         llm_config = config.get("llm", {})
@@ -84,7 +91,7 @@ class OrchestrationEngine:
         self._agents: dict[str, Any] = {}
 
     def _create_agent(self, agent_id: str, role: AgentRole, cls: type) -> Any:
-        """Create an agent instance."""
+        """Create an agent instance with architecture awareness."""
         model_overrides = self.config.get("agents", {}).get("models", {})
         return cls(
             agent_id=agent_id,
@@ -93,6 +100,7 @@ class OrchestrationEngine:
             message_bus=self.message_bus,
             kernel_spec_path=self.kernel_spec_path,
             model_override=model_overrides.get(role.value),
+            arch_profile=self.arch_profile,
         )
 
     def _init_agents(self) -> None:

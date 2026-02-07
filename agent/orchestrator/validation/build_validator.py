@@ -28,10 +28,21 @@ class BuildValidator:
     that can be fed back to developer agents.
     """
 
-    def __init__(self, workspace_path: Path, cc: str = "x86_64-elf-gcc", asm: str = "nasm"):
+    def __init__(
+        self,
+        workspace_path: Path,
+        cc: str = "x86_64-elf-gcc",
+        asm: str = "nasm",
+        arch_profile=None,
+    ):
         self.workspace_path = workspace_path
-        self.cc = cc
-        self.asm = asm
+        # Derive defaults from arch profile if provided
+        if arch_profile is not None:
+            self.cc = cc if cc != "x86_64-elf-gcc" else arch_profile.cc
+            self.asm = asm if asm != "nasm" else arch_profile.asm
+        else:
+            self.cc = cc
+            self.asm = asm
 
     async def build(self, target: str = "all", timeout: int = 120) -> BuildResult:
         """Run the kernel build and return structured results."""

@@ -6,10 +6,18 @@ import logging
 from typing import Any
 
 from orchestrator.agents.base_agent import Agent, AgentRole
-from orchestrator.llm.prompts import ARCHITECT_SYSTEM_PROMPT
+from orchestrator.llm.prompts import build_architect_prompt
 from orchestrator.llm.tools import ARCHITECT_TOOLS
 
 logger = logging.getLogger(__name__)
+
+
+def _get_prompt(kwargs):
+    arch = kwargs.get('arch_profile')
+    if arch is None:
+        from orchestrator.arch_registry import get_arch_profile
+        arch = get_arch_profile("x86_64")
+    return build_architect_prompt(arch)
 
 
 class ArchitectAgent(Agent):
@@ -20,9 +28,10 @@ class ArchitectAgent(Agent):
     """
 
     def __init__(self, **kwargs):
+        system_prompt = _get_prompt(kwargs)
         super().__init__(
             role=AgentRole.ARCHITECT,
-            system_prompt=ARCHITECT_SYSTEM_PROMPT,
+            system_prompt=system_prompt,
             tools=ARCHITECT_TOOLS,
             **kwargs,
         )

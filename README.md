@@ -2,7 +2,7 @@
 
 **Autonomous agent orchestration system that builds an SLM-driven operating system kernel from scratch.**
 
-AUTON uses LLM agents to collaboratively write, review, test, and integrate a custom x86_64 kernel with an embedded **Small Language Model (SLM)** at its core. The SLM serves as the OS's central intelligence — handling hardware discovery, driver configuration, OS installation, application management, and ongoing system administration.
+AUTON uses LLM agents to collaboratively write, review, test, and integrate a custom kernel with an embedded **Small Language Model (SLM)** at its core. The SLM serves as the OS's central intelligence — handling hardware discovery, driver configuration, OS installation, application management, and ongoing system administration. Supports **multiple architectures** (x86_64, AArch64, RISC-V 64) through a Hardware Abstraction Layer (HAL).
 
 Inspired by [NVIDIA VibeTensor](https://github.com/NVlabs/vibetensor) — where LLM agents generated ~195K lines of system software without human code review. Supports any LLM provider via [LiteLLM](https://github.com/BerriAI/litellm): Anthropic, OpenAI, Ollama, Google Gemini, OpenRouter, Azure, and more.
 
@@ -55,7 +55,7 @@ Agents communicate through **git branches and file-based messaging** — no mess
 
 ## Kernel Target
 
-The agents build a custom **x86_64 SLM-driven kernel from scratch** — Linux-inspired architecture with a custom API. The embedded SLM drives the entire OS lifecycle:
+The agents build a custom **SLM-driven kernel from scratch** — Linux-inspired architecture with a custom API, portable across multiple architectures via a HAL. The embedded SLM drives the entire OS lifecycle:
 
 1. **Boot** → SLM initializes
 2. **Hardware Discovery** → SLM probes and identifies devices
@@ -64,17 +64,31 @@ The agents build a custom **x86_64 SLM-driven kernel from scratch** — Linux-in
 5. **Application Setup** → SLM installs/configures apps based on device purpose
 6. **Runtime Management** → SLM stays resident for ongoing admin, updates, troubleshooting
 
+### Supported Architectures
+
+| Architecture | Boot Protocol | Assembler | Firmware | Core Drivers |
+|-------------|---------------|-----------|----------|-------------|
+| **x86_64** | Multiboot2 | NASM | ACPI | 16550A UART, VGA, PIT, PS/2 |
+| **AArch64** | DTB/UEFI | GNU AS | Device Tree | PL011 UART, GICv2, ARM Timer |
+| **RISC-V 64** | OpenSBI + DTB | GNU AS | Device Tree | ns16550 UART, PLIC, CLINT |
+
+Set the target architecture in `config/auton.toml`:
+```toml
+[kernel]
+arch = "aarch64"  # x86_64, aarch64, or riscv64
+```
+
 ### Subsystems
 
-- **Boot** — Multiboot2, GDT/IDT, real→protected→long mode, hardware handoff to SLM
-- **Memory Management** — Bitmap PMM, 4-level paging VMM, slab allocator, SLM memory pool
+- **Boot** — Architecture-specific boot protocol via HAL, hardware handoff to SLM
+- **Memory Management** — Bitmap PMM, multi-level paging VMM via MMU HAL, slab allocator, SLM memory pool
 - **Scheduler** — Preemptive round-robin with priority classes (KERNEL > SLM > SYSTEM > USER)
 - **IPC** — Structured message passing, ring buffers, SLM command channel
-- **Device Framework** — PCI enumeration, ACPI parsing, uniform driver interface, SLM-driven loading
+- **Device Framework** — PCI enumeration, firmware parsing (ACPI or Device Tree), uniform driver interface, SLM-driven loading
 - **SLM Runtime** — Pluggable architecture with two backends:
   - *Rule Engine* (default) — keyword matching, pattern rules, decision trees (works on any hardware)
   - *Neural Backend* (optional) — loads real models (GGUF/ONNX), CPU inference with INT4/INT8 quantization
-- **Drivers** — Core (serial, VGA, PIT, keyboard) + SLM-managed (storage, network, display, USB)
+- **Drivers** — Arch-specific core drivers (serial, console, timer, input) + portable SLM-managed drivers (storage, network, display, USB)
 - **Filesystem** — VFS layer, initramfs, ext2, devfs, procfs
 - **Network Stack** — Ethernet, ARP, IPv4, TCP/UDP, DHCP, DNS, HTTP
 - **Package Manager** — tar+manifest format, dependency resolution, SLM-driven installation
@@ -106,7 +120,7 @@ export ANTHROPIC_API_KEY="sk-ant-..."   # for Anthropic models
 # No key needed for Ollama (local)
 
 # Run
-auton run "Build a bootable x86_64 kernel with SLM rule engine that detects hardware via PCI scan"
+auton run "Build a bootable kernel with SLM rule engine that detects hardware via PCI scan"
 ```
 
 ### Model Configuration

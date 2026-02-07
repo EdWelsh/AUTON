@@ -180,7 +180,7 @@ TOOL_READ_SPEC = {
             "properties": {
                 "subsystem": {
                     "type": "string",
-                    "description": "Subsystem name: 'architecture', 'boot', 'mm', 'sched', 'ipc', 'nl_syscall', 'hypervisor', 'drivers', 'llm_runtime'.",
+                    "description": "Subsystem name: 'architecture', 'boot', 'mm', 'sched', 'ipc', 'dev', 'slm', 'drivers', 'fs', 'net', 'pkg', 'sys', 'hal', 'arch/x86_64', 'arch/aarch64', 'arch/riscv64'.",
                 },
             },
             "required": ["subsystem"],

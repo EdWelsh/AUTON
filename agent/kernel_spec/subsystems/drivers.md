@@ -2,109 +2,28 @@
 
 ## Overview
 
-The driver subsystem provides core device drivers that are always loaded at boot (serial UART, VGA text mode, PIT timer, PS/2 keyboard) and SLM-managed drivers that are loaded on demand when the SLM identifies hardware and selects appropriate drivers. All drivers implement a uniform interface (probe/init/remove/suspend/resume) and register with the device framework via `dev_driver_register()`. A driver template skeleton standardizes implementation patterns.
+The driver subsystem provides **architecture-specific core drivers** (always loaded at boot — serial console, display, timer, input) and **portable SLM-managed drivers** (loaded on demand when the SLM identifies hardware). Core drivers vary by architecture (see `arch/<arch>.md` for the specific set); portable drivers use MMIO through the I/O HAL and work across all architectures. All drivers implement a uniform interface (probe/init/remove/suspend/resume) and register with the device framework via `dev_driver_register()`.
+
+Core drivers per architecture:
+- **x86_64**: 16550A UART (COM1), VGA text mode, PIT 8254, PS/2 keyboard
+- **AArch64**: PL011 UART, framebuffer, GICv2 + ARM architected timer, device-tree input
+- **RISC-V**: ns16550 UART, framebuffer, PLIC + CLINT timer, device-tree input
 
 ## Data Structures
 
-### Core Driver: Serial UART 16550A
+### Core Drivers (Architecture-Specific)
+
+Core driver data structures, I/O port/register addresses, and implementation details are architecture-specific and defined in `arch/<arch>.md`. The core drivers access hardware through the I/O HAL:
+- `arch_io_read8(addr)` / `arch_io_write8(addr, val)` — replaces raw `inb`/`outb` on x86, volatile MMIO on ARM/RISC-V
+- `arch_io_read16(addr)` / `arch_io_write16(addr, val)`
+- `arch_io_read32(addr)` / `arch_io_write32(addr, val)`
+
+All core drivers expose a **portable interface** (see Interface section below) regardless of architecture. The implementation lives in `kernel/drivers/arch/<arch>/`.
+
+#### Keyboard State (Portable)
 
 ```c
-/* Serial port I/O registers (offsets from base port) */
-#define SERIAL_COM1_BASE    0x3F8
-#define SERIAL_COM2_BASE    0x2F8
-
-#define SERIAL_REG_DATA     0   /* data register (R/W) */
-#define SERIAL_REG_IER      1   /* interrupt enable register */
-#define SERIAL_REG_FCR      2   /* FIFO control register (W) */
-#define SERIAL_REG_LCR      3   /* line control register */
-#define SERIAL_REG_MCR      4   /* modem control register */
-#define SERIAL_REG_LSR      5   /* line status register */
-#define SERIAL_REG_MSR      6   /* modem status register */
-
-/* LSR bits */
-#define SERIAL_LSR_DR       (1 << 0)    /* data ready */
-#define SERIAL_LSR_THRE     (1 << 5)    /* THR empty (can write) */
-
-/* Serial driver state */
-typedef struct serial_state {
-    uint16_t base_port;     /* I/O base (0x3F8 for COM1) */
-    uint32_t baud_rate;     /* configured baud rate */
-    int      initialized;
-} serial_state_t;
-```
-
-### Core Driver: VGA Text Mode
-
-```c
-/* VGA text framebuffer */
-#define VGA_BUFFER_ADDR     0xB8000
-#define VGA_WIDTH           80
-#define VGA_HEIGHT          25
-#define VGA_SIZE            (VGA_WIDTH * VGA_HEIGHT)
-
-/* VGA color codes */
-typedef enum vga_color {
-    VGA_BLACK       = 0,
-    VGA_BLUE        = 1,
-    VGA_GREEN       = 2,
-    VGA_CYAN        = 3,
-    VGA_RED         = 4,
-    VGA_MAGENTA     = 5,
-    VGA_BROWN       = 6,
-    VGA_LIGHT_GRAY  = 7,
-    VGA_DARK_GRAY   = 8,
-    VGA_LIGHT_BLUE  = 9,
-    VGA_LIGHT_GREEN = 10,
-    VGA_LIGHT_CYAN  = 11,
-    VGA_LIGHT_RED   = 12,
-    VGA_PINK        = 13,
-    VGA_YELLOW      = 14,
-    VGA_WHITE       = 15,
-} vga_color_t;
-
-/* VGA driver state */
-typedef struct vga_state {
-    volatile uint16_t *buffer;  /* pointer to VGA text buffer */
-    uint16_t cursor_x;
-    uint16_t cursor_y;
-    uint8_t  color;             /* current fg|bg color attribute */
-    int      initialized;
-} vga_state_t;
-```
-
-### Core Driver: PIT (8254 Programmable Interval Timer)
-
-```c
-/* PIT I/O ports */
-#define PIT_CHANNEL0    0x40    /* channel 0 data port */
-#define PIT_CHANNEL1    0x41    /* channel 1 data port */
-#define PIT_CHANNEL2    0x42    /* channel 2 data port */
-#define PIT_COMMAND     0x43    /* mode/command register */
-
-/* PIT constants */
-#define PIT_BASE_FREQ   1193182 /* base oscillator frequency in Hz */
-
-/* PIT driver state */
-typedef struct pit_state {
-    uint32_t frequency;     /* configured tick frequency in Hz */
-    uint64_t tick_count;    /* total ticks since init */
-    int      initialized;
-} pit_state_t;
-```
-
-### Core Driver: PS/2 Keyboard
-
-```c
-/* PS/2 controller I/O ports */
-#define PS2_DATA_PORT       0x60
-#define PS2_STATUS_PORT     0x64
-#define PS2_COMMAND_PORT    0x64
-
-/* PS/2 status register bits */
-#define PS2_STATUS_OUTPUT   (1 << 0)    /* output buffer full (data available) */
-#define PS2_STATUS_INPUT    (1 << 1)    /* input buffer full (don't write) */
-
-/* Keyboard buffer */
+/* Keyboard buffer (shared by all architecture keyboard drivers) */
 #define KB_BUFFER_SIZE      256
 
 typedef struct keyboard_state {
@@ -118,9 +37,6 @@ typedef struct keyboard_state {
     int      caps_lock;
     int      initialized;
 } keyboard_state_t;
-
-/* Scancode set 1 to ASCII conversion table (defined in implementation) */
-/* scan_to_ascii[scancode] = ASCII character (0 if not printable) */
 ```
 
 ### SLM-Managed Driver: AHCI (SATA)
@@ -573,10 +489,10 @@ void usb_hc_driver_register(void);
 
 ```
 drivers_init_core() [called from kernel_main]:
-  1. serial_init()    -- COM1, needed for all debug output
-  2. vga_init()       -- text display
-  3. timer_init(100)  -- 100 Hz tick (10ms interval)
-  4. keyboard_init()  -- PS/2 keyboard
+  1. serial_init()    -- architecture-specific serial console, needed for all debug output
+  2. display_init()   -- text display (VGA on x86, framebuffer/serial on others)
+  3. timer_init(100)  -- 100 Hz tick via arch_timer_init()
+  4. keyboard_init()  -- input device (PS/2 on x86, device-tree input on ARM/RISC-V)
   All core drivers are registered as platform devices with dev framework.
 ```
 
@@ -608,41 +524,20 @@ SLM receives DRIVER_SELECT result for a device:
 
 ### Serial Driver Details
 
-```
-serial_init():
-  1. Disable interrupts (write 0 to IER)
-  2. Set DLAB (LCR bit 7) to access divisor
-  3. Set divisor for 115200 baud: divisor = 1 (115200 / 115200)
-     Write low byte to DATA, high byte to IER
-  4. Clear DLAB, set 8 data bits, no parity, 1 stop bit (LCR = 0x03)
-  5. Enable FIFO, clear buffers, 14-byte threshold (FCR = 0xC7)
-  6. Enable DTR, RTS, OUT2 for interrupts (MCR = 0x0B)
+Serial driver initialization and I/O are architecture-specific:
+- **x86_64/RISC-V (16550A)**: Port I/O or MMIO to configure baud rate, FIFO, line control
+- **AArch64 (PL011)**: MMIO registers for baud rate, data, flags
 
-serial_putchar(c):
-  1. While (!(inb(base + LSR) & LSR_THRE)): spin
-  2. outb(base + DATA, c)
+All serial drivers use the I/O HAL (`arch_io_read8`/`arch_io_write8`) for register access.
+See `arch/<arch>.md` for the specific initialization sequence.
 
-serial_getchar():
-  1. While (!(inb(base + LSR) & LSR_DR)): spin (or block via scheduler)
-  2. Return inb(base + DATA)
-```
+### Keyboard Input Processing
 
-### Keyboard Scancode Processing
+Keyboard input handling varies by architecture:
+- **x86_64 (PS/2)**: IRQ1 handler reads scancode, converts via lookup table
+- **AArch64/RISC-V**: Device-tree keyboard or virtio-input
 
-```
-keyboard_handler() [called from IRQ1]:
-  1. Read scancode from PS2_DATA_PORT
-  2. If scancode & 0x80: key release
-     - Clear modifier flags (shift/ctrl/alt) if applicable
-     - Return
-  3. Key press:
-     - If scancode is shift/ctrl/alt: set modifier flag, return
-     - If caps lock: toggle caps_lock, return
-     - Convert scancode to ASCII via lookup table
-     - Apply shift/caps_lock modifiers
-     - If buffer not full: add to circular buffer
-     - If keyboard_getchar() was blocked: unblock that process
-```
+All keyboard drivers fill the portable `keyboard_state_t` buffer and expose the same interface (`keyboard_getchar`, `keyboard_available`).
 
 ### Block Device Read (AHCI Example)
 
@@ -665,9 +560,9 @@ ahci_read(dev, lba, count, buf):
 
 ### Edge Cases
 
-- **Serial not present**: serial_init() checks for UART by writing/reading scratch register; if absent, all serial output becomes no-op
-- **VGA buffer not at 0xB8000**: framebuffer address from Multiboot2 info overrides default
-- **PIT frequency too high/low**: clamp to range [18 Hz, 1193182 Hz]
+- **Serial not present**: serial_init() checks for UART presence; if absent, all serial output becomes no-op
+- **Display not available**: fallback to serial-only output
+- **Timer frequency too high/low**: clamp to architecture-supported range
 - **Keyboard buffer overflow**: drop new keystrokes when buffer is full
 - **AHCI port not connected**: skip ports where SATA status shows no device (DET != 3)
 - **NVMe controller in error state**: reset controller before init; abort if reset fails
@@ -679,31 +574,28 @@ ahci_read(dev, lba, count, buf):
 
 | File | Purpose |
 |------|---------|
-| `kernel/drivers/serial.c`       | Serial UART 16550A driver (COM1/COM2) |
-| `kernel/drivers/vga.c`          | VGA text mode driver |
-| `kernel/drivers/pit.c`          | PIT 8254 timer driver |
-| `kernel/drivers/keyboard.c`     | PS/2 keyboard driver |
-| `kernel/drivers/ahci.c`         | AHCI/SATA storage driver |
-| `kernel/drivers/nvme.c`         | NVMe storage driver |
-| `kernel/drivers/virtio_blk.c`   | VirtIO block device driver |
-| `kernel/drivers/virtio_net.c`   | VirtIO network driver |
-| `kernel/drivers/e1000.c`        | Intel e1000 Ethernet driver |
-| `kernel/drivers/vesa.c`         | VESA framebuffer driver |
-| `kernel/drivers/usb_hc.c`       | USB host controller driver (UHCI/EHCI/xHCI stub) |
-| `kernel/drivers/drivers.c`      | Driver registration coordinator |
-| `kernel/include/serial.h`       | Serial interface |
-| `kernel/include/vga.h`          | VGA interface |
-| `kernel/include/timer.h`        | Timer interface |
-| `kernel/include/keyboard.h`     | Keyboard interface |
-| `kernel/include/blk.h`          | Block device interface |
-| `kernel/include/netdev.h`       | Network device interface |
-| `kernel/include/fb.h`           | Framebuffer interface |
+| `kernel/drivers/arch/<arch>/`    | Architecture-specific core drivers (serial, display, timer, input) |
+| `kernel/drivers/common/ahci.c`   | AHCI/SATA storage driver (portable MMIO) |
+| `kernel/drivers/common/nvme.c`   | NVMe storage driver (portable MMIO) |
+| `kernel/drivers/common/virtio_blk.c` | VirtIO block device driver |
+| `kernel/drivers/common/virtio_net.c` | VirtIO network driver |
+| `kernel/drivers/common/e1000.c`  | Intel e1000 Ethernet driver (portable MMIO) |
+| `kernel/drivers/common/vesa.c`   | VESA framebuffer driver |
+| `kernel/drivers/common/usb_hc.c` | USB host controller driver (UHCI/EHCI/xHCI stub) |
+| `kernel/drivers/drivers.c`       | Driver registration coordinator |
+| `kernel/include/serial.h`        | Portable serial interface |
+| `kernel/include/display.h`       | Portable display interface |
+| `kernel/include/timer.h`         | Portable timer interface |
+| `kernel/include/keyboard.h`      | Portable keyboard interface |
+| `kernel/include/blk.h`           | Block device interface |
+| `kernel/include/netdev.h`        | Network device interface |
+| `kernel/include/fb.h`            | Framebuffer interface |
 
 ## Dependencies
 
 - **dev**: device framework for driver registration and device binding
 - **mm**: `kmalloc`/`kfree` for driver state; PMM for DMA buffers; VMM for MMIO mapping
-- **boot/idt**: IRQ handlers for timer (IRQ0), keyboard (IRQ1), PCI devices
+- **arch/cpu**: interrupt handlers registered via `arch_set_interrupt_handler()`
 - **sched**: timer driver calls `sched_schedule()`; keyboard unblocks waiting processes
 - **ipc**: SLM-managed drivers receive load/unload commands via IPC
 - **slm**: SLM selects which drivers to load based on hardware identification

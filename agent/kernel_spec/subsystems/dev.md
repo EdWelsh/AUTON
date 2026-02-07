@@ -2,18 +2,21 @@
 
 ## Overview
 
-The device framework provides unified hardware discovery, device description, and driver management for the AUTON kernel. It handles PCI bus enumeration, ACPI table parsing, and maintains a registry of all detected hardware. The SLM uses device descriptors to intelligently select and load drivers. The framework also monitors for hot-plug events and notifies the SLM when hardware changes occur at runtime.
+The device framework provides unified hardware discovery, device description, and driver management for the AUTON kernel. It handles PCI bus enumeration (via the Device Discovery HAL), firmware table parsing (ACPI or Device Tree depending on architecture), and maintains a registry of all detected hardware. The SLM uses device descriptors to intelligently select and load drivers. The framework also monitors for hot-plug events and notifies the SLM when hardware changes occur at runtime.
+
+PCI configuration access is architecture-specific: port I/O (0xCF8/0xCFC) on x86, ECAM (memory-mapped) on ARM/RISC-V. The portable device framework calls `arch_pci_config_read32()` / `arch_pci_config_write32()` from the HAL.
 
 ## Data Structures
 
 ### PCI Configuration
 
 ```c
-/* PCI configuration space access */
-#define PCI_CONFIG_ADDR     0x0CF8
-#define PCI_CONFIG_DATA     0x0CFC
+/* PCI configuration space access is architecture-specific:
+ * - x86_64: port I/O via 0xCF8/0xCFC
+ * - AArch64/RISC-V: ECAM (PCIe Enhanced Configuration Access Mechanism)
+ * The portable code uses arch_pci_config_read32()/arch_pci_config_write32() */
 
-/* PCI configuration header offsets */
+/* PCI configuration header offsets (universal) */
 #define PCI_VENDOR_ID       0x00
 #define PCI_DEVICE_ID       0x02
 #define PCI_COMMAND         0x04
@@ -147,7 +150,20 @@ typedef struct device {
 } device_t;
 ```
 
-### ACPI Structures
+### Firmware Abstraction
+
+The device framework supports multiple firmware types via `arch_get_firmware_type()`:
+
+```c
+/* Firmware type (from HAL) */
+typedef enum {
+    FIRMWARE_ACPI,          /* x86, some ARM servers */
+    FIRMWARE_DEVICE_TREE,   /* ARM, RISC-V */
+    FIRMWARE_NONE,          /* minimal/embedded */
+} firmware_type_t;
+```
+
+#### ACPI Structures (x86_64, some ARM servers)
 
 ```c
 /* ACPI RSDP (Root System Description Pointer) */
@@ -193,6 +209,32 @@ typedef struct acpi_info {
     uint8_t  io_apic_id;
     int      table_count;       /* number of ACPI tables found */
 } acpi_info_t;
+```
+
+#### Device Tree Structures (AArch64, RISC-V)
+
+```c
+/* Flattened Device Tree header */
+typedef struct fdt_header {
+    uint32_t magic;             /* 0xD00DFEED */
+    uint32_t totalsize;
+    uint32_t off_dt_struct;
+    uint32_t off_dt_strings;
+    uint32_t off_mem_rsvmap;
+    uint32_t version;
+    uint32_t last_comp_version;
+    uint32_t boot_cpuid_phys;
+    uint32_t size_dt_strings;
+    uint32_t size_dt_struct;
+} __attribute__((packed)) fdt_header_t;
+
+/* Parsed Device Tree information */
+typedef struct dt_info {
+    fdt_header_t *fdt;          /* pointer to FDT in memory */
+    uint64_t      fdt_phys;     /* physical address of FDT */
+    uint64_t      fdt_size;     /* FDT total size */
+    int           node_count;   /* number of device nodes found */
+} dt_info_t;
 ```
 
 ### Driver Interface
@@ -248,14 +290,16 @@ typedef struct driver {
 
 ```c
 typedef struct dev_framework {
-    device_t   *devices;            /* linked list of all devices */
-    uint32_t    device_count;       /* total devices discovered */
-    uint32_t    next_dev_id;        /* next device ID to assign */
-    driver_t   *drivers;            /* linked list of registered drivers */
-    uint32_t    driver_count;       /* total registered drivers */
-    acpi_info_t acpi;               /* parsed ACPI tables */
-    int         pci_enumerated;     /* 1 if PCI scan completed */
-    int         acpi_parsed;        /* 1 if ACPI tables parsed */
+    device_t       *devices;            /* linked list of all devices */
+    uint32_t        device_count;       /* total devices discovered */
+    uint32_t        next_dev_id;        /* next device ID to assign */
+    driver_t       *drivers;            /* linked list of registered drivers */
+    uint32_t        driver_count;       /* total registered drivers */
+    firmware_type_t firmware_type;      /* ACPI, Device Tree, or None */
+    acpi_info_t     acpi;               /* parsed ACPI tables (if ACPI) */
+    dt_info_t       dt;                 /* parsed Device Tree (if DTB) */
+    int             pci_enumerated;     /* 1 if PCI scan completed */
+    int             firmware_parsed;    /* 1 if firmware tables parsed */
 } dev_framework_t;
 ```
 
@@ -268,12 +312,23 @@ typedef struct dev_framework {
  * Must be called after mm subsystem is ready. */
 void dev_init(void);
 
-/* Parse ACPI tables starting from RSDP address.
+/* Initialize firmware parsing based on architecture.
+ * Calls arch_firmware_parse() which handles ACPI (x86) or DTB (ARM/RISC-V).
+ * Returns 0 on success, -1 if firmware data invalid. */
+int dev_firmware_init(uint64_t firmware_data_addr, int firmware_type);
+
+/* Parse ACPI tables starting from RSDP address (x86 path).
  * Populates acpi_info_t with MADT, FADT, MCFG etc.
  * Returns 0 on success, -1 if RSDP invalid or no ACPI. */
 int dev_acpi_init(uint64_t rsdp_phys_addr, int is_v2);
 
-/* Enumerate all PCI devices. Scans bus 0-255, device 0-31, function 0-7.
+/* Parse Device Tree Blob (ARM/RISC-V path).
+ * Traverses FDT nodes to discover devices, memory, interrupts.
+ * Returns 0 on success, -1 if DTB invalid. */
+int dev_dt_init(uint64_t dtb_phys_addr);
+
+/* Enumerate all PCI devices via arch_pci_config_read32().
+ * Scans bus 0-255, device 0-31, function 0-7.
  * Creates device_t for each discovered device and adds to device list.
  * Returns number of devices found. */
 uint32_t dev_pci_enumerate(void);
@@ -286,12 +341,12 @@ void dev_register_platform_devices(void);
 ### PCI Configuration Access
 
 ```c
-/* Read 8/16/32-bit value from PCI configuration space */
+/* Portable PCI config wrappers (call arch_pci_config_read32/write32 from HAL).
+ * Architecture handles the mechanism: port I/O on x86, ECAM on ARM/RISC-V. */
 uint8_t  pci_read8(pci_addr_t addr, uint8_t offset);
 uint16_t pci_read16(pci_addr_t addr, uint8_t offset);
 uint32_t pci_read32(pci_addr_t addr, uint8_t offset);
 
-/* Write 8/16/32-bit value to PCI configuration space */
 void pci_write8(pci_addr_t addr, uint8_t offset, uint8_t value);
 void pci_write16(pci_addr_t addr, uint8_t offset, uint16_t value);
 void pci_write32(pci_addr_t addr, uint8_t offset, uint32_t value);
@@ -503,7 +558,7 @@ dev_hotplug_monitor() [runs as background kernel thread]:
 
 - **PCI bus with no devices**: enumeration returns 0 devices; SLM notified, proceeds with platform devices only
 - **BAR reads all zeros**: BAR not implemented, `bar_count` for that device is decremented
-- **ACPI not available**: `dev_acpi_init()` returns -1; fallback to legacy PCI enumeration only, no I/O APIC info
+- **ACPI not available**: `dev_acpi_init()` returns -1; on ARM/RISC-V, `dev_dt_init()` is used instead. If neither available, fallback to legacy PCI enumeration only
 - **Driver probe fails for all drivers**: device stays in `DEV_STATE_IDENTIFIED`; SLM may retry or report "no driver available"
 - **Driver init fails**: device stays unbound; SLM receives error and may try alternate driver
 - **Hot-plug of device already known**: ignored (deduplicated by PCI address)
@@ -514,8 +569,9 @@ dev_hotplug_monitor() [runs as background kernel thread]:
 | File | Purpose |
 |------|---------|
 | `kernel/dev/dev.c`        | Device framework core: init, device list, driver registry |
-| `kernel/dev/pci.c`        | PCI bus enumeration, config space access, BAR parsing |
-| `kernel/dev/acpi.c`       | ACPI table discovery and parsing |
+| `kernel/dev/pci.c`        | Portable PCI bus enumeration, BAR parsing (calls HAL for config access) |
+| `kernel/dev/acpi.c`       | ACPI table discovery and parsing (x86, some ARM) |
+| `kernel/dev/dt.c`         | Device Tree parsing (ARM, RISC-V) |
 | `kernel/dev/hotplug.c`    | Hot-plug monitoring thread |
 | `kernel/include/dev.h`    | Device framework interface and data structures |
 

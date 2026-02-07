@@ -7,10 +7,18 @@ import logging
 from typing import Any
 
 from orchestrator.agents.base_agent import Agent, AgentRole, TaskResult
-from orchestrator.llm.prompts import TESTER_SYSTEM_PROMPT
+from orchestrator.llm.prompts import build_tester_prompt
 from orchestrator.llm.tools import TESTER_TOOLS
 
 logger = logging.getLogger(__name__)
+
+
+def _get_prompt(kwargs):
+    arch = kwargs.get('arch_profile')
+    if arch is None:
+        from orchestrator.arch_registry import get_arch_profile
+        arch = get_arch_profile("x86_64")
+    return build_tester_prompt(arch)
 
 
 class TesterAgent(Agent):
@@ -21,9 +29,10 @@ class TesterAgent(Agent):
     """
 
     def __init__(self, **kwargs):
+        system_prompt = _get_prompt(kwargs)
         super().__init__(
             role=AgentRole.TESTER,
-            system_prompt=TESTER_SYSTEM_PROMPT,
+            system_prompt=system_prompt,
             tools=TESTER_TOOLS,
             **kwargs,
         )

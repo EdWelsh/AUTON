@@ -53,13 +53,15 @@ path = "workspace"
 branch_prefix = "agent"
 
 [kernel]
-# Target architecture
+# Target architecture: "x86_64", "aarch64", or "riscv64"
+# Changing this reconfigures toolchain, QEMU, agent prompts, and boot protocol automatically.
 arch = "x86_64"
-# Cross-compiler
-cc = "x86_64-elf-gcc"
-as = "nasm"
-# QEMU binary for testing
-qemu = "qemu-system-x86_64"
+
+# Optional overrides — these default from the architecture profile.
+# Only set if you have a custom toolchain or QEMU build.
+# cc = "x86_64-elf-gcc"       # default: derived from arch (e.g. aarch64-elf-gcc)
+# as = "nasm"                 # default: derived from arch (nasm for x86_64, GNU AS for others)
+# qemu = "qemu-system-x86_64" # default: derived from arch (e.g. qemu-system-aarch64)
 
 [validation]
 # Build timeout in seconds

@@ -25,8 +25,36 @@ class AcceptanceTest:
     requires_subsystems: list[str] | None = None
 
 
-# Boot subsystem tests
-BOOT_TESTS = [
+# Boot subsystem tests — portable (all architectures)
+BOOT_TESTS_COMMON = [
+    AcceptanceTest(
+        name="boot_kernel_main",
+        subsystem="boot",
+        description="kernel_main() is called and prints banner",
+        expected_serial_patterns=[
+            r"AUTON Kernel booting",
+        ],
+    ),
+    AcceptanceTest(
+        name="boot_interrupts",
+        subsystem="boot",
+        description="Interrupt/exception table is set up",
+        expected_serial_patterns=[
+            r"\[BOOT\] Interrupts initialized",
+        ],
+    ),
+    AcceptanceTest(
+        name="boot_hw_handoff",
+        subsystem="boot",
+        description="Hardware summary collected and passed to kernel_main",
+        expected_serial_patterns=[
+            r"\[BOOT\] Hardware summary: \d+ MB RAM",
+        ],
+    ),
+]
+
+# Boot tests — architecture-specific
+BOOT_TESTS_X86_64 = [
     AcceptanceTest(
         name="boot_multiboot2",
         subsystem="boot",
@@ -44,38 +72,55 @@ BOOT_TESTS = [
             r"\[BOOT\] 64-bit GDT loaded",
         ],
     ),
+]
+
+BOOT_TESTS_AARCH64 = [
     AcceptanceTest(
-        name="boot_kernel_main",
+        name="boot_dtb_valid",
         subsystem="boot",
-        description="kernel_main() is called and prints banner",
+        description="Device Tree Blob parsed successfully",
         expected_serial_patterns=[
-            r"AUTON Kernel booting",
+            r"\[BOOT\] DTB parsed",
         ],
     ),
     AcceptanceTest(
-        name="boot_idt",
+        name="boot_el1_entry",
         subsystem="boot",
-        description="IDT is loaded with exception handlers",
+        description="CPU entered EL1 from EL2",
         expected_serial_patterns=[
-            r"\[BOOT\] IDT loaded",
-        ],
-    ),
-    AcceptanceTest(
-        name="boot_hw_handoff",
-        subsystem="boot",
-        description="Hardware summary collected and passed to kernel_main",
-        expected_serial_patterns=[
-            r"\[BOOT\] Hardware summary: \d+ MB RAM",
+            r"\[BOOT\] Running at EL1",
         ],
     ),
 ]
+
+BOOT_TESTS_RISCV64 = [
+    AcceptanceTest(
+        name="boot_dtb_valid",
+        subsystem="boot",
+        description="Device Tree Blob parsed successfully",
+        expected_serial_patterns=[
+            r"\[BOOT\] DTB parsed",
+        ],
+    ),
+    AcceptanceTest(
+        name="boot_smode_entry",
+        subsystem="boot",
+        description="CPU entered S-mode via OpenSBI",
+        expected_serial_patterns=[
+            r"\[BOOT\] Running in S-mode",
+        ],
+    ),
+]
+
+# Combined boot tests (backward compat)
+BOOT_TESTS = BOOT_TESTS_COMMON + BOOT_TESTS_X86_64
 
 # Memory management tests
 MM_TESTS = [
     AcceptanceTest(
         name="mm_pmm_init",
         subsystem="mm",
-        description="PMM initializes from Multiboot2 memory map",
+        description="PMM initializes from boot memory map",
         expected_serial_patterns=[
             r"\[MM\] PMM initialized: \d+ pages free",
         ],
@@ -225,27 +270,67 @@ SLM_TESTS = [
     ),
 ]
 
-# Driver tests
-DRIVER_TESTS = [
+# Driver tests — portable
+DRIVER_TESTS_COMMON = [
     AcceptanceTest(
         name="driver_serial_output",
         subsystem="drivers",
-        description="Serial UART outputs text (this test is self-proving)",
+        description="Serial console outputs text (this test is self-proving)",
         expected_serial_patterns=[
-            r"\[DRV\] Serial UART initialized",
+            r"\[DRV\] Serial .+ initialized",
         ],
         requires_subsystems=["boot"],
     ),
     AcceptanceTest(
         name="driver_timer_tick",
         subsystem="drivers",
-        description="PIT timer generates interrupts",
+        description="System timer generates interrupts",
         expected_serial_patterns=[
             r"\[TEST\] timer_tick: PASS",
         ],
         requires_subsystems=["boot", "mm"],
     ),
 ]
+
+# Driver tests — architecture-specific
+DRIVER_TESTS_X86_64 = [
+    AcceptanceTest(
+        name="driver_vga_text",
+        subsystem="drivers",
+        description="VGA text mode driver displays output",
+        expected_serial_patterns=[
+            r"\[DRV\] VGA text initialized",
+        ],
+        requires_subsystems=["boot"],
+    ),
+]
+
+DRIVER_TESTS_AARCH64 = [
+    AcceptanceTest(
+        name="driver_pl011",
+        subsystem="drivers",
+        description="PL011 UART driver initialized",
+        expected_serial_patterns=[
+            r"\[DRV\] PL011 initialized",
+        ],
+        requires_subsystems=["boot"],
+    ),
+]
+
+DRIVER_TESTS_RISCV64 = [
+    AcceptanceTest(
+        name="driver_ns16550",
+        subsystem="drivers",
+        description="ns16550 UART driver initialized",
+        expected_serial_patterns=[
+            r"\[DRV\] ns16550 initialized",
+        ],
+        requires_subsystems=["boot"],
+    ),
+]
+
+# Combined (backward compat)
+DRIVER_TESTS = DRIVER_TESTS_COMMON + DRIVER_TESTS_X86_64
 
 # Filesystem tests
 FS_TESTS = [
@@ -343,7 +428,7 @@ INTEGRATION_TESTS = [
     ),
 ]
 
-# All tests grouped
+# All tests grouped (default x86_64)
 ALL_TESTS = {
     "boot": BOOT_TESTS,
     "mm": MM_TESTS,
@@ -356,3 +441,49 @@ ALL_TESTS = {
     "net": NET_TESTS,
     "integration": INTEGRATION_TESTS,
 }
+
+
+# --- Architecture-aware test accessors ---
+
+_ARCH_BOOT_TESTS = {
+    "x86_64": BOOT_TESTS_X86_64,
+    "aarch64": BOOT_TESTS_AARCH64,
+    "riscv64": BOOT_TESTS_RISCV64,
+}
+
+_ARCH_DRIVER_TESTS = {
+    "x86_64": DRIVER_TESTS_X86_64,
+    "aarch64": DRIVER_TESTS_AARCH64,
+    "riscv64": DRIVER_TESTS_RISCV64,
+}
+
+
+def get_boot_tests(arch: str) -> list[AcceptanceTest]:
+    """Get boot tests for a specific architecture."""
+    arch_tests = _ARCH_BOOT_TESTS.get(arch, [])
+    return BOOT_TESTS_COMMON + arch_tests
+
+
+def get_driver_tests(arch: str) -> list[AcceptanceTest]:
+    """Get driver tests for a specific architecture."""
+    arch_tests = _ARCH_DRIVER_TESTS.get(arch, [])
+    return DRIVER_TESTS_COMMON + arch_tests
+
+
+def get_all_tests(arch: str) -> dict[str, list[AcceptanceTest]]:
+    """Get all tests for a specific architecture.
+
+    Returns a dict keyed by subsystem name with per-arch test lists.
+    """
+    return {
+        "boot": get_boot_tests(arch),
+        "mm": MM_TESTS,
+        "sched": SCHED_TESTS,
+        "ipc": IPC_TESTS,
+        "dev": DEV_TESTS,
+        "slm": SLM_TESTS,
+        "drivers": get_driver_tests(arch),
+        "fs": FS_TESTS,
+        "net": NET_TESTS,
+        "integration": INTEGRATION_TESTS,
+    }

@@ -7,10 +7,18 @@ from typing import Any
 
 from orchestrator.agents.base_agent import Agent, AgentRole, TaskResult
 from orchestrator.comms.diff_protocol import TaskMetadata, TaskStatus
-from orchestrator.llm.prompts import INTEGRATOR_SYSTEM_PROMPT
+from orchestrator.llm.prompts import build_integrator_prompt
 from orchestrator.llm.tools import INTEGRATOR_TOOLS
 
 logger = logging.getLogger(__name__)
+
+
+def _get_prompt(kwargs):
+    arch = kwargs.get('arch_profile')
+    if arch is None:
+        from orchestrator.arch_registry import get_arch_profile
+        arch = get_arch_profile("x86_64")
+    return build_integrator_prompt(arch)
 
 
 class IntegratorAgent(Agent):
@@ -21,9 +29,10 @@ class IntegratorAgent(Agent):
     """
 
     def __init__(self, **kwargs):
+        system_prompt = _get_prompt(kwargs)
         super().__init__(
             role=AgentRole.INTEGRATOR,
-            system_prompt=INTEGRATOR_SYSTEM_PROMPT,
+            system_prompt=system_prompt,
             tools=INTEGRATOR_TOOLS,
             **kwargs,
         )

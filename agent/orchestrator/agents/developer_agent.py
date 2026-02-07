@@ -7,10 +7,18 @@ from typing import Any
 
 from orchestrator.agents.base_agent import Agent, AgentRole, TaskResult
 from orchestrator.comms.diff_protocol import TaskMetadata, TaskStatus
-from orchestrator.llm.prompts import DEVELOPER_SYSTEM_PROMPT
+from orchestrator.llm.prompts import build_developer_prompt
 from orchestrator.llm.tools import DEVELOPER_TOOLS
 
 logger = logging.getLogger(__name__)
+
+
+def _get_prompt(kwargs):
+    arch = kwargs.get('arch_profile')
+    if arch is None:
+        from orchestrator.arch_registry import get_arch_profile
+        arch = get_arch_profile("x86_64")
+    return build_developer_prompt(arch)
 
 
 class DeveloperAgent(Agent):
@@ -22,9 +30,10 @@ class DeveloperAgent(Agent):
     """
 
     def __init__(self, **kwargs):
+        system_prompt = _get_prompt(kwargs)
         super().__init__(
             role=AgentRole.DEVELOPER,
-            system_prompt=DEVELOPER_SYSTEM_PROMPT,
+            system_prompt=system_prompt,
             tools=DEVELOPER_TOOLS,
             **kwargs,
         )

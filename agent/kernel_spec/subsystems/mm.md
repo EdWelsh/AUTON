@@ -2,15 +2,15 @@
 
 ## Overview
 
-The memory management subsystem provides physical page allocation (bitmap PMM), four-level virtual address translation (VMM), a slab allocator for kernel objects, and a dedicated SLM memory pool for model weights and inference buffers. The SLM pool is reserved early in boot to guarantee contiguous memory for the language model runtime regardless of system memory pressure.
+The memory management subsystem provides physical page allocation (bitmap PMM), virtual address translation via the MMU HAL, a slab allocator for kernel objects, and a dedicated SLM memory pool for model weights and inference buffers. Page table format and manipulation are architecture-specific (accessed through `arch_map_page()`, `arch_flush_tlb()`, etc. from the HAL). The SLM pool is reserved early in boot to guarantee contiguous memory for the language model runtime regardless of system memory pressure.
 
 ## Data Structures
 
 ### Physical Memory Manager
 
 ```c
-/* Page size constant */
-#define PAGE_SIZE       4096
+/* Page size from architecture constants */
+#define PAGE_SIZE       ARCH_PAGE_SIZE   /* typically 4096 */
 #define PAGE_SHIFT      12
 
 /* Maximum supported physical memory: 4GB (1M pages) */
@@ -29,39 +29,28 @@ typedef struct pmm_state {
 ### Virtual Memory Manager
 
 ```c
-/* Page table entry flags */
-#define PTE_PRESENT     (1ULL << 0)
-#define PTE_WRITABLE    (1ULL << 1)
-#define PTE_USER        (1ULL << 2)
-#define PTE_WRITETHROUGH (1ULL << 3)
-#define PTE_NOCACHE     (1ULL << 4)
-#define PTE_ACCESSED    (1ULL << 5)
-#define PTE_DIRTY       (1ULL << 6)
-#define PTE_HUGE        (1ULL << 7)   /* 2MB page (in PD level) */
-#define PTE_GLOBAL      (1ULL << 8)
-#define PTE_NO_EXECUTE  (1ULL << 63)
+/* Portable page mapping flags (architecture HAL translates to native format) */
+#define VMM_FLAG_PRESENT    (1ULL << 0)
+#define VMM_FLAG_WRITABLE   (1ULL << 1)
+#define VMM_FLAG_USER       (1ULL << 2)
+#define VMM_FLAG_NOCACHE    (1ULL << 3)
+#define VMM_FLAG_NO_EXECUTE (1ULL << 4)
 
-/* Address mask to extract physical frame from PTE */
-#define PTE_ADDR_MASK   0x000FFFFFFFFFF000ULL
+/* Virtual address space regions (from architecture constants) */
+#define KERNEL_VBASE    ARCH_KERNEL_VBASE   /* higher-half kernel base */
+#define USER_VBASE      ARCH_USER_VBASE     /* user space start */
+#define USER_VTOP       ARCH_USER_VTOP      /* user space end */
 
-/* Page table levels */
-#define PT_LEVEL_PML4   3
-#define PT_LEVEL_PDPT   2
-#define PT_LEVEL_PD     1
-#define PT_LEVEL_PT     0
-
-/* Entries per page table (512 entries, 8 bytes each = 4KB) */
-#define PT_ENTRIES      512
-
-/* Virtual address space regions */
-#define KERNEL_VBASE    0xFFFF800000000000ULL  /* higher-half kernel base */
-#define USER_VBASE      0x0000000000400000ULL  /* user space start */
-#define USER_VTOP       0x00007FFFFFFFFFFFULL  /* user space end */
+/* Page table levels and entries are architecture-defined:
+ * - x86_64: 4-level (PML4 -> PDPT -> PD -> PT), 512 entries each
+ * - AArch64: 4-level translation tables (4KB granule), 512 entries
+ * - RISC-V: 3-level Sv39, 512 entries
+ * See ARCH_PT_LEVELS in arch_memory.h */
 
 /* VMM state */
 typedef struct vmm_state {
-    uint64_t kernel_pml4_phys;  /* physical address of kernel PML4 */
-    uint64_t *kernel_pml4_virt; /* virtual address of kernel PML4 */
+    uint64_t kernel_root_phys;  /* physical address of root page table */
+    uint64_t *kernel_root_virt; /* virtual address of root page table */
 } vmm_state_t;
 ```
 
@@ -141,7 +130,7 @@ typedef struct slm_pool {
 ### Physical Memory Manager (`kernel/include/mm.h`)
 
 ```c
-/* Initialize PMM from Multiboot2-parsed memory map.
+/* Initialize PMM from boot-parsed memory map.
  * Marks kernel, boot structures, and SLM pool as used.
  * Must be called before any other memory allocation. */
 void pmm_init(const boot_mmap_t *mmap);
@@ -173,12 +162,13 @@ void pmm_mark_used(uint64_t phys_start, uint64_t size);
 ### Virtual Memory Manager (`kernel/include/mm.h`)
 
 ```c
-/* Initialize VMM: set up kernel PML4, map kernel higher-half,
- * identity map critical regions. Must be called after pmm_init(). */
+/* Initialize VMM: calls arch_mmu_init() to set up root page table,
+ * map kernel higher-half, identity map critical regions.
+ * Must be called after pmm_init(). */
 void vmm_init(void);
 
-/* Map a single 4KB virtual page to a physical frame with given flags.
- * Allocates intermediate page tables as needed.
+/* Map a single virtual page to a physical frame with given flags.
+ * Calls arch_map_page() which allocates intermediate page tables as needed.
  * Returns 0 on success, -1 on failure (out of memory for page tables). */
 int vmm_map_page(uint64_t virt, uint64_t phys, uint64_t flags);
 
@@ -187,7 +177,7 @@ int vmm_map_page(uint64_t virt, uint64_t phys, uint64_t flags);
 int vmm_map_range(uint64_t virt_start, uint64_t phys_start,
                   uint64_t size, uint64_t flags);
 
-/* Unmap a virtual page. Invalidates TLB entry via invlpg.
+/* Unmap a virtual page. Invalidates TLB entry via arch_flush_tlb().
  * Does NOT free the physical page (caller must do that separately). */
 void vmm_unmap_page(uint64_t virt);
 
@@ -195,15 +185,15 @@ void vmm_unmap_page(uint64_t virt);
  * Walks page tables. Returns 0 if not mapped. */
 uint64_t vmm_get_physical(uint64_t virt);
 
-/* Create a new address space (allocate and initialize a PML4).
- * Copies kernel mappings into new PML4. Returns physical address of PML4. */
+/* Create a new address space via arch_create_address_space().
+ * Copies kernel mappings into new root table. Returns physical address. */
 uint64_t vmm_create_address_space(void);
 
-/* Switch to a different address space by loading CR3. */
-void vmm_switch_address_space(uint64_t pml4_phys);
+/* Switch to a different address space via arch_switch_address_space(). */
+void vmm_switch_address_space(uint64_t root_table_phys);
 
-/* Destroy an address space: free all user page tables and mapped pages. */
-void vmm_destroy_address_space(uint64_t pml4_phys);
+/* Destroy an address space via arch_destroy_address_space(). */
+void vmm_destroy_address_space(uint64_t root_table_phys);
 ```
 
 ### Slab Allocator (`kernel/include/mm.h`)
@@ -289,20 +279,14 @@ int slm_pool_resize(uint64_t new_size);
 
 ### VMM Page Table Walk
 
-```
-Virtual address: [PML4 idx : 9 bits][PDPT idx : 9 bits][PD idx : 9 bits][PT idx : 9 bits][Offset : 12 bits]
+Page table walking is architecture-specific and handled by the MMU HAL. The portable VMM calls `arch_map_page(virt, phys, flags)` which:
 
-vmm_map_page(virt, phys, flags):
-  1. Extract PML4 index = (virt >> 39) & 0x1FF
-  2. If PML4[index] not present: allocate page for PDPT, zero it, set PML4 entry
-  3. Extract PDPT index = (virt >> 30) & 0x1FF
-  4. If PDPT[index] not present: allocate page for PD, zero it, set PDPT entry
-  5. Extract PD index = (virt >> 21) & 0x1FF
-  6. If PD[index] not present: allocate page for PT, zero it, set PD entry
-  7. Extract PT index = (virt >> 12) & 0x1FF
-  8. Set PT[index] = phys | flags | PTE_PRESENT
-  9. invlpg(virt)  -- flush TLB for this address
-```
+1. Walks the architecture's page table hierarchy (e.g., PML4→PDPT→PD→PT on x86_64, or L0→L1→L2→L3 on AArch64)
+2. Allocates intermediate page tables as needed (via `pmm_alloc_page()`)
+3. Sets the leaf entry with the physical address and translated flags
+4. Flushes the TLB for the address via `arch_flush_tlb(virt)`
+
+See `arch/<arch>.md` for the specific page table format and virtual address layout.
 
 ### Slab Allocator Algorithm
 
@@ -347,7 +331,7 @@ Given `pool_size` total bytes, regions are allocated as follows:
 ### Edge Cases
 
 - **Out of physical memory**: `pmm_alloc_page()` returns NULL; caller must handle gracefully
-- **Double free**: `pmm_free_page()` panics with diagnostic (address, caller RIP)
+- **Double free**: `pmm_free_page()` panics with diagnostic (address, caller return address)
 - **Page table allocation failure during mapping**: `vmm_map_page()` returns -1
 - **Slab large allocation**: sizes > 2048 bytes bypass slab, use direct page allocation
 - **SLM pool exhaustion**: `slm_pool_alloc()` returns NULL; SLM falls back to simpler inference or reports error
@@ -358,15 +342,16 @@ Given `pool_size` total bytes, regions are allocated as follows:
 | File | Purpose |
 |------|---------|
 | `kernel/mm/pmm.c`       | Physical memory manager (bitmap allocator) |
-| `kernel/mm/vmm.c`       | Virtual memory manager (4-level paging) |
+| `kernel/mm/vmm.c`       | Virtual memory manager (portable, calls MMU HAL) |
 | `kernel/mm/slab.c`      | Slab allocator (kmalloc/kfree) |
 | `kernel/mm/slm_pool.c`  | SLM dedicated memory pool |
 | `kernel/include/mm.h`   | All memory management interfaces |
 
 ## Dependencies
 
-- **boot**: provides `boot_mmap_t` (parsed Multiboot2 memory map)
+- **boot**: provides `boot_mmap_t` (parsed from architecture boot protocol)
 - **boot**: provides kernel physical address range (linker symbols)
+- **arch/mm**: MMU HAL functions (`arch_map_page`, `arch_flush_tlb`, `arch_create_address_space`, etc.)
 - PMM has no dependencies (first subsystem initialized after serial)
 - VMM depends on PMM (needs pages for page tables)
 - Slab depends on PMM + VMM
@@ -374,7 +359,7 @@ Given `pool_size` total bytes, regions are allocated as follows:
 
 ## Acceptance Criteria
 
-1. PMM correctly parses Multiboot2 memory map; `pmm_total_count()` matches expected RAM
+1. PMM correctly parses boot memory map; `pmm_total_count()` matches expected RAM
 2. `pmm_alloc_page()` returns valid physical addresses; no two calls return the same address
 3. `pmm_free_page()` followed by `pmm_alloc_page()` returns the freed page (first-fit)
 4. Double-free triggers kernel panic with diagnostic output

@@ -72,7 +72,7 @@ def run(ctx, goal: str, workspace: str | None, specs: str):
     """Run the agent orchestration loop to build toward a goal.
 
     GOAL is a high-level description of what to build, e.g.:
-    "Build a minimal bootable x86_64 kernel that prints to serial console"
+    "Build a minimal bootable kernel that prints to serial console"
     """
     config = _load_config(ctx.obj["config_path"])
 

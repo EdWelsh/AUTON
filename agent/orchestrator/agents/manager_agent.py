@@ -10,10 +10,18 @@ from typing import Any
 from orchestrator.agents.base_agent import Agent, AgentRole, AgentState, TaskResult
 from orchestrator.comms.diff_protocol import TaskMetadata, TaskStatus
 from orchestrator.comms.message_bus import MessageType
-from orchestrator.llm.prompts import MANAGER_SYSTEM_PROMPT
+from orchestrator.llm.prompts import build_manager_prompt
 from orchestrator.llm.tools import MANAGER_TOOLS
 
 logger = logging.getLogger(__name__)
+
+
+def _get_prompt(kwargs):
+    arch = kwargs.get('arch_profile')
+    if arch is None:
+        from orchestrator.arch_registry import get_arch_profile
+        arch = get_arch_profile("x86_64")
+    return build_manager_prompt(arch)
 
 
 class ManagerAgent(Agent):
@@ -28,9 +36,10 @@ class ManagerAgent(Agent):
     """
 
     def __init__(self, **kwargs):
+        system_prompt = _get_prompt(kwargs)
         super().__init__(
             role=AgentRole.MANAGER,
-            system_prompt=MANAGER_SYSTEM_PROMPT,
+            system_prompt=system_prompt,
             tools=MANAGER_TOOLS,
             **kwargs,
         )

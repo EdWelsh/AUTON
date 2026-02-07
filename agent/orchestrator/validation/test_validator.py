@@ -46,10 +46,21 @@ class TestValidator:
         workspace_path: Path,
         qemu: str = "qemu-system-x86_64",
         timeout: int = 60,
+        arch_profile=None,
     ):
         self.workspace_path = workspace_path
-        self.qemu = qemu
         self.timeout = timeout
+        # Derive QEMU config from arch profile if provided
+        if arch_profile is not None:
+            self.qemu = qemu if qemu != "qemu-system-x86_64" else arch_profile.qemu
+            self.qemu_machine = arch_profile.qemu_machine
+            self.qemu_cpu = arch_profile.qemu_cpu
+            self.qemu_extra = list(arch_profile.qemu_extra)
+        else:
+            self.qemu = qemu
+            self.qemu_machine = ""
+            self.qemu_cpu = ""
+            self.qemu_extra = []
 
     async def run_tests(self, kernel_image: str | None = None) -> TestResult:
         """Boot the kernel in QEMU and capture test results from serial output."""
@@ -62,14 +73,19 @@ class TestValidator:
 
         start = time.monotonic()
         try:
+            # Build QEMU command with architecture-specific flags
+            qemu_cmd = [self.qemu]
+            if self.qemu_machine:
+                qemu_cmd += ["-machine", self.qemu_machine]
+            if self.qemu_cpu:
+                qemu_cmd += ["-cpu", self.qemu_cpu]
+            qemu_cmd += ["-kernel", image, "-serial", "stdio",
+                         "-display", "none", "-no-reboot", "-m", "128M"]
+            qemu_cmd += self.qemu_extra
+
             # Launch QEMU with serial output piped to stdout
             proc = await asyncio.create_subprocess_exec(
-                self.qemu,
-                "-kernel", image,
-                "-serial", "stdio",
-                "-display", "none",
-                "-no-reboot",
-                "-m", "128M",
+                *qemu_cmd,
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
             )
@@ -105,7 +121,7 @@ class TestValidator:
         except FileNotFoundError:
             return TestResult(
                 success=False,
-                raw_output=f"QEMU not found: {self.qemu}. Install qemu-system-x86_64.",
+                raw_output=f"QEMU not found: {self.qemu}. Install {self.qemu}.",
             )
 
     def _parse_test_output(self, output: str) -> list[TestCase]:

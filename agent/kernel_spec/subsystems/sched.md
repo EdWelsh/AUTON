@@ -55,17 +55,12 @@ typedef struct process {
     priority_class_t    priority;
     process_state_t     state;
 
-    /* CPU context (saved on context switch) */
-    struct cpu_context {
-        uint64_t rsp;       /* stack pointer */
-        uint64_t rbp;       /* base pointer */
-        uint64_t rip;       /* instruction pointer (return address) */
-        uint64_t rax, rbx, rcx, rdx;
-        uint64_t rsi, rdi;
-        uint64_t r8, r9, r10, r11, r12, r13, r14, r15;
-        uint64_t rflags;
-        uint64_t cr3;       /* page table root (address space) */
-    } context;
+    /* CPU context (saved on context switch).
+     * Architecture-defined opaque struct from <arch/arch_context.h>.
+     * Contains all callee-saved registers, stack pointer, flags,
+     * and page table root for the target architecture. */
+    #include <arch/arch_context.h>
+    arch_cpu_context_t context;
 
     /* Stack */
     uint64_t kernel_stack_base;     /* bottom of kernel stack (allocated) */
@@ -129,9 +124,9 @@ process_t *sched_create_slm_process(const char *name, void (*entry)(void));
  * priority queue and reschedules. */
 void sched_yield(void);
 
-/* Timer-driven schedule function. Called from the PIT/APIC timer
- * interrupt handler. Decrements timeslice, reschedules if expired.
- * This is the main preemption point. */
+/* Timer-driven schedule function. Called from the timer interrupt
+ * handler (arch_timer_init callback). Decrements timeslice,
+ * reschedules if expired. This is the main preemption point. */
 void sched_schedule(void);
 
 /* Block the current process. Removes it from run queue and sets
@@ -175,14 +170,18 @@ void sched_enable(void);
 void sched_disable(void);
 ```
 
-### Context Switch (Assembly)
+### Context Switch (HAL)
 
 ```c
-/* Implemented in kernel/sched/switch.asm.
- * Saves callee-saved registers to old stack, switches RSP, restores
- * callee-saved registers from new stack. The return address on the
- * new stack determines where execution resumes. */
-extern void context_switch(uint64_t *old_rsp_ptr, uint64_t new_rsp);
+/* Implemented per-architecture in kernel/arch/<arch>/sched/.
+ * Saves callee-saved registers to old stack, switches stack pointer,
+ * restores callee-saved registers from new stack. The return address
+ * on the new stack determines where execution resumes.
+ * See arch/hal.md for the contract. */
+extern void arch_context_switch(uint64_t *old_sp_ptr, uint64_t new_sp);
+
+/* Set up initial context for a new process so it starts at entry(). */
+extern void arch_setup_initial_context(struct process *proc, void (*entry)(void));
 ```
 
 ## Behavior
@@ -211,7 +210,7 @@ sched_schedule() [called from timer interrupt]:
   11. Set next->state = RUNNING
   12. Update scheduler->current = next
   13. Increment switches counter
-  14. context_switch(&current->context.rsp, next->context.rsp)
+  14. arch_context_switch(&current->context.sp, next->context.sp)
 ```
 
 ### SLM Priority Boost
@@ -231,12 +230,12 @@ sched_create_process(name, entry, priority):
   2. Assign next_pid, copy name, set priority
   3. Allocate KERNEL_STACK_SIZE bytes for kernel stack
   4. Set kernel_stack_top = stack_base + KERNEL_STACK_SIZE
-  5. Initialize context:
-     - rsp = kernel_stack_top - sizeof(initial_frame)
-     - Push onto stack: entry address (as return addr for context_switch)
-     - Push callee-saved registers (all zero initially)
-     - rflags = 0x200 (interrupts enabled)
-     - cr3 = kernel PML4 (kernel thread) or new address space (user)
+  5. Initialize context via arch_setup_initial_context(proc, entry):
+     - Sets stack pointer to kernel_stack_top - sizeof(initial_frame)
+     - Pushes entry address as return address for arch_context_switch
+     - Pushes callee-saved registers (all zero initially)
+     - Sets default flags via arch_default_user_flags() (interrupts enabled)
+     - Sets page table root to kernel address space (or new user space)
   6. Set timeslice_max based on priority class
   7. Set state = READY
   8. Insert into queues[priority]
@@ -245,12 +244,12 @@ sched_create_process(name, entry, priority):
 
 ### Idle Process
 
-The idle process runs at lowest priority and executes `hlt` in a loop:
+The idle process runs at lowest priority and halts the CPU until the next interrupt:
 
 ```c
 static void idle_entry(void) {
     while (1) {
-        asm volatile("hlt");  /* halt until next interrupt */
+        arch_halt();  /* halt until next interrupt (HLT on x86, WFI on ARM, WFI on RISC-V) */
     }
 }
 ```
@@ -273,43 +272,22 @@ Timer handler check:
       sched_unblock(proc)  /* moves to READY, adds to run queue */
 ```
 
-### Context Switch Assembly
+### Context Switch (Architecture-Specific)
 
-```nasm
-; context_switch(old_rsp_ptr [rdi], new_rsp [rsi])
-; Called with interrupts disabled (cli in sched_schedule)
-context_switch:
-    ; Save callee-saved registers on current stack
-    push rbp
-    push rbx
-    push r12
-    push r13
-    push r14
-    push r15
-    pushfq              ; save rflags
+The context switch implementation is defined per-architecture in `kernel/arch/<arch>/sched/`:
+- **x86_64**: Saves/restores RBP, RBX, R12-R15, RFLAGS via push/pop; switches RSP
+- **AArch64**: Saves/restores X19-X30, SP; uses `stp`/`ldp` instructions
+- **RISC-V**: Saves/restores s0-s11, ra, sp; uses `sd`/`ld` instructions
 
-    ; Save current RSP
-    mov [rdi], rsp
+All implementations follow the same contract: `arch_context_switch(old_sp_ptr, new_sp)` saves caller state on old stack, switches to new stack, restores state, and returns to the new process's saved return address.
 
-    ; Load new RSP
-    mov rsp, rsi
-
-    ; Restore callee-saved registers from new stack
-    popfq
-    pop r15
-    pop r14
-    pop r13
-    pop r12
-    pop rbx
-    pop rbp
-    ret                 ; return to the new process's saved RIP
-```
+See `arch/<arch>.md` for the specific assembly implementation.
 
 ### Edge Cases
 
 - **No runnable processes**: idle process runs `hlt` until next interrupt
 - **Process terminates while holding resources**: the termination path does NOT automatically release IPC channels or memory; the subsystem that blocked the process is responsible for cleanup
-- **Timer interrupt during context switch**: interrupts are disabled (cli) at the start of `sched_schedule()` and re-enabled (sti) after the switch
+- **Timer interrupt during context switch**: interrupts are disabled (`arch_disable_interrupts()`) at the start of `sched_schedule()` and re-enabled (`arch_enable_interrupts()`) after the switch
 - **SLM task blocks on I/O**: treated like any blocked process; unblock restores SLM priority
 - **Priority inversion**: not handled in V1; future work may add priority inheritance for IPC
 - **Stack overflow**: each kernel stack is bounded; guard page (unmapped) below stack base catches overflow as page fault
@@ -318,15 +296,16 @@ context_switch:
 
 | File | Purpose |
 |------|---------|
-| `kernel/sched/sched.c`    | Scheduler core: init, create, schedule, block/unblock |
-| `kernel/sched/switch.asm` | Context switch assembly routine |
-| `kernel/include/sched.h`  | Scheduler interface and data structures |
+| `kernel/sched/sched.c`            | Portable scheduler core: init, create, schedule, block/unblock |
+| `kernel/arch/<arch>/sched/`       | Architecture-specific context switch assembly |
+| `kernel/arch/<arch>/include/arch_context.h` | Architecture-specific CPU context struct |
+| `kernel/include/sched.h`          | Scheduler interface and data structures |
 
 ## Dependencies
 
 - **mm**: `kmalloc`/`kfree` for process_t and kernel stack allocation
-- **boot/idt**: timer interrupt (IRQ0) calls `sched_schedule()`
-- **drivers/pit**: provides periodic timer tick
+- **arch/timer**: timer interrupt calls `sched_schedule()` via `arch_timer_init()`
+- **arch/cpu**: interrupt enable/disable via `arch_enable_interrupts()`/`arch_disable_interrupts()`
 - **ipc**: SLM command channel triggers unblock of SLM tasks
 
 ## Acceptance Criteria
