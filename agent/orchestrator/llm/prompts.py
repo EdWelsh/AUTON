@@ -4,29 +4,43 @@ from __future__ import annotations
 
 KERNEL_CONTEXT = """
 ## Target: AUTON Kernel
-You are building a custom x86_64 kernel from scratch - a natural language LLM agent-based hypervisor.
+
+You are building a custom x86_64 kernel from scratch — an SLM-driven operating system.
+Linux-inspired architecture with a custom API (not Linux syscall compatible).
+
+### Core Innovation
+An embedded **Small Language Model (SLM)** acts as the OS's central intelligence:
+- Hardware discovery and driver loading
+- OS installation and filesystem setup
+- Application installation and configuration
+- Ongoing system management, monitoring, and troubleshooting
+
+The SLM is **pluggable**: a lightweight rule-based engine for minimal hardware,
+or a real neural model (GGUF/ONNX) when resources allow.
 
 ### Architecture
-- Language: C (kernel) + x86_64 Assembly (boot, context switch, interrupt handlers)
+- Language: C11 (kernel) + NASM x86_64 Assembly (boot, context switch, interrupts)
 - Target: x86_64, boots via Multiboot2 on QEMU and bare metal
 - Build system: Makefile + nasm + x86_64-elf-gcc cross-compiler
-- Core innovation: Natural language syscall interface powered by an embedded LLM runtime
 
-### Kernel Subsystems
-1. **Boot** - Multiboot2 bootloader, GDT, IDT, protected→long mode transition
-2. **Memory Management** - Physical page allocator, virtual memory (paging), slab allocator
-3. **Scheduler** - LLM-aware preemptive scheduler, agent priority classes
-4. **IPC** - Inter-agent message passing using natural language messages
-5. **NL Syscall** - Natural language syscall interface (LLM parses user intent into kernel operations)
-6. **Hypervisor** - Agent VM isolation, capability-based security model
-7. **Drivers** - Serial console, VGA text mode, virtio (QEMU guest)
-8. **LLM Runtime** - Lightweight in-kernel inference engine for NL processing
+### Kernel Subsystems (11)
+1. **Boot** — Multiboot2, GDT, IDT, protected→long mode, hardware info handoff to SLM
+2. **Memory Management** — PMM (bitmap), VMM (4-level paging), slab, SLM memory pool
+3. **Scheduler** — Preemptive round-robin, priorities: KERNEL > SLM > SYSTEM > USER > BACKGROUND
+4. **IPC** — Structured message passing, dedicated SLM command channel
+5. **Device Framework** — PCI enumeration, ACPI parsing, device descriptors, uniform driver interface
+6. **SLM Runtime** — Pluggable engine (rule-based + neural), intent system, knowledge base, context
+7. **Drivers** — Core (serial, VGA, PIT, PS/2) + SLM-managed (AHCI, NVMe, virtio, e1000, VESA, USB)
+8. **Filesystem** — VFS layer, ext2, initramfs, devfs, procfs
+9. **Network** — Ethernet, ARP, IPv4, TCP/UDP, DHCP, DNS, HTTP client
+10. **Package Manager** — tar+manifest format, registry, SLM-driven install with dep resolution
+11. **System Services** — SLM-driven init, service descriptors, logging, resource monitoring
 
 ### Coding Standards
 - Follow Linux kernel coding style (tabs, 80-col soft limit, K&R braces)
 - Every function must have a clear single responsibility
 - All memory allocations must have matching frees
-- No undefined behavior - use static_assert, bounds checking
+- No undefined behavior — use static_assert, bounds checking
 - Comment complex logic but don't over-comment obvious code
 - Use standard Linux kernel patterns: container_of, list_head, etc.
 """

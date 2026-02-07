@@ -38,7 +38,7 @@ def _load_config(config_path: Path) -> dict:
             console.print(f"[red]Config not found: {config_path}[/red]")
             console.print(f"[yellow]Copy the example to get started:[/yellow]")
             console.print(f"  cp {example} {config_path}")
-            console.print(f"  Then set your API key in {config_path} or export ANTHROPIC_API_KEY")
+            console.print(f"  Then set your API keys in {config_path} or via environment variables")
         else:
             console.print(f"[red]Config not found: {config_path}[/red]")
         raise SystemExit(1)
@@ -76,13 +76,35 @@ def run(ctx, goal: str, workspace: str | None, specs: str):
     """
     config = _load_config(ctx.obj["config_path"])
 
-    # Fail fast if no API key is available
-    api_key = config.get("llm", {}).get("api_key") or os.environ.get("ANTHROPIC_API_KEY")
-    if not api_key:
-        console.print("[red]No API key found![/red]")
+    # Fail fast if no API key is available for the configured provider
+    PROVIDER_ENV_VARS = {
+        "anthropic": "ANTHROPIC_API_KEY",
+        "openai": "OPENAI_API_KEY",
+        "gemini": "GEMINI_API_KEY",
+        "openrouter": "OPENROUTER_API_KEY",
+        "azure": "AZURE_API_KEY",
+    }
+    llm_config = config.get("llm", {})
+    model = llm_config.get("model", "anthropic/claude-opus-4-6")
+    provider = model.split("/")[0] if "/" in model else "anthropic"
+
+    api_key_sources = dict(llm_config.get("api_keys", {}))
+    # Backward compat: old single api_key field
+    if "api_key" in llm_config:
+        api_key_sources.setdefault("anthropic", llm_config["api_key"])
+
+    has_key = (
+        provider in api_key_sources
+        or os.environ.get(PROVIDER_ENV_VARS.get(provider, ""))
+        or provider == "ollama"
+    )
+    if not has_key:
+        env_var = PROVIDER_ENV_VARS.get(provider, f"{provider.upper()}_API_KEY")
+        console.print(f"[red]No API key found for provider '{provider}'![/red]")
+        console.print(f"[yellow]Configured model: {model}[/yellow]")
         console.print("[yellow]Set it via one of:[/yellow]")
-        console.print("  1. Add api_key to [llm] section in config/auton.toml")
-        console.print("  2. Export ANTHROPIC_API_KEY environment variable")
+        console.print(f"  1. Add '{provider}' key to [llm.api_keys] in config/auton.toml")
+        console.print(f"  2. Export {env_var} environment variable")
         raise SystemExit(1)
 
     # Default workspace is the repo root (parent of agent/)

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import json
 import logging
 import subprocess
 from dataclasses import dataclass, field
@@ -12,7 +13,7 @@ from typing import Any
 
 from orchestrator.comms.git_workspace import GitWorkspace
 from orchestrator.comms.message_bus import Message, MessageBus
-from orchestrator.llm.client import ClaudeClient
+from orchestrator.llm.client import LLMClient
 
 logger = logging.getLogger(__name__)
 
@@ -66,7 +67,7 @@ class Agent:
         role: AgentRole,
         system_prompt: str,
         tools: list[dict[str, Any]],
-        client: ClaudeClient,
+        client: LLMClient,
         workspace: GitWorkspace,
         message_bus: MessageBus,
         kernel_spec_path: Path,
@@ -301,12 +302,9 @@ class Agent:
         """Extract the final text response from the conversation."""
         for msg in reversed(messages):
             if msg.get("role") == "assistant":
-                content = msg.get("content", [])
-                if isinstance(content, str):
+                content = msg.get("content")
+                if isinstance(content, str) and content:
                     return content
-                for block in content:
-                    if hasattr(block, "text"):
-                        return block.text
         return "No text response."
 
     def _extract_artifacts(self, messages: list[dict[str, Any]]) -> list[str]:
@@ -314,12 +312,16 @@ class Agent:
         artifacts = []
         for msg in messages:
             if msg.get("role") == "assistant":
-                content = msg.get("content", [])
-                if isinstance(content, list):
-                    for block in content:
-                        if hasattr(block, "type") and block.type == "tool_use":
-                            if block.name == "write_file":
-                                artifacts.append(block.input.get("path", ""))
+                for tc in msg.get("tool_calls", []):
+                    func = tc.get("function", {})
+                    if func.get("name") == "write_file":
+                        try:
+                            args = json.loads(func.get("arguments", "{}"))
+                        except (json.JSONDecodeError, TypeError):
+                            args = {}
+                        path = args.get("path", "")
+                        if path:
+                            artifacts.append(path)
         return artifacts
 
     def _current_branch(self) -> str | None:

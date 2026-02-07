@@ -1,8 +1,10 @@
 # AUTON
 
-**Autonomous agent orchestration system that builds a natural language LLM agent-based hypervisor kernel from scratch.**
+**Autonomous agent orchestration system that builds an SLM-driven operating system kernel from scratch.**
 
-Inspired by [NVIDIA VibeTensor](https://github.com/NVlabs/vibetensor) — where LLM agents generated ~195K lines of system software without human code review — AUTON uses Claude API to power a team of specialized agents that collaboratively write, review, test, and integrate a custom x86_64 kernel.
+AUTON uses LLM agents to collaboratively write, review, test, and integrate a custom x86_64 kernel with an embedded **Small Language Model (SLM)** at its core. The SLM serves as the OS's central intelligence — handling hardware discovery, driver configuration, OS installation, application management, and ongoing system administration.
+
+Inspired by [NVIDIA VibeTensor](https://github.com/NVlabs/vibetensor) — where LLM agents generated ~195K lines of system software without human code review. Supports any LLM provider via [LiteLLM](https://github.com/BerriAI/litellm): Anthropic, OpenAI, Ollama, Google Gemini, OpenRouter, Azure, and more.
 
 **We don't write the kernel. The agents do.**
 
@@ -53,21 +55,36 @@ Agents communicate through **git branches and file-based messaging** — no mess
 
 ## Kernel Target
 
-The agents build a custom **x86_64 kernel from scratch** with:
+The agents build a custom **x86_64 SLM-driven kernel from scratch** — Linux-inspired architecture with a custom API. The embedded SLM drives the entire OS lifecycle:
 
-- **Boot** — Multiboot2, GDT/IDT, real→protected→long mode
-- **Memory Management** — Bitmap page allocator, 4-level paging, slab allocator
-- **Scheduler** — Preemptive round-robin with LLM-aware priority classes
-- **IPC** — Natural language message passing between agents
-- **NL Syscall** — Natural language syscall interface (the core innovation)
-- **Hypervisor** — Agent VM isolation with capability-based security
-- **LLM Runtime** — In-kernel NL processing (keyword matching → future: neural)
+1. **Boot** → SLM initializes
+2. **Hardware Discovery** → SLM probes and identifies devices
+3. **Driver Configuration** → SLM determines and loads needed drivers
+4. **Installation** → SLM sets up filesystems, network, base system
+5. **Application Setup** → SLM installs/configures apps based on device purpose
+6. **Runtime Management** → SLM stays resident for ongoing admin, updates, troubleshooting
+
+### Subsystems
+
+- **Boot** — Multiboot2, GDT/IDT, real→protected→long mode, hardware handoff to SLM
+- **Memory Management** — Bitmap PMM, 4-level paging VMM, slab allocator, SLM memory pool
+- **Scheduler** — Preemptive round-robin with priority classes (KERNEL > SLM > SYSTEM > USER)
+- **IPC** — Structured message passing, ring buffers, SLM command channel
+- **Device Framework** — PCI enumeration, ACPI parsing, uniform driver interface, SLM-driven loading
+- **SLM Runtime** — Pluggable architecture with two backends:
+  - *Rule Engine* (default) — keyword matching, pattern rules, decision trees (works on any hardware)
+  - *Neural Backend* (optional) — loads real models (GGUF/ONNX), CPU inference with INT4/INT8 quantization
+- **Drivers** — Core (serial, VGA, PIT, keyboard) + SLM-managed (storage, network, display, USB)
+- **Filesystem** — VFS layer, initramfs, ext2, devfs, procfs
+- **Network Stack** — Ethernet, ARP, IPv4, TCP/UDP, DHCP, DNS, HTTP
+- **Package Manager** — tar+manifest format, dependency resolution, SLM-driven installation
+- **System Services** — SLM-driven init system, logging, resource monitoring
 
 ## Tech Stack
 
 - **Python** — Agent orchestration framework
 - **Rust** — Build tooling, diff validation, QEMU test runner
-- **Claude API** (Anthropic) — Powers all agent reasoning
+- **LiteLLM** — Multi-provider LLM abstraction (Anthropic, OpenAI, Ollama, Gemini, OpenRouter, Azure)
 - **Git** — Agent collaboration and version control
 - **QEMU** — Kernel testing and validation
 
@@ -76,23 +93,38 @@ The agents build a custom **x86_64 kernel from scratch** with:
 ```bash
 # Clone
 git clone https://github.com/EdWelsh/AUTON.git
-cd AUTON
-
-# Set up the agent directory (not tracked in git)
-mkdir -p agent
-# Copy the orchestration framework into agent/
-# (see deployment instructions)
+cd AUTON/agent
 
 # Install
-cd agent
 pip install -e .
 
-# Configure
-export ANTHROPIC_API_KEY="sk-ant-..."
-# Or edit agent/config/auton.toml
+# Configure — copy the example and add your API key(s)
+cp config/auton.toml.example config/auton.toml
+# Edit config/auton.toml with your keys, or use environment variables:
+export ANTHROPIC_API_KEY="sk-ant-..."   # for Anthropic models
+# export OPENAI_API_KEY="sk-..."        # for OpenAI models
+# No key needed for Ollama (local)
 
 # Run
-auton run "Build a minimal bootable x86_64 kernel that prints to serial console"
+auton run "Build a bootable x86_64 kernel with SLM rule engine that detects hardware via PCI scan"
+```
+
+### Model Configuration
+
+Models use `provider/model` format. Mix providers per agent role for cost optimization:
+
+```toml
+[llm]
+model = "anthropic/claude-opus-4-6"    # default for all agents
+
+[llm.api_keys]
+anthropic = "sk-ant-..."
+openai = "sk-..."
+
+[agents.models]
+developer = "anthropic/claude-sonnet-4-5-20250929"  # cheaper for code gen
+reviewer = "openai/gpt-4o"                          # use a different provider
+# tester = "ollama/llama3.1"                        # free, local
 ```
 
 ## How It Works
@@ -108,14 +140,17 @@ auton run "Build a minimal bootable x86_64 kernel that prints to serial console"
 
 ## Key Concepts
 
+### SLM-Driven OS
+The kernel embeds a Small Language Model as its central intelligence. The SLM is **pluggable**: a lightweight rule-based engine runs on minimal hardware (IoT, embedded), while systems with sufficient resources can load a real neural language model for richer understanding. Everything flows through the SLM — from first boot to ongoing system management.
+
 ### The Frankenstein Effect
 From NVIDIA VibeTensor: *"Locally correct subsystems interact to yield globally suboptimal performance."* AUTON's Composition Validator specifically detects this by comparing unit test results against integration test results.
 
 ### Agents as Black Boxes
 The orchestrator doesn't care how agents solve problems — only whether the result builds and passes tests. This is the VibeTensor methodology: validation through tools, not human review.
 
-### Natural Language Kernel
-The kernel itself uses natural language as its primary interface. Instead of `syscall(SYS_mmap, ...)`, agents say `"allocate 4KB of memory"` and the NL syscall layer parses intent into kernel operations.
+### SLM Intent System
+All SLM interactions go through an intent classifier: `HARDWARE_IDENTIFY`, `DRIVER_SELECT`, `INSTALL_CONFIGURE`, `APP_INSTALL`, `SYSTEM_MANAGE`, `TROUBLESHOOT`. This allows the SLM to understand what the system needs at any point and dispatch the right kernel operations.
 
 ## License
 
@@ -126,3 +161,18 @@ Apache 2.0
 - [NVIDIA VibeTensor](https://github.com/NVlabs/vibetensor) — AI-generated deep learning runtime
 - [VibeTensor Paper](https://arxiv.org/abs/2601.16238) — *"System Software for Deep Learning, Fully Generated by AI Agents"*
 - [AIOS](https://github.com/agiresearch/AIOS) — LLM Agent Operating System
+- [LiteLLM](https://github.com/BerriAI/litellm) — Unified LLM API for 100+ providers
+
+
+## Inspirations from our greatest of grand parents
+The more I study, the more insatiable do I feel my genius for it to be
+
+That brain of mine is something more than merely mortal; as time will show
+
+I believe myself to possess a most singular combination of qualities exactly fitted to make me pre-eminently a discoverer of the hidden realities of nature.
+
+The Analytical Engine has no pretensions whatever to originate anything. It can do whatever we know how to order it to perform.
+
+The intellectual, the moral, the religious seem to me all naturally bound up and interlinked together in one great and harmonious whole.
+
+I have an inexpressible wish to understand what has actually occurred.

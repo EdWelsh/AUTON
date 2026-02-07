@@ -20,7 +20,7 @@ from orchestrator.comms.message_bus import MessageBus
 from orchestrator.core.scheduler import Scheduler
 from orchestrator.core.state import OrchestratorState
 from orchestrator.core.task_graph import TaskGraph, TaskState
-from orchestrator.llm.client import ClaudeClient, CostTracker
+from orchestrator.llm.client import CostTracker, LLMClient, ProviderConfig
 
 logger = logging.getLogger(__name__)
 
@@ -52,14 +52,23 @@ class OrchestrationEngine:
         self.config = config
 
         # Core components
+        llm_config = config.get("llm", {})
         self.cost_tracker = CostTracker(
-            max_cost_usd=config.get("llm", {}).get("cost", {}).get("max_cost_usd", 50.0),
-            warn_at_usd=config.get("llm", {}).get("cost", {}).get("warn_at_usd", 25.0),
+            max_cost_usd=llm_config.get("cost", {}).get("max_cost_usd", 50.0),
+            warn_at_usd=llm_config.get("cost", {}).get("warn_at_usd", 25.0),
         )
-        self.client = ClaudeClient(
-            model=config.get("llm", {}).get("model", "claude-opus-4-6"),
-            max_tokens=config.get("llm", {}).get("max_tokens", 16384),
-            api_key=config.get("llm", {}).get("api_key"),
+        provider_config = ProviderConfig(
+            api_keys=dict(llm_config.get("api_keys", {})),
+            endpoints=dict(llm_config.get("endpoints", {})),
+        )
+        # Backward compat: old single api_key field maps to anthropic
+        if "api_key" in llm_config and "anthropic" not in provider_config.api_keys:
+            provider_config.api_keys["anthropic"] = llm_config["api_key"]
+
+        self.client = LLMClient(
+            model=llm_config.get("model", "anthropic/claude-opus-4-6"),
+            max_tokens=llm_config.get("max_tokens", 16384),
+            provider_config=provider_config,
             cost_tracker=self.cost_tracker,
         )
         self.workspace = GitWorkspace(

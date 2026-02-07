@@ -2,7 +2,17 @@
 
 ## Overview
 
-AUTON is a custom x86_64 kernel that functions as a natural language LLM agent-based hypervisor. Its primary innovation is replacing traditional syscall interfaces with a natural language processing layer, enabling agents (processes) to communicate with the kernel using human-readable instructions.
+AUTON is a custom x86_64 kernel built from scratch, inspired by Linux architecture but with a custom API. Its core innovation is an embedded **Small Language Model (SLM)** that serves as the system's central intelligence — handling hardware discovery, driver configuration, OS installation, application management, and ongoing system administration.
+
+The SLM is **pluggable**: a lightweight rule-based engine runs on minimal hardware (IoT, embedded), while systems with sufficient resources can load a real neural language model for richer understanding.
+
+**The OS lifecycle is SLM-driven at every stage:**
+1. **Boot** — Kernel loads, SLM initializes
+2. **Hardware Discovery** — SLM probes and identifies hardware components
+3. **Driver Configuration** — SLM determines and loads needed drivers
+4. **Installation** — SLM sets up filesystems, network, base system
+5. **Application Setup** — SLM installs/configures apps based on device purpose
+6. **Runtime Management** — SLM stays resident for ongoing admin, updates, troubleshooting
 
 ## Target Platform
 
@@ -16,13 +26,14 @@ AUTON is a custom x86_64 kernel that functions as a natural language LLM agent-b
 ## Memory Layout
 
 ```
-0x0000_0000_0000_0000 - 0x0000_7FFF_FFFF_FFFF  User space (agent VMs)
+0x0000_0000_0000_0000 - 0x0000_7FFF_FFFF_FFFF  User space (processes)
 0xFFFF_8000_0000_0000 - 0xFFFF_FFFF_FFFF_FFFF  Kernel space
 
 Kernel Physical Layout:
 0x0010_0000 (1 MB)     Kernel load address
 0x0020_0000 (2 MB)     Kernel heap start
-0x0040_0000 (4 MB)     Agent VM memory pool start
+0x0040_0000 (4 MB)     SLM runtime memory pool
+0x0080_0000 (8 MB)     Process memory pool start
 ```
 
 ## Subsystems
@@ -33,6 +44,7 @@ Kernel Physical Layout:
 - IDT (Interrupt Descriptor Table) with exception handlers
 - Transition: real mode → protected mode → long mode
 - Stack setup and BSS clearing
+- Hardware enumeration structures passed to SLM
 - Jump to C `kernel_main()`
 
 ### 2. Memory Management (`kernel/mm/`)
@@ -40,46 +52,123 @@ Kernel Physical Layout:
 - **Virtual Memory Manager (VMM)**: 4-level paging (PML4 → PDPT → PD → PT)
 - **Slab Allocator**: kmalloc/kfree for kernel objects
 - Memory map parsed from Multiboot2 info
+- SLM memory pool: dedicated region for model weights and inference buffers
 
 ### 3. Scheduler (`kernel/sched/`)
 - Preemptive round-robin with priority classes
-- Priority levels: KERNEL > SYSTEM_AGENT > USER_AGENT > BACKGROUND
+- Priority levels: KERNEL > SLM > SYSTEM > USER > BACKGROUND
 - Timer interrupt (PIT or APIC) drives preemption
 - Context switching via assembly (save/restore registers + stack)
-- Agent-aware: LLM inference tasks get higher priority
+- SLM inference tasks get elevated priority to keep the system responsive
 
 ### 4. Inter-Process Communication (`kernel/ipc/`)
 - Message-passing IPC (not shared memory for security)
-- Messages are natural language strings (UTF-8)
-- Ring buffer per agent pair
+- Structured message format: type + payload
+- Ring buffer per process pair
 - Blocking and non-blocking send/receive
+- SLM command channel: dedicated high-priority IPC path for SLM ↔ kernel
 
-### 5. Natural Language Syscall Interface (`kernel/nl_syscall/`)
-- Agents issue "syscalls" as natural language strings
-- NL parser maps intent to kernel operations:
-  - "allocate 4KB of memory" → pmm_alloc_page()
-  - "send message to agent-2: hello" → ipc_send(2, "hello")
-  - "list running agents" → sched_list_processes()
-- Fallback: traditional numeric syscall interface for bootstrapping
+### 5. Device Framework (`kernel/dev/`)
+- **Device discovery**: PCI enumeration, ACPI table parsing, port probing
+- **Device descriptor**: standardized struct describing each detected device
+  - vendor/device IDs, class, resources (MMIO, IRQ, DMA)
+- **Driver interface**: uniform API that all drivers implement
+  - `probe()`, `init()`, `remove()`, `suspend()`, `resume()`
+- **SLM-driven loading**: SLM receives device descriptors, determines which driver to load
+- **Hot-plug support**: SLM monitors for device changes at runtime
 
-### 6. Hypervisor (`kernel/hypervisor/`)
-- Each agent runs in an isolated VM (separate page tables)
-- Capability-based security: agents hold capability tokens
-- Capabilities: MEMORY, IPC, SPAWN, NL_SYSCALL, DEVICE
-- Agent lifecycle: create → start → suspend → resume → destroy
+### 6. SLM Runtime (`kernel/slm/`)
+- **Pluggable architecture**: two backends, selected at boot based on available resources
+  - **Rule Engine** (default): keyword matching, pattern rules, decision trees
+    - Parses hardware descriptors → driver mappings
+    - Parses user intent → system commands
+    - Works on any hardware (no GPU, minimal RAM)
+  - **Neural Backend** (optional): loads a real small language model
+    - Supports GGUF/ONNX model formats
+    - CPU inference with quantization (INT4/INT8)
+    - Requires ~256MB+ RAM for the model
+- **Intent system**: all SLM interactions go through an intent classifier
+  - `HARDWARE_IDENTIFY` — "what is this PCI device?"
+  - `DRIVER_SELECT` — "which driver handles this network card?"
+  - `INSTALL_CONFIGURE` — "set up the filesystem on /dev/sda"
+  - `APP_INSTALL` — "install a web server"
+  - `SYSTEM_MANAGE` — "check disk usage", "update packages"
+  - `TROUBLESHOOT` — "why is the network down?"
+- **Knowledge base**: embedded device database, driver catalog, package registry
+- **Conversation context**: maintains state across multi-step operations
 
 ### 7. Drivers (`kernel/drivers/`)
-- **Serial**: UART 16550A (COM1) for console I/O
-- **VGA Text**: 80x25 text mode framebuffer
-- **Timer**: PIT (8254) for scheduler tick
-- **Keyboard**: PS/2 keyboard for input
-- **Virtio**: Guest driver for QEMU (future: network, block)
+- **Core drivers** (always loaded):
+  - Serial UART 16550A (COM1) — console I/O, early boot output
+  - VGA text mode — 80x25 framebuffer
+  - PIT (8254) — scheduler timer tick
+  - PS/2 keyboard — input
+- **SLM-managed drivers** (loaded on demand based on hardware detection):
+  - Storage: AHCI/SATA, NVMe, virtio-blk
+  - Network: virtio-net, Intel e1000 (QEMU), RTL8139
+  - Display: VESA framebuffer, virtio-gpu
+  - USB: UHCI/EHCI/xHCI host controller
+- **Driver template**: standardized skeleton that the SLM uses when generating driver configs
+- All drivers register with the device framework via `driver_register()`
 
-### 8. LLM Runtime (`kernel/llm/`)
-- Lightweight inference engine for natural language parsing
-- Initially: pattern matching + keyword extraction
-- Future: embedded small model (TinyLLM) for actual NL understanding
-- Tokenizer, intent classifier, entity extractor
+### 8. Filesystem (`kernel/fs/`)
+- **VFS layer**: Linux-inspired virtual filesystem switch
+  - Inode, dentry, superblock abstractions
+  - Mount table, path resolution
+- **Supported filesystems**:
+  - initramfs (in-memory, for boot)
+  - ext2 (simple, well-documented, good starting point)
+  - devfs (device nodes)
+  - procfs (process information)
+- SLM uses VFS to set up partitions, create filesystems, install files
+
+### 9. Network Stack (`kernel/net/`)
+- Ethernet frame handling
+- ARP, IPv4, ICMP, UDP, TCP (minimal)
+- DHCP client (SLM triggers network config)
+- DNS resolver (for package downloads)
+- HTTP client (for fetching packages/updates)
+- Socket API for userspace
+
+### 10. Package Manager (`kernel/pkg/`)
+- Simple package format: tar archive + metadata manifest
+- Package registry: local database of available/installed packages
+- SLM-driven installation: "install a web server" → resolve deps → fetch → extract → configure
+- Dependency resolution
+- This runs partially in kernel (registry) and partially in userspace (fetch/extract)
+
+### 11. System Services (`kernel/sys/`)
+- Init system: SLM-driven service startup ordering
+- Service descriptors: what each service needs, how to start/stop
+- Logging: kernel log ring buffer, SLM can query logs for troubleshooting
+- Resource monitoring: CPU, memory, disk, network usage
+- SLM queries these for runtime system management
+
+## SLM Interaction Model
+
+The SLM is not just a component — it's the OS's brain. Everything flows through it:
+
+```
+User/Admin                    SLM                         Kernel
+    |                          |                            |
+    |--- "set up this PC" ---->|                            |
+    |                          |--- probe_hardware() ------>|
+    |                          |<-- device_list[] ----------|
+    |                          |--- load_driver("e1000") -->|
+    |                          |<-- OK --------------------|
+    |                          |--- dhcp_configure() ------>|
+    |                          |<-- IP: 192.168.1.x -------|
+    |                          |--- mkfs("/dev/sda1") ----->|
+    |                          |<-- OK --------------------|
+    |                          |--- install_pkg("nginx") -->|
+    |                          |<-- OK --------------------|
+    |<-- "PC ready. nginx    --|                            |
+    |    running on port 80"   |                            |
+```
+
+The SLM maintains a **conversation context** so multi-step operations work naturally:
+- "Set up this machine as a web server" → hardware detect → drivers → network → install nginx → configure
+- "The network isn't working" → check driver status → check DHCP → check cable → diagnose
 
 ## Build System
 
@@ -96,7 +185,7 @@ LDFLAGS = -T linker.ld -nostdlib
 
 # Targets
 all: kernel.bin
-kernel.bin: boot.o kernel.o mm.o sched.o ipc.o nl_syscall.o hypervisor.o drivers.o llm.o
+kernel.bin: boot.o kernel.o mm.o sched.o ipc.o dev.o slm.o drivers.o fs.o net.o pkg.o sys.o
 	$(LD) $(LDFLAGS) -o $@ $^
 ```
 
@@ -108,12 +197,19 @@ kernel/
 ├── mm/             # Physical + virtual memory management
 ├── sched/          # Process scheduler
 ├── ipc/            # Inter-process communication
-├── nl_syscall/     # Natural language syscall interface
-├── hypervisor/     # Agent VM management
-├── drivers/        # Device drivers
-├── llm/            # NL inference runtime
+├── dev/            # Device framework (discovery, driver interface)
+├── slm/            # SLM runtime (rule engine + neural backend)
+│   ├── engine/     # Core SLM dispatch, intent classification
+│   ├── rules/      # Rule-based backend (pattern matching)
+│   ├── neural/     # Neural model backend (GGUF/ONNX loader)
+│   └── knowledge/  # Device database, driver catalog, package registry
+├── drivers/        # Device drivers (core + SLM-managed)
+├── fs/             # VFS + filesystem implementations
+├── net/            # Network stack
+├── pkg/            # Package manager
+├── sys/            # System services, init, logging
 ├── include/        # Header files (interfaces)
-├── lib/            # Utility functions (string, printf)
+├── lib/            # Utility functions (string, printf, list)
 ├── Makefile        # Build rules
 └── linker.ld       # Linker script
 ```

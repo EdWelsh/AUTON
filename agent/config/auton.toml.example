@@ -1,9 +1,12 @@
 [llm]
-# Claude API configuration
-# Option 1: Set ANTHROPIC_API_KEY environment variable (recommended)
-# Option 2: Uncomment and set api_key below
-# api_key = "sk-ant-..."
-model = "claude-opus-4-6"
+# Model using LiteLLM provider/model format
+# Examples:
+#   "anthropic/claude-opus-4-6"       - Claude (Anthropic)
+#   "openai/gpt-4o"                   - GPT-4o (OpenAI)
+#   "ollama/llama3.1"                 - Llama 3.1 (local via Ollama)
+#   "gemini/gemini-2.0-flash"         - Gemini (Google)
+#   "openrouter/anthropic/claude-3.5-sonnet" - via OpenRouter
+model = "anthropic/claude-opus-4-6"
 max_tokens = 16384
 temperature = 0.0
 
@@ -11,6 +14,19 @@ temperature = 0.0
 # Budget limits per orchestration run
 max_cost_usd = 50.0
 warn_at_usd = 25.0
+
+# API keys per provider (or use environment variables instead)
+# Environment variables: ANTHROPIC_API_KEY, OPENAI_API_KEY, GEMINI_API_KEY, etc.
+[llm.api_keys]
+# anthropic = "sk-ant-..."
+# openai = "sk-..."
+# gemini = "..."
+# openrouter = "sk-or-..."
+
+# Custom base URLs for self-hosted or proxy endpoints
+[llm.endpoints]
+# ollama = "http://localhost:11434"
+# azure = "https://your-resource.openai.azure.com/"
 
 [agents]
 # Number of parallel developer agents
@@ -21,13 +37,14 @@ reviewer_count = 1
 tester_count = 1
 
 [agents.models]
-# Override models per agent type (defaults to llm.model)
-# manager = "claude-opus-4-6"
-# architect = "claude-opus-4-6"
-# developer = "claude-sonnet-4-5-20250929"
-# reviewer = "claude-opus-4-6"
-# tester = "claude-sonnet-4-5-20250929"
-# integrator = "claude-sonnet-4-5-20250929"
+# Override models per agent role (defaults to llm.model)
+# Can use different providers per role for cost optimization
+# manager = "anthropic/claude-opus-4-6"
+# architect = "anthropic/claude-opus-4-6"
+# developer = "anthropic/claude-sonnet-4-5-20250929"
+# reviewer = "openai/gpt-4o"
+# tester = "anthropic/claude-sonnet-4-5-20250929"
+# integrator = "anthropic/claude-sonnet-4-5-20250929"
 
 [workspace]
 # Path to the git workspace where agents write kernel code
