@@ -168,7 +168,7 @@ All SLM interactions go through an intent classifier: `HARDWARE_IDENTIFY`, `DRIV
 
 ## License
 
-**Source Available** — Free for personal, educational, and non-production use. Production and enterprise use requires a [commercial license or public attribution](LICENSE).
+**Source Available** — Free for personal, educational, and non-production use. Production and enterprise use requires a [commercial license or public attribution](LICENSE.md).
 
 ## References
 
