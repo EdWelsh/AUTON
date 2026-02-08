@@ -33,13 +33,24 @@ Inspired by [NVIDIA VibeTensor](https://github.com/NVlabs/vibetensor) — where 
     └──────────┬──────────┘    └──────────┬──────────┘
                │                          │
     ┌──────────▼──────────┐    ┌──────────▼──────────┐
-    │   Git Workspace     │    │   Validation Layer   │
-    │  (kernels/{arch})   │    │                      │
-    │                     │    │  Build Validator     │
-    │  Agents collaborate │    │  Test Validator      │
-    │  via branches +     │    │  Composition Check   │
-    │  structured diffs   │    │  (Frankenstein Fx)   │
-    └─────────────────────┘    └──────────────────────┘
+    │   Git Workspace     │    │   Git Workspace     │
+    │  (kernels/{arch})   │    │     (SLM/)          │
+    │                     │    │                     │
+    │  Agents collaborate │    │  Agents collaborate │
+    │  via branches +     │    │  via branches +     │
+    │  structured diffs   │    │  structured diffs   │
+    └──────────┬──────────┘    └──────────┬──────────┘
+               │                          │
+               └──────────┬───────────────┘
+                          │
+               ┌──────────▼──────────┐
+               │   Validation Layer   │
+               │                      │
+               │  Build Validator     │
+               │  Test Validator      │
+               │  Composition Check   │
+               │  (Frankenstein Fx)   │
+               └──────────────────────┘
 ```
 
 ### Complete System Architecture
