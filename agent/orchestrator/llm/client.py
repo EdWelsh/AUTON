@@ -161,6 +161,13 @@ class LLMClient:
                 logger.warning("Rate limited, retrying in 30s for agent %s", agent_id)
                 await asyncio.sleep(30)
                 response = await litellm.acompletion(**kwargs)
+            except (litellm.APIConnectionError, json.JSONDecodeError) as e:
+                if "ollama" in model.lower():
+                    logger.warning("Ollama JSON error, retrying with format=json: %s", e)
+                    kwargs["format"] = "json"
+                    response = await litellm.acompletion(**kwargs)
+                else:
+                    raise
 
             usage_tracker = self.cost_tracker.get_agent_usage(agent_id)
             if response.usage:

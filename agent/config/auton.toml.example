@@ -48,7 +48,7 @@ tester_count = 1
 
 [workspace]
 # Path to the git workspace where agents write kernel code
-path = "workspace"
+path = "../kernels/x86_64"
 # Branch naming convention
 branch_prefix = "agent"
 
