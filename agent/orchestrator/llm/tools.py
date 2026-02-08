@@ -211,6 +211,86 @@ TOOL_SHELL = {
 }
 
 # SLM-specific tools
+TOOL_ANALYZE_DATASET = {
+    "type": "function",
+    "function": {
+        "name": "analyze_dataset",
+        "description": "Analyze dataset statistics: vocab size, token counts, coverage.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "dataset_path": {
+                    "type": "string",
+                    "description": "Path to raw dataset directory",
+                },
+            },
+            "required": ["dataset_path"],
+        },
+    },
+}
+
+TOOL_TOKENIZE_DATA = {
+    "type": "function",
+    "function": {
+        "name": "tokenize_data",
+        "description": "Tokenize text data using BPE/WordPiece/SentencePiece.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "input_path": {
+                    "type": "string",
+                    "description": "Path to raw text files",
+                },
+                "output_path": {
+                    "type": "string",
+                    "description": "Output path for tokenized data",
+                },
+                "vocab_size": {
+                    "type": "integer",
+                    "description": "Vocabulary size. Default: 32000.",
+                },
+            },
+            "required": ["input_path", "output_path"],
+        },
+    },
+}
+
+TOOL_VALIDATE_ARCHITECTURE = {
+    "type": "function",
+    "function": {
+        "name": "validate_architecture",
+        "description": "Validate model architecture config YAML.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "config_path": {
+                    "type": "string",
+                    "description": "Path to model config YAML",
+                },
+            },
+            "required": ["config_path"],
+        },
+    },
+}
+
+TOOL_ESTIMATE_FLOPS = {
+    "type": "function",
+    "function": {
+        "name": "estimate_flops",
+        "description": "Estimate compute and memory requirements for model.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "config_path": {
+                    "type": "string",
+                    "description": "Path to model config YAML",
+                },
+            },
+            "required": ["config_path"],
+        },
+    },
+}
+
 TOOL_TRAIN_MODEL = {
     "type": "function",
     "function": {
@@ -307,6 +387,50 @@ TOOL_EXPORT_GGUF = {
     },
 }
 
+TOOL_EXPORT_ONNX = {
+    "type": "function",
+    "function": {
+        "name": "export_onnx",
+        "description": "Export model to ONNX format.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "model_path": {
+                    "type": "string",
+                    "description": "Path to model checkpoint",
+                },
+                "output_path": {
+                    "type": "string",
+                    "description": "Output ONNX file path",
+                },
+            },
+            "required": ["model_path", "output_path"],
+        },
+    },
+}
+
+TOOL_INTEGRATE_SLM = {
+    "type": "function",
+    "function": {
+        "name": "integrate_slm",
+        "description": "Copy SLM model to kernel workspace and update Makefile.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "model_path": {
+                    "type": "string",
+                    "description": "Path to GGUF model file",
+                },
+                "kernel_arch": {
+                    "type": "string",
+                    "description": "Target architecture: x86_64, aarch64, or riscv64",
+                },
+            },
+            "required": ["model_path", "kernel_arch"],
+        },
+    },
+}
+
 # Tool sets by agent role
 MANAGER_TOOLS = [TOOL_READ_SPEC, TOOL_LIST_FILES, TOOL_READ_FILE, TOOL_SEARCH_CODE]
 
@@ -361,9 +485,28 @@ INTEGRATOR_TOOLS = [
     TOOL_GIT_COMMIT,
     TOOL_GIT_DIFF,
     TOOL_SHELL,
+    TOOL_INTEGRATE_SLM,
 ]
 
 # SLM agent tool sets
+DATA_SCIENTIST_TOOLS = [
+    TOOL_READ_FILE,
+    TOOL_WRITE_FILE,
+    TOOL_LIST_FILES,
+    TOOL_ANALYZE_DATASET,
+    TOOL_TOKENIZE_DATA,
+    TOOL_SHELL,
+]
+
+MODEL_ARCHITECT_TOOLS = [
+    TOOL_READ_FILE,
+    TOOL_WRITE_FILE,
+    TOOL_LIST_FILES,
+    TOOL_VALIDATE_ARCHITECTURE,
+    TOOL_ESTIMATE_FLOPS,
+    TOOL_SHELL,
+]
+
 TRAINING_TOOLS = [
     TOOL_READ_FILE,
     TOOL_WRITE_FILE,
@@ -372,5 +515,6 @@ TRAINING_TOOLS = [
     TOOL_EVALUATE_MODEL,
     TOOL_QUANTIZE_MODEL,
     TOOL_EXPORT_GGUF,
+    TOOL_EXPORT_ONNX,
     TOOL_SHELL,
 ]

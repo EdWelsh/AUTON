@@ -214,6 +214,61 @@ class Agent:
                         tool_input.get("timeout", 120),
                     )
 
+                # SLM tools
+                case "analyze_dataset":
+                    return await self._analyze_dataset(tool_input["dataset_path"])
+
+                case "tokenize_data":
+                    return await self._tokenize_data(
+                        tool_input["input_path"],
+                        tool_input["output_path"],
+                        tool_input.get("vocab_size", 32000),
+                    )
+
+                case "validate_architecture":
+                    return self._validate_architecture(tool_input["config_path"])
+
+                case "estimate_flops":
+                    return self._estimate_flops(tool_input["config_path"])
+
+                case "train_model":
+                    return await self._train_model(
+                        tool_input["config_path"],
+                        tool_input["dataset_path"],
+                        tool_input.get("max_steps", 10000),
+                    )
+
+                case "evaluate_model":
+                    return await self._evaluate_model(
+                        tool_input["checkpoint_path"],
+                        tool_input["test_dataset"],
+                    )
+
+                case "quantize_model":
+                    return await self._quantize_model(
+                        tool_input["checkpoint_path"],
+                        tool_input["output_path"],
+                        tool_input.get("bits", 4),
+                    )
+
+                case "export_gguf":
+                    return await self._export_gguf(
+                        tool_input["model_path"],
+                        tool_input["output_path"],
+                    )
+
+                case "export_onnx":
+                    return await self._export_onnx(
+                        tool_input["model_path"],
+                        tool_input["output_path"],
+                    )
+
+                case "integrate_slm":
+                    return await self._integrate_slm(
+                        tool_input["model_path"],
+                        tool_input["kernel_arch"],
+                    )
+
                 case _:
                     return f"Unknown tool: {tool_name}"
 
@@ -344,3 +399,79 @@ class Agent:
             return self.workspace.repo.active_branch.name
         except Exception:
             return None
+
+    # SLM tool executors
+    async def _analyze_dataset(self, dataset_path: str) -> str:
+        """Analyze dataset statistics."""
+        cmd = f"python SLM/tools/dataset_builder.py analyze {dataset_path}"
+        return await self._run_shell(cmd)
+
+    async def _tokenize_data(self, input_path: str, output_path: str, vocab_size: int) -> str:
+        """Tokenize dataset."""
+        cmd = f"python SLM/tools/tokenizer.py --input {input_path} --output {output_path} --vocab-size {vocab_size}"
+        return await self._run_shell(cmd)
+
+    def _validate_architecture(self, config_path: str) -> str:
+        """Validate model config YAML."""
+        import yaml
+        try:
+            with open(config_path) as f:
+                config = yaml.safe_load(f)
+            required = ["model", "architecture", "training"]
+            missing = [k for k in required if k not in config]
+            if missing:
+                return f"Invalid config: missing {missing}"
+            return f"Config valid: {config['model']['name']}"
+        except Exception as e:
+            return f"Config validation error: {e}"
+
+    def _estimate_flops(self, config_path: str) -> str:
+        """Estimate model FLOPs."""
+        import yaml
+        try:
+            with open(config_path) as f:
+                config = yaml.safe_load(f)
+            arch = config["architecture"]
+            params = config["model"]["parameters"]
+            return f"Estimated {params:,} parameters, ~{params * 6 / 1e9:.2f}B FLOPs per token"
+        except Exception as e:
+            return f"FLOP estimation error: {e}"
+
+    async def _train_model(self, config_path: str, dataset_path: str, max_steps: int) -> str:
+        """Train SLM model."""
+        cmd = f"python SLM/scripts/train.py --config {config_path} --dataset {dataset_path} --max-steps {max_steps}"
+        return await self._run_shell(cmd, timeout=3600)
+
+    async def _evaluate_model(self, checkpoint_path: str, test_dataset: str) -> str:
+        """Evaluate model checkpoint."""
+        cmd = f"python SLM/scripts/evaluate.py --checkpoint {checkpoint_path} --dataset {test_dataset}"
+        return await self._run_shell(cmd, timeout=600)
+
+    async def _quantize_model(self, checkpoint_path: str, output_path: str, bits: int) -> str:
+        """Quantize model."""
+        cmd = f"python SLM/scripts/quantize.py --checkpoint {checkpoint_path} --bits {bits} --output {output_path}"
+        return await self._run_shell(cmd, timeout=1800)
+
+    async def _export_gguf(self, model_path: str, output_path: str) -> str:
+        """Export to GGUF format."""
+        cmd = f"python SLM/scripts/export_gguf.py --model {model_path} --output {output_path}"
+        return await self._run_shell(cmd, timeout=600)
+
+    async def _export_onnx(self, model_path: str, output_path: str) -> str:
+        """Export to ONNX format."""
+        cmd = f"python SLM/scripts/export_onnx.py --model {model_path} --output {output_path}"
+        return await self._run_shell(cmd, timeout=600)
+
+    async def _integrate_slm(self, model_path: str, kernel_arch: str) -> str:
+        """Integrate SLM into kernel workspace."""
+        import shutil
+        from pathlib import Path
+        
+        try:
+            src = Path(model_path)
+            dst = Path(f"kernels/{kernel_arch}/kernel/slm/models/auton-slm.gguf")
+            dst.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy(src, dst)
+            return f"Integrated {src.name} into {kernel_arch} kernel at {dst}"
+        except Exception as e:
+            return f"Integration error: {e}"
