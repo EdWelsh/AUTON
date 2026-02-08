@@ -10,6 +10,8 @@ Inspired by [NVIDIA VibeTensor](https://github.com/NVlabs/vibetensor) — where 
 
 ## Architecture
 
+### Orchestration Flow
+
 ```
 ┌─────────────────────────────────────────────────────┐
 │                  Orchestration Engine                │
@@ -38,6 +40,102 @@ Inspired by [NVIDIA VibeTensor](https://github.com/NVlabs/vibetensor) — where 
     │  via branches +     │
     │  structured diffs   │
     └─────────────────────┘
+```
+
+### Complete System Architecture
+
+```
+┌────────────────────────────────────────────────────────────────────┐
+│                         AUTON System                               │
+├────────────────────────────────────────────────────────────────────┤
+│                                                                    │
+│  ┌──────────────────────────────────────────────────────────┐     │
+│  │              Kernel Development Workflow                  │     │
+│  │                                                           │     │
+│  │  Manager → Architect → Developers (4x parallel)          │     │
+│  │     ↓          ↓            ↓                             │     │
+│  │  Reviewer → Tester → Integrator                          │     │
+│  │     ↓          ↓            ↓                             │     │
+│  │  [Build Validator] [Test Validator] [Composition Check]  │     │
+│  │                      ↓                                    │     │
+│  │              kernels/{arch}/kernel.bin                   │     │
+│  └──────────────────────────────────────────────────────────┘     │
+│                                                                    │
+│  ┌──────────────────────────────────────────────────────────┐     │
+│  │              SLM Training Workflow                        │     │
+│  │                                                           │     │
+│  │  Data Scientist → Model Architect                        │     │
+│  │        ↓               ↓                                  │     │
+│  │  [Dataset Prep]  [Architecture Design]                   │     │
+│  │        ↓               ↓                                  │     │
+│  │  Training Agents (4x parallel) → Evaluation Agent        │     │
+│  │        ↓                              ↓                   │     │
+│  │  Quantization Agent → Export Agent                       │     │
+│  │        ↓                   ↓                              │     │
+│  │    [INT4/INT8]      [GGUF/ONNX]                          │     │
+│  │        └───────────────┬───────────┘                     │     │
+│  │                        ↓                                  │     │
+│  │              SLM/models/auton-slm                        │     │
+│  └──────────────────────────────────────────────────────────┘     │
+│                                                                    │
+│  ┌──────────────────────────────────────────────────────────┐     │
+│  │              Integration & Deployment                     │     │
+│  │                                                           │     │
+│  │  kernel.bin + auton-slm.gguf                             │     │
+│  │         ↓                                                 │     │
+│  │  [SLM Integration Agent]                                 │     │
+│  │         ↓                                                 │     │
+│  │  Bootable SLM-Driven Kernel                              │     │
+│  │         ↓                                                 │     │
+│  │  [QEMU Validation] → Serial Output Analysis              │     │
+│  │         ↓                                                 │     │
+│  │  ✓ Boot  ✓ Hardware Discovery  ✓ Driver Loading         │     │
+│  └──────────────────────────────────────────────────────────┘     │
+│                                                                    │
+│  ┌──────────────────────────────────────────────────────────┐     │
+│  │              Test Coverage & Validation                   │     │
+│  │                                                           │     │
+│  │  Unit Tests (36 files)                                   │     │
+│  │    ├─ Agents (11)      ├─ LLM (4)                        │     │
+│  │    ├─ Orchestrator (4) ├─ Validation (3)                 │     │
+│  │    └─ Comms (3)        └─ Other (11)                     │     │
+│  │                                                           │     │
+│  │  Integration Tests (4 files)                             │     │
+│  │    ├─ Kernel Workflow  ├─ SLM Workflow                   │     │
+│  │    └─ Dual Workflow    └─ Agent Collaboration            │     │
+│  │                                                           │     │
+│  │  Rust Tests (9 files)                                    │     │
+│  │    ├─ Diff Validator (2)  ├─ Kernel Builder (3)          │     │
+│  │    └─ Test Runner (3)                                    │     │
+│  │                                                           │     │
+│  │  SLM Tests (9 files)                                     │     │
+│  │    ├─ Dataset/Tokenizer  ├─ Train/Evaluate               │     │
+│  │    └─ Quantize/Export                                    │     │
+│  │                                                           │     │
+│  │  Acceptance Tests (kernel_spec/tests/)                   │     │
+│  │    └─ Full QEMU validation per architecture              │     │
+│  └──────────────────────────────────────────────────────────┘     │
+│                                                                    │
+│  ┌──────────────────────────────────────────────────────────┐     │
+│  │              Multi-Architecture Support                   │     │
+│  │                                                           │     │
+│  │  ┌──────────┐  ┌──────────┐  ┌──────────┐               │     │
+│  │  │  x86_64  │  │ AArch64  │  │ RISC-V   │               │     │
+│  │  │          │  │          │  │          │               │     │
+│  │  │Multiboot2│  │ DTB/UEFI │  │ OpenSBI  │               │     │
+│  │  │   NASM   │  │  GNU AS  │  │  GNU AS  │               │     │
+│  │  │   ACPI   │  │   DTB    │  │   DTB    │               │     │
+│  │  └────┬─────┘  └────┬─────┘  └────┬─────┘               │     │
+│  │       └─────────────┴─────────────┘                      │     │
+│  │                     │                                     │     │
+│  │          Hardware Abstraction Layer (HAL)                │     │
+│  │                     │                                     │     │
+│  │       ┌─────────────┴─────────────┐                      │     │
+│  │       │   Portable Kernel Core    │                      │     │
+│  │       │  (Memory, Sched, IPC, FS) │                      │     │
+│  │       └───────────────────────────┘                      │     │
+│  └──────────────────────────────────────────────────────────┘     │
+└────────────────────────────────────────────────────────────────────┘
 ```
 
 ## Agents
