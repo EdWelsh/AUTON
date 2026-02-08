@@ -22,24 +22,35 @@ Inspired by [NVIDIA VibeTensor](https://github.com/NVlabs/vibetensor) — where 
 └──────────────┬──────────────────────────┬───────────┘
                │                          │
     ┌──────────▼──────────┐    ┌──────────▼──────────┐
-    │     Agent Team      │    │   Validation Layer   │
-    │                     │    │                      │
-    │  Manager (1x)       │    │  Build Validator     │
-    │  Architect (1x)     │    │  Test Validator      │
-    │  Developer (4x)     │    │  Composition Check   │
-    │  Reviewer (1x)      │    │  (Frankenstein Fx)   │
-    │  Tester (1x)        │    │                      │
-    │  Integrator (1x)    │    └──────────────────────┘
-    └──────────┬──────────┘
-               │
-    ┌──────────▼──────────┐
-    │   Git Workspace     │
-    │  (shared repo)      │
-    │                     │
-    │  Agents collaborate │
-    │  via branches +     │
-    │  structured diffs   │
-    └─────────────────────┘
+    │   Kernel Agents     │    │    SLM Agents       │
+    │                     │    │                     │
+    │  Manager (1x)       │    │  Data Scientist (1x)│
+    │  Architect (1x)     │    │  Model Arch (1x)    │
+    │  Developer (4x)     │    │  Training (4x)      │
+    │  Reviewer (1x)      │    │  Evaluation (1x)    │
+    │  Tester (1x)        │    │  Quantization (1x)  │
+    │  Integrator (1x)    │    │  Export (1x)        │
+    └──────────┬──────────┘    └──────────┬──────────┘
+               │                          │
+    ┌──────────▼──────────┐    ┌──────────▼──────────┐
+    │   Git Workspace     │    │   Git Workspace     │
+    │  (kernels/{arch})   │    │     (SLM/)          │
+    │                     │    │                     │
+    │  Agents collaborate │    │  Agents collaborate │
+    │  via branches +     │    │  via branches +     │
+    │  structured diffs   │    │  structured diffs   │
+    └──────────┬──────────┘    └──────────┬──────────┘
+               │                          │
+               └──────────┬───────────────┘
+                          │
+               ┌──────────▼──────────┐
+               │   Validation Layer   │
+               │                      │
+               │  Build Validator     │
+               │  Test Validator      │
+               │  Composition Check   │
+               │  (Frankenstein Fx)   │
+               └──────────────────────┘
 ```
 
 ### Complete System Architecture
@@ -144,16 +155,115 @@ Inspired by [NVIDIA VibeTensor](https://github.com/NVlabs/vibetensor) — where 
 
 ## Agents
 
+### Kernel Development Agents
+
 | Agent | Role | Count |
 |-------|------|-------|
 | **Manager** | Decomposes goals into tasks, tracks dependencies, detects blocked paths | 1 |
 | **Architect** | Designs subsystem interfaces, writes header files, resolves conflicts | 1 |
-| **Developer** | Writes kernel C/ASM code, builds, tests, commits on feature branches | 3–6 parallel |
-| **Reviewer** | Reviews diffs for correctness, memory safety, spec compliance | 1–2 |
-| **Tester** | Writes tests, runs QEMU validation, detects composition failures | 1–2 |
+| **Developer** | Writes kernel C/ASM code, builds, tests, commits on feature branches | 4 parallel |
+| **Reviewer** | Reviews diffs for correctness, memory safety, spec compliance | 1 |
+| **Tester** | Writes tests, runs QEMU validation, detects composition failures | 1 |
 | **Integrator** | Merges approved branches, runs full integration checks | 1 |
 
+### SLM Training Agents
+
+| Agent | Role | Count |
+|-------|------|-------|
+| **Data Scientist** | Prepares and analyzes training datasets, tokenization | 1 |
+| **Model Architect** | Designs SLM architecture, estimates FLOPs, validates configs | 1 |
+| **Training Agent** | Trains SLM models with distributed training support | 4 parallel |
+| **Evaluation Agent** | Evaluates model checkpoints, tracks metrics | 1 |
+| **Quantization Agent** | Quantizes models to INT4/INT8 for deployment | 1 |
+| **Export Agent** | Exports models to GGUF/ONNX formats | 1 |
+
 Agents communicate through **git branches and file-based messaging** — no message broker needed. The VibeTensor insight: treat agents as black boxes, validate only through builds and tests.
+
+## SLM Training Data
+
+The SLM is trained on OS-specific tasks to understand hardware, drivers, and system administration. Training datasets follow a structured format:
+
+### Dataset Structure
+
+```json
+{
+  "text": "Initialize PCI device at bus 0 device 3 function 0",
+  "intent": "HARDWARE_IDENTIFY",
+  "context": {
+    "device_type": "network",
+    "vendor_id": "0x8086",
+    "device_id": "0x100e"
+  }
+}
+```
+
+### Intent Categories
+
+- **HARDWARE_IDENTIFY** — Device detection, PCI enumeration, hardware probing
+  - Examples: "Detect network card", "Scan PCI bus", "Identify storage controller"
+- **DRIVER_SELECT** — Driver matching, module loading, driver configuration
+  - Examples: "Load e1000 driver for Intel NIC", "Select AHCI driver for SATA"
+- **INSTALL_CONFIGURE** — System setup, filesystem creation, network configuration
+  - Examples: "Create ext2 filesystem", "Configure DHCP client", "Mount root partition"
+- **APP_INSTALL** — Package installation, dependency resolution, service setup
+  - Examples: "Install web server", "Resolve package dependencies", "Configure systemd service"
+- **SYSTEM_MANAGE** — Runtime administration, resource monitoring, updates
+  - Examples: "Check memory usage", "Update kernel modules", "Monitor disk space"
+- **TROUBLESHOOT** — Error diagnosis, log analysis, recovery procedures
+  - Examples: "Diagnose boot failure", "Analyze kernel panic", "Recover from disk error"
+
+### Dataset Sources
+
+- **Kernel Documentation** — Linux kernel docs, driver specifications, hardware manuals
+- **System Logs** — Boot logs, dmesg output, hardware detection sequences
+- **Command Traces** — Shell commands for hardware setup, driver loading, system configuration
+- **Hardware Databases** — PCI ID databases, device compatibility lists, driver mappings
+- **Troubleshooting Guides** — Common issues, error messages, recovery procedures
+
+### Data Preparation Pipeline
+
+```bash
+# 1. Collect raw data
+python SLM/tools/dataset_builder.py collect \
+  --sources kernel_docs,pci_ids,boot_logs \
+  --output SLM/datasets/raw/
+
+# 2. Tokenize and process
+python SLM/tools/tokenizer.py \
+  --input SLM/datasets/raw/ \
+  --output SLM/datasets/processed/ \
+  --vocab-size 32000
+
+# 3. Create train/validation splits
+python SLM/tools/dataset_builder.py split \
+  --input SLM/datasets/processed/ \
+  --train-ratio 0.9 \
+  --output SLM/datasets/
+```
+
+### Example Training Samples
+
+```json
+[
+  {
+    "text": "Detected Intel 82540EM Gigabit Ethernet Controller",
+    "intent": "HARDWARE_IDENTIFY",
+    "next_action": "Load e1000 network driver"
+  },
+  {
+    "text": "Load e1000 driver for network interface",
+    "intent": "DRIVER_SELECT",
+    "driver": "e1000",
+    "device_class": "network"
+  },
+  {
+    "text": "Configure network interface with DHCP",
+    "intent": "INSTALL_CONFIGURE",
+    "protocol": "dhcp",
+    "interface": "eth0"
+  }
+]
+```
 
 ## Kernel Target
 
