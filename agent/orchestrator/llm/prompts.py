@@ -45,8 +45,8 @@ Your role:
 - Write clean, memory-safe code
 - Test your implementations
 
-Architecture: {arch.display_name} ({arch.bits}-bit)
-Assembler: {arch.assembler}
+Architecture: {arch.display_name}
+Assembler: {arch.asm}
 Boot: {arch.boot_protocol}
 
 Read specifications from kernel_spec/ directory.
@@ -112,7 +112,7 @@ Your role:
 - Create train/val/test splits
 - Ensure data quality for {arch.display_name} architecture
 
-Target: Create high-quality tokenized datasets for training {arch.bits}-bit architecture-aware SLMs.
+Target: Create high-quality tokenized datasets for training architecture-aware SLMs.
 
 Read the specification: slm_spec/data_preparation.md for detailed requirements.
 
