@@ -197,7 +197,7 @@ This document outlines the complete implementation plan for adding SLM (Small La
 - ✅ All agents properly integrated
 - ✅ No regressions in existing agents---
 
-## Phase 4: Orchestration Integration
+## Phase 4: Orchestration Integration ✅ COMPLETED
 
 **Objective**: Integrate SLM agents into the orchestration engine and enable SLM training workflow.
 
@@ -205,134 +205,34 @@ This document outlines the complete implementation plan for adding SLM (Small La
 
 ### Steps
 
-- [ ] **4.1 Add `WorkflowMode` to `agent/orchestrator/core/engine.py`**
-  ```python
-  from enum import Enum
+- [x] **4.1 Add `WorkflowMode` to `agent/orchestrator/core/engine.py`**
+  - [x] KERNEL_BUILD, SLM_TRAINING, DUAL modes
 
-  class WorkflowMode(str, Enum):
-      KERNEL_BUILD = "kernel_build"
-      SLM_TRAINING = "slm_training"
-      DUAL = "dual"
-  ```
+- [x] **4.2 Update `OrchestrationEngine.__init__()` to read workflow mode**
+  - [x] Read from config["workflow"]["mode"]
+  - [x] Log workflow mode on startup
 
-- [ ] **4.2 Update `OrchestrationEngine.__init__()` to read workflow mode**
-  ```python
-  self.workflow_mode = WorkflowMode(
-      self.config.get("workflow", {}).get("mode", "kernel_build")
-  )
-  logger.info("Workflow mode: %s", self.workflow_mode)
-  ```
+- [x] **4.3 Update `_init_agents()` to create SLM agents conditionally**
+  - [x] Create SLM agents when mode is SLM_TRAINING or DUAL
+  - [x] DataScientistAgent, ModelArchitectAgent, TrainingAgent (2x parallel)
+  - [x] Register with scheduler
 
-- [ ] **4.3 Update `_init_agents()` to create SLM agents conditionally**
-  ```python
-  def _init_agents(self) -> None:
-      agent_config = self.config.get("agents", {})
+- [x] **4.4 Create SLM-specific task graph in `agent/orchestrator/core/task_graph.py`**
+  - [x] create_slm_training_tasks() method
+  - [x] 7-task pipeline: data prep → arch design → training → eval → quantize → export → integrate
 
-      # Existing kernel agents (always created)
-      self._agents["manager"] = self._create_agent("manager-01", AgentRole.MANAGER, ManagerAgent)
-      # ... other kernel agents
+- [x] **4.5 Update orchestration loop in `engine.py`**
+  - [x] Handle KERNEL_BUILD mode (existing)
+  - [x] Handle SLM_TRAINING mode (SLM tasks only)
+  - [x] Handle DUAL mode (kernel + SLM tasks)
 
-      # SLM agents (created if mode is slm_training or dual)
-      if self.workflow_mode in [WorkflowMode.SLM_TRAINING, WorkflowMode.DUAL]:
-          # Data Scientist
-          self._agents["data_scientist"] = self._create_agent(
-              "data-scientist-01", AgentRole.DATA_SCIENTIST, DataScientistAgent
-          )
-          self.scheduler.register_agent("data_scientist", self._agents["data_scientist"])
+**Status**: ✅ Complete
 
-          # Model Architect
-          self._agents["model_architect"] = self._create_agent(
-              "model-architect-01", AgentRole.MODEL_ARCHITECT, ModelArchitectAgent
-          )
-          self.scheduler.register_agent("model_architect", self._agents["model_architect"])
-
-          # Training Agents (parallel)
-          training_count = agent_config.get("training_agent_count", 4)
-          for i in range(training_count):
-              agent = self._create_agent(
-                  f"training-{i+1:02d}", AgentRole.TRAINING, TrainingAgent
-              )
-              self._agents[f"training-{i+1:02d}"] = agent
-              self.scheduler.register_agent("training", agent)
-
-          logger.info("Initialized SLM agents: 1 data scientist, 1 model architect, %d training", training_count)
-  ```
-
-- [ ] **4.4 Create SLM-specific task graph in `agent/orchestrator/core/task_graph.py`**
-
-  Add method to create SLM training task graph:
-  ```python
-  def create_slm_training_tasks(self, goal: str) -> list[Task]:
-      """Create task graph for SLM training workflow."""
-      tasks = []
-
-      # 1. Data Preparation
-      data_prep = Task(
-          task_id="slm-data-prep",
-          title="Prepare SLM training dataset",
-          description="Clean, tokenize, and split dataset",
-          assigned_role="data_scientist",
-          dependencies=[],
-      )
-      tasks.append(data_prep)
-
-      # 2. Architecture Design
-      arch_design = Task(
-          task_id="slm-arch-design",
-          title="Design SLM architecture",
-          description="Create model config YAML, estimate FLOPs",
-          assigned_role="model_architect",
-          dependencies=[],  # Can run in parallel with data prep
-      )
-      tasks.append(arch_design)
-
-      # 3. Training (depends on data + architecture)
-      training = Task(
-          task_id="slm-training",
-          title="Train SLM model",
-          description="Execute training loop, save checkpoints",
-          assigned_role="training",
-          dependencies=["slm-data-prep", "slm-arch-design"],
-      )
-      tasks.append(training)
-
-      # 4. Evaluation (depends on training)
-      evaluation = Task(
-          task_id="slm-evaluation",
-          title="Evaluate trained model",
-          description="Run benchmarks, select best checkpoint",
-          assigned_role="tester",
-          dependencies=["slm-training"],
-      )
-      tasks.append(evaluation)
-
-      # 5. Quantization (depends on evaluation)
-      quantization = Task(
-          task_id="slm-quantization",
-          title="Quantize SLM to INT4",
-          description="Compress model using GPTQ",
-          assigned_role="training",  # Reuse training agent
-          dependencies=["slm-evaluation"],
-      )
-      tasks.append(quantization)
-
-      # 6. Export (depends on quantization)
-      export = Task(
-          task_id="slm-export",
-          title="Export SLM to GGUF",
-          description="Convert to GGUF format, validate",
-          assigned_role="training",
-          dependencies=["slm-quantization"],
-      )
-      tasks.append(export)
-
-      # 7. Integration (depends on export)
-      integration = Task(
-          task_id="slm-integration",
-          title="Integrate SLM into kernel",
-          description="Copy to kernel workspace, update Makefile, test",
-          assigned_role="integrator",
-          dependencies=["slm-export"],
+**Success Criteria**:
+- ✅ OrchestrationEngine supports 3 workflow modes
+- ✅ SLM task graph executes successfully
+- ✅ DUAL mode coordinates kernel + SLM workflows
+- ✅ All integration complete,
       )
       tasks.append(integration)
 
@@ -681,7 +581,7 @@ This document outlines the complete implementation plan for adding SLM (Small La
 - [x] **Phase 1**: Infrastructure ✅ COMPLETED
 - [x] **Phase 2**: Tool Definitions and Executors ✅ COMPLETED
 - [x] **Phase 3**: SLM Agent Classes ✅ COMPLETED
-- [ ] **Phase 4**: Orchestration Integration
+- [x] **Phase 4**: Orchestration Integration ✅ COMPLETED
 - [ ] **Phase 5**: Directory Migration
 - [ ] **Phase 6**: Full Integration and Testing
 
