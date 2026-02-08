@@ -90,6 +90,10 @@ Inspired by [NVIDIA VibeTensor](https://github.com/NVlabs/vibetensor) — where 
 │  │  [QEMU Validation] → Serial Output Analysis              │     │
 │  │         ↓                                                 │     │
 │  │  ✓ Boot  ✓ Hardware Discovery  ✓ Driver Loading         │     │
+│  │         ↓                                                 │     │
+│  │  [Release Builder] → ISO/IMG/QCOW2 Generation            │     │
+│  │         ↓                                                 │     │
+│  │  GitHub Release (auton-{arch}-{version}.iso)             │     │
 │  └──────────────────────────────────────────────────────────┘     │
 │                                                                    │
 │  ┌──────────────────────────────────────────────────────────┐     │
@@ -239,6 +243,29 @@ developer = "anthropic/claude-sonnet-4-5-20250929"  # cheaper for code gen
 reviewer = "openai/gpt-4o"                          # use a different provider
 # tester = "ollama/llama3.1"                        # free, local
 ```
+
+## Releases
+
+AUTON automatically generates bootable images for all supported architectures:
+
+- **ISO Images** — Bootable CD/DVD images for x86_64
+- **Raw Disk Images** — `.img` files for USB/SD card deployment
+- **QCOW2 Images** — QEMU-optimized virtual disk images
+- **Embedded Binaries** — Standalone kernel binaries with embedded SLM
+
+Releases are published as GitHub releases with artifacts for each architecture:
+```
+auton-x86_64-v0.1.0.iso
+auton-x86_64-v0.1.0.img
+auton-aarch64-v0.1.0.img
+auton-riscv64-v0.1.0.img
+```
+
+Each release includes:
+- Bootable kernel with embedded SLM
+- Architecture-specific drivers
+- Validation test results
+- Build metadata and checksums
 
 ## Testing
 
