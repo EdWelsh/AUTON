@@ -210,6 +210,103 @@ TOOL_SHELL = {
     },
 }
 
+# SLM-specific tools
+TOOL_TRAIN_MODEL = {
+    "type": "function",
+    "function": {
+        "name": "train_model",
+        "description": "Train an SLM model using PyTorch. Runs SLM/scripts/train.py with config.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "config_path": {
+                    "type": "string",
+                    "description": "Path to model config YAML (e.g. 'SLM/configs/tiny_10M.yaml')",
+                },
+                "dataset_path": {
+                    "type": "string",
+                    "description": "Path to processed dataset",
+                },
+                "max_steps": {
+                    "type": "integer",
+                    "description": "Maximum training steps. Default: 10000.",
+                },
+            },
+            "required": ["config_path", "dataset_path"],
+        },
+    },
+}
+
+TOOL_EVALUATE_MODEL = {
+    "type": "function",
+    "function": {
+        "name": "evaluate_model",
+        "description": "Evaluate a trained model checkpoint. Computes perplexity and benchmarks.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "checkpoint_path": {
+                    "type": "string",
+                    "description": "Path to model checkpoint",
+                },
+                "test_dataset": {
+                    "type": "string",
+                    "description": "Path to test dataset",
+                },
+            },
+            "required": ["checkpoint_path", "test_dataset"],
+        },
+    },
+}
+
+TOOL_QUANTIZE_MODEL = {
+    "type": "function",
+    "function": {
+        "name": "quantize_model",
+        "description": "Quantize model to INT4/INT8 using GPTQ or AWQ.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "checkpoint_path": {
+                    "type": "string",
+                    "description": "Path to model checkpoint",
+                },
+                "bits": {
+                    "type": "integer",
+                    "description": "Quantization bits: 4 or 8. Default: 4.",
+                },
+                "output_path": {
+                    "type": "string",
+                    "description": "Output path for quantized model",
+                },
+            },
+            "required": ["checkpoint_path", "output_path"],
+        },
+    },
+}
+
+TOOL_EXPORT_GGUF = {
+    "type": "function",
+    "function": {
+        "name": "export_gguf",
+        "description": "Export model to GGUF format for kernel integration.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "model_path": {
+                    "type": "string",
+                    "description": "Path to quantized model",
+                },
+                "output_path": {
+                    "type": "string",
+                    "description": "Output GGUF file path",
+                },
+            },
+            "required": ["model_path", "output_path"],
+        },
+    },
+}
+
 # Tool sets by agent role
 MANAGER_TOOLS = [TOOL_READ_SPEC, TOOL_LIST_FILES, TOOL_READ_FILE, TOOL_SEARCH_CODE]
 
@@ -263,5 +360,17 @@ INTEGRATOR_TOOLS = [
     TOOL_RUN_TEST,
     TOOL_GIT_COMMIT,
     TOOL_GIT_DIFF,
+    TOOL_SHELL,
+]
+
+# SLM agent tool sets
+TRAINING_TOOLS = [
+    TOOL_READ_FILE,
+    TOOL_WRITE_FILE,
+    TOOL_LIST_FILES,
+    TOOL_TRAIN_MODEL,
+    TOOL_EVALUATE_MODEL,
+    TOOL_QUANTIZE_MODEL,
+    TOOL_EXPORT_GGUF,
     TOOL_SHELL,
 ]
