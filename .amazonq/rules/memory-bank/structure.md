@@ -32,8 +32,15 @@ agent/
 ├── slm_spec/                # SLM training specifications
 ├── config/                  # Configuration files
 ├── tools/                   # Rust build tools
+│   ├── diff-validator/      # Diff validation (+ tests/)
+│   ├── kernel-builder/      # Build system (+ tests/)
+│   └── test-runner/         # QEMU runner (+ tests/)
 ├── workspace/               # Git workspace for agents
-└── tests/                   # Unit tests
+└── tests/                   # Unit and integration tests
+    ├── unit/                # Fast isolated tests (36 files)
+    ├── integration/         # Multi-component tests (4 files)
+    ├── fixtures/            # Mocks and test data
+    └── conftest.py          # Pytest configuration
 ```
 
 ### Kernel Outputs (`kernels/`)
@@ -58,6 +65,8 @@ SLM/
 ├── configs/                 # Model configurations
 ├── scripts/                 # Training/export scripts
 ├── tools/                   # Data processing utilities
+├── tests/                   # SLM pipeline tests (9 files)
+├── fixtures/                # Test datasets and configs
 └── notebooks/               # Jupyter analysis notebooks
 ```
 
