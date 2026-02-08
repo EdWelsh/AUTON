@@ -67,6 +67,9 @@ matplotlib = ">=3.7.0"         # Visualization
 # Testing & Quality
 pytest = ">=7.4.0"             # Unit testing
 pytest-asyncio = ">=0.23.0"    # Async test support
+pytest-cov = ">=4.1.0"         # Coverage reporting
+pytest-mock = ">=3.12.0"       # Mocking utilities
+pytest-timeout = ">=2.2.0"     # Test timeouts
 ruff = ">=0.1.0"               # Linting and formatting
 ```
 
@@ -144,11 +147,23 @@ python SLM/scripts/export_onnx.py --model quantized/model_q4.pt
 
 ### Testing & Validation
 ```bash
-# Unit tests
-pytest agent/tests/
+# Unit tests (fast, isolated)
+pytest agent/tests/unit/ -v
 
-# Integration tests  
-pytest agent/kernel_spec/tests/
+# With coverage
+pytest agent/tests/unit/ --cov=orchestrator --cov-report=html
+
+# Integration tests
+pytest agent/tests/integration/ -v
+
+# Rust tool tests
+cd agent/tools && cargo test
+
+# SLM pipeline tests
+pytest SLM/tests/ -v
+
+# Acceptance tests (full kernel validation)
+pytest agent/kernel_spec/tests/ -v
 
 # QEMU validation
 cargo run --bin test-runner -- --arch x86_64 --kernel kernels/x86_64/kernel.bin
@@ -156,6 +171,23 @@ cargo run --bin test-runner -- --arch x86_64 --kernel kernels/x86_64/kernel.bin
 # Composition validation
 auton validate --composition --timeout 300
 ```
+
+## Test Structure
+
+### Python Tests
+- **Unit Tests** (`agent/tests/unit/`) - 36 test files, fast isolated tests with mocks
+- **Integration Tests** (`agent/tests/integration/`) - 4 test files, multi-component workflows
+- **Fixtures** (`agent/tests/fixtures/`) - Mock LLM client, Git workspace, sample configs/tasks
+- **Acceptance Tests** (`agent/kernel_spec/tests/`) - Full kernel validation in QEMU
+
+### Rust Tests
+- **diff-validator/tests/** - 2 test files for diff parsing and validation
+- **kernel-builder/tests/** - 3 test files for toolchain detection and build commands
+- **test-runner/tests/** - 3 test files for QEMU launch and serial capture
+
+### SLM Tests
+- **SLM/tests/** - 9 test files for training pipeline (dataset, tokenizer, train, evaluate, quantize, export)
+- **SLM/fixtures/** - Sample datasets and model configs
 
 ## Configuration Management
 

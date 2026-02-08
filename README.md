@@ -10,6 +10,8 @@ Inspired by [NVIDIA VibeTensor](https://github.com/NVlabs/vibetensor) — where 
 
 ## Architecture
 
+### Orchestration Flow
+
 ```
 ┌─────────────────────────────────────────────────────┐
 │                  Orchestration Engine                │
@@ -38,6 +40,106 @@ Inspired by [NVIDIA VibeTensor](https://github.com/NVlabs/vibetensor) — where 
     │  via branches +     │
     │  structured diffs   │
     └─────────────────────┘
+```
+
+### Complete System Architecture
+
+```
+┌────────────────────────────────────────────────────────────────────┐
+│                         AUTON System                               │
+├────────────────────────────────────────────────────────────────────┤
+│                                                                    │
+│  ┌──────────────────────────────────────────────────────────┐     │
+│  │              Kernel Development Workflow                  │     │
+│  │                                                           │     │
+│  │  Manager → Architect → Developers (4x parallel)          │     │
+│  │     ↓          ↓            ↓                             │     │
+│  │  Reviewer → Tester → Integrator                          │     │
+│  │     ↓          ↓            ↓                             │     │
+│  │  [Build Validator] [Test Validator] [Composition Check]  │     │
+│  │                      ↓                                    │     │
+│  │              kernels/{arch}/kernel.bin                   │     │
+│  └──────────────────────────────────────────────────────────┘     │
+│                                                                    │
+│  ┌──────────────────────────────────────────────────────────┐     │
+│  │              SLM Training Workflow                        │     │
+│  │                                                           │     │
+│  │  Data Scientist → Model Architect                        │     │
+│  │        ↓               ↓                                  │     │
+│  │  [Dataset Prep]  [Architecture Design]                   │     │
+│  │        ↓               ↓                                  │     │
+│  │  Training Agents (4x parallel) → Evaluation Agent        │     │
+│  │        ↓                              ↓                   │     │
+│  │  Quantization Agent → Export Agent                       │     │
+│  │        ↓                   ↓                              │     │
+│  │    [INT4/INT8]      [GGUF/ONNX]                          │     │
+│  │        └───────────────┬───────────┘                     │     │
+│  │                        ↓                                  │     │
+│  │              SLM/models/auton-slm                        │     │
+│  └──────────────────────────────────────────────────────────┘     │
+│                                                                    │
+│  ┌──────────────────────────────────────────────────────────┐     │
+│  │              Integration & Deployment                     │     │
+│  │                                                           │     │
+│  │  kernel.bin + auton-slm.gguf                             │     │
+│  │         ↓                                                 │     │
+│  │  [SLM Integration Agent]                                 │     │
+│  │         ↓                                                 │     │
+│  │  Bootable SLM-Driven Kernel                              │     │
+│  │         ↓                                                 │     │
+│  │  [QEMU Validation] → Serial Output Analysis              │     │
+│  │         ↓                                                 │     │
+│  │  ✓ Boot  ✓ Hardware Discovery  ✓ Driver Loading         │     │
+│  │         ↓                                                 │     │
+│  │  [Release Builder] → ISO/IMG/QCOW2 Generation            │     │
+│  │         ↓                                                 │     │
+│  │  GitHub Release (auton-{arch}-{version}.iso)             │     │
+│  └──────────────────────────────────────────────────────────┘     │
+│                                                                    │
+│  ┌──────────────────────────────────────────────────────────┐     │
+│  │              Test Coverage & Validation                   │     │
+│  │                                                           │     │
+│  │  Unit Tests (36 files)                                   │     │
+│  │    ├─ Agents (11)      ├─ LLM (4)                        │     │
+│  │    ├─ Orchestrator (4) ├─ Validation (3)                 │     │
+│  │    └─ Comms (3)        └─ Other (11)                     │     │
+│  │                                                           │     │
+│  │  Integration Tests (4 files)                             │     │
+│  │    ├─ Kernel Workflow  ├─ SLM Workflow                   │     │
+│  │    └─ Dual Workflow    └─ Agent Collaboration            │     │
+│  │                                                           │     │
+│  │  Rust Tests (9 files)                                    │     │
+│  │    ├─ Diff Validator (2)  ├─ Kernel Builder (3)          │     │
+│  │    └─ Test Runner (3)                                    │     │
+│  │                                                           │     │
+│  │  SLM Tests (9 files)                                     │     │
+│  │    ├─ Dataset/Tokenizer  ├─ Train/Evaluate               │     │
+│  │    └─ Quantize/Export                                    │     │
+│  │                                                           │     │
+│  │  Acceptance Tests (kernel_spec/tests/)                   │     │
+│  │    └─ Full QEMU validation per architecture              │     │
+│  └──────────────────────────────────────────────────────────┘     │
+│                                                                    │
+│  ┌──────────────────────────────────────────────────────────┐     │
+│  │              Multi-Architecture Support                   │     │
+│  │                                                           │     │
+│  │  ┌──────────┐  ┌──────────┐  ┌──────────┐               │     │
+│  │  │  x86_64  │  │ AArch64  │  │ RISC-V   │               │     │
+│  │  │          │  │          │  │          │               │     │
+│  │  │Multiboot2│  │ DTB/UEFI │  │ OpenSBI  │               │     │
+│  │  │   NASM   │  │  GNU AS  │  │  GNU AS  │               │     │
+│  │  │   ACPI   │  │   DTB    │  │   DTB    │               │     │
+│  │  └────┬─────┘  └────┬─────┘  └────┬─────┘               │     │
+│  │       └─────────────┴─────────────┘                      │     │
+│  │                     │                                     │     │
+│  │          Hardware Abstraction Layer (HAL)                │     │
+│  │                     │                                     │     │
+│  │       ┌─────────────┴─────────────┐                      │     │
+│  │       │   Portable Kernel Core    │                      │     │
+│  │       │  (Memory, Sched, IPC, FS) │                      │     │
+│  │       └───────────────────────────┘                      │     │
+│  └──────────────────────────────────────────────────────────┘     │
+└────────────────────────────────────────────────────────────────────┘
 ```
 
 ## Agents
@@ -101,6 +203,7 @@ arch = "aarch64"  # x86_64, aarch64, or riscv64
 - **LiteLLM** — Multi-provider LLM abstraction (Anthropic, OpenAI, Ollama, Gemini, OpenRouter, Azure)
 - **Git** — Agent collaboration and version control
 - **QEMU** — Kernel testing and validation
+- **Pytest** — Comprehensive unit and integration testing
 
 ## Setup
 
@@ -140,6 +243,57 @@ developer = "anthropic/claude-sonnet-4-5-20250929"  # cheaper for code gen
 reviewer = "openai/gpt-4o"                          # use a different provider
 # tester = "ollama/llama3.1"                        # free, local
 ```
+
+## Releases
+
+AUTON automatically generates bootable images for all supported architectures:
+
+- **ISO Images** — Bootable CD/DVD images for x86_64
+- **Raw Disk Images** — `.img` files for USB/SD card deployment
+- **QCOW2 Images** — QEMU-optimized virtual disk images
+- **Embedded Binaries** — Standalone kernel binaries with embedded SLM
+
+Releases are published as GitHub releases with artifacts for each architecture:
+```
+auton-x86_64-v0.1.0.iso
+auton-x86_64-v0.1.0.img
+auton-aarch64-v0.1.0.img
+auton-riscv64-v0.1.0.img
+```
+
+Each release includes:
+- Bootable kernel with embedded SLM
+- Architecture-specific drivers
+- Validation test results
+- Build metadata and checksums
+
+## Testing
+
+AUTON includes a comprehensive test suite:
+
+```bash
+# Run unit tests
+pytest agent/tests/unit/ -v
+
+# Run with coverage
+pytest agent/tests/unit/ --cov=orchestrator --cov-report=html
+
+# Run integration tests
+pytest agent/tests/integration/ -v
+
+# Run Rust tool tests
+cd agent/tools && cargo test
+
+# Run SLM pipeline tests
+pytest SLM/tests/ -v
+```
+
+### Test Structure
+- **Unit Tests** (`agent/tests/unit/`) — Fast, isolated tests with mocks (36 test files)
+- **Integration Tests** (`agent/tests/integration/`) — Multi-component workflow tests
+- **Acceptance Tests** (`agent/kernel_spec/tests/`) — Full kernel validation in QEMU
+- **Rust Tests** (`agent/tools/*/tests/`) — Build tool validation (9 test files)
+- **SLM Tests** (`SLM/tests/`) — Training pipeline tests (9 test files)
 
 ## How It Works
 
