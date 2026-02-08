@@ -143,7 +143,7 @@ This document outlines the complete implementation plan for adding SLM (Small La
 
 ---
 
-## Phase 3: SLM Agent Classes
+## Phase 3: SLM Agent Classes ✅ COMPLETED
 
 **Objective**: Create specialized agent classes for SLM training workflow.
 
@@ -151,70 +151,37 @@ This document outlines the complete implementation plan for adding SLM (Small La
 
 ### Steps
 
-- [ ] **3.1 Update `agent/orchestrator/agents/base_agent.py`**
+- [x] **3.1 Update `agent/orchestrator/agents/base_agent.py`**
 
   Add new agent roles to `AgentRole` enum:
-  ```python
-  class AgentRole(str, Enum):
-      # Existing
-      MANAGER = "manager"
-      ARCHITECT = "architect"
-      DEVELOPER = "developer"
-      REVIEWER = "reviewer"
-      TESTER = "tester"
-      INTEGRATOR = "integrator"
-      # NEW
-      DATA_SCIENTIST = "data_scientist"
-      MODEL_ARCHITECT = "model_architect"
-      TRAINING = "training"
-  ```
+  - [x] DATA_SCIENTIST
+  - [x] MODEL_ARCHITECT
+  - [x] TRAINING
 
-- [ ] **3.2 Create `agent/orchestrator/agents/data_scientist_agent.py`**
-  ```python
-  from orchestrator.agents.base_agent import Agent, AgentRole
-  from orchestrator.llm.tools import DATA_SCIENTIST_TOOLS
-  from orchestrator.llm.prompts import build_data_scientist_prompt
+- [x] **3.2 Create `agent/orchestrator/agents/data_scientist_agent.py`**
+  - [x] DataScientistAgent class with DATA_SCIENTIST_TOOLS
 
-  class DataScientistAgent(Agent):
-      def __init__(self, **kwargs):
-          system_prompt = build_data_scientist_prompt(kwargs.get("arch_profile"))
-          super().__init__(
-              role=AgentRole.DATA_SCIENTIST,
-              system_prompt=system_prompt,
-              tools=DATA_SCIENTIST_TOOLS,
-              **kwargs,
-          )
-  ```
+- [x] **3.3 Create `agent/orchestrator/agents/model_architect_agent.py`**
+  - [x] ModelArchitectAgent class with MODEL_ARCHITECT_TOOLS
 
-- [ ] **3.3 Create `agent/orchestrator/agents/model_architect_agent.py`**
+- [x] **3.4 Create `agent/orchestrator/agents/training_agent.py`**
+  - [x] TrainingAgent class with TRAINING_TOOLS
 
-  Similar structure to DataScientistAgent:
-  - Use `AgentRole.MODEL_ARCHITECT`
-  - Use `build_model_architect_prompt()`
-  - Use `MODEL_ARCHITECT_TOOLS`
+- [x] **3.5 Add system prompts to `agent/orchestrator/llm/prompts.py`**
+  - [x] build_data_scientist_prompt()
+  - [x] build_model_architect_prompt()
+  - [x] build_training_prompt()
 
-- [ ] **3.4 Create `agent/orchestrator/agents/training_agent.py`**
+- [x] **3.6 Add import statements to `agent/orchestrator/agents/__init__.py`**
+  - [x] All SLM agents exported
 
-  Similar structure:
-  - Use `AgentRole.TRAINING`
-  - Use `build_training_prompt()`
-  - Use `TRAINING_TOOLS`
+**Status**: ✅ Complete
 
-- [ ] **3.5 Add system prompts to `agent/orchestrator/llm/prompts.py`**
-
-  **Data Scientist Prompt**:
-  ```python
-  def build_data_scientist_prompt(arch: ArchProfile) -> str:
-      return f"""You are a Data Scientist agent in the AUTON SLM training pipeline.
-
-  Your role:
-  - Clean and prepare training datasets for SLM training
-  - Tokenize text data using BPE/WordPiece/SentencePiece
-  - Analyze dataset statistics (vocab size, coverage, token distribution)
-  - Create train/val/test splits
-  - Use Jupyter notebooks for exploratory data analysis
-
-  Target: Create high-quality tokenized datasets for training {arch.bits}-bit architecture-aware SLMs.
+**Success Criteria**:
+- ✅ 3 new agent classes created
+- ✅ 3 system prompts defined
+- ✅ All agents properly integrated
+- ✅ No regressions in existing agentsits}-bit architecture-aware SLMs.
 
   Read the specification: slm_spec/data_preparation.md for detailed requirements.
 
@@ -783,7 +750,7 @@ This document outlines the complete implementation plan for adding SLM (Small La
 
 - [x] **Phase 1**: Infrastructure ✅ COMPLETED
 - [x] **Phase 2**: Tool Definitions and Executors ✅ COMPLETED
-- [ ] **Phase 3**: SLM Agent Classes
+- [x] **Phase 3**: SLM Agent Classes ✅ COMPLETED
 - [ ] **Phase 4**: Orchestration Integration
 - [ ] **Phase 5**: Directory Migration
 - [ ] **Phase 6**: Full Integration and Testing
