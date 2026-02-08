@@ -22,24 +22,24 @@ Inspired by [NVIDIA VibeTensor](https://github.com/NVlabs/vibetensor) — where 
 └──────────────┬──────────────────────────┬───────────┘
                │                          │
     ┌──────────▼──────────┐    ┌──────────▼──────────┐
-    │     Agent Team      │    │   Validation Layer   │
-    │                     │    │                      │
-    │  Manager (1x)       │    │  Build Validator     │
-    │  Architect (1x)     │    │  Test Validator      │
-    │  Developer (4x)     │    │  Composition Check   │
-    │  Reviewer (1x)      │    │  (Frankenstein Fx)   │
-    │  Tester (1x)        │    │                      │
-    │  Integrator (1x)    │    └──────────────────────┘
-    └──────────┬──────────┘
-               │
-    ┌──────────▼──────────┐
-    │   Git Workspace     │
-    │  (shared repo)      │
-    │                     │
-    │  Agents collaborate │
-    │  via branches +     │
-    │  structured diffs   │
-    └─────────────────────┘
+    │   Kernel Agents     │    │    SLM Agents       │
+    │                     │    │                     │
+    │  Manager (1x)       │    │  Data Scientist (1x)│
+    │  Architect (1x)     │    │  Model Arch (1x)    │
+    │  Developer (4x)     │    │  Training (4x)      │
+    │  Reviewer (1x)      │    │  Evaluation (1x)    │
+    │  Tester (1x)        │    │  Quantization (1x)  │
+    │  Integrator (1x)    │    │  Export (1x)        │
+    └──────────┬──────────┘    └──────────┬──────────┘
+               │                          │
+    ┌──────────▼──────────┐    ┌──────────▼──────────┐
+    │   Git Workspace     │    │   Validation Layer   │
+    │  (kernels/{arch})   │    │                      │
+    │                     │    │  Build Validator     │
+    │  Agents collaborate │    │  Test Validator      │
+    │  via branches +     │    │  Composition Check   │
+    │  structured diffs   │    │  (Frankenstein Fx)   │
+    └─────────────────────┘    └──────────────────────┘
 ```
 
 ### Complete System Architecture
@@ -144,14 +144,27 @@ Inspired by [NVIDIA VibeTensor](https://github.com/NVlabs/vibetensor) — where 
 
 ## Agents
 
+### Kernel Development Agents
+
 | Agent | Role | Count |
 |-------|------|-------|
 | **Manager** | Decomposes goals into tasks, tracks dependencies, detects blocked paths | 1 |
 | **Architect** | Designs subsystem interfaces, writes header files, resolves conflicts | 1 |
-| **Developer** | Writes kernel C/ASM code, builds, tests, commits on feature branches | 3–6 parallel |
-| **Reviewer** | Reviews diffs for correctness, memory safety, spec compliance | 1–2 |
-| **Tester** | Writes tests, runs QEMU validation, detects composition failures | 1–2 |
+| **Developer** | Writes kernel C/ASM code, builds, tests, commits on feature branches | 4 parallel |
+| **Reviewer** | Reviews diffs for correctness, memory safety, spec compliance | 1 |
+| **Tester** | Writes tests, runs QEMU validation, detects composition failures | 1 |
 | **Integrator** | Merges approved branches, runs full integration checks | 1 |
+
+### SLM Training Agents
+
+| Agent | Role | Count |
+|-------|------|-------|
+| **Data Scientist** | Prepares and analyzes training datasets, tokenization | 1 |
+| **Model Architect** | Designs SLM architecture, estimates FLOPs, validates configs | 1 |
+| **Training Agent** | Trains SLM models with distributed training support | 4 parallel |
+| **Evaluation Agent** | Evaluates model checkpoints, tracks metrics | 1 |
+| **Quantization Agent** | Quantizes models to INT4/INT8 for deployment | 1 |
+| **Export Agent** | Exports models to GGUF/ONNX formats | 1 |
 
 Agents communicate through **git branches and file-based messaging** — no message broker needed. The VibeTensor insight: treat agents as black boxes, validate only through builds and tests.
 
