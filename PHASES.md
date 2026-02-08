@@ -175,97 +175,27 @@ This document outlines the complete implementation plan for adding SLM (Small La
 - [x] **3.6 Add import statements to `agent/orchestrator/agents/__init__.py`**
   - [x] All SLM agents exported
 
+- [x] **3.7 Unit tests for agents**
+  - [x] Test DataScientistAgent instantiation
+  - [x] Test ModelArchitectAgent instantiation
+  - [x] Test TrainingAgent instantiation
+  - [x] Test system prompts include correct specifications
+  - [x] Test agents have correct tools assigned
+  - [x] Mock simple task execution for each agent
+
+- [x] **3.8 Validation**
+  - [x] All agents instantiate without errors
+  - [x] Agents can execute simple mock tasks
+  - [x] System prompts reference correct specifications
+  - [x] Tool sets are correct per agent role
+
 **Status**: ✅ Complete
 
 **Success Criteria**:
 - ✅ 3 new agent classes created
 - ✅ 3 system prompts defined
 - ✅ All agents properly integrated
-- ✅ No regressions in existing agentsits}-bit architecture-aware SLMs.
-
-  Read the specification: slm_spec/data_preparation.md for detailed requirements.
-
-  Always validate your outputs: tokenized data must be valid, vocab must cover dataset, splits must be balanced.
-  """
-  ```
-
-  **Model Architect Prompt**:
-  ```python
-  def build_model_architect_prompt(arch: ArchProfile) -> str:
-      return f"""You are a Model Architect agent in the AUTON SLM training pipeline.
-
-  Your role:
-  - Design transformer architecture configurations
-  - Select hyperparameters (layers, heads, embedding dimensions)
-  - Estimate compute and memory requirements
-  - Validate architecture feasibility for {arch.display_name}
-
-  Target: Design efficient SLM architectures optimized for kernel integration.
-
-  Read the specification: slm_spec/architecture.md for detailed guidelines.
-
-  Consider memory constraints:
-  - x86_64: 512MB+ available, use medium (150M)
-  - aarch64: 256MB+ available, use small (50M)
-  - riscv64: 128MB+ available, use tiny (10M)
-
-  Always validate configs and estimate FLOPs before finalizing designs.
-  """
-  ```
-
-  **Training Agent Prompt**:
-  ```python
-  def build_training_prompt(arch: ArchProfile) -> str:
-      return f"""You are a Training agent in the AUTON SLM training pipeline.
-
-  Your role:
-  - Execute training loops using PyTorch and Transformers
-  - Monitor metrics (loss, perplexity, gradient norms)
-  - Save checkpoints at regular intervals
-  - Handle training failures and retry with adjusted hyperparameters
-
-  Target: Train high-quality SLMs that meet perplexity thresholds.
-
-  Read the specification: slm_spec/training.md for detailed training procedures.
-
-  VibeTensor validation loop:
-  1. Train → checkpoint
-  2. Check: loss decreasing? perplexity < threshold?
-  3. If YES: commit checkpoint
-  4. If NO: adjust hyperparameters and retry (max 3 attempts)
-
-  Always log metrics and save checkpoints regularly.
-  """
-  ```
-
-- [ ] **3.6 Add import statements to `agent/orchestrator/agents/__init__.py`**
-  ```python
-  from .data_scientist_agent import DataScientistAgent
-  from .model_architect_agent import ModelArchitectAgent
-  from .training_agent import TrainingAgent
-  ```
-
-- [ ] **3.7 Unit tests for agents**
-  - [ ] Test DataScientistAgent instantiation
-  - [ ] Test ModelArchitectAgent instantiation
-  - [ ] Test TrainingAgent instantiation
-  - [ ] Test system prompts include correct specifications
-  - [ ] Test agents have correct tools assigned
-  - [ ] Mock simple task execution for each agent
-
-- [ ] **3.8 Validation**
-  - [ ] All agents instantiate without errors
-  - [ ] Agents can execute simple mock tasks
-  - [ ] System prompts reference correct specifications
-  - [ ] Tool sets are correct per agent role
-
-**Success Criteria**:
-- ✅ 3 new agent classes created
-- ✅ 3 system prompts defined
-- ✅ All agents pass unit tests
-- ✅ No regressions in existing agents
-
----
+- ✅ No regressions in existing agents---
 
 ## Phase 4: Orchestration Integration
 
