@@ -26,6 +26,10 @@ class AgentRole(str, Enum):
     REVIEWER = "reviewer"
     TESTER = "tester"
     INTEGRATOR = "integrator"
+    # SLM agents
+    DATA_SCIENTIST = "data_scientist"
+    MODEL_ARCHITECT = "model_architect"
+    TRAINING = "training"
 
 
 class AgentState(str, Enum):
