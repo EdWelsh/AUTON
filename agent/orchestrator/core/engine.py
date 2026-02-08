@@ -10,11 +10,14 @@ from typing import Any
 
 from orchestrator.agents.architect_agent import ArchitectAgent
 from orchestrator.agents.base_agent import AgentRole, TaskResult
+from orchestrator.agents.data_scientist_agent import DataScientistAgent
 from orchestrator.agents.developer_agent import DeveloperAgent
 from orchestrator.agents.integrator_agent import IntegratorAgent
 from orchestrator.agents.manager_agent import ManagerAgent
+from orchestrator.agents.model_architect_agent import ModelArchitectAgent
 from orchestrator.agents.reviewer_agent import ReviewerAgent
 from orchestrator.agents.tester_agent import TesterAgent
+from orchestrator.agents.training_agent import TrainingAgent
 from orchestrator.comms.git_workspace import GitWorkspace
 from orchestrator.comms.message_bus import MessageBus
 from orchestrator.core.scheduler import Scheduler
@@ -24,6 +27,13 @@ from orchestrator.arch_registry import ArchProfile, get_arch_profile
 from orchestrator.llm.client import CostTracker, LLMClient, ProviderConfig
 
 logger = logging.getLogger(__name__)
+
+
+class WorkflowMode(str, Enum):
+    """Orchestration workflow modes."""
+    KERNEL_BUILD = "kernel_build"
+    SLM_TRAINING = "slm_training"
+    DUAL = "dual"
 
 
 class OrchestrationEngine:
@@ -57,6 +67,12 @@ class OrchestrationEngine:
         arch_name = kernel_config.get("arch", "x86_64")
         self.arch_profile: ArchProfile = get_arch_profile(arch_name)
         logger.info("Target architecture: %s", self.arch_profile.display_name)
+
+        # Workflow mode
+        self.workflow_mode = WorkflowMode(
+            self.config.get("workflow", {}).get("mode", "kernel_build")
+        )
+        logger.info("Workflow mode: %s", self.workflow_mode.value)
 
         # Core components
         llm_config = config.get("llm", {})
@@ -150,6 +166,34 @@ class OrchestrationEngine:
             len(self._agents), dev_count, reviewer_count, tester_count,
         )
 
+        # SLM agents (created if mode is slm_training or dual)
+        if self.workflow_mode in [WorkflowMode.SLM_TRAINING, WorkflowMode.DUAL]:
+            # Data Scientist
+            self._agents["data_scientist"] = self._create_agent(
+                "data-scientist-01", AgentRole.DATA_SCIENTIST, DataScientistAgent
+            )
+            self.scheduler.register_agent("data_scientist", self._agents["data_scientist"])
+
+            # Model Architect
+            self._agents["model_architect"] = self._create_agent(
+                "model-architect-01", AgentRole.MODEL_ARCHITECT, ModelArchitectAgent
+            )
+            self.scheduler.register_agent("model_architect", self._agents["model_architect"])
+
+            # Training Agents (parallel)
+            training_count = agent_config.get("training_agent_count", 2)
+            for i in range(training_count):
+                agent = self._create_agent(
+                    f"training-{i+1:02d}", AgentRole.TRAINING, TrainingAgent
+                )
+                self._agents[f"training-{i+1:02d}"] = agent
+                self.scheduler.register_agent("training", agent)
+
+            logger.info(
+                "Initialized SLM agents: 1 data scientist, 1 model architect, %d training",
+                training_count,
+            )
+
     async def run(self, goal: str) -> dict[str, Any]:
         """Run the full orchestration loop for a goal.
 
@@ -173,8 +217,23 @@ class OrchestrationEngine:
             self.state.save(state_path)
             logger.info("--- Phase 1: Planning ---")
 
-            manager: ManagerAgent = self._agents["manager"]
-            tasks = await manager.decompose_goal(goal)
+            # Create task graph based on workflow mode
+            if self.workflow_mode == WorkflowMode.KERNEL_BUILD:
+                # Existing kernel build workflow
+                manager: ManagerAgent = self._agents["manager"]
+                tasks = await manager.decompose_goal(goal)
+            elif self.workflow_mode == WorkflowMode.SLM_TRAINING:
+                # SLM training workflow only
+                tasks = self.task_graph.create_slm_training_tasks(goal)
+            elif self.workflow_mode == WorkflowMode.DUAL:
+                # Both kernel and SLM tasks
+                manager: ManagerAgent = self._agents["manager"]
+                kernel_tasks = await manager.decompose_goal(goal)
+                slm_tasks = self.task_graph.create_slm_training_tasks(goal)
+                tasks = kernel_tasks + slm_tasks
+            else:
+                return {"success": False, "error": f"Unknown workflow mode: {self.workflow_mode}"}
+
             self.state.tasks_created = len(tasks)
 
             if not tasks:

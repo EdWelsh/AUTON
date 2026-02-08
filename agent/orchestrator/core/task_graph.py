@@ -173,3 +173,86 @@ class TaskGraph:
 
         # All dependencies met
         node.state = TaskState.READY
+
+    def create_slm_training_tasks(self, goal: str) -> list[dict[str, Any]]:
+        """Create task graph for SLM training workflow."""
+        tasks = []
+
+        # 1. Data Preparation
+        tasks.append({
+            "task_id": "slm-data-prep",
+            "title": "Prepare SLM training dataset",
+            "description": "Clean, tokenize, and split dataset",
+            "subsystem": "slm",
+            "assigned_to": "data_scientist",
+            "dependencies": [],
+            "priority": 1,
+        })
+
+        # 2. Architecture Design
+        tasks.append({
+            "task_id": "slm-arch-design",
+            "title": "Design SLM architecture",
+            "description": "Create model config YAML, estimate FLOPs",
+            "subsystem": "slm",
+            "assigned_to": "model_architect",
+            "dependencies": [],
+            "priority": 1,
+        })
+
+        # 3. Training
+        tasks.append({
+            "task_id": "slm-training",
+            "title": "Train SLM model",
+            "description": "Execute training loop, save checkpoints",
+            "subsystem": "slm",
+            "assigned_to": "training",
+            "dependencies": ["slm-data-prep", "slm-arch-design"],
+            "priority": 2,
+        })
+
+        # 4. Evaluation
+        tasks.append({
+            "task_id": "slm-evaluation",
+            "title": "Evaluate trained model",
+            "description": "Run benchmarks, select best checkpoint",
+            "subsystem": "slm",
+            "assigned_to": "training",
+            "dependencies": ["slm-training"],
+            "priority": 3,
+        })
+
+        # 5. Quantization
+        tasks.append({
+            "task_id": "slm-quantization",
+            "title": "Quantize SLM to INT4",
+            "description": "Compress model using GPTQ",
+            "subsystem": "slm",
+            "assigned_to": "training",
+            "dependencies": ["slm-evaluation"],
+            "priority": 4,
+        })
+
+        # 6. Export
+        tasks.append({
+            "task_id": "slm-export",
+            "title": "Export SLM to GGUF",
+            "description": "Convert to GGUF format, validate",
+            "subsystem": "slm",
+            "assigned_to": "training",
+            "dependencies": ["slm-quantization"],
+            "priority": 5,
+        })
+
+        # 7. Integration
+        tasks.append({
+            "task_id": "slm-integration",
+            "title": "Integrate SLM into kernel",
+            "description": "Copy to kernel workspace, update Makefile, test",
+            "subsystem": "slm",
+            "assigned_to": "integrator",
+            "dependencies": ["slm-export"],
+            "priority": 6,
+        })
+
+        return tasks
