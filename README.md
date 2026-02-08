@@ -101,6 +101,7 @@ arch = "aarch64"  # x86_64, aarch64, or riscv64
 - **LiteLLM** — Multi-provider LLM abstraction (Anthropic, OpenAI, Ollama, Gemini, OpenRouter, Azure)
 - **Git** — Agent collaboration and version control
 - **QEMU** — Kernel testing and validation
+- **Pytest** — Comprehensive unit and integration testing
 
 ## Setup
 
@@ -140,6 +141,34 @@ developer = "anthropic/claude-sonnet-4-5-20250929"  # cheaper for code gen
 reviewer = "openai/gpt-4o"                          # use a different provider
 # tester = "ollama/llama3.1"                        # free, local
 ```
+
+## Testing
+
+AUTON includes a comprehensive test suite:
+
+```bash
+# Run unit tests
+pytest agent/tests/unit/ -v
+
+# Run with coverage
+pytest agent/tests/unit/ --cov=orchestrator --cov-report=html
+
+# Run integration tests
+pytest agent/tests/integration/ -v
+
+# Run Rust tool tests
+cd agent/tools && cargo test
+
+# Run SLM pipeline tests
+pytest SLM/tests/ -v
+```
+
+### Test Structure
+- **Unit Tests** (`agent/tests/unit/`) — Fast, isolated tests with mocks (36 test files)
+- **Integration Tests** (`agent/tests/integration/`) — Multi-component workflow tests
+- **Acceptance Tests** (`agent/kernel_spec/tests/`) — Full kernel validation in QEMU
+- **Rust Tests** (`agent/tools/*/tests/`) — Build tool validation (9 test files)
+- **SLM Tests** (`SLM/tests/`) — Training pipeline tests (9 test files)
 
 ## How It Works
 
