@@ -25,7 +25,7 @@ if _git_exe:
     _git.refresh(_git_exe)
 
 from git import Repo
-from git.exc import GitCommandError, InvalidGitRepositoryError
+from git.exc import GitCommandError, InvalidGitRepositoryError, NoSuchPathError
 
 logger = logging.getLogger(__name__)
 
@@ -54,7 +54,7 @@ class GitWorkspace:
         try:
             self._repo = Repo(self.path)
             logger.info("Opened existing workspace at %s", self.path)
-        except InvalidGitRepositoryError:
+        except (InvalidGitRepositoryError, NoSuchPathError):
             self.path.mkdir(parents=True, exist_ok=True)
             self._repo = Repo.init(self.path)
             # Create initial commit so branches work
