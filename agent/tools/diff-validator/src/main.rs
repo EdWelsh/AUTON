@@ -1,32 +1,60 @@
-use anyhow::Result;
+//! diff-validator: static analysis of agent-proposed C-kernel diffs.
+
+use anyhow::{Context, Result};
 use clap::Parser;
+use diff_validator::{has_errors, validate};
+use std::io::Read;
 use std::path::PathBuf;
 
 #[derive(Parser)]
-#[command(name = "diff-validator", about = "Validate agent-proposed kernel code diffs")]
+#[command(
+    name = "diff-validator",
+    about = "Validate agent-proposed C code diffs"
+)]
 struct Cli {
-    /// Path to the diff file or git branch to validate
+    /// Unified diff file to validate. Reads stdin if omitted.
     #[arg(short, long)]
-    diff: PathBuf,
+    input: Option<PathBuf>,
 
-    /// Path to the kernel workspace
-    #[arg(short, long, default_value = "workspace")]
-    workspace: PathBuf,
+    /// Emit findings as JSON.
+    #[arg(long)]
+    json: bool,
 }
 
-#[tokio::main]
-async fn main() -> Result<()> {
+fn main() -> Result<()> {
     tracing_subscriber::fmt::init();
     let cli = Cli::parse();
 
-    tracing::info!(diff = %cli.diff.display(), "Validating diff");
+    let diff = match &cli.input {
+        Some(path) => {
+            std::fs::read_to_string(path).with_context(|| format!("reading {}", path.display()))?
+        }
+        None => {
+            let mut buf = String::new();
+            std::io::stdin()
+                .read_to_string(&mut buf)
+                .context("reading stdin")?;
+            buf
+        }
+    };
 
-    // TODO: Implement diff validation
-    // 1. Parse unified diff format
-    // 2. Check diff applies cleanly
-    // 3. Static analysis for common kernel bugs
-    // 4. Verify no security anti-patterns
+    let findings = validate(&diff);
 
-    println!("diff-validator: not yet implemented");
+    if cli.json {
+        println!("{}", serde_json::to_string_pretty(&findings)?);
+    } else if findings.is_empty() {
+        println!("diff-validator: no issues");
+    } else {
+        for f in &findings {
+            println!(
+                "{:?}\t{}:{}\t{}\t{}",
+                f.severity, f.file, f.line, f.rule, f.message
+            );
+        }
+    }
+
+    if has_errors(&findings) {
+        std::process::exit(1);
+    }
     Ok(())
 }
