@@ -40,6 +40,12 @@ agent/build/
 .venv/
 venv/
 
+# SLM model artifacts (checkpoints + exports)
+SLM/models/
+*.pt
+*.onnx
+*.gguf
+
 # Rust
 agent/tools/target/
 agent/tools/*/target/

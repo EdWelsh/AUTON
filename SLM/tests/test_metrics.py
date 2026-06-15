@@ -61,7 +61,11 @@ class TestComputeAccuracy:
         result = compute_accuracy([], [])
         assert result == 0.0
 
-    def test_stub_returns_zero(self):
-        """The stub implementation always returns 0.0."""
+    def test_partial_match_fraction(self):
+        """Accuracy is the fraction of matching positions (2 of 3 here)."""
         result = compute_accuracy([1, 2, 3], [1, 2, 4])
-        assert result == 0.0
+        assert abs(result - 2 / 3) < 1e-9
+
+    def test_all_match_is_one(self):
+        """Identical sequences score 1.0."""
+        assert compute_accuracy([1, 2, 3], [1, 2, 3]) == 1.0

@@ -1,0 +1,11 @@
+# Neural SLM backend dependencies (training/eval/quantize/export).
+#
+# These are heavy (torch is ~hundreds of MB) and are NOT part of the base AUTON
+# image. The core tools (dataset_builder, tokenizer, metrics, gguf_validator)
+# and the script --help/CLI contracts work without them; only actually running
+# train/evaluate/quantize/export needs this stack.
+torch>=2.2
+numpy>=1.26
+onnx>=1.16
+gguf>=0.9
+pyyaml>=6.0

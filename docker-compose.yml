@@ -30,7 +30,28 @@ services:
     platform: linux/amd64
     volumes:
       - ./:/work
-    command: ["bash", "-lc", "cd agent && python3 -m pytest tests/unit -q"]
+    # Orchestrator unit tests + Rust tools + torch-free SLM tests (the neural
+    # train/export e2e tests skip themselves when torch is absent).
+    command:
+      - "bash"
+      - "-lc"
+      - >-
+        cd agent && python3 -m pytest tests/unit -q &&
+        (cd tools && cargo test) &&
+        cd /work && PYTHONPATH=SLM python3 -m pytest SLM/tests -q
+
+  slm:
+    build:
+      context: .
+      target: slm
+    platform: linux/amd64
+    volumes:
+      - ./:/work
+    # Full SLM suite including the torch training/quantize/ONNX+GGUF export e2e.
+    command:
+      - "bash"
+      - "-lc"
+      - "cd /work && PYTHONPATH=SLM python3 -m pytest SLM/tests -q"
 
   orchestrate:
     build:

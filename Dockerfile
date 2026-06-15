@@ -34,3 +34,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN pip3 install --no-cache-dir --break-system-packages \
         litellm gitpython pydantic rich click pyyaml \
         pytest pytest-asyncio pytest-cov pytest-mock pytest-timeout ruff
+
+# ---- slm: dev + the heavy neural training/export stack ---------------------
+# Separate stage so the torch dependency only lands in images that need it.
+# The repo is volume-mounted at runtime, so packages are installed by name here
+# (kept in sync with SLM/requirements.txt) rather than via COPY at build time.
+# `docker compose run slm` runs the full SLM suite (training, ONNX/GGUF export).
+FROM dev AS slm
+RUN pip3 install --no-cache-dir --break-system-packages \
+        torch numpy onnx gguf
