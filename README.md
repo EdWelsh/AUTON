@@ -315,7 +315,32 @@ arch = "aarch64"  # x86_64, aarch64, or riscv64
 - **QEMU** — Kernel testing and validation
 - **Pytest** — Comprehensive unit and integration testing
 
-## Setup
+## Quick Start (Docker)
+
+The fastest way to build and boot the kernel — no host toolchain required (the
+image carries the cross toolchain, GRUB, and QEMU):
+
+```bash
+# Build the seed kernel and boot it in QEMU (serial console)
+docker compose run os
+
+# Boot + verify the acceptance serial markers
+docker compose run acceptance
+
+# Orchestrator unit tests
+docker compose run test
+```
+
+`docker compose run os` builds a Multiboot2 GRUB rescue ISO from the seed kernel
+and boots it via `qemu-system-x86_64 -cdrom ... -serial stdio`, printing the
+full boot sequence through `[SLM] Ready` and `[BOOT] OK`. The image is pinned to
+`linux/amd64` (GRUB PC/BIOS + x86 QEMU); on Apple Silicon it runs emulated.
+
+> The seed kernel lives in `kernels/x86_64/` and is the buildable scaffold the
+> agents extend. The neural on-device SLM chat is layered on top of this
+> foundation (see the plans under `.claude/PRPs/plans/`).
+
+## Setup (orchestrator)
 
 ```bash
 # Clone

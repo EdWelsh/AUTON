@@ -1,0 +1,44 @@
+# AUTON local environment.
+#   docker compose run os           # build + boot the OS in QEMU (serial)
+#   docker compose run acceptance   # boot + verify acceptance markers
+#   docker compose run test         # orchestrator unit tests
+#   docker compose run orchestrate  # run the agent loop (needs ANTHROPIC_API_KEY)
+
+services:
+  os:
+    build:
+      context: .
+      target: base
+    platform: linux/amd64
+    volumes:
+      - ./:/work
+    command: ["bash", "scripts/auton-boot.sh", "x86_64"]
+
+  acceptance:
+    build:
+      context: .
+      target: base
+    platform: linux/amd64
+    volumes:
+      - ./:/work
+    command: ["bash", "scripts/run-acceptance.sh", "x86_64"]
+
+  test:
+    build:
+      context: .
+      target: dev
+    platform: linux/amd64
+    volumes:
+      - ./:/work
+    command: ["bash", "-lc", "cd agent && python3 -m pytest tests/unit -q"]
+
+  orchestrate:
+    build:
+      context: .
+      target: dev
+    platform: linux/amd64
+    volumes:
+      - ./:/work
+    environment:
+      - ANTHROPIC_API_KEY
+    command: ["bash", "-lc", "cd agent && pip install -e . --break-system-packages >/dev/null 2>&1 && auton run \"${GOAL:-Build a bootable kernel with SLM rule engine}\""]

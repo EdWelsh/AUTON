@@ -26,6 +26,11 @@ from orchestrator.core.state import OrchestratorState
 from orchestrator.core.task_graph import TaskGraph, TaskState
 from orchestrator.arch_registry import ArchProfile, get_arch_profile
 from orchestrator.llm.client import CostTracker, LLMClient, ProviderConfig
+from orchestrator.validation import (
+    BuildValidator,
+    CompositionValidator,
+    TestValidator,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -102,6 +107,23 @@ class OrchestrationEngine:
         self.message_bus = MessageBus(workspace_path)
         self.task_graph = TaskGraph()
         self.scheduler = Scheduler(self.task_graph)
+
+        # Validation layer. Agents build/test via shell tools during development,
+        # but the engine independently verifies the final result here so success
+        # is gated on a real build + QEMU boot, not just agent self-report.
+        validation_config = config.get("validation", {})
+        self.build_timeout = validation_config.get("build_timeout", 120)
+        self.test_timeout = validation_config.get("test_timeout", 60)
+        self.composition_checks = validation_config.get("composition_checks", True)
+        self.build_validator = BuildValidator(
+            workspace_path=workspace_path, arch_profile=self.arch_profile
+        )
+        self.test_validator = TestValidator(
+            workspace_path=workspace_path,
+            timeout=self.test_timeout,
+            arch_profile=self.arch_profile,
+        )
+        self.composition_validator = CompositionValidator(workspace_path)
 
         # State
         self.state: OrchestratorState | None = None
@@ -332,16 +354,49 @@ class OrchestrationEngine:
             integrator = self._agents["integrator"]
             final_check = await integrator.full_integration_check()
 
+            # Independent verification: build the kernel and boot it in QEMU.
+            # This is the engine's own gate, separate from agent self-report.
+            build_result = await self.build_validator.build(timeout=self.build_timeout)
+            test_result = None
+            composition_result = None
+            if build_result.success:
+                test_result = await self.test_validator.run_tests()
+                if self.composition_checks:
+                    composition_result = await self.composition_validator.validate(
+                        subsystems=sorted(
+                            {t.get("subsystem", "") for t in tasks if t.get("subsystem")}
+                        )
+                    )
+            else:
+                logger.warning(
+                    "Final build failed with %d errors", len(build_result.errors)
+                )
+
+            validation_ok = build_result.success and bool(
+                test_result and test_result.success
+            )
+            if composition_result is not None:
+                validation_ok = validation_ok and composition_result.success
+
             self.state.phase = "done"
             self.state.save(state_path)
 
             return {
-                "success": self.task_graph.is_complete and final_check.get("success", False),
+                "success": self.task_graph.is_complete
+                and final_check.get("success", False)
+                and validation_ok,
                 "run_id": run_id,
                 "progress": self.task_graph.progress,
                 "total_cost_usd": self.cost_tracker.total_cost_usd,
                 "iterations": self.state.iteration,
                 "final_check": final_check,
+                "build_ok": build_result.success,
+                "test_ok": bool(test_result and test_result.success),
+                "composition_ok": (
+                    composition_result.success
+                    if composition_result is not None
+                    else None
+                ),
             }
 
         except Exception as e:

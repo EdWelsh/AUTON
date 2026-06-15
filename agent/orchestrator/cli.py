@@ -107,12 +107,26 @@ def run(ctx, goal: str, workspace: str | None, specs: str):
         console.print(f"  2. Export {env_var} environment variable")
         raise SystemExit(1)
 
-    # Default workspace is the repo root (parent of agent/)
+    # Resolve the workspace. Agents and the build/test validators must all
+    # target the same tree: the one holding the kernel Makefile + build/kernel.bin.
+    # Priority: --workspace flag > [workspace].path in config > kernels/{arch}.
     agent_dir = Path(__file__).resolve().parent.parent
+    repo_root = agent_dir.parent
+    arch = config.get("kernel", {}).get("arch", "x86_64")
     if workspace:
         workspace_path = Path(workspace).resolve()
     else:
-        workspace_path = agent_dir.parent
+        configured = config.get("workspace", {}).get("path")
+        if configured:
+            # Config paths are written relative to the agent/ dir (e.g. "../kernels/x86_64").
+            cfg_path = Path(configured)
+            workspace_path = (
+                cfg_path if cfg_path.is_absolute() else (agent_dir / cfg_path)
+            ).resolve()
+        else:
+            workspace_path = (repo_root / "kernels" / arch).resolve()
+    # The validators expect a Makefile + build/ at the workspace root.
+    workspace_path.mkdir(parents=True, exist_ok=True)
     spec_path = (agent_dir / specs).resolve() if not Path(specs).is_absolute() else Path(specs).resolve()
 
     console.print(f"\n[bold green]AUTON Orchestration Engine[/bold green]")

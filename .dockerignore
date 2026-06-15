@@ -1,0 +1,10 @@
+.git
+**/build/
+**/target/
+**/__pycache__/
+**/*.pyc
+**/.DS_Store
+**/dist/
+*.iso
+*.img
+.claude/
