@@ -26,9 +26,17 @@ CMD ["bash", "scripts/auton-boot.sh", "x86_64"]
 
 # ---- dev: orchestrator + tests + SLM tooling -------------------------------
 FROM base AS dev
+# libc6-dev provides the crt startup objects + libc needed to link hosted Rust
+# binaries (the kernel itself builds -nostdlib and does not need them).
 RUN apt-get update && apt-get install -y --no-install-recommends \
-        python3 python3-pip python3-venv git cargo rustc \
+        python3 python3-pip python3-venv git curl libc6-dev \
     && rm -rf /var/lib/apt/lists/*
+# Modern Rust via rustup. Debian's packaged cargo (~1.63) is too old to build
+# current crates (clap/tokio pull in edition-2024 deps), so install the stable
+# toolchain into a shared location on PATH.
+ENV RUSTUP_HOME=/opt/rustup CARGO_HOME=/opt/cargo PATH=/opt/cargo/bin:$PATH
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs \
+        | sh -s -- -y --profile minimal --default-toolchain stable
 # Orchestrator runtime + test deps. Heavy SLM training deps (torch) are NOT
 # installed here to keep the image usable; install them in an SLM profile.
 RUN pip3 install --no-cache-dir --break-system-packages \

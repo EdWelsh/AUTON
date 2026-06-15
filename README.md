@@ -313,6 +313,7 @@ arch = "aarch64"  # x86_64, aarch64, or riscv64
 - **LiteLLM** — Multi-provider LLM abstraction (Anthropic, OpenAI, Ollama, Gemini, OpenRouter, Azure)
 - **Git** — Agent collaboration and version control
 - **QEMU** — Kernel testing and validation
+- **PyTorch** — Neural SLM backend (training, quantization, ONNX/GGUF export)
 - **Pytest** — Comprehensive unit and integration testing
 
 ## Quick Start (Docker)
@@ -327,8 +328,11 @@ docker compose run os
 # Boot + verify the acceptance serial markers
 docker compose run acceptance
 
-# Orchestrator unit tests
+# Orchestrator unit tests + Rust tools + (torch-free) SLM tests
 docker compose run test
+
+# Full SLM neural pipeline tests (pulls in PyTorch; heavier image)
+docker compose run slm
 ```
 
 `docker compose run os` builds a Multiboot2 GRUB rescue ISO from the seed kernel
@@ -381,26 +385,25 @@ reviewer = "openai/gpt-4o"                          # use a different provider
 
 ## Releases
 
-AUTON automatically generates bootable images for all supported architectures:
+Build a versioned, bootable GRUB rescue ISO of the seed kernel:
 
-- **ISO Images** — Bootable CD/DVD images for x86_64
-- **Raw Disk Images** — `.img` files for USB/SD card deployment
-- **QCOW2 Images** — QEMU-optimized virtual disk images
-- **Embedded Binaries** — Standalone kernel binaries with embedded SLM
+```bash
+# Produces dist/auton-x86_64-v0.1.0.iso (runs inside the Docker toolchain)
+docker compose run --rm os bash scripts/build-iso.sh x86_64 v0.1.0
 
-Releases are published as GitHub releases with artifacts for each architecture:
-```
-auton-x86_64-v0.1.0.iso
-auton-x86_64-v0.1.0.img
-auton-aarch64-v0.1.0.img
-auton-riscv64-v0.1.0.img
+# Boot a built ISO directly:
+qemu-system-x86_64 -cdrom dist/auton-x86_64-v0.1.0.iso -serial stdio -display none
 ```
 
-Each release includes:
-- Bootable kernel with embedded SLM
-- Architecture-specific drivers
-- Validation test results
-- Build metadata and checksums
+The ISO boots through the full sequence to `[SLM] Ready` / `[BOOT] OK`, the same
+markers `docker compose run acceptance` verifies.
+
+**Shipped today:** x86_64 bootable ISO (`scripts/build-iso.sh`).
+
+**Roadmap (not yet shipped):** raw `.img`/QCOW2 disk images, AArch64/RISC-V seed
+kernels, automated GitHub release publishing, and a neural (GGUF/ONNX) in-kernel
+SLM. The build system and Docker image are parameterized by `ARCH`, but only
+x86_64 is currently brought to "boots + passes acceptance".
 
 ## Testing
 
@@ -419,16 +422,17 @@ pytest agent/tests/integration/ -v
 # Run Rust tool tests
 cd agent/tools && cargo test
 
-# Run SLM pipeline tests
-pytest SLM/tests/ -v
+# Run SLM pipeline tests (neural train/export tests auto-skip without torch;
+# install SLM/requirements.txt to run the full pipeline)
+PYTHONPATH=SLM pytest SLM/tests/ -v
 ```
 
 ### Test Structure
 - **Unit Tests** (`agent/tests/unit/`) — Fast, isolated tests with mocks (36 test files)
 - **Integration Tests** (`agent/tests/integration/`) — Multi-component workflow tests
 - **Acceptance Tests** (`agent/kernel_spec/tests/`) — Full kernel validation in QEMU
-- **Rust Tests** (`agent/tools/*/tests/`) — Build tool validation (9 test files)
-- **SLM Tests** (`SLM/tests/`) — Training pipeline tests (9 test files)
+- **Rust Tests** (`agent/tools/*/tests/` + per-crate `src/lib.rs`) — build tool validation
+- **SLM Tests** (`SLM/tests/`) — tools + neural train/eval/quantize/export pipeline (torch tests skip when torch is absent)
 
 ## How It Works
 
