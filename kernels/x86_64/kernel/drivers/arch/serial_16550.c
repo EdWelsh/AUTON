@@ -12,6 +12,7 @@
 #define REG_MCR     (COM1 + 4)
 #define REG_LSR     (COM1 + 5)
 
+#define LSR_DATA_READY 0x01
 #define LSR_THR_EMPTY 0x20
 
 void serial_init(void)
@@ -38,4 +39,20 @@ void serial_write(const char *s)
 {
 	for (; *s; s++)
 		serial_putc(*s);
+}
+
+/* Non-blocking: 1 if a byte is waiting in the receive buffer.
+ * QEMU `-serial stdio` pipes host stdin into the UART RX path. */
+int serial_rx_ready(void)
+{
+	return (io_read8(REG_LSR) & LSR_DATA_READY) != 0;
+}
+
+/* Blocking read of one byte from the UART. Pure polling — fine for a
+ * console REPL; interrupts are not required. */
+char serial_getc(void)
+{
+	while (!serial_rx_ready())
+		;
+	return (char)io_read8(REG_DATA);
 }

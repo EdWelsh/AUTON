@@ -9,6 +9,8 @@
 void serial_init(void);
 void serial_putc(char c);
 void serial_write(const char *s);
+int  serial_rx_ready(void);
+char serial_getc(void);
 
 /* ---- formatted output ----
  * Supports %s %c %d %u %x %% and a leading width digit (e.g. %8x is ignored

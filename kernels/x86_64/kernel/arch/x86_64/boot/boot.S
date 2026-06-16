@@ -2,8 +2,11 @@
  *
  * QEMU -kernel loads this ELF64 and enters `_start` in 32-bit protected mode
  * with EAX = multiboot magic (0x2BADB002) and EBX = pointer to the multiboot
- * info struct. We identity-map the low 1 GiB with 2 MiB pages, switch to 64-bit
+ * info struct. We identity-map the low 4 GiB with 2 MiB pages, switch to 64-bit
  * long mode, then call the portable C entry point `kernel_main(mb_info, magic)`.
+ *
+ * 4 GiB (not 1) so device MMIO below 4 GiB — notably the e1000 NIC BAR near
+ * ~0xFEBCxxxx — is addressable without faulting.
  */
 
 .section .text
@@ -27,30 +30,40 @@ _start:
 	lgdt	gdt64_pointer
 	ljmp	$0x08, $long_mode_start
 
-/* Identity-map the first 1 GiB using 2 MiB pages. */
+/* Identity-map the first 4 GiB using 2 MiB pages (4 PDs of 512 entries). */
 setup_page_tables:
 	/* PML4[0] -> PDPT */
 	movl	$pdpt, %eax
 	orl	$0x3, %eax              /* present | writable */
 	movl	%eax, pml4
 
-	/* PDPT[0] -> PD */
+	/* PDPT[0..3] -> pd + 0/4096/8192/12288 (one PD = 1 GiB). */
+	movl	$pdpt, %edi
 	movl	$pd, %eax
 	orl	$0x3, %eax
-	movl	%eax, pdpt
+	movl	$0, %ecx
+.fill_pdpt:
+	movl	%eax, (%edi)
+	movl	$0, 4(%edi)
+	addl	$4096, %eax            /* next PD (4 KiB further) */
+	addl	$8, %edi
+	incl	%ecx
+	cmpl	$4, %ecx
+	jne	.fill_pdpt
 
-	/* PD[i] = (i << 21) | present | writable | page-size(2MiB) */
+	/* PD[i] = (i << 21) | present | writable | page-size(2MiB), i in 0..2047.
+	 * i<<21 for i<=2047 is 0xFFE00000 — still 32-bit, so the high dword is 0. */
 	movl	$pd, %edi
 	xorl	%ecx, %ecx
 .fill_pd:
 	movl	%ecx, %eax
-	shll	$21, %eax               /* i * 2 MiB (fits in 32 bits for 1 GiB) */
+	shll	$21, %eax               /* i * 2 MiB */
 	orl	$0x83, %eax
 	movl	%eax, (%edi)
-	movl	$0, 4(%edi)             /* high dword: 0 for the first 1 GiB */
+	movl	$0, 4(%edi)             /* high dword: 0 across the first 4 GiB */
 	addl	$8, %edi
 	incl	%ecx
-	cmpl	$512, %ecx
+	cmpl	$2048, %ecx
 	jne	.fill_pd
 	ret
 
@@ -116,7 +129,7 @@ mb_info:	.long 0
 .align 4096
 pml4:	.skip 4096
 pdpt:	.skip 4096
-pd:	.skip 4096
+pd:	.skip 16384                     /* 4 PDs -> 4 GiB identity map */
 .align 16
 stack_bottom:
 	.skip 16384

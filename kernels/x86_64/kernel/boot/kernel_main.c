@@ -8,6 +8,7 @@
 #include "boot_info.h"
 #include "pci.h"
 #include "slm.h"
+#include "net.h"
 
 #define PAGE_SIZE 4096u
 
@@ -59,9 +60,19 @@ void kernel_main(uint32_t mb_info_ptr, uint32_t magic)
 		if (drv)
 			kprintf("[SLM] Loaded driver: %s\n", drv);
 	}
+	/* Bring up networking so the chat can answer "what is my IP" and, in
+	 * Phase H, serve as a web server. Non-fatal if no NIC is present. */
+	net_bringup(devs, ndev);
+
+	kprintf("[SLM] Backend: %s\n", slm_backend_name());
 	kprintf("[SLM] Ready\n");
 
+	/* Emit the boot-complete marker BEFORE entering the REPL so the
+	 * acceptance harness sees it, then hand control to the chat loop. */
 	kprintf("[BOOT] OK\n");
 
+	slm_chat_loop();
+
+	/* Reached only if the user typed 'quit'. */
 	halt_forever();
 }
