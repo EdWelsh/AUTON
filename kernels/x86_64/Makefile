@@ -15,6 +15,15 @@ OBJ  := $(patsubst %,$(BUILD)/%.o,$(CSRC) $(ASRC))
 
 all: $(KERNEL)
 
+# Neural float code is compiled with SSE (more specific rules win over %.c.o).
+$(BUILD)/kernel/slm/neural/%.c.o: kernel/slm/neural/%.c
+	@mkdir -p $(dir $@)
+	$(CC) $(CFLAGS_SSE) -c $< -o $@
+
+$(BUILD)/kernel/lib/kmath.c.o: kernel/lib/kmath.c
+	@mkdir -p $(dir $@)
+	$(CC) $(CFLAGS_SSE) -c $< -o $@
+
 $(BUILD)/%.c.o: %.c
 	@mkdir -p $(dir $@)
 	$(CC) $(CFLAGS) -c $< -o $@

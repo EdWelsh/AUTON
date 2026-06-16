@@ -13,6 +13,14 @@ CFLAGS  := -ffreestanding -fno-stack-protector -fno-pic -fno-pie \
            -std=gnu11 -O2 -g -Wall -Wextra \
            -Ikernel/include
 
+# SSE-enabled profile for the neural backend's float math (kernel/slm/neural/*,
+# kernel/lib/kmath.c). SSE is turned on in boot.S; these TUs may use hardware
+# float. Red zone stays disabled (interrupt-safe). The rest of the kernel keeps
+# the integer-only CFLAGS above so interrupt handlers never touch SSE state.
+CFLAGS_SSE := -ffreestanding -fno-stack-protector -fno-pic -fno-pie \
+              -mno-red-zone -std=gnu11 -O2 -g -Wall -Wextra \
+              -Ikernel/include
+
 ASFLAGS := -ffreestanding -fno-pic -fno-pie
 
 LDFLAGS := -nostdlib -no-pie -Wl,--build-id=none -Wl,-T,$(LINKER)

@@ -2,7 +2,9 @@
 #include "phys.h"
 #include "kernel.h"
 
-#define ARENA_SIZE (4u * 1024u * 1024u)     /* 4 MiB — rings + packet buffers */
+/* Rings + packet buffers (~150 KiB) plus the neural backend's KV cache, logits,
+ * and activation scratch (a couple MiB at the capped context length). */
+#define ARENA_SIZE (12u * 1024u * 1024u)
 
 /* 4 KiB-aligned so the first allocation can hand out page-aligned DMA memory.
  * Lives in .bss inside the kernel image, well under the 1 GiB mark. */

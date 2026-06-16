@@ -9,6 +9,9 @@
 
 #include <stdint.h>
 
+/* Upper bound on vocab the in-kernel tokenizer tables reserve (tiny_10M=32000). */
+#define MODEL_MAX_VOCAB_CAP 32000u
+
 /* Model on-disk formats. AUTON is our own llama2.c-style flat format (we own
  * both the host exporter and the kernel loader); GGUF/ONNX stay roadmap. */
 typedef enum model_format {

@@ -315,6 +315,27 @@ int slm_process_text(const char *text, uint32_t text_len,
 	kmemset(result, 0, sizeof(*result));
 	result->status = 0;
 
+	/* Neural backend (when a model is loaded): generate free-form text.
+	 * On empty/failed generation, fall through to the rule engine so the
+	 * chat never leaves the user without an answer (slm.md:639). */
+	if (g_neural_active && slm_neural_available()) {
+		uint32_t in_ids[64], out_ids[64];
+		uint32_t nin = slm_neural_tokenize(text, text_len, in_ids, 64);
+		if (nin > 0) {
+			inference_config_t cfg = { 0.0f, 1.0f, 48, 1 };
+			uint32_t nout = slm_neural_infer(in_ids, nin, out_ids,
+							 64, &cfg);
+			if (nout > 0) {
+				slm_neural_detokenize(out_ids, nout,
+						      result->response, R_CAP);
+				result->response_len = kstrlen(result->response);
+				if (result->response_len > 0)
+					return 0;
+			}
+		}
+		/* else: fall through to the deterministic rule engine. */
+	}
+
 	/* System queries answered directly from runtime state. */
 	if (is_ip_query(text)) {
 		result->intent = SLM_INTENT_SYSTEM_MANAGE;
