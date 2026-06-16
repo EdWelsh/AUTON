@@ -63,6 +63,13 @@ static void arp_request(ipv4_t ip)
 	eth_send(bcast, ETHERTYPE_ARP, &p, sizeof(p));
 }
 
+void net_flush_kick(void)
+{
+	/* Any transmit makes QEMU flush queued inbound packets to the NIC. A
+	 * gratuitous ARP for our own address is harmless and serves that role. */
+	arp_request(net_ip());
+}
+
 int arp_resolve(ipv4_t ip, uint8_t mac_out[6])
 {
 	for (int i = 0; i < ARP_CACHE; i++) {

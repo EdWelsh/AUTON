@@ -64,6 +64,14 @@ int net_bringup(const struct pci_device *devs, uint32_t ndev)
 		kprintf("[NET] IP ");
 		print_ip(net_ip());
 		kprintf("\n");
+		/* Pre-resolve the gateway so outbound replies (e.g. a TCP
+		 * SYN-ACK) are never dropped waiting on ARP. ip_send drops on an
+		 * ARP miss, and SLIRP may send us a SYN without ARPing first. */
+		uint8_t gwmac[6];
+		for (int i = 0; i < 300 && !arp_resolve(net_gw(), gwmac); i++) {
+			__asm__ volatile("hlt");
+			net_poll();
+		}
 	} else {
 		kprintf("[NET] DHCP: no lease (link up, no address)\n");
 	}

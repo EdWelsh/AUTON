@@ -44,6 +44,24 @@ struct udp_hdr {
 	uint16_t checksum;
 } __attribute__((packed));
 
+struct tcp_hdr {
+	uint16_t src_port;
+	uint16_t dst_port;
+	uint32_t seq;
+	uint32_t ack;
+	uint8_t  data_off;      /* high nibble: header length in 32-bit words */
+	uint8_t  flags;
+	uint16_t window;
+	uint16_t checksum;
+	uint16_t urgent;
+} __attribute__((packed));
+
+#define TCP_FIN 0x01
+#define TCP_SYN 0x02
+#define TCP_RST 0x04
+#define TCP_PSH 0x08
+#define TCP_ACK 0x10
+
 /* ---- byte order (x86 is little-endian) ---- */
 static inline uint16_t htons(uint16_t x) { return (uint16_t)((x << 8) | (x >> 8)); }
 static inline uint16_t ntohs(uint16_t x) { return htons(x); }
@@ -102,5 +120,23 @@ int  arp_resolve(ipv4_t ip, uint8_t mac_out[6]);
 typedef void (*udp_handler_t)(ipv4_t src, uint16_t src_port,
 			      const uint8_t *data, uint16_t len);
 int  udp_bind(uint16_t port, udp_handler_t handler);
+
+/* ---- minimal single-connection TCP (server side) ---- */
+/* Called when request bytes arrive on an established connection. The handler
+ * typically replies with tcp_send() then tcp_close(). */
+typedef void (*tcp_handler_t)(const uint8_t *data, uint16_t len);
+
+/* Passively listen on 'port'. One connection at a time. */
+void tcp_listen(uint16_t port, tcp_handler_t handler);
+/* Send response bytes on the active connection (PSH|ACK). */
+void tcp_send(const void *data, uint16_t len);
+/* Half-close the active connection (FIN) and return to listening. */
+void tcp_close(void);
+
+/* Emit a benign frame (gratuitous ARP) to coax the SLIRP backend into
+ * flushing any queued inbound packet — see the polled-RX note in e1000.c.
+ * Call periodically from idle/serve loops so a client's first packet (e.g. a
+ * TCP SYN) is delivered even when we are not otherwise transmitting. */
+void net_flush_kick(void);
 
 #endif /* AUTON_NET_H */

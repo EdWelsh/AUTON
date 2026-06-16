@@ -132,25 +132,26 @@ static void dhcp_on_udp(ipv4_t src, uint16_t sport,
 
 /* Run the DHCP exchange. Returns 0 on success (IP configured), -1 on timeout.
  *
- * Under QEMU's SLIRP backend a queued reply is only flushed to the NIC during
- * the e1000 transmit path, so we re-send on a tight cadence while polling
- * rather than waiting passively between a few attempts. */
-#define DHCP_RESEND_EVERY 2000
-#define DHCP_MAX_POLLS    600000
+ * Each iteration halts until the next timer tick (~1 ms), which lets QEMU's
+ * main loop run and deliver any queued reply, then drains the RX ring. We
+ * re-send DISCOVER/REQUEST periodically as a retransmit. */
+#define DHCP_RESEND_EVERY 50            /* ticks (~ms) between retransmits */
+#define DHCP_MAX_TICKS    4000          /* ~4 s overall timeout */
 
 int dhcp_run(void)
 {
 	g_state = ST_INIT;
 	udp_bind(DHCP_CLIENT_PORT, dhcp_on_udp);
 
-	for (int i = 0; i < DHCP_MAX_POLLS && g_state != ST_DONE; i++) {
+	for (int i = 0; i < DHCP_MAX_TICKS && g_state != ST_DONE; i++) {
 		if (i % DHCP_RESEND_EVERY == 0) {
 			if (g_state == ST_INIT)
 				send_discover();
 			else if (g_state == ST_OFFERED)
 				send_request();
 		}
-		net_poll();
+		__asm__ volatile("hlt");        /* yield to QEMU until next tick */
+		net_poll();                     /* drain whatever arrived */
 	}
 	if (g_state != ST_DONE) {
 		e1000_debug();

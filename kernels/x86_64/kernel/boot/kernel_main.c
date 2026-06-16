@@ -9,6 +9,7 @@
 #include "pci.h"
 #include "slm.h"
 #include "net.h"
+#include "irq.h"
 
 #define PAGE_SIZE 4096u
 
@@ -30,7 +31,9 @@ void kernel_main(uint32_t mb_info_ptr, uint32_t magic)
 	kprintf("[BOOT] Long mode enabled\n");
 	kprintf("[BOOT] 64-bit GDT loaded\n");
 
-	/* Interrupts remain masked (cli) in the seed; state is initialized. */
+	/* Real IDT + PIC + ~1 kHz PIT timer. Interrupts are enabled below, before
+	 * networking, so polled loops can hlt-yield (see irq.h). */
+	idt_init();
 	kprintf("[BOOT] Interrupts initialized\n");
 
 	hw_summary_t hw = boot_parse(mb_info_ptr, magic);
@@ -60,6 +63,10 @@ void kernel_main(uint32_t mb_info_ptr, uint32_t magic)
 		if (drv)
 			kprintf("[SLM] Loaded driver: %s\n", drv);
 	}
+	/* Enable interrupts so the network bring-up (and the chat's server loops)
+	 * can hlt-yield to QEMU between polls — required for reliable RX. */
+	irq_enable();
+
 	/* Bring up networking so the chat can answer "what is my IP" and, in
 	 * Phase H, serve as a web server. Non-fatal if no NIC is present. */
 	net_bringup(devs, ndev);

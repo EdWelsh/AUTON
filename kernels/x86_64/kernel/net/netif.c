@@ -85,17 +85,20 @@ void eth_send(const uint8_t dst[6], uint16_t ethertype,
 void net_poll(void)
 {
 	static uint8_t buf[FRAME_MAX];
-	uint16_t n = e1000_poll(buf, sizeof(buf));
+	uint16_t n;
 
-	if (n < sizeof(struct eth_hdr))
-		return;
-	struct eth_hdr *eth = (struct eth_hdr *)buf;
-	uint16_t type = ntohs(eth->type);
+	/* Drain every frame currently in the RX ring. */
+	while ((n = e1000_poll(buf, sizeof(buf))) > 0) {
+		if (n < sizeof(struct eth_hdr))
+			continue;
+		struct eth_hdr *eth = (struct eth_hdr *)buf;
+		uint16_t type = ntohs(eth->type);
 
-	if (type == ETHERTYPE_ARP)
-		arp_input(buf, n);
-	else if (type == ETHERTYPE_IP)
-		ip_input(buf, n);
+		if (type == ETHERTYPE_ARP)
+			arp_input(buf, n);
+		else if (type == ETHERTYPE_IP)
+			ip_input(buf, n);
+	}
 }
 
 /* ---- UDP ---- */

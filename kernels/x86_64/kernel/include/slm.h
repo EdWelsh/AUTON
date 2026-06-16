@@ -44,6 +44,9 @@ const char *slm_driver_for_pci(uint16_t vendor, uint16_t device);
 /* Classify free-form text into an intent. */
 slm_intent_t slm_classify_intent(const char *text, uint32_t text_len);
 
+/* True if the user is asking to turn this machine into a web server. */
+int slm_is_web_server_request(const char *text);
+
 /* Process a free-form text query (e.g., from the console). Classifies the
  * intent, answers from the knowledge base, and fills 'result'. Returns 0 on
  * success. Dispatches to the active backend (rule engine in Stage 1). */

@@ -173,6 +173,20 @@ static int is_ip_query(const char *t)
 		(contains(t, "what") || contains(t, "address")));
 }
 
+int slm_is_web_server_request(const char *t)
+{
+	if (!(contains(t, "web server") || contains(t, "http server") ||
+	      (contains(t, "web") && contains(t, "server"))))
+		return 0;
+	/* Mentioning a web server means "make this one" — unless it's a question
+	 * about web servers. (Robust to a dropped leading char like "e a web
+	 * server" from the serial console.) */
+	if (contains(t, "what") || contains(t, "how") ||
+	    contains(t, "why") || contains(t, "explain"))
+		return 0;
+	return 1;
+}
+
 static void answer_ip(slm_intent_result_t *r)
 {
 	uint32_t p = 0;
