@@ -10,6 +10,7 @@ LINKER  := kernel/arch/x86_64/linker.ld
 # The seed runs identity-mapped in low memory, so no -mcmodel=kernel offset.
 CFLAGS  := -ffreestanding -fno-stack-protector -fno-pic -fno-pie \
            -mno-red-zone -mno-mmx -mno-sse -mno-sse2 -mno-80387 \
+           -fno-tree-loop-distribute-patterns \
            -std=gnu11 -O2 -g -Wall -Wextra \
            -Ikernel/include
 
@@ -18,7 +19,8 @@ CFLAGS  := -ffreestanding -fno-stack-protector -fno-pic -fno-pie \
 # float. Red zone stays disabled (interrupt-safe). The rest of the kernel keeps
 # the integer-only CFLAGS above so interrupt handlers never touch SSE state.
 CFLAGS_SSE := -ffreestanding -fno-stack-protector -fno-pic -fno-pie \
-              -mno-red-zone -std=gnu11 -O2 -g -Wall -Wextra \
+              -mno-red-zone -fno-math-errno -fno-tree-loop-distribute-patterns \
+              -std=gnu11 -O2 -g -Wall -Wextra \
               -Ikernel/include
 
 ASFLAGS := -ffreestanding -fno-pic -fno-pie

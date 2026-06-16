@@ -51,7 +51,26 @@ run: $(ISO)
 	qemu-system-x86_64 -cdrom $(ISO) -serial stdio -display none \
 		-no-reboot -m 128M
 
+# Bootable ISO that bundles the on-device model as a Multiboot2 module.
+# MODEL must point to a flat auton-slm.bin (see SLM/scripts/export_auton.py).
+NEURAL_ISO := $(BUILD)/auton-neural.iso
+iso-neural: $(NEURAL_ISO)
+$(NEURAL_ISO): $(KERNEL) grub/grub-neural.cfg
+	@test -n "$(MODEL)" || { echo "set MODEL=path/to/auton-slm.bin"; exit 1; }
+	@test -f "$(MODEL)" || { echo "MODEL not found: $(MODEL)"; exit 1; }
+	@mkdir -p $(BUILD)/isodir-neural/boot/grub
+	cp $(KERNEL) $(BUILD)/isodir-neural/boot/kernel.bin
+	cp "$(MODEL)" $(BUILD)/isodir-neural/boot/auton-slm.bin
+	cp grub/grub-neural.cfg $(BUILD)/isodir-neural/boot/grub/grub.cfg
+	grub-mkrescue -o $(NEURAL_ISO) $(BUILD)/isodir-neural 2>/dev/null
+	@echo "built $(NEURAL_ISO)"
+
+# Boot with the model module and enough RAM to select the neural backend.
+run-neural: $(NEURAL_ISO)
+	qemu-system-x86_64 -cdrom $(NEURAL_ISO) -serial stdio -display none \
+		-no-reboot -m 256M
+
 clean:
 	rm -rf $(BUILD)
 
-.PHONY: all iso run clean
+.PHONY: all iso run iso-neural run-neural clean

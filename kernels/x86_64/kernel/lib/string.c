@@ -34,3 +34,16 @@ int kstrcmp(const char *a, const char *b)
 	}
 	return (int)(unsigned char)*a - (int)(unsigned char)*b;
 }
+
+/* Freestanding C compilers (gcc) may lower __builtin_memcpy/memset and large
+ * aggregate copies in the neural backend to calls to these symbols. Provide
+ * them so the kernel links -nostdlib. */
+void *memcpy(void *dst, const void *src, size_t n)
+{
+	return kmemcpy(dst, src, n);
+}
+
+void *memset(void *dst, int c, size_t n)
+{
+	return kmemset(dst, c, n);
+}

@@ -319,12 +319,14 @@ int slm_process_text(const char *text, uint32_t text_len,
 	 * On empty/failed generation, fall through to the rule engine so the
 	 * chat never leaves the user without an answer (slm.md:639). */
 	if (g_neural_active && slm_neural_available()) {
-		uint32_t in_ids[64], out_ids[64];
+		uint32_t in_ids[64], out_ids[16];
 		uint32_t nin = slm_neural_tokenize(text, text_len, in_ids, 64);
 		if (nin > 0) {
-			inference_config_t cfg = { 0.0f, 1.0f, 48, 1 };
+			/* Cap output: scalar fp32 inference is slow under
+			 * emulation; a short reply keeps the REPL responsive. */
+			inference_config_t cfg = { 0.0f, 1.0f, 12, 1 };
 			uint32_t nout = slm_neural_infer(in_ids, nin, out_ids,
-							 64, &cfg);
+							 12, &cfg);
 			if (nout > 0) {
 				slm_neural_detokenize(out_ids, nout,
 						      result->response, R_CAP);
