@@ -344,6 +344,63 @@ full boot sequence through `[SLM] Ready` and `[BOOT] OK`. The image is pinned to
 > agents extend. The neural on-device SLM chat is layered on top of this
 > foundation (see the plans under `.claude/PRPs/plans/`).
 
+## The OS is the chat — no terminal
+
+AUTON boots straight into an `auton>` prompt over the serial console. You
+configure the machine it runs on by *asking*, not by running shell commands.
+Networking comes up at boot (DHCP over an in-kernel IPv4 stack), and the chat
+can turn the box into a server role:
+
+```text
+auton> what is my ip
+My IP is 10.0.2.15 (gateway 10.0.2.2, dns 10.0.2.3).
+auton> what can you do
+I can turn this machine into a server role from chat:
+  web server - ready
+  DNS server - ready
+  file server - roadmap
+  email server - roadmap
+  database server - roadmap
+  SSH server - roadmap
+  DHCP server - roadmap
+auton> be a web server
+Configuring this machine as a web server (in-kernel HTTP on port 80)...
+[HTTP] listening on :80
+```
+
+System queries answered from live kernel state: `what is my ip`, `hostname`
+(and `set hostname web1`), `memory`, `devices`, `uptime`, `status`. Working
+roles run on the in-kernel TCP/IP stack; roadmap roles report what they still
+need. Everything is a chat sentence — there is no shell.
+
+Try it with host networking and a forwarded port:
+
+```bash
+# Boot with a SLIRP-backed NIC and forward host :8080 -> guest :80
+docker compose run --rm os bash -lc \
+  'cd kernels/x86_64 && make CC=gcc iso && \
+   qemu-system-x86_64 -cdrom build/auton.iso -serial stdio -display none \
+     -no-reboot -m 128M -nic user,model=e1000,hostfwd=tcp::8080-:80'
+# then in the prompt: be a web server   (fetch http://localhost:8080)
+```
+
+`docker compose run acceptance` also verifies this automatically: alongside the
+boot markers it runs `net_dhcp_ip` (a real DHCP lease) and `http_get` (a real
+HTTP 200 from the in-kernel web server). Set `SKIP_NET=1` to skip the network
+checks in environments without user-mode networking.
+
+### On-device model (optional)
+
+With a trained model bundled as a boot module and ≥128 MB RAM, the chat answers
+with a transformer running **on the machine itself** (falling back to the rule
+engine otherwise):
+
+```bash
+# Train + export a tiny model on the host (see SLM/scripts), then:
+make -C kernels/x86_64 run-neural MODEL=/path/to/auton-slm.bin   # boots with -m 256M
+# boot shows: [SLM] Loaded model ... / [SLM] Backend: neural
+```
+
 ## Setup (orchestrator)
 
 ```bash
