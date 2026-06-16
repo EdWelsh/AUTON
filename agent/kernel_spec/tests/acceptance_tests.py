@@ -487,3 +487,120 @@ def get_all_tests(arch: str) -> dict[str, list[AcceptanceTest]]:
         "net": NET_TESTS,
         "integration": INTEGRATION_TESTS,
     }
+
+
+# Acceptance tests the committed seed kernel actually delivers (real subsystem
+# markers). The gate requires all of these to pass. Tests that assert optional
+# in-kernel "[TEST] ...: PASS" self-tests or agent-extended subsystems
+# (mm/ipc/fs/net, VGA, FS mount) are reported informationally only.
+CORE_GATE_TESTS = (
+    "boot_kernel_main",
+    "boot_interrupts",
+    "boot_hw_handoff",
+    "boot_multiboot2",
+    "boot_long_mode",
+    "driver_serial_output",
+    "dev_pci_scan",
+    "slm_rule_engine_init",
+    "slm_hw_discovery",
+    "full_boot_to_slm",
+)
+
+
+def test_passes(test: "AcceptanceTest", serial: str) -> bool:
+    """True if every expected serial pattern for ``test`` is present."""
+    return all(re.search(p, serial) for p in test.expected_serial_patterns)
+
+
+def evaluate(serial: str, arch: str = "x86_64") -> dict:
+    """Match captured serial output against all acceptance tests.
+
+    Returns ``{subsystem: {"passed": [names], "failed": [names], "total": n}}``
+    plus a top-level ``"ok"`` gating on the core seed subsystems.
+    """
+    groups = get_all_tests(arch)
+    results: dict = {}
+    for subsystem, tests in groups.items():
+        passed = [t.name for t in tests if test_passes(t, serial)]
+        failed = [t.name for t in tests if not test_passes(t, serial)]
+        results[subsystem] = {
+            "passed": passed,
+            "failed": failed,
+            "total": len(tests),
+        }
+
+    named = {t.name for ts in groups.values() for t in ts if test_passes(t, serial)}
+    results["ok"] = all(name in named for name in CORE_GATE_TESTS)
+    return results
+
+
+def _capture_serial(arch: str, timeout_secs: int) -> str:
+    """Build the seed ISO and boot it in QEMU, returning captured serial.
+
+    The seed kernel never exits (it boots into the chat REPL), so QEMU is run
+    under the ``timeout`` command — which kills it after ``timeout_secs`` and
+    leaves the serial printed so far on stdout. All acceptance markers print
+    before the REPL, so the capture is complete.
+    """
+    import subprocess
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parents[3]
+    kdir = root / "kernels" / arch
+    subprocess.run(
+        ["make", "CC=gcc", "iso"], cwd=kdir, check=True,
+        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+    )
+    proc = subprocess.run(
+        [
+            "timeout", str(timeout_secs),
+            "qemu-system-x86_64", "-cdrom", str(kdir / "build" / "auton.iso"),
+            "-serial", "stdio", "-display", "none", "-no-reboot", "-m", "128M",
+        ],
+        capture_output=True, text=True, timeout=timeout_secs + 15,
+    )
+    return proc.stdout
+
+
+def main(argv: list[str] | None = None) -> int:
+    """Run the acceptance markers against a (built+booted, or captured) kernel."""
+    import argparse
+
+    parser = argparse.ArgumentParser(description="AUTON kernel acceptance runner")
+    parser.add_argument("--arch", default="x86_64")
+    parser.add_argument(
+        "--serial", help="evaluate this captured serial log instead of booting"
+    )
+    parser.add_argument("--timeout", type=int, default=60)
+    args = parser.parse_args(argv)
+
+    if args.serial:
+        from pathlib import Path
+        serial = Path(args.serial).read_text(encoding="utf-8", errors="replace")
+    else:
+        try:
+            serial = _capture_serial(args.arch, args.timeout)
+        except Exception as exc:  # build/boot failure → report, fail
+            print(f"boot failed: {exc}")
+            return 1
+
+    results = evaluate(serial, args.arch)
+    for subsystem, r in results.items():
+        if subsystem == "ok":
+            continue
+        npass = len(r["passed"])
+        flag = "" if npass == r["total"] else "  (partial — agent-extended)"
+        print(f"{subsystem}: {npass}/{r['total']}{flag}")
+
+    if results["ok"]:
+        print("ALL PASS (seed-delivered acceptance markers)")
+        return 0
+    missing = [n for n in CORE_GATE_TESTS if n not in
+               {t.name for ts in get_all_tests(args.arch).values()
+                for t in ts if test_passes(t, serial)}]
+    print(f"FAILURES (missing: {', '.join(missing)})")
+    return 1
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
