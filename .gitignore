@@ -62,3 +62,5 @@ Thumbs.db
 
 # Claude Code
 .claude/
+SLM/work/
+SLM/models/exports/
