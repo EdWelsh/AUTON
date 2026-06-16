@@ -1,10 +1,10 @@
 /* Interactive chat REPL. The OS *is* the conversational interface: this loop
- * is what the user reaches after boot. It reads a line from the serial
- * console, routes it through the active SLM backend, and prints the reply. */
+ * is what the user reaches after boot. It reads a line from the serial console
+ * and routes it: system queries -> server roles -> the rule-engine fallback. */
 #include "slm.h"
 #include "console.h"
-#include "server.h"
-#include "net.h"
+#include "sysinfo.h"
+#include "roles.h"
 #include "kernel.h"
 
 #define LINE_MAX 256
@@ -14,11 +14,12 @@ static void print_help(void)
 	kprintf("Commands:\n");
 	kprintf("  help                 show this help\n");
 	kprintf("  quit / exit          leave the chat (halts)\n");
+	kprintf("  what can you do      list the server roles I can run\n");
 	kprintf("Ask in plain language, e.g.:\n");
-	kprintf("  what is my ip\n");
+	kprintf("  what is my ip / hostname / memory / devices / uptime / status\n");
+	kprintf("  be a web server          (also: dns server)\n");
+	kprintf("  set hostname web1\n");
 	kprintf("  what is pci 8086:100e\n");
-	kprintf("  which driver for 1af4:1000\n");
-	kprintf("  be a web server\n");
 }
 
 void slm_chat_loop(void)
@@ -45,18 +46,17 @@ void slm_chat_loop(void)
 			return;
 		}
 
-		/* Action: turn this machine into a web server. */
-		if (slm_is_web_server_request(line)) {
-			if (!net_is_up()) {
-				kprintf("Networking is not up yet, so I can't "
-					"start a web server.\n");
-				continue;
-			}
-			kprintf("Configuring this machine as a web server...\n");
-			http_server_run();
+		/* System queries (ip, hostname, memory, devices, uptime, status). */
+		if (sysinfo_answer(line, result.response, sizeof(result.response))) {
+			kprintf("%s\n", result.response);
 			continue;
 		}
 
+		/* Server-role control plane ("be a web server", "what can you do"). */
+		if (roles_dispatch(line))
+			continue;
+
+		/* Rule-engine fallback (hardware identify, driver select, etc.). */
 		slm_process_text(line, len, &result);
 		kprintf("%s\n", result.response);
 	}

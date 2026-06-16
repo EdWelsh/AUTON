@@ -29,16 +29,6 @@ void http_server_run(void)
 {
 	tcp_listen(80, http_on_data);
 	kprintf("[HTTP] listening on :80 (press any key to stop)\n");
-
-	for (;;) {
-		/* Halt until the next timer tick so QEMU's main loop can deliver
-		 * inbound packets, then service them. */
-		__asm__ volatile("hlt");
-		net_poll();
-		if (serial_rx_ready()) {
-			(void)serial_getc();
-			break;
-		}
-	}
+	server_serve_loop();
 	kprintf("[HTTP] stopped\n");
 }

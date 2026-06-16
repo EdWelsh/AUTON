@@ -92,9 +92,17 @@ void exception_handler(void)
 		__asm__ volatile("cli; hlt");
 }
 
+static volatile uint64_t g_ticks;
+
 void irq_timer(void)
 {
+	g_ticks++;
 	io_write8(PIC1_CMD, PIC_EOI);
+}
+
+uint64_t timer_ticks(void)
+{
+	return g_ticks;
 }
 
 void irq_eoi_only(void)

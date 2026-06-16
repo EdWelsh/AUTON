@@ -10,6 +10,7 @@
 #include "slm.h"
 #include "net.h"
 #include "irq.h"
+#include "sysinfo.h"
 
 #define PAGE_SIZE 4096u
 
@@ -54,6 +55,9 @@ void kernel_main(uint32_t mb_info_ptr, uint32_t magic)
 	uint32_t ndev = pci_scan(devs, 32);
 	hw.pci_device_count = ndev;
 	kprintf("[DEV] PCI scan: %u devices found\n", ndev);
+
+	/* Record facts the chat's system queries report (memory, devices). */
+	sysinfo_init(ram_mb, devs, ndev);
 
 	/* SLM runtime (rule engine) drives driver selection. */
 	slm_init(&hw);

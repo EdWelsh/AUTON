@@ -8,10 +8,15 @@
 #ifndef AUTON_IRQ_H
 #define AUTON_IRQ_H
 
+#include <stdint.h>
+
 /* Install the IDT, remap the PIC, and start a ~1 kHz timer. Leaves IF clear. */
 void idt_init(void);
 
 /* Set IF (sti). Call once after idt_init, before any hlt-based wait loop. */
 void irq_enable(void);
+
+/* Milliseconds since idt_init (the PIT runs at ~1 kHz, one tick per ms). */
+uint64_t timer_ticks(void);
 
 #endif /* AUTON_IRQ_H */
