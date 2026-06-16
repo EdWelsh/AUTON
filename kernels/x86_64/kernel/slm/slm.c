@@ -5,6 +5,9 @@
 #include "slm.h"
 #include "kernel.h"
 #include "net.h"
+#include "neural.h"
+
+#define NEURAL_MIN_RAM_MB 128u
 
 struct pci_driver_rule {
 	uint16_t vendor;
@@ -22,18 +25,41 @@ static const struct pci_driver_rule kb_rules[] = {
 };
 
 static int g_initialized;
+static int g_neural_active;     /* 1 if the neural backend loaded a model */
 
+/* Select a backend per slm.md:487-502: rule engine unless there is enough RAM
+ * AND a model boot module that the neural backend can load. The neural loader
+ * returns -1 until Stage 2 lands, so this falls back cleanly today. */
 int slm_init(const hw_summary_t *hw)
 {
-	(void)hw;
-	g_initialized = 1;
 	kprintf("[SLM] Rule engine initialized\n");
+	g_initialized = 1;
+	g_neural_active = 0;
+
+	if (hw) {
+		uint32_t ram_mb = (uint32_t)(hw->total_ram_bytes / (1024u * 1024u));
+		if (ram_mb >= NEURAL_MIN_RAM_MB) {
+			for (uint32_t i = 0; i < hw->module_count; i++) {
+				const boot_module_t *m = &hw->modules[i];
+				const void *data = (const void *)(uintptr_t)m->start;
+				uint64_t size = m->end - m->start;
+				if (slm_neural_load_model(data, size,
+							  MODEL_FORMAT_AUTON) == 0) {
+					g_neural_active = 1;
+					char info[96];
+					slm_neural_model_info(info, sizeof(info));
+					kprintf("[SLM] Loaded model: %s\n", info);
+					break;
+				}
+			}
+		}
+	}
 	return 0;
 }
 
 const char *slm_backend_name(void)
 {
-	return "rule-engine";
+	return g_neural_active ? "neural" : "rule-engine";
 }
 
 static const struct pci_driver_rule *kb_lookup(uint16_t vendor, uint16_t device)

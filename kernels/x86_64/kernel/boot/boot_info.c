@@ -7,6 +7,7 @@
 
 #define MB2_BOOT_MAGIC   0x36D76289u
 #define MB2_TAG_END      0u
+#define MB2_TAG_MODULE   3u
 #define MB2_TAG_BASIC_MEM 4u
 
 struct mb2_tag {
@@ -20,6 +21,22 @@ struct mb2_tag_basic_mem {
 	uint32_t mem_lower;   /* KiB below 1 MiB */
 	uint32_t mem_upper;   /* KiB above 1 MiB */
 };
+
+struct mb2_tag_module {
+	uint32_t type;
+	uint32_t size;
+	uint32_t mod_start;
+	uint32_t mod_end;
+	char     cmdline[];   /* NUL-terminated */
+};
+
+static void copy_cmdline(char *dst, const char *src, uint32_t cap)
+{
+	uint32_t i = 0;
+	for (; i < cap - 1 && src[i]; i++)
+		dst[i] = src[i];
+	dst[i] = '\0';
+}
 
 int boot_magic_valid(uint32_t magic)
 {
@@ -47,6 +64,14 @@ hw_summary_t boot_parse(uint32_t mb_info_ptr, uint32_t magic)
 				(const struct mb2_tag_basic_mem *)p;
 			uint64_t kib = (uint64_t)m->mem_lower + (uint64_t)m->mem_upper;
 			hw.total_ram_bytes = kib * 1024u;
+		} else if (tag->type == MB2_TAG_MODULE &&
+			   hw.module_count < BOOT_MAX_MODULES) {
+			const struct mb2_tag_module *m =
+				(const struct mb2_tag_module *)p;
+			boot_module_t *mod = &hw.modules[hw.module_count++];
+			mod->start = m->mod_start;
+			mod->end = m->mod_end;
+			copy_cmdline(mod->cmdline, m->cmdline, sizeof(mod->cmdline));
 		}
 
 		/* Advance to the next tag, padded up to an 8-byte boundary. */

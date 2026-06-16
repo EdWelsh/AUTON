@@ -99,6 +99,17 @@ long_mode_start:
 	movw	%ax, %fs
 	movw	%ax, %gs
 
+	/* Enable SSE so the neural backend can use hardware float. Must happen
+	 * before any SSE instruction executes (clears CR0.EM, sets CR0.MP, and
+	 * CR4.OSFXSR | CR4.OSXMMEXCPT). QEMU's default CPU has SSE2. */
+	movq	%cr0, %rax
+	andq	$~0x4, %rax             /* clear EM (bit 2) */
+	orq	$0x2, %rax              /* set MP (bit 1) */
+	movq	%rax, %cr0
+	movq	%cr4, %rax
+	orq	$0x600, %rax            /* OSFXSR (9) | OSXMMEXCPT (10) */
+	movq	%rax, %cr4
+
 	/* kernel_main(uint32_t mb_info_ptr, uint32_t magic) -> rdi, rsi */
 	movl	mb_info(%rip), %edi
 	movl	mb_magic(%rip), %esi

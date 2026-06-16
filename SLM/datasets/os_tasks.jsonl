@@ -1,0 +1,12 @@
+{"text": "what is pci 8086:100e", "intent": "HARDWARE_IDENTIFY", "context": "pci", "next_action": "Intel 82540EM Gigabit Ethernet, driver e1000"}
+{"text": "identify device 1af4:1000", "intent": "HARDWARE_IDENTIFY", "context": "pci", "next_action": "Virtio network device, driver virtio-net"}
+{"text": "which driver for the network card", "intent": "DRIVER_SELECT", "context": "nic", "next_action": "load e1000 for Intel gigabit ethernet"}
+{"text": "what driver do i need for 8086:10d3", "intent": "DRIVER_SELECT", "context": "pci", "next_action": "e1000e for Intel 82574L"}
+{"text": "set up networking", "intent": "INSTALL_CONFIGURE", "context": "net", "next_action": "identify nic, load driver, run dhcp"}
+{"text": "what is my ip address", "intent": "SYSTEM_MANAGE", "context": "net", "next_action": "report dhcp-assigned address"}
+{"text": "be a web server", "intent": "INSTALL_CONFIGURE", "context": "role", "next_action": "start in-kernel http server on port 80"}
+{"text": "make this machine a dns server", "intent": "INSTALL_CONFIGURE", "context": "role", "next_action": "answer A queries on port 53"}
+{"text": "how much memory does this machine have", "intent": "SYSTEM_MANAGE", "context": "sys", "next_action": "report total ram"}
+{"text": "what devices do you see", "intent": "HARDWARE_IDENTIFY", "context": "pci", "next_action": "list pci devices and drivers"}
+{"text": "why is the network down", "intent": "TROUBLESHOOT", "context": "net", "next_action": "check nic driver loaded and dhcp completed"}
+{"text": "describe the network card you found", "intent": "HARDWARE_IDENTIFY", "context": "nic", "next_action": "Intel gigabit ethernet controller using e1000, supports dhcp"}
