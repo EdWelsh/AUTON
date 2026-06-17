@@ -1,0 +1,32 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "auton-controlplane"
+version = "0.1.0"
+description = "AUTON host chat control plane — run desktop apps, Docker, k8s, and server workloads from one natural-language chat."
+requires-python = ">=3.10"
+dependencies = [
+    "rich>=13.7.0",
+]
+
+[project.optional-dependencies]
+ui = ["fastapi>=0.110", "uvicorn>=0.29"]
+desktop = ["pywebview>=5.0"]
+llm = ["litellm>=1.40.0"]
+dev = ["pytest>=8.0", "pytest-asyncio>=0.23", "httpx>=0.27"]
+
+# Console scripts are PRE-DECLARED here by the foundation so surface units never
+# need to edit this file. The referenced modules are created by Units 5/6/7.
+[project.scripts]
+auton-chat = "controlplane.surfaces.terminal.repl:main"
+auton-ui = "controlplane.surfaces.ui.app:main"
+auton-desktop = "controlplane.surfaces.desktop.shell:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/controlplane"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
