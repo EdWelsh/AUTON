@@ -69,6 +69,20 @@ def test_run_argv_wires_devices_caps_env_privileged():
     assert "6080:6080" in argv
 
 
+def test_free_port_returns_preferred_when_open_else_fallback():
+    import socket
+
+    # With no preference, the OS hands back a real free port.
+    p = builder.free_port()
+    assert isinstance(p, int) and p > 0
+    # When preferred is taken, a different free port is returned.
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        s.bind(("", 0))
+        taken = s.getsockname()[1]
+        got = builder.free_port(taken)
+        assert got != taken
+
+
 def test_build_argv_uses_build_dir():
     win = profiles.profile_by_key("windows")
     argv = builder.build_argv(win)

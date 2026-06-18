@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import os
 import shutil
+import socket
 import subprocess  # nosec B404 - fixed argument lists, shell=False
 from dataclasses import dataclass
 from pathlib import Path
@@ -28,6 +29,25 @@ def kvm_available() -> bool:
 
 def docker_available(docker: str = "docker") -> bool:
     return shutil.which(docker) is not None
+
+
+def free_port(preferred: int | None = None) -> int:
+    """Return ``preferred`` if it's bindable, otherwise an OS-assigned free port.
+
+    Avoids the common "port already in use" launch failure when the default
+    viewer port (e.g. 3000) is taken by another service. Small TOCTOU window
+    between this check and Docker's bind is acceptable for a chat-driven tool.
+    """
+    if preferred is not None:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            try:
+                s.bind(("", preferred))
+                return preferred
+            except OSError:
+                pass
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        s.bind(("", 0))
+        return s.getsockname()[1]
 
 
 # --- pure argv builders (unit-tested without Docker) ------------------------
@@ -127,6 +147,9 @@ class OSManager:
 
         # Replace any stale container of the same name first.
         self._run([self.docker, "rm", "-f", profile.container_name()])
+        # Pick a free host port so a busy default (e.g. 3000) doesn't fail the run.
+        if host_port is None and profile.web_port is not None:
+            host_port = free_port(profile.web_port)
         cp = self._run(run_argv(profile, host_port, self.docker))
         if cp.returncode != 0:
             return StepResult(False, f"launch failed for {profile.label}", cp.stderr.strip()[-500:])
