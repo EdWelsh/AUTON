@@ -268,6 +268,45 @@ SLM_TESTS = [
         ],
         requires_subsystems=["boot", "mm", "dev"],
     ),
+    # Control-plane roadmap stubs: the chat capability listing acknowledges
+    # desktop apps / containers / kubernetes / workloads and points at the
+    # AUTON host control plane (these run there today, not in-kernel yet).
+    AcceptanceTest(
+        name="slm_roadmap_desktop_apps",
+        subsystem="slm",
+        description="Capability listing acknowledges desktop apps as a roadmap role",
+        expected_serial_patterns=[
+            r"desktop apps - roadmap",
+        ],
+        requires_subsystems=["boot", "mm"],
+    ),
+    AcceptanceTest(
+        name="slm_roadmap_containers",
+        subsystem="slm",
+        description="Capability listing acknowledges containers (Docker) as a roadmap role",
+        expected_serial_patterns=[
+            r"containers - roadmap",
+        ],
+        requires_subsystems=["boot", "mm"],
+    ),
+    AcceptanceTest(
+        name="slm_roadmap_kubernetes",
+        subsystem="slm",
+        description="Capability listing acknowledges kubernetes as a roadmap role",
+        expected_serial_patterns=[
+            r"kubernetes - roadmap",
+        ],
+        requires_subsystems=["boot", "mm"],
+    ),
+    AcceptanceTest(
+        name="slm_roadmap_workloads",
+        subsystem="slm",
+        description="Capability listing acknowledges generic workloads as a roadmap role",
+        expected_serial_patterns=[
+            r"workloads - roadmap",
+        ],
+        requires_subsystems=["boot", "mm"],
+    ),
 ]
 
 # Driver tests — portable

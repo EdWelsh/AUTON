@@ -30,6 +30,15 @@ static const capability_t caps[] = {
 	{ "sql",      "database server", CAP_ROADMAP, "needs persistent storage and a query engine",       0 },
 	{ "ssh",      "SSH server",      CAP_ROADMAP, "needs crypto (key exchange, ciphers) and a PTY",    0 },
 	{ "dhcp",     "DHCP server",     CAP_ROADMAP, "this host is a DHCP client; serving leases is next", 0 },
+	/* Control-plane roadmap stubs: the AUTON host control plane already runs
+	 * these from chat; the booted kernel acknowledges and points there. */
+	{ "desktop",  "desktop apps",    CAP_ROADMAP, "the AUTON host control plane launches Win/Mac/Linux apps from chat; in-kernel needs a process model + window system", 0 },
+	{ "gui",      "desktop apps",    CAP_ROADMAP, "the AUTON host control plane launches Win/Mac/Linux apps from chat; in-kernel needs a process model + window system", 0 },
+	{ "docker",   "containers",      CAP_ROADMAP, "host control plane runs Docker today; in-kernel needs an OCI runtime", 0 },
+	{ "container","containers",      CAP_ROADMAP, "host control plane runs Docker today; in-kernel needs an OCI runtime", 0 },
+	{ "kubernetes","kubernetes",     CAP_ROADMAP, "host control plane drives kubectl today; in-kernel needs a container runtime + scheduler", 0 },
+	{ "k8s",      "kubernetes",      CAP_ROADMAP, "host control plane drives kubectl today; in-kernel needs a container runtime + scheduler", 0 },
+	{ "workload", "workloads",       CAP_ROADMAP, "the host control plane runs server/docker/k8s workloads from chat", 0 },
 };
 #define NCAPS ((int)(sizeof(caps) / sizeof(caps[0])))
 

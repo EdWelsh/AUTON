@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="dark" />
+    <title>AUTON — chat control plane</title>
+    <link rel="stylesheet" href="/static/style.css" />
+  </head>
+  <body>
+    <main class="shell" aria-labelledby="title">
+      <header class="masthead">
+        <div class="mark" aria-hidden="true">▮</div>
+        <div class="masthead-text">
+          <h1 id="title">AUTON</h1>
+          <p class="tagline">One chat. Desktop apps, Docker, k8s, servers.</p>
+        </div>
+        <span class="surface-pill" title="This conversation is shared with your terminal and desktop installs">
+          surface: web
+        </span>
+      </header>
+
+      <section
+        id="chat"
+        class="transcript"
+        aria-live="polite"
+        aria-label="Conversation"
+      >
+        <p class="empty-hint" id="empty-hint">
+          Ask in plain English — try
+          <button type="button" class="seed" data-seed="what can you do">what can you do</button>,
+          <button type="button" class="seed" data-seed="run nginx in docker">run nginx in docker</button>,
+          or
+          <button type="button" class="seed" data-seed="launch firefox">launch firefox</button>.
+        </p>
+      </section>
+
+      <form id="composer" class="composer" autocomplete="off">
+        <label class="sr-only" for="prompt">Your request</label>
+        <input
+          id="prompt"
+          name="text"
+          type="text"
+          placeholder="Tell AUTON what to do…"
+          required
+          autofocus
+        />
+        <button id="send" type="submit">
+          <span class="send-label">Send</span>
+          <span class="send-glyph" aria-hidden="true">↵</span>
+        </button>
+      </form>
+    </main>
+
+    <script src="/static/app.js" defer></script>
+  </body>
+</html>
