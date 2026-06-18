@@ -1,0 +1,18 @@
+# REAL Android emulator with noVNC + ADB (budtmo/docker-android). Run on a KVM
+# host. Browser at http://<host>:6080. Side-load APKs with:
+#   adb connect <host>:5555 && adb install yourapp.apk
+services:
+  android:
+    image: budtmo/docker-android:emulator_11.0
+    container_name: auton-android
+    privileged: true          # emulator needs broad device access
+    devices:
+      - /dev/kvm
+    ports:
+      - "6080:6080"           # noVNC web
+      - "5555:5555"           # ADB
+    environment:
+      EMULATOR_DEVICE: "Samsung Galaxy S10"
+      WEB_VNC: "true"
+      DATAPARTITION: "2g"
+    restart: unless-stopped

@@ -1,0 +1,22 @@
+# macOS in a container (dockur/macos) — run on your Proxmox/KVM host. Web viewer
+# on http://<host>:8006. EXPERIMENTAL: x86 only, slow under emulation, and
+# running macOS on non-Apple hardware violates Apple's EULA. For testing only.
+services:
+  macos:
+    image: dockurr/macos
+    container_name: auton-macos
+    environment:
+      VERSION: "13"          # Ventura; also 14, 12, 11
+      RAM_SIZE: "8G"
+      CPU_CORES: "4"
+    devices:
+      - /dev/kvm
+      - /dev/net/tun
+    cap_add:
+      - NET_ADMIN
+    ports:
+      - "8006:8006"          # web viewer
+    volumes:
+      - ./storage:/storage
+    stop_grace_period: 2m
+    restart: unless-stopped

@@ -1,0 +1,24 @@
+# REAL Windows in a container (dockur/windows) — run this on your Proxmox/KVM
+# host. Web viewer on http://<host>:8006. First boot downloads + installs
+# Windows automatically. Needs /dev/kvm.
+services:
+  windows:
+    image: dockurr/windows
+    container_name: auton-windows
+    environment:
+      VERSION: "11"          # 11, 10, 8e, 7, etc.
+      RAM_SIZE: "4G"
+      CPU_CORES: "2"
+    devices:
+      - /dev/kvm
+      - /dev/net/tun
+    cap_add:
+      - NET_ADMIN
+    ports:
+      - "8006:8006"          # web viewer
+      - "3389:3389/tcp"      # RDP
+      - "3389:3389/udp"
+    volumes:
+      - ./storage:/storage   # persists the Windows install
+    stop_grace_period: 2m
+    restart: unless-stopped
