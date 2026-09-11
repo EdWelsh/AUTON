@@ -159,7 +159,7 @@ def make_resolver(
     Parameters
     ----------
     model:
-        LiteLLM model string (e.g. ``"ollama/llama3.1:8b"``). When ``None`` the
+        LiteLLM model string (e.g. ``"ollama/gemma4:latest"``). When ``None`` the
         resolver is deterministic-only — useful offline and in tests.
     api_keys:
         Provider → API key, matching ``agent/config/auton.toml`` ``[llm.api_keys]``.
@@ -220,16 +220,19 @@ def _resolve_via_llm(
     user = _build_user_prompt(text, caps)
     messages = [{"role": "user", "content": user}]
 
+    # asyncio.run() rejects a running loop *before* awaiting, so a coroutine
+    # built inline would be abandoned unawaited on that path (RuntimeWarning).
+    # Hold a reference and close it explicitly on every non-awaited exit.
+    coro = client.send_message(
+        agent_id=agent_id,
+        system=system,
+        messages=messages,
+        temperature=0.0,
+    )
     try:
-        response = asyncio.run(
-            client.send_message(
-                agent_id=agent_id,
-                system=system,
-                messages=messages,
-                temperature=0.0,
-            )
-        )
+        response = asyncio.run(coro)
     except RuntimeError as exc:
+        coro.close()
         # Already inside a running loop (e.g. called from async code): use a
         # dedicated loop in a thread rather than failing.
         if "running event loop" in str(exc) or "cannot be called" in str(exc):
@@ -237,6 +240,7 @@ def _resolve_via_llm(
         log.warning("intent LLM call failed, using fallback: %s", exc)
         return None
     except Exception as exc:  # noqa: BLE001 - any model/network error => fallback
+        coro.close()
         log.warning("intent LLM call failed, using fallback: %s", exc)
         return None
 

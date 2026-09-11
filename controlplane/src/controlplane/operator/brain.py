@@ -11,13 +11,32 @@ fallback AUTON uses throughout.
 from __future__ import annotations
 
 import json
-import tomllib
 from pathlib import Path
+
+import tomllib
 
 from .tools import ToolExecutor, tool_schemas
 
-_REPO_ROOT = Path(__file__).resolve().parents[5]
-_AGENT_CONFIG = _REPO_ROOT / "agent" / "config" / "auton.toml"
+
+def _find_agent_config() -> Path:
+    """Locate ``agent/config/auton.toml`` by walking up from this module.
+
+    A fixed ``parents[N]`` index was off by one here, so the config was never
+    actually read — every call fell through to a hardcoded default, which is
+    how a dead model name went unnoticed. Searching is index-independent and
+    survives a src-layout move.
+    """
+    here = Path(__file__).resolve()
+    for parent in here.parents:
+        candidate = parent / "agent" / "config" / "auton.toml"
+        if candidate.is_file():
+            return candidate
+    # Nothing found: return the conventional location so the error message
+    # names a real path rather than silently picking a different config.
+    return here.parents[4] / "agent" / "config" / "auton.toml"
+
+
+_AGENT_CONFIG = _find_agent_config()
 
 _SYSTEM = (
     "You are AUTON, an operating system you drive entirely from chat. The user "
@@ -51,14 +70,26 @@ def resolve_model(request: str | None = None, default: str | None = None) -> str
 
 
 def _config_model() -> str:
+    """The configured model, or raise. Config is the only source of truth.
+
+    A hardcoded fallback here would silently diverge from ``auton.toml`` the
+    moment the config changed — which is exactly how a dead model name survived
+    in two places. Raising instead lets the runner degrade to the rule brain.
+    """
     try:
         with open(_AGENT_CONFIG, "rb") as f:
             model = tomllib.load(f).get("llm", {}).get("model")
-        if model:
-            return model
-    except (OSError, tomllib.TOMLDecodeError):
-        pass
-    return "ollama/llama3.1:8b"
+    except (OSError, tomllib.TOMLDecodeError) as exc:
+        raise BrainUnavailable(
+            f"cannot read {_AGENT_CONFIG}: {exc}. Set [llm].model there to a "
+            f"LiteLLM model string, e.g. 'ollama/gemma4:latest'."
+        ) from exc
+    if not model:
+        raise BrainUnavailable(
+            f"no [llm].model in {_AGENT_CONFIG}. Set it to a LiteLLM model "
+            f"string, e.g. 'ollama/gemma4:latest'."
+        )
+    return model
 
 
 def _ollama_api_base() -> str | None:
@@ -67,6 +98,59 @@ def _ollama_api_base() -> str | None:
             return tomllib.load(f).get("llm", {}).get("endpoints", {}).get("ollama")
     except (OSError, tomllib.TOMLDecodeError):
         return None
+
+
+# One HTTP call to localhost, cached per process: a preflight must not add
+# latency to every turn. Keyed by (base_url, model) so a re-pull is picked up
+# by a fresh process, not silently cached forever within one.
+_PREFLIGHT_OK: set[tuple[str, str]] = set()
+
+
+def preflight_ollama(model: str, api_base: str | None) -> None:
+    """Fail fast if ``model`` is not installed on the Ollama host.
+
+    Without this the symptom surfaces as an empty completion or a connection
+    error several tool-calls into an agent run, where it reads as a flaky model
+    rather than a typo. Raises :class:`BrainUnavailable` naming the model that
+    was asked for and the ones that actually exist.
+    """
+    base = (api_base or "http://localhost:11434").rstrip("/")
+    tag = model.split("/", 1)[1] if "/" in model else model
+    if (base, tag) in _PREFLIGHT_OK:
+        return
+
+    installed = _installed_ollama_tags(base)
+    if installed is None:
+        # Endpoint unreachable: that is a different failure, and litellm will
+        # report it with a better message than a guess from here.
+        return
+    if tag not in installed:
+        available = ", ".join(sorted(installed)) or "(none installed)"
+        raise BrainUnavailable(
+            f"model {model!r} is not installed on the Ollama host at {base}. "
+            f"Available: {available}. Either `ollama pull {tag}` or set "
+            f"[llm].model in {_AGENT_CONFIG} to one of the available names."
+        )
+    _PREFLIGHT_OK.add((base, tag))
+
+
+def _installed_ollama_tags(base: str) -> set[str] | None:
+    """Installed model tags, or None when the endpoint cannot be reached.
+
+    The timeout is generous: a busy Ollama serving another request is not the
+    same as an absent one, and mistaking a cold start for absence would make
+    the preflight itself the flaky part.
+    """
+    import json as _json
+    import urllib.error
+    import urllib.request
+
+    try:
+        with urllib.request.urlopen(f"{base}/api/tags", timeout=10) as resp:
+            payload = _json.loads(resp.read())
+    except (urllib.error.URLError, OSError, ValueError):
+        return None
+    return {m["name"] for m in payload.get("models", []) if m.get("name")}
 
 
 class LLMBrain:
@@ -93,6 +177,7 @@ class LLMBrain:
             base = _ollama_api_base()
             if base:
                 kwargs["api_base"] = base
+            preflight_ollama(self.model, base)
 
         messages: list[dict] = [
             {"role": "system", "content": _SYSTEM},

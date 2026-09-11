@@ -17,7 +17,7 @@ def main(argv: list[str] | None = None) -> int:
     )
     parser.add_argument("goal", nargs="+", help="what you want done, in plain English")
     parser.add_argument("--brain", choices=["auto", "llm", "rule"], default="auto")
-    parser.add_argument("--model", help="override the brain, e.g. 'use chatgpt' / 'ollama/llama3.1:8b'")
+    parser.add_argument("--model", help="override the brain, e.g. 'use chatgpt' / 'ollama/gemma4:latest'")
     parser.add_argument("--yes", action="store_true", help="auto-approve irreversible actions (use with care)")
     parser.add_argument("--smtp-host", default="localhost")
     parser.add_argument("--smtp-port", type=int, default=1025)

@@ -10,12 +10,15 @@ endpoint check and skipped when absent.
 
 from __future__ import annotations
 
+import asyncio
+import gc
 import os
 import urllib.error
 import urllib.request
+import warnings
+from types import SimpleNamespace
 
 import pytest
-
 from controlplane.core import (
     Capability,
     CapabilityResult,
@@ -24,7 +27,7 @@ from controlplane.core import (
     Router,
 )
 from controlplane.intent import make_resolver
-from controlplane.intent.resolver import deterministic_resolve
+from controlplane.intent.resolver import _resolve_via_llm, deterministic_resolve
 
 
 def _docker_cap() -> Capability:
@@ -140,7 +143,11 @@ async def test_real_llm_resolves_intent_if_reachable():
     if url is None:
         pytest.skip("no reachable ollama endpoint; skipping real-LLM test")
 
-    model = os.environ.get("AUTON_INTENT_MODEL", "ollama/llama3.1:8b")
+    # Default to the configured model rather than a second hardcoded name —
+    # that divergence is exactly what this test would otherwise stop catching.
+    from controlplane.operator.brain import resolve_model
+
+    model = os.environ.get("AUTON_INTENT_MODEL") or resolve_model()
     reg = _registry()
     resolve = make_resolver(model=model, endpoints={"ollama": url})
     # A phrase with no keyword substring overlap with docker, to force the LLM
@@ -148,3 +155,87 @@ async def test_real_llm_resolves_intent_if_reachable():
     cap = resolve("bundle my server so it runs the same everywhere", reg)
     assert cap is not None
     assert cap.name in {c.name for c in reg.unique_by_name()}
+
+
+# --- 4. Coroutine lifecycle on the LLM path -----------------------------
+
+class _StubClient:
+    """The LLMClient surface the resolver actually uses: one async method.
+
+    Not a stand-in for a model's answers — it is the seam that makes the
+    coroutine-lifecycle bug testable deterministically, with no network and no
+    dependence on which loop the caller happens to be running.
+    """
+
+    def __init__(self, reply: str = "docker", raises: Exception | None = None):
+        self.reply = reply
+        self.raises = raises
+        self.calls = 0
+
+    async def send_message(self, agent_id, system, messages, temperature=0.0):
+        self.calls += 1
+        if self.raises is not None:
+            raise self.raises
+        return SimpleNamespace(text=self.reply)
+
+
+def _resolve_via_llm_capturing_warnings(client, text: str):
+    """Run the LLM resolver path; return (capability, RuntimeWarnings raised).
+
+    "coroutine was never awaited" is emitted by the garbage collector when the
+    orphaned coroutine is finalised, not at the call site — so the collection
+    has to happen inside the capture block for the warning to be seen at all.
+    """
+    caps = _registry().unique_by_name()
+    with warnings.catch_warnings(record=True) as record:
+        warnings.simplefilter("always")
+        picked = _resolve_via_llm(client, "test-intent", text, caps)
+        gc.collect()
+    return picked, [w for w in record if issubclass(w.category, RuntimeWarning)]
+
+
+def test_llm_path_inside_running_loop_leaks_no_coroutine():
+    """The regression: asyncio.run() rejects a running loop before awaiting.
+
+    A coroutine built inline as its argument was then discarded unawaited. The
+    resolver still has to resolve — via the threaded fallback — and do it
+    without leaving a RuntimeWarning behind.
+    """
+    client = _StubClient(reply="docker")
+
+    async def _inside_loop():
+        return _resolve_via_llm_capturing_warnings(client, "put this in a container")
+
+    picked, runtime_warnings = asyncio.run(_inside_loop())
+
+    assert picked is not None and picked.name == "docker"
+    assert client.calls == 1, "the threaded fallback must still make the call"
+    assert runtime_warnings == [], f"leaked: {[str(w.message) for w in runtime_warnings]}"
+
+
+def test_llm_path_leaves_no_coroutine_when_the_call_errors():
+    """An erroring model degrades to None (the caller's backstop), warning-free."""
+    client = _StubClient(raises=ConnectionError("ollama is down"))
+
+    picked, runtime_warnings = _resolve_via_llm_capturing_warnings(client, "spin up a container")
+
+    assert picked is None, "an errored call hands off to the deterministic backstop"
+    assert runtime_warnings == [], f"leaked: {[str(w.message) for w in runtime_warnings]}"
+
+
+def test_llm_path_outside_a_loop_leaves_no_coroutine():
+    """The ordinary synchronous path must stay clean too."""
+    client = _StubClient(reply="kubernetes")
+
+    picked, runtime_warnings = _resolve_via_llm_capturing_warnings(client, "scale my workload out")
+
+    assert picked is not None and picked.name == "kubernetes"
+    assert runtime_warnings == []
+
+
+def test_erroring_resolver_still_routes_via_the_deterministic_backstop():
+    """End of the chain: a dead LLM must not stop the router from resolving."""
+    reg = _registry()
+    router = Router(reg, intent_resolver=make_resolver(model="ollama/definitely-not-installed"))
+    result = router.route("i need to ship and manage images for my service")
+    assert result.handled and result.text == "docker handled"

@@ -53,8 +53,11 @@ class Operator:
         if brain == "rule":
             return "rule", RuleBrain().run(goal, executor)
         if brain in ("llm", "auto"):
-            model = resolve_model(model_request)
             try:
+                # resolve_model reads config and can itself raise BrainUnavailable
+                # (unreadable config, no [llm].model), so it belongs inside the
+                # try — otherwise "auto" would propagate instead of degrading.
+                model = resolve_model(model_request)
                 return f"llm:{model}", LLMBrain(model=model).run(goal, executor)
             except BrainUnavailable:
                 if brain == "llm":

@@ -14,7 +14,7 @@ from typing import Any
 
 import litellm
 
-from orchestrator.llm.response import LLMResponse, ToolCall
+from orchestrator.llm.response import LLMResponse
 
 logger = logging.getLogger(__name__)
 
@@ -97,6 +97,70 @@ class ProviderConfig:
         return self.endpoints.get(provider)
 
 
+class ModelUnavailableError(Exception):
+    """The configured model does not exist on the configured provider."""
+
+
+DEFAULT_OLLAMA_URL = "http://localhost:11434"
+# A busy Ollama serving another request is not an absent one; a cold start must
+# not be mistaken for a missing model, so the probe waits rather than guesses.
+_OLLAMA_PROBE_TIMEOUT = 10.0
+# One HTTP call to localhost per (endpoint, model) per process.
+_preflight_ok: set[tuple[str, str]] = set()
+
+
+def _installed_ollama_tags(base_url: str) -> set[str] | None:
+    """Model tags installed on an Ollama host, or None if it is unreachable.
+
+    Unreachable is deliberately not an error here: that is a different failure
+    with its own message further down, and failing construction on it would
+    make the orchestrator unusable whenever Ollama is merely slow to start.
+    """
+    import urllib.error
+    import urllib.request
+
+    try:
+        with urllib.request.urlopen(
+            f"{base_url.rstrip('/')}/api/tags", timeout=_OLLAMA_PROBE_TIMEOUT
+        ) as resp:
+            payload = json.loads(resp.read())
+    except (urllib.error.URLError, OSError, ValueError):
+        return None
+    return {m["name"] for m in payload.get("models", []) if m.get("name")}
+
+
+def preflight_model(model: str, provider_config: ProviderConfig) -> None:
+    """Verify ``model`` exists on its provider before the first completion.
+
+    Only ``ollama/*`` is checked here: a local tag can be missing with no
+    credential involved, and the failure would otherwise surface as an empty
+    completion or a connection error deep inside an agent run, long after the
+    typo that caused it. Cloud providers are gated by the API-key check in
+    :mod:`orchestrator.cli`, which is not duplicated here.
+    """
+    provider = model.split("/")[0] if "/" in model else ""
+    if provider not in ("ollama", "ollama_chat"):
+        return
+
+    base_url = provider_config.get_base_url(model) or DEFAULT_OLLAMA_URL
+    tag = model.split("/", 1)[1]
+    if (base_url, tag) in _preflight_ok:
+        return
+
+    installed = _installed_ollama_tags(base_url)
+    if installed is None:
+        return  # endpoint down — a different failure, reported elsewhere
+    if tag not in installed:
+        available = ", ".join(sorted(installed)) or "(none installed)"
+        raise ModelUnavailableError(
+            f"Model {model!r} is not installed on the Ollama host at "
+            f"{base_url}. Available: {available}. Either run "
+            f"`ollama pull {tag}`, or set [llm].model in "
+            f"config/auton.toml to one of the available names."
+        )
+    _preflight_ok.add((base_url, tag))
+
+
 class LLMClient:
     """Async LLM client using LiteLLM for multi-provider support."""
 
@@ -106,6 +170,7 @@ class LLMClient:
         max_tokens: int = 16384,
         provider_config: ProviderConfig | None = None,
         cost_tracker: CostTracker | None = None,
+        preflight: bool = True,
     ):
         self.model = model
         self.max_tokens = max_tokens
@@ -114,6 +179,8 @@ class LLMClient:
         self._semaphore = asyncio.Semaphore(10)
         self._last_call_time = 0.0
         self._min_interval = 0.1
+        if preflight:
+            preflight_model(self.model, self.provider_config)
 
     async def send_message(
         self,

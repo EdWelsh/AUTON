@@ -19,7 +19,7 @@ The model that plans is swappable — that's the design:
 
 | You say / configure | Brain |
 |---------------------|-------|
-| default | local Ollama (`agent/config/auton.toml` `[llm].model`, e.g. `ollama/llama3.1:8b`) |
+| default | local Ollama (`agent/config/auton.toml` `[llm].model`, e.g. `ollama/gemma4:latest`) |
 | `--model "use chatgpt"` | OpenAI (needs `OPENAI_API_KEY`) |
 | `--model "use claude"` | Anthropic (needs `ANTHROPIC_API_KEY`) |
 | (no model reachable) | deterministic planner — parses the goal and runs the steps offline |
