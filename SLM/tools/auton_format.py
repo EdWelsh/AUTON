@@ -46,7 +46,11 @@ import struct
 from dataclasses import dataclass
 
 MAGIC = 0x4E4F5455
-VERSION = 1
+# v2: the vocabulary carries <sep> (id 4), which divides a question from its
+# answer. A v1 model has no such token, so a v2 kernel prompting with <sep>
+# would feed it an id that means something else entirely — a silently wrong
+# model rather than a load error. The kernel rejects any version but its own.
+VERSION = 2
 QUANT_FP32 = 0
 
 

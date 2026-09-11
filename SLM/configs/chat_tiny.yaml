@@ -1,0 +1,43 @@
+# Rung 3b — chat-quality tiny model.
+#
+# Separate from tiny_10M.yaml on purpose: the rung-3a baseline is reproducible
+# against that file, and changing it would invalidate the recorded parity
+# tokens and model hash.
+#
+# The one substantive difference is vocab_size. tiny_10M.yaml asks for 32000
+# against a domain that has 394 distinct words, so 98.8% of the embedding table
+# is rows that can never be selected — 8.2M of the model's 14M parameters spent
+# on tokens that do not exist. Sizing it to the real vocabulary shrinks the
+# exported model by roughly 4x and puts the capacity into the layers that do
+# the work. 512 leaves headroom for corpus growth without a retrain.
+model:
+  name: "auton-slm-chat-tiny"
+  parameters: 6_000_000
+
+architecture:
+  hidden_size: 256
+  num_layers: 6
+  num_attention_heads: 4
+  num_key_value_heads: 2  # GQA
+  intermediate_size: 1024
+  vocab_size: 1024
+  max_position_embeddings: 2048
+
+  activation: "swiglu"
+  rope_theta: 10000.0
+  attention_dropout: 0.0
+  hidden_dropout: 0.0
+
+training:
+  batch_size: 32
+  learning_rate: 3e-4
+  weight_decay: 0.1
+  warmup_steps: 1000
+  max_steps: 10000
+  gradient_accumulation_steps: 1
+
+  optimizer: "adamw"
+  scheduler: "cosine"
+
+  checkpoint_every: 1000
+  eval_every: 500

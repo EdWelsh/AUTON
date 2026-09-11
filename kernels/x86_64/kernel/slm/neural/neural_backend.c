@@ -14,7 +14,11 @@
 #include "kernel.h"
 
 #define MAGIC      0x4E4F5455u          /* "UTON" little-endian */
-#define VERSION    1u
+/* v2: the vocabulary carries <sep> (id 4) dividing a question from its
+ * answer. A v1 model has no such token, so prompting one with <sep> would
+ * feed it an id meaning something else — silently wrong output rather than
+ * a load error. Hence the exact-version check below. */
+#define VERSION    2u
 #define MAX_LAYERS 16
 #define MAX_CTX    256                  /* cap context to bound KV-cache size */
 #define MAX_TOKENS 64
@@ -357,7 +361,10 @@ uint32_t slm_neural_infer(const uint32_t *input, uint32_t input_len,
 	uint32_t n = 0;
 	uint32_t next = argmax(M.logits, M.vocab_size);
 	while (n < max_output && pos < M.ctx - 1) {
-		if (next == 3 /* <eos> */ || next == 0 /* <pad> */)
+		/* <sep> is prompt grammar, not answer text: emitting it means the
+		 * model has started a new question/answer pair, so stop there. */
+		if (next == 3 /* <eos> */ || next == 0 /* <pad> */ ||
+		    next == 4 /* <sep> */)
 			break;
 		output[n++] = next;
 		forward(next, pos);

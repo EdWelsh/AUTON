@@ -115,16 +115,32 @@ SYS_Q = {
 }
 OOD_TOPICS = [
     ("the weather", ["what is the weather", "is it raining", "what's the forecast",
-                     "will it snow tomorrow", "how hot is it outside"]),
+                     "will it snow tomorrow", "how hot is it outside",
+                     "weather report please", "is it sunny", "what's the temperature",
+                     "do i need an umbrella", "how cold is it"]),
     ("world events or sport", ["who won the world cup", "what happened in the news",
-                               "who is the president", "what won best picture"]),
+                               "who is the president", "what won best picture",
+                               "who won the election", "what is the score",
+                               "tell me the headlines", "who is the prime minister",
+                               "when is the next olympics", "what happened yesterday"]),
     ("general trivia or arithmetic", ["what is 47 times 19", "how many continents are there",
-                                      "what is the capital of france", "spell encyclopedia"]),
+                                      "what is the capital of france", "spell encyclopedia",
+                                      "what is 2 plus 2", "how many days in a year",
+                                      "what is the square root of 64", "define photosynthesis",
+                                      "how tall is everest", "what year was rome founded",
+                                      "convert 10 miles to km", "what is 100 divided by 7"]),
     ("creative writing", ["write me a poem", "tell me a joke", "write a short story",
-                          "compose a haiku about disks"]),
+                          "compose a haiku about disks", "write a song",
+                          "make up a limerick", "tell me a riddle", "write an essay"]),
+    ("cooking, travel or health", ["how do i make bread", "what should i cook tonight",
+                                   "book me a flight", "where should i go on holiday",
+                                   "am i getting a cold", "how many calories in an apple",
+                                   "recommend a restaurant"]),
 ]
 NONSENSE = ["zxqw flibberty gronk", "asdfgh qwerty", "blorp zonk widget",
-            "xyzzy plugh frotz", "qqq www eee"]
+            "xyzzy plugh frotz", "qqq www eee", "hgfds lkjhg", "wibble wobble",
+            "foo bar baz qux", "aaa bbb ccc", "mnbvc xzasd", "plover fjord",
+            "glorp snark boojum", "ssss tttt uuuu", "random gibberish here"]
 
 
 def _pci_answer(desc: str, drv: str) -> str:
@@ -257,9 +273,98 @@ def build(seed: int = 0) -> list[dict]:
          "from the host."),
         ("what driver is loaded", "The e1000 driver is loaded for 8086:100e."),
         ("which driver is currently in use", "The e1000 driver is loaded for 8086:100e."),
-        ("how much ram is free", "Memory: 255 MB RAM total; the PMM reports free pages at boot."),
         ("what is my gateway", "Gateway is 10.0.2.2 (dns 10.0.2.3)."),
         ("what is my dns server", "DNS is 10.0.2.3 (gateway 10.0.2.2)."),
+        ("tell me about the network card",
+         "Intel 82540EM Gigabit Ethernet (e1000) at 8086:100e, driver e1000 loaded."),
+        ("describe the network card",
+         "Intel 82540EM Gigabit Ethernet (e1000) at 8086:100e, driver e1000 loaded."),
+        ("what network card is in this machine",
+         "Intel 82540EM Gigabit Ethernet (e1000) at 8086:100e, driver e1000 loaded."),
+        ("which driver is loaded right now", "The e1000 driver is loaded for 8086:100e."),
+        ("what driver am i using", "The e1000 driver is loaded for 8086:100e."),
+        ("is e1000 loaded", "Yes. The e1000 driver is loaded for 8086:100e."),
+        ("which driver should i use for my nic",
+         "The NIC is 8086:100e; its driver is e1000, already loaded."),
+        ("what driver does my network card need",
+         "The NIC is 8086:100e; its driver is e1000, already loaded."),
+        ("do you have a driver for the intel gigabit card",
+         "Yes. 8086:100e is Intel 82540EM Gigabit Ethernet; driver e1000."),
+        ("what driver would a realtek card need",
+         "Realtek is not in the knowledge base. Give me its PCI id and I will look it up."),
+        ("what about a broadcom card",
+         "Broadcom is not in the knowledge base. Give me its PCI id and I will look it up."),
+        ("how much free memory is there",
+         "Memory: 255 MB RAM total. The PMM tracks free pages; free memory is not "
+         "reported separately yet."),
+        ("how much memory is available",
+         "Memory: 255 MB RAM total. The PMM tracks free pages; free memory is not "
+         "reported separately yet."),
+        ("why is boot slow",
+         "Boot time is not instrumented. Uptime since boot is reported by 'uptime'."),
+        ("why did the boot take so long",
+         "Boot time is not instrumented. Uptime since boot is reported by 'uptime'."),
+        ("i cannot reach the internet",
+         "Networking is user-mode NAT: outbound works through the gateway at 10.0.2.2, "
+         "inbound needs a host port forward."),
+        ("no internet access from this box",
+         "Networking is user-mode NAT: outbound works through the gateway at 10.0.2.2, "
+         "inbound needs a host port forward."),
+        ("the network is unreachable",
+         "Networking is user-mode NAT: outbound works through the gateway at 10.0.2.2, "
+         "inbound needs a host port forward."),
+        ("what should i check if the web server does not respond",
+         "Check the web server is running (be a web server) and that port 80 is forwarded "
+         "from the host."),
+        # DHCP client state kept routing to the DHCP *server* roadmap answer:
+        # the words overlap, and the corpus had one phrasing for the client case.
+        ("did dhcp give me an address",
+         "Yes. DHCP assigned 10.0.2.15, gateway 10.0.2.2, dns 10.0.2.3."),
+        ("was dhcp successful", "Yes. DHCP assigned 10.0.2.15, gateway 10.0.2.2, dns 10.0.2.3."),
+        ("check dhcp", "Yes. DHCP assigned 10.0.2.15, gateway 10.0.2.2, dns 10.0.2.3."),
+        ("is dhcp working", "Yes. DHCP assigned 10.0.2.15, gateway 10.0.2.2, dns 10.0.2.3."),
+        ("did i get a lease", "Yes. DHCP assigned 10.0.2.15, gateway 10.0.2.2, dns 10.0.2.3."),
+        ("did the dhcp client get an address",
+         "Yes. DHCP assigned 10.0.2.15, gateway 10.0.2.2, dns 10.0.2.3."),
+        # Gateway/DNS as first-class questions, not only inside the IP answer.
+        ("what is the gateway", "Gateway is 10.0.2.2 (dns 10.0.2.3)."),
+        ("what gateway am i using", "Gateway is 10.0.2.2 (dns 10.0.2.3)."),
+        ("tell me the gateway", "Gateway is 10.0.2.2 (dns 10.0.2.3)."),
+        ("what is the default route", "Gateway is 10.0.2.2 (dns 10.0.2.3)."),
+        ("which dns server am i using", "DNS is 10.0.2.3 (gateway 10.0.2.2)."),
+        # Free vs total memory was answered with the total.
+        ("how much ram is free",
+         "Memory: 255 MB RAM total. The PMM tracks free pages; free memory is not "
+         "reported separately yet."),
+        ("how much free ram",
+         "Memory: 255 MB RAM total. The PMM tracks free pages; free memory is not "
+         "reported separately yet."),
+        ("what is free memory",
+         "Memory: 255 MB RAM total. The PMM tracks free pages; free memory is not "
+         "reported separately yet."),
+        # Diagnostic phrasings that were answered with a device dump.
+        ("the nic is broken what do i do",
+         "The NIC is up: 8086:100e bound to e1000, IP 10.0.2.15 from DHCP. "
+         "Nothing indicates a network fault."),
+        ("help me fix the network",
+         "The NIC is up: 8086:100e bound to e1000, IP 10.0.2.15 from DHCP. "
+         "Nothing indicates a network fault."),
+        ("what should i check for a web server problem",
+         "Check the web server is running (be a web server) and that port 80 is forwarded "
+         "from the host."),
+        ("the web server does not answer",
+         "Check the web server is running (be a web server) and that port 80 is forwarded "
+         "from the host."),
+        # Unknown-vendor driver questions answered with e1000.
+        ("what driver for a realtek nic",
+         "Realtek is not in the knowledge base. Give me its PCI id and I will look it up."),
+        ("driver for realtek",
+         "Realtek is not in the knowledge base. Give me its PCI id and I will look it up."),
+        ("do you support realtek cards",
+         "Realtek is not in the knowledge base. Give me its PCI id and I will look it up."),
+        ("the nic seems broken",
+         "The NIC is up: 8086:100e bound to e1000, IP 10.0.2.15 from DHCP. "
+         "Nothing indicates a network fault."),
     ]
     for q, a in trouble:
         add(q, a, "TROUBLESHOOT", f"trouble:{q[:24]}")

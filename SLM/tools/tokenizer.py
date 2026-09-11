@@ -14,7 +14,42 @@ import sys
 from collections import Counter
 from pathlib import Path
 
-SPECIAL_TOKENS = ["<pad>", "<unk>", "<bos>", "<eos>"]
+# <sep> divides a question from its answer in the training stream. Appended
+# last so <pad>=0, <unk>=1, <bos>=2, <eos>=3 keep their ids — the kernel and the
+# parity harness both rely on 0 and 3.
+SPECIAL_TOKENS = ["<pad>", "<unk>", "<bos>", "<eos>", "<sep>"]
+
+
+def _read_pairs(path: Path):
+    """Yield (question, answer) from a JSONL dataset; answer may be "".
+
+    The answer used to be dropped here. Records carried it in ``next_action``
+    and nothing read that field, so the model was trained on questions alone
+    and never saw a single answer token — it could not emit "Intel" because
+    no such token existed in its vocabulary. Both sides are read now.
+    """
+    if not path.exists():
+        return
+    targets = [path] if path.is_file() else [
+        f for ext in ("*.jsonl", "*.json") for f in sorted(path.rglob(ext))
+    ]
+    for fp in targets:
+        try:
+            for line in fp.read_text(encoding="utf-8").splitlines():
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    obj = json.loads(line)
+                except json.JSONDecodeError:
+                    continue
+                if not isinstance(obj, dict) or "text" not in obj:
+                    continue
+                # "response" is the answer; "next_action" is the legacy field.
+                answer = obj.get("response") or obj.get("next_action") or ""
+                yield str(obj["text"]), str(answer)
+        except OSError:
+            continue
 
 
 def _read_texts(path: Path):
@@ -54,8 +89,9 @@ def train_tokenizer(input_path: str, vocab_size: int = 32000, output_path: str |
     ``output_path`` is given, the vocab is written there as JSON.
     """
     counter: Counter[str] = Counter()
-    for text in _read_texts(Path(input_path)):
-        counter.update(text.split())
+    for question, answer in _read_pairs(Path(input_path)):
+        counter.update(question.split())
+        counter.update(answer.split())   # answer vocabulary, previously absent
 
     # Reserve slots for special tokens; fill the rest by frequency.
     capacity = max(0, vocab_size - len(SPECIAL_TOKENS))
@@ -98,9 +134,20 @@ def tokenize_dataset(input_path: str, output_path: str, vocab_path: str) -> None
 
     out = Path(output_path)
     out.parent.mkdir(parents=True, exist_ok=True)
+    bos = vocab.get("<bos>", 2)
+    eos = vocab.get("<eos>", 3)
+    sep = vocab.get("<sep>", 4)
+
     with out.open("w", encoding="utf-8") as fh:
-        for text in _read_texts(in_path):
-            fh.write(json.dumps({"ids": encode(text, vocab)}) + "\n")
+        for question, answer in _read_pairs(in_path):
+            # <bos> question <sep> answer <eos> — the separator is what turns a
+            # flat language-model stream into supervision for answering. Without
+            # it the model only ever learns to continue questions.
+            ids = [bos] + encode(question, vocab)
+            if answer:
+                ids += [sep] + encode(answer, vocab)
+            ids.append(eos)
+            fh.write(json.dumps({"ids": ids}) + "\n")
 
 
 def main(argv: list[str] | None = None) -> int:

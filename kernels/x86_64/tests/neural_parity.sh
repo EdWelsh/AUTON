@@ -30,7 +30,13 @@ cd "$(dirname "$0")/.."
 clang -O2 -Ikernel/include kernel/slm/neural/neural_backend.c kernel/lib/kmath.c \
 	tests/neural_forward_host.c -lm -o /tmp/neural_forward_host || exit 1
 
-PROMPTS=("2 4 5" "2 29 30" "2 4")
+# Real questions in v2 vocabulary, each ending at <sep> — the exact shape the
+# kernel builds. Regenerated when the tokenizer changed; the old ids addressed
+# different words entirely.
+#   "what is pci 8086:100e"          -> 2 27 9 71 66 4
+#   "can you run a database server"  -> 2 39 43 11 5 172 14 4
+#   "what is my ip"                  -> 2 27 9 110 231 4
+PROMPTS=("2 27 9 71 66 4" "2 39 43 11 5 172 14 4" "2 27 9 110 231 4")
 fail=0
 for p in "${PROMPTS[@]}"; do
 	kern=$(/tmp/neural_forward_host "$MODEL" $p | sed 's/^gen: //')
@@ -46,7 +52,9 @@ for _ in range(12):
     with torch.no_grad():
         lg, _ = m(torch.tensor([cur]))
     nt = int(lg[0, -1].argmax())
-    if nt in (0, 3):
+    # Match the kernel: stop at <pad>, <eos> and <sep>. <sep> is prompt
+    # grammar, so emitting it means a new question has started.
+    if nt in (0, 3, 4):
         break
     out.append(nt); cur.append(nt)
 print(" ".join(str(x) for x in out))

@@ -319,14 +319,23 @@ int slm_process_text(const char *text, uint32_t text_len,
 	 * On empty/failed generation, fall through to the rule engine so the
 	 * chat never leaves the user without an answer (slm.md:639). */
 	if (g_neural_active && slm_neural_available()) {
-		uint32_t in_ids[64], out_ids[16];
-		uint32_t nin = slm_neural_tokenize(text, text_len, in_ids, 64);
-		if (nin > 0) {
+		uint32_t in_ids[64], out_ids[40];   /* out_ids must hold the full cap below */
+		/* The model is trained on "<bos> question <sep> answer <eos>", so
+		 * the prompt must end at the separator for generation to start in
+		 * answer position. Feeding the bare question instead makes the
+		 * model continue the *question* — which is what it did, echoing
+		 * fragments and emitting <sep> as visible text. */
+		in_ids[0] = 2;                  /* <bos> */
+		uint32_t nin = 1 + slm_neural_tokenize(text, text_len, in_ids + 1, 62);
+		in_ids[nin++] = 4;              /* <sep> */
+		if (nin > 2) {
 			/* Cap output: scalar fp32 inference is slow under
-			 * emulation; a short reply keeps the REPL responsive. */
-			inference_config_t cfg = { 0.0f, 1.0f, 12, 1 };
+			 * emulation, but answers run to ~30 tokens (a roadmap
+			 * note is a full sentence), and truncating mid-sentence
+			 * scores as garbage. */
+			inference_config_t cfg = { 0.0f, 1.0f, 40, 1 };
 			uint32_t nout = slm_neural_infer(in_ids, nin, out_ids,
-							 12, &cfg);
+							 40, &cfg);
 			if (nout > 0) {
 				slm_neural_detokenize(out_ids, nout,
 						      result->response, R_CAP);

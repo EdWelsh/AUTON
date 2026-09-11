@@ -49,7 +49,16 @@ def train(
 
     tokens = load_token_stream(dataset_path)
     # Clamp ids into the model's vocab range so an arbitrary tokenizer can't OOB.
-    tokens = [t % model_cfg.vocab_size for t in tokens]
+    # Folding with % would map real words onto the special tokens when the
+    # tokenizer's vocabulary is larger than the model's — 'miles' silently
+    # becoming <pad>. That is a wrong model, not a smaller one, so refuse.
+    overflow = max(tokens, default=-1)
+    if overflow >= model_cfg.vocab_size:
+        raise ValueError(
+            f"token id {overflow} exceeds model vocab_size {model_cfg.vocab_size}; "
+            f"raise vocab_size in the config to at least {overflow + 1} "
+            f"(folding it would alias real tokens onto <pad>/<unk>)"
+        )
     if len(tokens) < seq_len * bsz:
         raise ValueError(
             f"dataset too small: need >= {seq_len * bsz} tokens for one batch, "

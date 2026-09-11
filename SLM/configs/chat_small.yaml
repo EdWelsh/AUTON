@@ -1,0 +1,35 @@
+# Rung 3b escalation: the 6M chat model plateaued at ~22% garbage, which is
+# above the bar's <10% half. Same vocab sizing rationale as chat_tiny.yaml —
+# 32000 rows for a 551-word domain would spend 16M parameters on tokens that
+# cannot occur, and push the fp32 export past the 256M boot budget.
+model:
+  name: "auton-slm-chat-small"
+  parameters: 50_000_000
+  
+architecture:
+  hidden_size: 512
+  num_layers: 12
+  num_attention_heads: 8
+  num_key_value_heads: 4
+  intermediate_size: 2048
+  vocab_size: 1024
+  max_position_embeddings: 2048
+  
+  activation: "swiglu"
+  rope_theta: 10000.0
+  attention_dropout: 0.0
+  hidden_dropout: 0.0
+  
+training:
+  batch_size: 64
+  learning_rate: 2e-4
+  weight_decay: 0.1
+  warmup_steps: 2000
+  max_steps: 50000
+  gradient_accumulation_steps: 2
+  
+  optimizer: "adamw"
+  scheduler: "cosine"
+  
+  checkpoint_every: 5000
+  eval_every: 1000
