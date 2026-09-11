@@ -5,11 +5,13 @@ set -uo pipefail
 
 ARCH="${1:-x86_64}"
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+# shellcheck source=lib/toolchain.sh
+source "$ROOT/scripts/lib/toolchain.sh"
 cd "$ROOT/kernels/$ARCH"
 
-make CC="${CC:-gcc}" iso >/dev/null 2>&1 || { echo "build failed"; exit 1; }
+make iso >/dev/null 2>&1 || { echo "build failed"; exit 1; }
 
-OUT="$(timeout "${BOOT_TIMEOUT:-45}" qemu-system-x86_64 -cdrom build/auton.iso \
+OUT="$(auton_timeout "${BOOT_TIMEOUT:-45}" "$QEMU" -cdrom build/auton.iso \
 	-serial stdio -display none -no-reboot -m "${MEM:-128M}" 2>/dev/null || true)"
 
 echo "----- serial output -----"
@@ -49,7 +51,7 @@ if [ "${SKIP_NET:-0}" != "1" ]; then
 	# Drive the REPL: blank line (absorbs the dropped first byte), then the
 	# web-server command; keep stdin open while we probe.
 	( printf '\nbe a web server\n'; sleep "${NET_SERVE_SECS:-40}" ) | \
-		timeout "${NET_TIMEOUT:-70}" qemu-system-x86_64 -cdrom build/auton.iso \
+		auton_timeout "${NET_TIMEOUT:-70}" "$QEMU" -cdrom build/auton.iso \
 		-serial stdio -display none -no-reboot -m "${MEM:-128M}" \
 		-nic "user,model=e1000,hostfwd=tcp::${HOST_PORT}-:80" \
 		>"$NET_LOG" 2>/dev/null &
@@ -60,7 +62,7 @@ if [ "${SKIP_NET:-0}" != "1" ]; then
 	http_get() {
 		exec 3<>"/dev/tcp/127.0.0.1/${HOST_PORT}" 2>/dev/null || return 1
 		printf 'GET / HTTP/1.0\r\n\r\n' >&3
-		timeout 5 cat <&3
+		auton_timeout 5 cat <&3
 		exec 3>&- 2>/dev/null || true
 	}
 	BODY=""

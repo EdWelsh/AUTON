@@ -9,6 +9,13 @@ BUILD  := build
 KERNEL := $(BUILD)/kernel.bin
 ISO    := $(BUILD)/auton.iso
 
+# External tools. Overridable so the same Makefile works on a Linux/Docker host
+# and on macOS, where Homebrew names them differently:
+#   make GRUB_MKRESCUE=i686-elf-grub-mkrescue     (brew install i686-elf-grub)
+# scripts/lib/toolchain.sh resolves both per platform.
+GRUB_MKRESCUE ?= grub-mkrescue
+QEMU          ?= qemu-system-x86_64
+
 CSRC := $(shell find kernel -name '*.c')
 ASRC := $(shell find kernel -name '*.S')
 OBJ  := $(patsubst %,$(BUILD)/%.o,$(CSRC) $(ASRC))
@@ -43,12 +50,12 @@ $(ISO): $(KERNEL) grub/grub.cfg
 	@mkdir -p $(BUILD)/isodir/boot/grub
 	cp $(KERNEL) $(BUILD)/isodir/boot/kernel.bin
 	cp grub/grub.cfg $(BUILD)/isodir/boot/grub/grub.cfg
-	grub-mkrescue -o $(ISO) $(BUILD)/isodir 2>/dev/null
+	$(GRUB_MKRESCUE) -o $(ISO) $(BUILD)/isodir 2>/dev/null
 	@echo "built $(ISO)"
 
 # Boot the kernel in QEMU with serial on stdio.
 run: $(ISO)
-	qemu-system-x86_64 -cdrom $(ISO) -serial stdio -display none \
+	$(QEMU) -cdrom $(ISO) -serial stdio -display none \
 		-no-reboot -m 128M
 
 # Bootable ISO that bundles the on-device model as a Multiboot2 module.
@@ -62,12 +69,12 @@ $(NEURAL_ISO): $(KERNEL) grub/grub-neural.cfg
 	cp $(KERNEL) $(BUILD)/isodir-neural/boot/kernel.bin
 	cp "$(MODEL)" $(BUILD)/isodir-neural/boot/auton-slm.bin
 	cp grub/grub-neural.cfg $(BUILD)/isodir-neural/boot/grub/grub.cfg
-	grub-mkrescue -o $(NEURAL_ISO) $(BUILD)/isodir-neural 2>/dev/null
+	$(GRUB_MKRESCUE) -o $(NEURAL_ISO) $(BUILD)/isodir-neural 2>/dev/null
 	@echo "built $(NEURAL_ISO)"
 
 # Boot with the model module and enough RAM to select the neural backend.
 run-neural: $(NEURAL_ISO)
-	qemu-system-x86_64 -cdrom $(NEURAL_ISO) -serial stdio -display none \
+	$(QEMU) -cdrom $(NEURAL_ISO) -serial stdio -display none \
 		-no-reboot -m 256M
 
 clean:

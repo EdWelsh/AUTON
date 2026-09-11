@@ -344,6 +344,42 @@ full boot sequence through `[SLM] Ready` and `[BOOT] OK`. The image is pinned to
 > agents extend. The neural on-device SLM chat is layered on top of this
 > foundation (see the plans under `.claude/PRPs/plans/`).
 
+## Quick Start (native macOS — no Docker)
+
+On macOS the whole build-and-boot loop runs on the host, which avoids the
+double emulation of running x86 QEMU inside an emulated `linux/amd64` container:
+
+```bash
+# One-time: the cross toolchain, ISO tooling, and QEMU
+brew install qemu xorriso x86_64-elf-gcc x86_64-elf-binutils i686-elf-grub
+
+# Check the host is ready (tools + free disk) before anything long runs
+scripts/preflight.sh
+
+# Build the ISO and boot to the auton> prompt
+scripts/auton-boot-native.sh
+
+# Boot + verify the acceptance serial markers, natively
+scripts/run-acceptance.sh
+
+# Boot with the on-device neural model as a Multiboot2 module
+MODEL=$PWD/SLM/work/auton-slm.bin scripts/auton-boot-native.sh
+```
+
+`scripts/lib/toolchain.sh` resolves the per-platform tool names — on macOS
+`x86_64-elf-gcc` and `i686-elf-grub-mkrescue`, on Linux `gcc` and
+`grub-mkrescue` — so the same scripts and Makefile work on both. Any `CC`,
+`GRUB_MKRESCUE`, or `QEMU` you set yourself is respected.
+
+`scripts/preflight.sh` fails loudly when a tool is missing or free disk is
+below `MIN_FREE_GB` (default 5). The disk floor is deliberate: a full volume has
+previously corrupted Docker layers mid-build.
+
+> Docker is still the fallback, and is still required for the control plane's
+> OS-image backend (`controlplane/backends/os/`). Native covers the kernel loop
+> only. On Linux the same scripts work with `apt install build-essential
+> grub-pc-bin xorriso qemu-system-x86`.
+
 ## The OS is the chat — no terminal
 
 AUTON boots straight into an `auton>` prompt over the serial console. You

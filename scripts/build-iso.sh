@@ -10,7 +10,10 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 KDIR="$ROOT/kernels/$ARCH"
 DIST="$ROOT/dist"
 
-make -C "$KDIR" CC="${CC:-gcc}" iso
+# shellcheck source=lib/toolchain.sh
+source "$ROOT/scripts/lib/toolchain.sh"
+
+make -C "$KDIR" iso
 mkdir -p "$DIST"
 cp "$KDIR/build/auton.iso" "$DIST/auton-$ARCH-$VERSION.iso"
 echo "built $DIST/auton-$ARCH-$VERSION.iso"
