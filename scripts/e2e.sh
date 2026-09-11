@@ -23,6 +23,7 @@ source "$ROOT/scripts/lib/markers.sh"
 PY="${PYTHON:-$ROOT/.venv/bin/python}"
 case "$PY" in /*) ;; *) PY="$ROOT/$PY";; esac   # absolutize before any cd
 
+ARCH="${ARCH:-x86_64}"
 RUNG="3a"
 SKIP_TRAIN=0
 KEEP="${KEEP:-10}"
@@ -106,13 +107,112 @@ record_stage() {
 	printf '%d\t%s\t%s\t%s\n' "$STAGE_NO" "$1" "$2" "$3" >> "$STAGE_LOG"
 }
 
-# --- stages (bodies land in Task 3) ----------------------------------------- #
-s_train()      { echo "train: not yet wired"; }
-s_export()     { echo "export: not yet wired"; }
-s_parity()     { echo "parity: not yet wired"; }
-s_iso()        { echo "iso: not yet wired"; }
-s_boot()       { echo "boot: not yet wired"; }
-s_markers()    { echo "markers: not yet wired"; }
+# --- rung parameters -------------------------------------------------------- #
+# 3a proves the pipeline on the existing corpus: os_tasks.jsonl is 1.7 KB and
+# tokenizes to ~61 tokens, so seq_len*batch_size must stay under that or
+# train.py rejects the dataset. Chat quality is Phase 3b's job, not this one.
+CORPUS="$ROOT/SLM/datasets/os_tasks.jsonl"
+CONFIG="$ROOT/SLM/configs/tiny_10M.yaml"
+MAX_STEPS="${MAX_STEPS:-200}"
+SEQ_LEN="${SEQ_LEN:-16}"
+BATCH_SIZE="${BATCH_SIZE:-2}"
+
+VOCAB="$WORK/vocab.json"
+TOKENS="$WORK/tokens.jsonl"
+CKPT="$WORK/final.pt"
+MODEL_BIN="$WORK/auton-slm.bin"
+NEURAL_ISO="$ROOT/kernels/$ARCH/build/auton-neural.iso"
+SERIAL_LOG="$ART/serial-neural.log"
+
+# --- stages ------------------------------------------------------------------ #
+# Each stage CALLS an existing entry point. No stage reimplements logic that
+# lives in the tool it invokes.
+
+s_train() {
+	mkdir -p "$WORK"
+	if [ "$SKIP_TRAIN" -eq 1 ]; then
+		# A reused checkpoint is legitimate, a missing one is not — never let
+		# --skip-train silently proceed to export a stale or absent model.
+		local missing=0
+		for f in "$VOCAB" "$CKPT"; do
+			[ -f "$f" ] || { echo "--skip-train but $f is missing"; missing=1; }
+		done
+		[ "$missing" -eq 0 ] || return 1
+		echo "reusing checkpoint $CKPT ($(date -r "$CKPT" -u +%Y-%m-%dT%H:%M:%SZ))"
+		return 0
+	fi
+
+	"$PY" "$ROOT/SLM/tools/tokenizer.py" \
+		--input "$CORPUS" --output "$VOCAB" --tokenize-to "$TOKENS" || return 1
+	"$PY" "$ROOT/SLM/scripts/train.py" \
+		--config "$CONFIG" --dataset "$TOKENS" --output "$WORK" \
+		--max-steps "$MAX_STEPS" --seq-len "$SEQ_LEN" --batch-size "$BATCH_SIZE"
+}
+
+s_export() {
+	"$PY" "$ROOT/SLM/scripts/export_auton.py" \
+		--checkpoint "$CKPT" --vocab "$VOCAB" --output "$MODEL_BIN" || return 1
+	# export_auton.py already writes <output>.manifest.json; keep it with the run.
+	[ -f "$MODEL_BIN.manifest.json" ] && cp "$MODEL_BIN.manifest.json" "$ART/"
+	return 0
+}
+
+s_parity() {
+	"$ROOT/kernels/$ARCH/tests/neural_parity.sh" "$MODEL_BIN" "$CKPT" "$VOCAB"
+}
+
+s_iso() {
+	make -C "$ROOT/kernels/$ARCH" iso-neural MODEL="$MODEL_BIN"
+}
+
+s_boot() {
+	# The kernel boots to an interactive prompt and never exits, so waiting for
+	# QEMU to finish would always burn the whole timeout. Poll for the last boot
+	# marker instead and stop as soon as it lands — a timeout then means the
+	# boot genuinely did not complete, not that the VM is merely still running.
+	: > "$SERIAL_LOG"
+	"$QEMU" -cdrom "$NEURAL_ISO" -serial stdio -display none -no-reboot \
+		-m "${MEM:-256M}" > "$SERIAL_LOG" 2>/dev/null &
+	local qemu_pid=$! booted=0 waited=0
+	local limit="${BOOT_TIMEOUT:-90}"
+
+	while [ "$waited" -lt "$limit" ]; do
+		if grep -q '\[BOOT\] OK' "$SERIAL_LOG" 2>/dev/null; then booted=1; break; fi
+		kill -0 "$qemu_pid" 2>/dev/null || break   # QEMU exited on its own
+		sleep 1
+		waited=$((waited + 1))
+	done
+
+	kill "$qemu_pid" 2>/dev/null
+	wait "$qemu_pid" 2>/dev/null || true
+
+	if [ ! -s "$SERIAL_LOG" ]; then
+		echo "no serial output captured in ${waited}s"
+		return 1
+	fi
+	if [ "$booted" -ne 1 ]; then
+		echo "boot did not reach [BOOT] OK within ${limit}s; last lines:"
+		tail -5 "$SERIAL_LOG"
+		return 1
+	fi
+	echo "booted in ${waited}s ($(wc -l < "$SERIAL_LOG" | tr -d ' ') lines of serial output)"
+	return 0
+}
+
+s_markers() {
+	local serial fail=0
+	serial="$(cat "$SERIAL_LOG")"
+	# A neural boot must satisfy the ordinary boot markers AND the model-loaded
+	# /backend-selected chain. Both sets come from acceptance_tests.py.
+	for set_name in boot neural; do
+		markers_load "$set_name" || return 1
+		echo "--- $set_name ---"
+		markers_check "$serial"
+		[ "$MARKERS_FAILED" -eq 0 ] || fail=1
+	done
+	return "$fail"
+}
+
 s_transcript() { echo "transcript: not yet wired"; }
 
 echo "AUTON e2e — rung $RUNG$([ "$SKIP_TRAIN" -eq 1 ] && echo ' (train skipped)')"
