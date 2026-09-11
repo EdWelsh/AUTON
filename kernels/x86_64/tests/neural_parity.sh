@@ -13,6 +13,18 @@ CKPT="${2:?checkpoint.pt}"
 VOCAB="${3:?vocab.json}"
 PY="${PYTHON:-$ROOT/.venv/bin/python}"
 case "$PY" in /*) ;; *) PY="$ROOT/$PY";; esac     # absolutize before cd
+# The model/checkpoint/vocab need the same treatment: this script cds below, so
+# a relative path passed by the caller silently stops resolving. Both sides then
+# fail to load anything, both print nothing, and "" = "" reported ALL PASS.
+for _v in MODEL CKPT VOCAB; do
+	case "${!_v}" in
+		/*) ;;
+		*)  printf -v "$_v" '%s' "$PWD/${!_v}" ;;
+	esac
+done
+for _v in MODEL CKPT VOCAB; do
+	[ -f "${!_v}" ] || { echo "FAIL $_v not found: ${!_v}" >&2; exit 2; }
+done
 
 cd "$(dirname "$0")/.."
 clang -O2 -Ikernel/include kernel/slm/neural/neural_backend.c kernel/lib/kmath.c \
@@ -40,7 +52,12 @@ for _ in range(12):
 print(" ".join(str(x) for x in out))
 PYEOF
 )
-	if [ "$kern" = "$ref" ]; then
+	# Empty output means neither side generated anything — a load failure, not
+	# agreement. Comparing "" to "" must never read as parity.
+	if [ -z "$kern" ] || [ -z "$ref" ]; then
+		echo "FAIL [$p] no tokens generated (kernel='$kern' torch='$ref')"
+		fail=1
+	elif [ "$kern" = "$ref" ]; then
 		echo "PASS [$p] -> $kern"
 	else
 		echo "FAIL [$p] kernel='$kern' torch='$ref'"

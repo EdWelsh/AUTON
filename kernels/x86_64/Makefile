@@ -62,7 +62,13 @@ run: $(ISO)
 # MODEL must point to a flat auton-slm.bin (see SLM/scripts/export_auton.py).
 NEURAL_ISO := $(BUILD)/auton-neural.iso
 iso-neural: $(NEURAL_ISO)
-$(NEURAL_ISO): $(KERNEL) grub/grub-neural.cfg
+# Always rebuild: which model is inside the ISO cannot be expressed as an mtime
+# dependency. Listing $(MODEL) as a prerequisite is not enough — switching to a
+# different model whose file is older than the existing ISO leaves make
+# satisfied while the ISO still holds the previous model, so a later training
+# rung would verify the earlier rung's weights and pass. The build is
+# sub-second; a stale model costs far more than rebuilding does.
+$(NEURAL_ISO): $(KERNEL) grub/grub-neural.cfg FORCE
 	@test -n "$(MODEL)" || { echo "set MODEL=path/to/auton-slm.bin"; exit 1; }
 	@test -f "$(MODEL)" || { echo "MODEL not found: $(MODEL)"; exit 1; }
 	@mkdir -p $(BUILD)/isodir-neural/boot/grub
@@ -76,6 +82,10 @@ $(NEURAL_ISO): $(KERNEL) grub/grub-neural.cfg
 run-neural: $(NEURAL_ISO)
 	$(QEMU) -cdrom $(NEURAL_ISO) -serial stdio -display none \
 		-no-reboot -m 256M
+
+# Phony helper that forces a recipe to run every time.
+.PHONY: FORCE
+FORCE:
 
 clean:
 	rm -rf $(BUILD)
