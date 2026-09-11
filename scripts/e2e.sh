@@ -123,6 +123,7 @@ CKPT="$WORK/final.pt"
 MODEL_BIN="$WORK/auton-slm.bin"
 NEURAL_ISO="$ROOT/kernels/$ARCH/build/auton-neural.iso"
 SERIAL_LOG="$ART/serial-neural.log"
+TRANSCRIPT_FILE="${TRANSCRIPT_FILE:-$ROOT/tests/transcripts/boot-basics.txt}"
 
 # --- stages ------------------------------------------------------------------ #
 # Each stage CALLS an existing entry point. No stage reimplements logic that
@@ -213,7 +214,14 @@ s_markers() {
 	return "$fail"
 }
 
-s_transcript() { echo "transcript: not yet wired"; }
+s_transcript() {
+	# Driven against the rule-engine ISO: these are deterministic system answers,
+	# and rung 3a's model is trained only far enough to prove the pipeline, not
+	# to hold a conversation. Chat quality is graded in Phase 6.
+	local iso="$ROOT/kernels/$ARCH/build/auton.iso"
+	[ -f "$iso" ] || make -C "$ROOT/kernels/$ARCH" iso >/dev/null || return 1
+	"$ROOT/scripts/transcript.sh" "$TRANSCRIPT_FILE" "$iso" "$ART/serial-transcript.log"
+}
 
 echo "AUTON e2e — rung $RUNG$([ "$SKIP_TRAIN" -eq 1 ] && echo ' (train skipped)')"
 echo "artifacts: ${ART#"$ROOT"/}"

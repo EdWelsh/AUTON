@@ -1,0 +1,42 @@
+# AUTON chat transcript expectations: what the booted OS must answer.
+#
+# Format:  <sentence> :: <expected substring of the reply>
+# Blank lines and #-comments are ignored. Lines run in order against one boot,
+# and each reply is matched only in the block following that sentence's echo —
+# so a later answer cannot satisfy an earlier expectation. That ordering is
+# what makes the stateful hostname pair below meaningful.
+#
+# Deliberately excluded: "be a web server" / "be a dns server". Both run until
+# a keypress and would swallow the first byte of the next sentence. They are
+# covered by scripts/run-acceptance.sh's networking checks instead.
+
+# --- the OS can describe itself ---
+help :: show this help
+who are you :: I can identify PCI devices
+
+# --- system queries ---
+what is my ip :: My IP is 10.0.2.15
+what is my hostname :: Hostname is auton.
+how much memory :: Memory: 127 MB RAM
+what devices :: Devices: 4 on PCI bus 0
+what hardware do you have :: 8086:100e(e1000)
+uptime :: Uptime:
+status :: AUTON auton: IP 10.0.2.15
+
+# --- the IP answer also carries gateway and DNS (there is no separate
+#     "what is my gateway" command; asking falls through to the generic reply) ---
+what is my ip :: gateway 10.0.2.2
+
+# --- hardware knowledge base ---
+what is pci 8086:100e :: Intel 82540EM Gigabit Ethernet
+what is pci 8086:100e driver :: Recommended driver: e1000
+what is pci 8086:1237 :: Unknown PCI device 8086:1237
+
+# --- roles it knows it can and cannot fill (honesty, not bravado) ---
+what can you do :: web server - ready
+what roles are on the roadmap :: kubernetes - roadmap
+
+# --- state actually changes, and the change sticks ---
+set hostname web1 :: Hostname set to web1.
+what is my hostname :: Hostname is web1.
+set hostname auton :: Hostname set to auton.
