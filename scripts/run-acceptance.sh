@@ -7,6 +7,8 @@ ARCH="${1:-x86_64}"
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 # shellcheck source=lib/toolchain.sh
 source "$ROOT/scripts/lib/toolchain.sh"
+# shellcheck source=lib/markers.sh
+source "$ROOT/scripts/lib/markers.sh"
 cd "$ROOT/kernels/$ARCH"
 
 make iso >/dev/null 2>&1 || { echo "build failed"; exit 1; }
@@ -28,18 +30,10 @@ check() {
 	fi
 }
 
-check "AUTON Kernel booting"
-check "\[BOOT\] Multiboot2 magic valid"
-check "\[BOOT\] Long mode enabled"
-check "\[BOOT\] 64-bit GDT loaded"
-check "\[BOOT\] Interrupts initialized"
-check "\[DRV\] Serial .+ initialized"
-check "\[MM\] PMM initialized"
-check "\[SCHED\] Scheduler initialized"
-check "\[DEV\] PCI scan: [0-9]+ devices found"
-check "\[SLM\] Rule engine initialized"
-check "\[SLM\] Ready"
-check "\[BOOT\] OK"
+# Boot markers come from acceptance_tests.py, not from a copy kept here.
+markers_load boot || exit 1
+markers_check "$OUT"
+[ "$MARKERS_FAILED" -eq 0 ] || fail=1
 
 # ----- networking acceptance: net_dhcp_ip + http_get ------------------------
 # Boot once more with a SLIRP-backed e1000 and a host port-forward, drive the

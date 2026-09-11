@@ -10,6 +10,7 @@ Tests work by:
 """
 
 import re
+import sys
 from dataclasses import dataclass
 
 
@@ -113,6 +114,20 @@ BOOT_TESTS_RISCV64 = [
 ]
 
 # Combined boot tests (backward compat)
+# The final line the kernel prints once every subsystem is up. run-acceptance.sh
+# has always checked it; it had no definition here, which is why the shell kept
+# its own marker list.
+BOOT_TESTS_X86_64.append(
+    AcceptanceTest(
+        name="boot_ok",
+        subsystem="boot",
+        description="Kernel reports a completed boot",
+        expected_serial_patterns=[
+            r"\[BOOT\] OK",
+        ],
+    )
+)
+
 BOOT_TESTS = BOOT_TESTS_COMMON + BOOT_TESTS_X86_64
 
 # Memory management tests
@@ -310,6 +325,29 @@ SLM_TESTS = [
 ]
 
 # Driver tests — portable
+# Neural-backend markers. Only present when the kernel boots with the on-device
+# model as a Multiboot2 module (make iso-neural MODEL=...), so these are not in
+# CORE_GATE_TESTS — a rule-engine boot legitimately prints neither.
+SLM_TESTS += [
+    AcceptanceTest(
+        name="slm_model_loaded",
+        subsystem="slm",
+        description="On-device model is loaded from the Multiboot2 module",
+        expected_serial_patterns=[
+            r"\[SLM\] Loaded model",
+        ],
+    ),
+    AcceptanceTest(
+        name="slm_backend_neural",
+        subsystem="slm",
+        description="Neural backend is selected once the model is loaded",
+        expected_serial_patterns=[
+            r"\[SLM\] Backend: neural",
+        ],
+    ),
+]
+
+
 DRIVER_TESTS_COMMON = [
     AcceptanceTest(
         name="driver_serial_output",
@@ -546,6 +584,63 @@ CORE_GATE_TESTS = (
 )
 
 
+# --- Canonical serial-marker sets (consumed by shell harnesses) ------------
+#
+# scripts/run-acceptance.sh and scripts/e2e.sh used to carry their own copy of
+# this list, which drifted: the shell checked "[BOOT] OK" and a "[0-9]+" PCI
+# pattern that had no definition here. The list now lives here only, and the
+# shell reads it via `--list-patterns <set>` (see lib/markers.sh).
+#
+# Order is significant: harnesses report in this order, roughly boot sequence.
+# Every pattern must also belong to a real AcceptanceTest above — enforced by
+# test_marker_sets_are_covered_by_tests, so deleting a test's pattern without
+# updating this set fails the suite rather than silently weakening the gate.
+SERIAL_MARKER_SETS: dict[str, tuple[str, ...]] = {
+    # What a healthy rule-engine boot prints, start to finish.
+    "boot": (
+        r"AUTON Kernel booting",
+        r"\[BOOT\] Multiboot2 magic valid",
+        r"\[BOOT\] Long mode enabled",
+        r"\[BOOT\] 64-bit GDT loaded",
+        r"\[BOOT\] Interrupts initialized",
+        r"\[DRV\] Serial .+ initialized",
+        r"\[MM\] PMM initialized",
+        r"\[SCHED\] Scheduler initialized",
+        r"\[DEV\] PCI scan: \d+ devices found",
+        r"\[SLM\] Rule engine initialized",
+        r"\[SLM\] Ready",
+        r"\[BOOT\] OK",
+    ),
+    # Additionally required when booting with the on-device model as a
+    # Multiboot2 module: the model is loaded and the neural backend selected.
+    "neural": (
+        r"\[SLM\] Loaded model",
+        r"\[SLM\] Backend: neural",
+    ),
+}
+
+
+def marker_patterns(set_name: str) -> tuple[str, ...]:
+    """Patterns for a named marker set, in report order."""
+    try:
+        return SERIAL_MARKER_SETS[set_name]
+    except KeyError:
+        raise KeyError(
+            f"unknown marker set {set_name!r}; "
+            f"available: {', '.join(sorted(SERIAL_MARKER_SETS))}"
+        ) from None
+
+
+def all_test_patterns(arch: str = "x86_64") -> set[str]:
+    """Every pattern claimed by any AcceptanceTest, for coverage checks."""
+    return {
+        p
+        for tests in get_all_tests(arch).values()
+        for t in tests
+        for p in t.expected_serial_patterns
+    }
+
+
 def test_passes(test: "AcceptanceTest", serial: str) -> bool:
     """True if every expected serial pattern for ``test`` is present."""
     return all(re.search(p, serial) for p in test.expected_serial_patterns)
@@ -611,7 +706,24 @@ def main(argv: list[str] | None = None) -> int:
         "--serial", help="evaluate this captured serial log instead of booting"
     )
     parser.add_argument("--timeout", type=int, default=60)
+    parser.add_argument(
+        "--list-patterns",
+        metavar="SET",
+        help="print one serial-marker regex per line and exit "
+        f"(sets: {', '.join(sorted(SERIAL_MARKER_SETS))}); consumed by "
+        "scripts/lib/markers.sh so the shell keeps no copy of the list",
+    )
     args = parser.parse_args(argv)
+
+    if args.list_patterns:
+        try:
+            patterns = marker_patterns(args.list_patterns)
+        except KeyError as exc:
+            print(exc.args[0], file=sys.stderr)
+            return 2
+        for pattern in patterns:
+            print(pattern)
+        return 0
 
     if args.serial:
         from pathlib import Path
