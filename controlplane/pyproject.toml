@@ -31,4 +31,8 @@ packages = ["src/controlplane"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+markers = [
+    "integration: exercises real tools/surfaces rather than one unit",
+    "unit: a single unit in isolation",
+]
 addopts = "-q"

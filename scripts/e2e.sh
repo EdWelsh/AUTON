@@ -63,7 +63,7 @@ WORK="$ROOT/SLM/work"
 STAGE_LOG="$ART/stages.tsv"
 printf 'stage\tname\tstatus\tseconds\n' > "$STAGE_LOG"
 
-TOTAL_STAGES=$([ "$RUN_EVAL" -eq 1 ] && echo 9 || echo 8)
+TOTAL_STAGES=$([ "$RUN_EVAL" -eq 1 ] && echo 10 || echo 9)
 STAGE_NO=0
 FAILED_STAGE=""
 declare -a STAGE_NAMES=()
@@ -277,6 +277,13 @@ s_fallback() {
 	return "$fail"
 }
 
+# The host half of the chat OS. Needs no VM, so it is cheap and independent of
+# everything above it; a kernel regression and a control-plane regression should
+# not be able to mask each other.
+s_controlplane() {
+	"$ROOT/scripts/cp-e2e.sh"
+}
+
 s_transcript() {
 	# Driven against the rule-engine ISO: these are deterministic system answers,
 	# and rung 3a's model is trained only far enough to prove the pipeline, not
@@ -314,6 +321,7 @@ stage iso        s_iso
 stage boot       s_boot
 stage markers    s_markers
 stage fallback   s_fallback
+stage cplane     s_controlplane
 stage transcript s_transcript
 [ "$RUN_EVAL" -eq 1 ] && stage eval s_eval
 RUN_SECS=$(( $(date +%s) - RUN_START ))
