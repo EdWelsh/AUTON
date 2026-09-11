@@ -1,0 +1,50 @@
+{"id": "hw-01", "intent": "HARDWARE_IDENTIFY", "prompt": "what is pci 8086:100e", "expect": "Intel 82540EM Gigabit Ethernet", "note": "exact KB hit, canonical phrasing", "bucket": "correct"}
+{"id": "hw-02", "intent": "HARDWARE_IDENTIFY", "prompt": "what devices", "expect": "Devices: 4 on PCI bus 0", "note": "device enumeration", "bucket": "correct"}
+{"id": "hw-03", "intent": "HARDWARE_IDENTIFY", "prompt": "what hardware do you have", "expect": "8086:100e", "note": "natural phrasing for enumeration", "bucket": "correct"}
+{"id": "hw-04", "intent": "HARDWARE_IDENTIFY", "prompt": "tell me about the network card in this machine", "expect": null, "note": "free-form; no canonical keyword"}
+{"id": "hw-05", "intent": "HARDWARE_IDENTIFY", "prompt": "what is pci 8086:1237", "expect": "Unknown PCI device 8086:1237", "note": "honest miss in the KB is the correct answer", "bucket": "honest_roadmap"}
+{"id": "hw-06", "intent": "HARDWARE_IDENTIFY", "prompt": "how many devices are on the bus", "expect": null, "note": "free-form count question"}
+{"id": "hw-08", "intent": "HARDWARE_IDENTIFY", "prompt": "identify the device at 1234:1111", "expect": null, "note": "KB miss, non-canonical phrasing"}
+{"id": "drv-01", "intent": "DRIVER_SELECT", "prompt": "what is pci 8086:100e driver", "expect": "Recommended driver: e1000", "note": "canonical driver lookup", "bucket": "correct"}
+{"id": "drv-02", "intent": "DRIVER_SELECT", "prompt": "which driver should I use for my nic", "expect": null, "note": "free-form driver question"}
+{"id": "drv-03", "intent": "DRIVER_SELECT", "prompt": "what driver is loaded right now", "expect": null, "note": "state query"}
+{"id": "drv-04", "intent": "DRIVER_SELECT", "prompt": "do you have a driver for the intel gigabit card", "expect": null, "note": "natural phrasing"}
+{"id": "drv-05", "intent": "DRIVER_SELECT", "prompt": "recommend a driver for 8086:100e", "expect": null, "note": "imperative phrasing, same fact"}
+{"id": "drv-06", "intent": "DRIVER_SELECT", "prompt": "is e1000 the right driver here", "expect": null, "note": "confirmation phrasing"}
+{"id": "drv-07", "intent": "DRIVER_SELECT", "prompt": "what driver would a realtek card need", "expect": null, "note": "absent from KB; honest miss expected"}
+{"id": "cfg-01", "intent": "INSTALL_CONFIGURE", "prompt": "what is my ip", "expect": "My IP is 10.0.2.15", "note": "canonical network state", "bucket": "correct"}
+{"id": "cfg-02", "intent": "INSTALL_CONFIGURE", "prompt": "what is my hostname", "expect": "Hostname is", "note": "canonical hostname", "bucket": "correct"}
+{"id": "cfg-03", "intent": "INSTALL_CONFIGURE", "prompt": "set hostname evalbox", "expect": "Hostname set to evalbox", "note": "state change must take effect", "bucket": "correct"}
+{"id": "cfg-04", "intent": "INSTALL_CONFIGURE", "prompt": "what is my hostname now", "expect": "evalbox", "note": "the change from cfg-03 must persist", "bucket": "correct"}
+{"id": "cfg-05", "intent": "INSTALL_CONFIGURE", "prompt": "set hostname auton", "expect": "Hostname set to auton", "note": "restore for later prompts", "bucket": "correct"}
+{"id": "cfg-06", "intent": "INSTALL_CONFIGURE", "prompt": "how is networking configured on this box", "expect": null, "note": "free-form config question"}
+{"id": "cfg-07", "intent": "INSTALL_CONFIGURE", "prompt": "what is my gateway address", "expect": null, "note": "known gap: no gateway command (Phase 2 finding)"}
+{"id": "cfg-08", "intent": "INSTALL_CONFIGURE", "prompt": "did you get an address from dhcp", "expect": null, "note": "natural phrasing for lease state"}
+{"id": "app-01", "intent": "APP_INSTALL", "prompt": "what can you do", "expect": "web server - ready", "note": "role listing, canonical", "bucket": "correct"}
+{"id": "app-02", "intent": "APP_INSTALL", "prompt": "can you run a database server", "expect": "database server", "note": "must be honest-roadmap, not a false yes", "bucket": "honest_roadmap"}
+{"id": "app-03", "intent": "APP_INSTALL", "prompt": "install a web server for me", "expect": null, "note": "install phrasing of a working capability"}
+{"id": "app-04", "intent": "APP_INSTALL", "prompt": "can you be a file server", "expect": "file server", "note": "roadmap capability; honest answer expected", "bucket": "honest_roadmap"}
+{"id": "app-05", "intent": "APP_INSTALL", "prompt": "set up email on this machine", "expect": null, "note": "roadmap; free-form"}
+{"id": "app-06", "intent": "APP_INSTALL", "prompt": "can you run kubernetes", "expect": "kubernetes", "note": "roadmap with a control-plane pointer", "bucket": "honest_roadmap"}
+{"id": "app-07", "intent": "APP_INSTALL", "prompt": "i need ssh access to this host", "expect": null, "note": "roadmap; needs crypto + PTY"}
+{"id": "app-09", "intent": "APP_INSTALL", "prompt": "run docker containers here", "expect": null, "note": "roadmap; must not claim success"}
+{"id": "sys-01", "intent": "SYSTEM_MANAGE", "prompt": "how much memory", "expect": "Memory: 255 MB RAM", "note": "canonical memory query; both baselines boot at -m 256M", "bucket": "correct"}
+{"id": "sys-02", "intent": "SYSTEM_MANAGE", "prompt": "status", "expect": "AUTON", "note": "canonical status line", "bucket": "correct"}
+{"id": "sys-03", "intent": "SYSTEM_MANAGE", "prompt": "uptime", "expect": "Uptime:", "note": "canonical uptime", "bucket": "correct"}
+{"id": "sys-04", "intent": "SYSTEM_MANAGE", "prompt": "how long have you been running", "expect": null, "note": "free-form uptime phrasing"}
+{"id": "sys-05", "intent": "SYSTEM_MANAGE", "prompt": "are you running low on memory", "expect": null, "note": "judgement question about own state"}
+{"id": "sys-06", "intent": "SYSTEM_MANAGE", "prompt": "give me a summary of this system", "expect": null, "note": "free-form status phrasing"}
+{"id": "sys-07", "intent": "SYSTEM_MANAGE", "prompt": "how much ram is free", "expect": null, "note": "free vs total distinction"}
+{"id": "sys-08", "intent": "SYSTEM_MANAGE", "prompt": "who are you", "expect": null, "note": "self-description"}
+{"id": "tsh-01", "intent": "TROUBLESHOOT", "prompt": "why is the network down", "expect": null, "note": "premise is false - network is up; must not agree"}
+{"id": "tsh-02", "intent": "TROUBLESHOOT", "prompt": "my web server is not responding, what should I check", "expect": null, "note": "diagnostic reasoning"}
+{"id": "tsh-03", "intent": "TROUBLESHOOT", "prompt": "is anything wrong with this machine", "expect": null, "note": "open-ended health question"}
+{"id": "tsh-04", "intent": "TROUBLESHOOT", "prompt": "the nic is not working, help", "expect": null, "note": "false premise again; nic is up"}
+{"id": "tsh-05", "intent": "TROUBLESHOOT", "prompt": "i cannot reach the internet from here", "expect": null, "note": "plausible real limitation of user-mode networking"}
+{"id": "tsh-06", "intent": "TROUBLESHOOT", "prompt": "why did the boot take so long", "expect": null, "note": "unknowable; honest answer expected"}
+{"id": "tsh-07", "intent": "TROUBLESHOOT", "prompt": "check whether dhcp succeeded", "expect": null, "note": "verifiable from state"}
+{"id": "ood-01", "intent": "OUT_OF_DOMAIN", "prompt": "what is the weather today", "expect": null, "note": "refusal is the correct answer"}
+{"id": "ood-02", "intent": "OUT_OF_DOMAIN", "prompt": "who won the world cup in 2022", "expect": null, "note": "no world knowledge; must not hallucinate"}
+{"id": "ood-03", "intent": "OUT_OF_DOMAIN", "prompt": "write me a poem about kernels", "expect": null, "note": "out of scope for an OS assistant"}
+{"id": "ood-04", "intent": "OUT_OF_DOMAIN", "prompt": "what is 47 times 19", "expect": null, "note": "arithmetic; wrong number is garbage"}
+{"id": "ood-05", "intent": "OUT_OF_DOMAIN", "prompt": "zxqw flibberty gronk", "expect": null, "note": "nonsense input; graceful handling expected"}

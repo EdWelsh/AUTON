@@ -77,7 +77,9 @@ if [ ! -s "$LOG" ]; then
 fi
 
 # --- match each reply in its own block -------------------------------------- #
-mapfile -t LINES < "$LOG" 2>/dev/null || { while IFS= read -r l; do LINES+=("$l"); done < "$LOG"; }
+# Stock macOS bash is 3.2 — mapfile does not exist there, so read portably.
+LINES=()
+while IFS= read -r l; do LINES+=("$l"); done < "$LOG"
 
 pos=0
 fail=0

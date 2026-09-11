@@ -6,6 +6,7 @@
 #
 #   --rung {3a,3b,3c}  training rung (default 3a: tiny model, existing corpus)
 #   --skip-train       reuse the last checkpoint in SLM/work (fast iteration)
+#   --eval             add the graded chat eval as a final stage
 #   --keep N           artifact dirs to retain (default 10)
 #
 # Exits non-zero on the first failing stage. Artifacts are written either way.
@@ -26,6 +27,7 @@ case "$PY" in /*) ;; *) PY="$ROOT/$PY";; esac   # absolutize before any cd
 ARCH="${ARCH:-x86_64}"
 RUNG="3a"
 SKIP_TRAIN=0
+RUN_EVAL=0
 KEEP="${KEEP:-10}"
 
 usage() { sed -n '2,12p' "$0" | sed 's/^# \{0,1\}//'; }
@@ -35,6 +37,7 @@ while [ $# -gt 0 ]; do
 		--rung)       RUNG="${2:?--rung needs a value}"; shift 2 ;;
 		--rung=*)     RUNG="${1#*=}"; shift ;;
 		--skip-train) SKIP_TRAIN=1; shift ;;
+		--eval)       RUN_EVAL=1; shift ;;
 		--keep)       KEEP="${2:?--keep needs a value}"; shift 2 ;;
 		--keep=*)     KEEP="${1#*=}"; shift ;;
 		-h|--help)    usage; exit 0 ;;
@@ -60,7 +63,7 @@ WORK="$ROOT/SLM/work"
 STAGE_LOG="$ART/stages.tsv"
 printf 'stage\tname\tstatus\tseconds\n' > "$STAGE_LOG"
 
-TOTAL_STAGES=7
+TOTAL_STAGES=$([ "$RUN_EVAL" -eq 1 ] && echo 8 || echo 7)
 STAGE_NO=0
 FAILED_STAGE=""
 declare -a STAGE_NAMES=()
@@ -214,6 +217,16 @@ s_markers() {
 	return "$fail"
 }
 
+s_eval() {
+	# A freshly trained model has a new fingerprint, so every free-form answer is
+	# unseen and queues for review. That is honest, not a failure: the stage
+	# reports the auto-graded subset and says how many await a human. Exit 3
+	# from eval.sh means "ungraded remain", which is not a red run.
+	"$ROOT/scripts/eval.sh" --model "$MODEL_BIN" --json "$ART/eval.json"
+	local rc=$?
+	[ "$rc" -eq 0 ] || [ "$rc" -eq 3 ]
+}
+
 s_transcript() {
 	# Driven against the rule-engine ISO: these are deterministic system answers,
 	# and rung 3a's model is trained only far enough to prove the pipeline, not
@@ -251,6 +264,7 @@ stage iso        s_iso
 stage boot       s_boot
 stage markers    s_markers
 stage transcript s_transcript
+[ "$RUN_EVAL" -eq 1 ] && stage eval s_eval
 RUN_SECS=$(( $(date +%s) - RUN_START ))
 
 # --- verdict ---------------------------------------------------------------- #
@@ -326,5 +340,19 @@ else
 	echo "RED    stage '$FAILED_STAGE' failed after ${RUN_SECS}s"
 fi
 echo "artifacts: ${ART#"$ROOT"/}"
+
+if [ "$RUN_EVAL" -eq 1 ] && [ -f "$ART/eval.json" ]; then
+	"$PY" - "$ART/eval.json" <<'PYEOF'
+import json, sys
+d = json.load(open(sys.argv[1]))
+c, graded = d["counts"], d["graded"]
+if graded:
+    pct = lambda n: 100.0 * n / graded
+    print(f'eval:      correct {pct(c["correct"]):.0f}%  honest {pct(c["honest_roadmap"]):.0f}%  '
+          f'garbage {pct(c["garbage"]):.0f}%  (graded {graded}/{d["total"]})')
+else:
+    print(f'eval:      nothing graded yet ({d["total"]} awaiting review)')
+PYEOF
+fi
 
 [ "$VERDICT" = GREEN ]
