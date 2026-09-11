@@ -2,7 +2,8 @@
 # Verify this host can build and boot AUTON natively, before anything long runs.
 # Checks the cross toolchain, the ISO tooling, QEMU, and free disk space.
 #
-#   scripts/preflight.sh              # default floor: 5 GiB
+#   scripts/preflight.sh              # kernel loop; default floor: 5 GiB
+#   CHECK_E2E=1 scripts/preflight.sh  # also clang/torch/corpus; floor 10 GiB
 #   MIN_FREE_GB=20 scripts/preflight.sh
 #
 # No -e: every check reports before we exit, so one run lists everything missing.
@@ -12,7 +13,13 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 # shellcheck source=lib/toolchain.sh
 source "$ROOT/scripts/lib/toolchain.sh"
 
-MIN_FREE_GB="${MIN_FREE_GB:-5}"
+PY="${PYTHON:-$ROOT/.venv/bin/python}"
+case "$PY" in /*) ;; *) PY="$ROOT/$PY";; esac
+
+# A full e2e run writes a checkpoint and an exported model (~56 MB each here,
+# far more at larger rungs) on top of the ISO, so it asks for a higher floor
+# than the kernel-only loop.
+MIN_FREE_GB="${MIN_FREE_GB:-$([ "${CHECK_E2E:-0}" = "1" ] && echo 10 || echo 5)}"
 BREW_INSTALL="brew install qemu xorriso x86_64-elf-gcc x86_64-elf-binutils i686-elf-grub"
 
 fail=0
@@ -43,6 +50,29 @@ done
 
 if have xorriso; then pass "xorriso"
 else bad "xorriso" "not on PATH ($GRUB_MKRESCUE needs it). $BREW_INSTALL"; fi
+
+# --- e2e extras ------------------------------------------------------------ #
+# Only checked when asked (scripts/e2e.sh stage 0). The kernel-only loop needs
+# neither clang nor torch, so a plain preflight must not fail without them.
+if [ "${CHECK_E2E:-0}" = "1" ]; then
+	if have clang; then pass "clang ($(clang --version | head -1 | sed 's/ version.*//'))"
+	else bad "clang" "needed by neural_parity.sh; install Xcode command line tools"; fi
+
+	if [ -x "$PY" ]; then
+		if "$PY" -c 'import torch' >/dev/null 2>&1; then
+			pass "torch ($("$PY" -c 'import torch; print(torch.__version__)' 2>/dev/null))"
+		else
+			bad "torch (via $PY)" "parity compares against the PyTorch reference; pip install torch"
+		fi
+	else
+		bad "python ($PY)" "no interpreter; set PYTHON= or create the venv"
+	fi
+
+	for f in "$ROOT/SLM/datasets/os_tasks.jsonl" "$ROOT/SLM/configs/tiny_10M.yaml"; do
+		if [ -f "$f" ]; then pass "corpus/config ($(basename "$f"))"
+		else bad "corpus/config ($(basename "$f"))" "missing; rung 3a cannot train"; fi
+	done
+fi
 
 # --- disk ------------------------------------------------------------------ #
 # Emulated builds and model artifacts are large, and a full volume has

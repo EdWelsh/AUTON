@@ -227,6 +227,22 @@ echo "AUTON e2e — rung $RUNG$([ "$SKIP_TRAIN" -eq 1 ] && echo ' (train skipped
 echo "artifacts: ${ART#"$ROOT"/}"
 echo
 
+# --- stage 0: preflight ------------------------------------------------------ #
+# A gate, not one of the seven: if the host cannot do the work there is nothing
+# to report per-stage. Runs before training so a missing tool or a full disk
+# costs seconds, not a training run.
+printf '[0/%d] %-10s ... ' "$TOTAL_STAGES" "preflight"
+if CHECK_E2E=1 "$ROOT/scripts/preflight.sh" > "$ART/0-preflight.log" 2>&1; then
+	echo "ok"
+else
+	echo "FAILED"
+	sed 's/^/        | /' "$ART/0-preflight.log"
+	echo
+	echo "RED    preflight failed — host is not ready to run the spine"
+	echo "artifacts: ${ART#"$ROOT"/}"
+	exit 1
+fi
+
 RUN_START="$(date +%s)"
 stage train      s_train
 stage export     s_export
