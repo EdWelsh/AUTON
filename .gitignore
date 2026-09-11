@@ -68,3 +68,6 @@ SLM/models/exports/
 # Local tool/agent scratch (not project source)
 .logs/
 .opencode/
+
+# E2E run artifacts (serial logs, manifests, timings) — regenerated per run.
+.artifacts/
