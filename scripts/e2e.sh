@@ -238,13 +238,76 @@ stage transcript s_transcript
 RUN_SECS=$(( $(date +%s) - RUN_START ))
 
 # --- verdict ---------------------------------------------------------------- #
+if [ -z "$FAILED_STAGE" ]; then VERDICT=GREEN; else VERDICT=RED; fi
+
+write_summary_json() {
+	local i first=1
+	{
+		printf '{\n'
+		printf '  "run_id": "%s",\n' "$RUN_ID"
+		printf '  "verdict": "%s",\n' "$VERDICT"
+		printf '  "rung": "%s",\n' "$RUNG"
+		printf '  "arch": "%s",\n' "$ARCH"
+		printf '  "skip_train": %s,\n' "$([ "$SKIP_TRAIN" -eq 1 ] && echo true || echo false)"
+		printf '  "failed_stage": %s,\n' \
+			"$([ -n "$FAILED_STAGE" ] && printf '"%s"' "$FAILED_STAGE" || echo null)"
+		printf '  "seconds": %s,\n' "$RUN_SECS"
+		printf '  "model": {\n'
+		printf '    "max_steps": %s, "seq_len": %s, "batch_size": %s\n' \
+			"$MAX_STEPS" "$SEQ_LEN" "$BATCH_SIZE"
+		printf '  },\n'
+		printf '  "stages": [\n'
+		for i in "${!STAGE_NAMES[@]}"; do
+			[ "$first" -eq 1 ] || printf ',\n'
+			first=0
+			printf '    {"n": %d, "name": "%s", "status": "%s", "seconds": %s}' \
+				"$((i + 1))" "${STAGE_NAMES[$i]}" "${STAGE_STATUS[$i]}" "${STAGE_SECS[$i]}"
+		done
+		printf '\n  ]\n}\n'
+	} > "$ART/summary.json"
+}
+
+write_summary_md() {
+	{
+		printf '# E2E run %s\n\n' "$RUN_ID"
+		printf '%s — rung %s, %ss total.' "$VERDICT" "$RUNG" "$RUN_SECS"
+		if [ -n "$FAILED_STAGE" ]; then
+			printf ' Stage `%s` failed; later stages were skipped.\n\n' "$FAILED_STAGE"
+		else
+			printf ' All %s stages passed.\n\n' "$TOTAL_STAGES"
+		fi
+		printf '| # | Stage | Status | Seconds |\n|---|---|---|---|\n'
+		local i
+		for i in "${!STAGE_NAMES[@]}"; do
+			printf '| %d | %s | %s | %s |\n' \
+				"$((i + 1))" "${STAGE_NAMES[$i]}" "${STAGE_STATUS[$i]}" "${STAGE_SECS[$i]}"
+		done
+		printf '\nArtifacts: `%s`\n' "${ART#"$ROOT"/}"
+	} > "$ART/summary.md"
+}
+
+# Keep the last $KEEP runs. Serial logs and model manifests are small, but a
+# loop left running would fill the disk the Phase 0 preflight exists to guard.
+prune_artifacts() {
+	local dirs n
+	[ "$KEEP" -gt 0 ] 2>/dev/null || return 0
+	dirs="$(ls -1d "$ROOT/.artifacts/e2e"/*/ 2>/dev/null | sort)"
+	n="$(printf '%s\n' "$dirs" | grep -c . )"
+	[ "$n" -gt "$KEEP" ] || return 0
+	printf '%s\n' "$dirs" | head -n "$((n - KEEP))" | while IFS= read -r d; do
+		[ -n "$d" ] && rm -rf "$d"
+	done
+}
+
+write_summary_json
+write_summary_md
+prune_artifacts
+
 echo
-if [ -z "$FAILED_STAGE" ]; then
+if [ "$VERDICT" = GREEN ]; then
 	echo "GREEN  all $TOTAL_STAGES stages passed in ${RUN_SECS}s"
-	VERDICT=GREEN
 else
 	echo "RED    stage '$FAILED_STAGE' failed after ${RUN_SECS}s"
-	VERDICT=RED
 fi
 echo "artifacts: ${ART#"$ROOT"/}"
 
