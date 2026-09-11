@@ -7,7 +7,13 @@
 #include "net.h"
 #include "neural.h"
 
-#define NEURAL_MIN_RAM_MB 128u
+/* Headroom the neural backend needs beyond the model itself: KV cache and
+ * activation buffers (~1 MB at MAX_CTX), the kernel, and slack. The old rule
+ * was a flat 128 MB regardless of model size, which meant a 6 MB int8 model was
+ * refused on a 96 MB machine for no reason the hardware could justify. The
+ * floor now tracks what the model actually costs — which is the point of
+ * quantizing it. */
+#define NEURAL_HEADROOM_MB 24u
 
 struct pci_driver_rule {
 	uint16_t vendor;
@@ -38,11 +44,16 @@ int slm_init(const hw_summary_t *hw)
 
 	if (hw) {
 		uint32_t ram_mb = (uint32_t)(hw->total_ram_bytes / (1024u * 1024u));
-		if (ram_mb >= NEURAL_MIN_RAM_MB) {
+		{
 			for (uint32_t i = 0; i < hw->module_count; i++) {
 				const boot_module_t *m = &hw->modules[i];
 				const void *data = (const void *)(uintptr_t)m->start;
 				uint64_t size = m->end - m->start;
+				uint32_t need_mb =
+					(uint32_t)(size / (1024u * 1024u)) +
+					NEURAL_HEADROOM_MB;
+				if (ram_mb < need_mb)
+					continue;   /* too big for this machine */
 				if (slm_neural_load_model(data, size,
 							  MODEL_FORMAT_AUTON) == 0) {
 					g_neural_active = 1;

@@ -19,7 +19,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from tools.auton_format import FlatHeader, QUANT_FP32, validate, write_model  # noqa: E402
+from tools.auton_format import write_model_int8, FlatHeader, QUANT_FP32, validate, write_model  # noqa: E402
 
 
 def _layer_tensors(state: dict, i: int) -> list:
@@ -38,7 +38,8 @@ def _layer_tensors(state: dict, i: int) -> list:
     ]
 
 
-def export(checkpoint: str, vocab_path: str, output: str) -> dict:
+def export(checkpoint: str, vocab_path: str, output: str,
+           quant: str = "fp32") -> dict:
     """Write the flat model + manifest. Returns the manifest dict."""
     import torch
 
@@ -65,9 +66,10 @@ def export(checkpoint: str, vocab_path: str, output: str) -> dict:
         tensors.extend(_layer_tensors(state, i))
     tensors.append(state["norm.weight"])
 
+    flat_tensors = [t.detach().to(torch.float32).flatten().tolist() for t in tensors]
     weights: list[float] = []
-    for t in tensors:
-        weights.extend(t.detach().to(torch.float32).flatten().tolist())
+    for ft in flat_tensors:
+        weights.extend(ft)
 
     # Vocab: id -> token string (word-level). Pad to vocab_size with empties.
     vocab_map = json.loads(Path(vocab_path).read_text(encoding="utf-8"))
@@ -77,7 +79,10 @@ def export(checkpoint: str, vocab_path: str, output: str) -> dict:
         tok = id_to_tok.get(tid, "")
         vocab.append((float(-tid), tok.encode("utf-8")))
 
-    size = write_model(output, header, weights, vocab)
+    if quant == "int8":
+        size = write_model_int8(output, header, flat_tensors, vocab)
+    else:
+        size = write_model(output, header, weights, vocab)
     validate(output)  # fail loudly if the layout is inconsistent
 
     sha = hashlib.sha256(Path(output).read_bytes()).hexdigest()
@@ -94,7 +99,7 @@ def export(checkpoint: str, vocab_path: str, output: str) -> dict:
             "n_kv_heads": header.n_kv_heads,
             "vocab_size": header.vocab_size,
             "seq_len": header.seq_len,
-            "quant": "fp32",
+            "quant": quant,
         },
     }
     Path(output + ".manifest.json").write_text(
@@ -108,10 +113,12 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--checkpoint", required=True)
     parser.add_argument("--vocab", required=True, help="tokenizer vocab JSON")
     parser.add_argument("--output", default="SLM/models/exports/auton-slm.bin")
+    parser.add_argument("--quant", choices=["fp32", "int8"], default="fp32",
+                        help="int8 quantizes 2D matrices per tensor (~4x smaller)")
     args = parser.parse_args(argv)
 
     Path(args.output).parent.mkdir(parents=True, exist_ok=True)
-    manifest = export(args.checkpoint, args.vocab, args.output)
+    manifest = export(args.checkpoint, args.vocab, args.output, args.quant)
     print(f"wrote {args.output} ({manifest['bytes']} bytes) sha256={manifest['sha256'][:16]}...")
     return 0
 

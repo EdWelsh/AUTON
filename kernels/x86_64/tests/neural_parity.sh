@@ -26,6 +26,17 @@ for _v in MODEL CKPT VOCAB; do
 	[ -f "${!_v}" ] || { echo "FAIL $_v not found: ${!_v}" >&2; exit 2; }
 done
 
+# Read the model's quant mode from its header so the reference matches it.
+QUANT_MODE="$("$PY" - "$MODEL" <<'PYEOF'
+import struct, sys
+with open(sys.argv[1], "rb") as f:
+    head = f.read(48)
+# quant is the 10th uint32 after magic/version (see SLM/tools/auton_format.py).
+print("int8" if struct.unpack_from("<I", head, 36)[0] == 1 else "fp32")
+PYEOF
+)"
+echo "parity mode: $QUANT_MODE"
+
 cd "$(dirname "$0")/.."
 clang -O2 -Ikernel/include kernel/slm/neural/neural_backend.c kernel/lib/kmath.c \
 	tests/neural_forward_host.c -lm -o /tmp/neural_forward_host || exit 1
@@ -40,12 +51,27 @@ PROMPTS=("2 27 9 71 66 4" "2 39 43 11 5 172 14 4" "2 27 9 110 231 4")
 fail=0
 for p in "${PROMPTS[@]}"; do
 	kern=$(/tmp/neural_forward_host "$MODEL" $p | sed 's/^gen: //')
-	ref=$(CKPT="$CKPT" VOCAB="$VOCAB" PROMPT="$p" SLMROOT="$ROOT/SLM" "$PY" - <<'PYEOF'
+	ref=$(CKPT="$CKPT" VOCAB="$VOCAB" PROMPT="$p" SLMROOT="$ROOT/SLM" \
+	      QUANT="$QUANT_MODE" "$PY" - <<'PYEOF'
 import os, sys
 sys.path.insert(0, os.environ["SLMROOT"])
 import torch
 from model.checkpoint import load_checkpoint
 m, _ = load_checkpoint(os.environ["CKPT"])
+
+if os.environ.get("QUANT") == "int8":
+    # Compare int8 kernel against an int8 reference, not the fp32 one. Both
+    # sides then do the same arithmetic on the same weights, so rounding is
+    # common to both and any divergence left is an implementation bug — which
+    # is the only thing parity has ever been able to detect. Criterion fixed
+    # before measuring; see the rung-3c parity criterion note.
+    with torch.no_grad():
+        for mod in m.modules():
+            w = getattr(mod, "weight", None)
+            if w is not None and w.dim() == 2 and w.is_floating_point():
+                amax = w.abs().max().item()
+                scale = (amax / 127.0) if amax > 0 else 1.0
+                w.copy_(torch.clamp(torch.round(w / scale), -128, 127) * scale)
 ids = [int(x) for x in os.environ["PROMPT"].split()]
 out, cur = [], list(ids)
 for _ in range(12):

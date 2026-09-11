@@ -52,6 +52,7 @@ MAGIC = 0x4E4F5455
 # model rather than a load error. The kernel rejects any version but its own.
 VERSION = 2
 QUANT_FP32 = 0
+QUANT_INT8 = 1
 
 
 @dataclass(frozen=True)
@@ -127,6 +128,86 @@ def weight_element_count(h: FlatHeader) -> int:
     )
 
 
+# Which tensors, in the documented order, are 2D weight matrices. Mirrors the
+# kernel's loader and quantize.py's rule (2D float tensors are quantized, 1D
+# norm vectors pass through). Both sides must agree exactly or the int8 stream
+# is parsed at the wrong offsets.
+def quantized_tensor_flags(header: FlatHeader) -> list[bool]:
+    """True where a tensor is a 2D matrix (quantized), False for 1D norms."""
+    flags = [True]                     # token embedding
+    for _ in range(header.n_layers):
+        flags += [False,               # rms_att
+                  True, True, True, True,   # wq wk wv wo
+                  False,               # rms_ffn
+                  True, True, True]    # w1 w2 w3
+    flags.append(False)                # final rms_norm
+    return flags
+
+
+def write_model_int8(
+    path: str,
+    header: FlatHeader,
+    tensors: list[list[float]],
+    vocab: list[tuple[float, bytes]],
+) -> int:
+    """Write an int8 flat model: per-tensor scale then int8 codes.
+
+    ``tensors`` is the tensor list in documented order, each already flattened.
+    2D matrices are quantized symmetrically per tensor (matching
+    SLM/scripts/quantize.py); 1D norm vectors are written as fp32 because
+    quantizing a per-channel scale vector costs accuracy for almost no bytes.
+    """
+    import array
+    import struct as _struct
+
+    flags = quantized_tensor_flags(header)
+    if len(tensors) != len(flags):
+        raise ValueError(f"expected {len(flags)} tensors, got {len(tensors)}")
+
+    total = sum(len(t) for t in tensors)
+    if total != weight_element_count(header):
+        raise ValueError(f"weight count {total} != expected {weight_element_count(header)}")
+
+    max_token_len = max((len(b) for _, b in vocab), default=0)
+    with open(path, "wb") as f:
+        hdr = FlatHeader(**{**header.__dict__, "quant": QUANT_INT8})
+        f.write(hdr.pack())
+        for values, is_q in zip(tensors, flags):
+            if not is_q:
+                f.write(array.array("f", values).tobytes())
+                continue
+            amax = max((abs(v) for v in values), default=0.0)
+            scale = (amax / 127.0) if amax > 0 else 1.0
+            f.write(_struct.pack("<f", scale))
+            codes = array.array("b", (
+                max(-128, min(127, int(round(v / scale)))) for v in values
+            ))
+            f.write(codes.tobytes())
+        f.write(_struct.pack("<I", max_token_len))
+        for score, b in vocab:
+            f.write(_struct.pack("<fI", score, len(b)))
+            f.write(b)
+        return f.tell()
+
+
+def tensor_element_counts(h: FlatHeader) -> list[int]:
+    """Element count per tensor, in the documented order."""
+    hd = h.dim // h.n_heads
+    counts = [h.vocab_size * h.dim]
+    for _ in range(h.n_layers):
+        counts += [h.dim,
+                   h.n_heads * hd * h.dim,
+                   h.n_kv_heads * hd * h.dim,
+                   h.n_kv_heads * hd * h.dim,
+                   h.dim * h.n_heads * hd,
+                   h.dim,
+                   h.hidden_dim * h.dim,
+                   h.dim * h.hidden_dim,
+                   h.hidden_dim * h.dim]
+    counts.append(h.dim)
+    return counts
+
+
 def write_model(
     path: str,
     header: FlatHeader,
@@ -138,7 +219,7 @@ def write_model(
     import array
 
     if header.quant != QUANT_FP32:
-        raise ValueError("MVP writer supports fp32 only")
+        raise ValueError("write_model is the fp32 path; use write_model_int8")
 
     flat = array.array("f", weights)
     if len(flat) != weight_element_count(header):
@@ -164,7 +245,18 @@ def validate(path: str) -> FlatHeader:
         data = f.read()
 
     header = FlatHeader.unpack(data)
-    weight_bytes = weight_element_count(header) * 4
+    if header.quant == QUANT_INT8:
+        # Per quantized tensor: 4-byte scale + 1 byte per element. 1D norm
+        # vectors stay fp32 at 4 bytes each.
+        flags = quantized_tensor_flags(header)
+        sizes = tensor_element_counts(header)
+        weight_bytes = sum(
+            (4 + n) if q else (n * 4) for n, q in zip(sizes, flags)
+        )
+    elif header.quant == QUANT_FP32:
+        weight_bytes = weight_element_count(header) * 4
+    else:
+        raise ValueError(f"unsupported quant mode {header.quant}")
     offset = HEADER_SIZE + weight_bytes
     if offset + 4 > len(data):
         raise ValueError("file truncated before tokenizer section")

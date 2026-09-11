@@ -1,0 +1,413 @@
+{
+  "fingerprint": "neural:08e953a5fa41460d",
+  "total": 50,
+  "graded": 50,
+  "counts": {
+    "correct": 24,
+    "honest_roadmap": 14,
+    "garbage": 12,
+    "ungraded": 0
+  },
+  "results": [
+    {
+      "id": "hw-01",
+      "intent": "HARDWARE_IDENTIFY",
+      "prompt": "what is pci 8086:100e",
+      "answer": "Intel 82540EM Gigabit Ethernet (e1000). Recommended driver: e1000.",
+      "verdict": "correct",
+      "graded_by": "auto"
+    },
+    {
+      "id": "hw-02",
+      "intent": "HARDWARE_IDENTIFY",
+      "prompt": "what devices",
+      "answer": "Devices: 4 on PCI bus 0. 8086:1237 8086:7000 1234:1111 8086:100e(e1000)",
+      "verdict": "correct",
+      "graded_by": "auto"
+    },
+    {
+      "id": "hw-03",
+      "intent": "HARDWARE_IDENTIFY",
+      "prompt": "what hardware do you have",
+      "answer": "Devices: 4 on PCI bus 0. 8086:1237 8086:7000 1234:1111 8086:100e(e1000)",
+      "verdict": "correct",
+      "graded_by": "auto"
+    },
+    {
+      "id": "hw-04",
+      "intent": "HARDWARE_IDENTIFY",
+      "prompt": "tell me about the network card in this machine",
+      "answer": "Intel 82540EM Gigabit Ethernet (e1000) at 8086:100e, driver e1000 loaded.",
+      "verdict": "correct",
+      "graded_by": "human"
+    },
+    {
+      "id": "hw-05",
+      "intent": "HARDWARE_IDENTIFY",
+      "prompt": "what is pci 8086:1237",
+      "answer": "Unknown PCI device 8086:1237. No matching driver in the knowledge base.",
+      "verdict": "honest_roadmap",
+      "graded_by": "auto"
+    },
+    {
+      "id": "hw-06",
+      "intent": "HARDWARE_IDENTIFY",
+      "prompt": "how many devices are on the bus",
+      "answer": "Devices: 4 on PCI bus 0. 8086:1237 8086:7000 1234:1111 8086:100e(e1000)",
+      "verdict": "correct",
+      "graded_by": "human"
+    },
+    {
+      "id": "hw-08",
+      "intent": "HARDWARE_IDENTIFY",
+      "prompt": "identify the device at 1234:1111",
+      "answer": "Unknown PCI device 1234:1111. No matching driver in the knowledge base.",
+      "verdict": "honest_roadmap",
+      "graded_by": "human"
+    },
+    {
+      "id": "drv-01",
+      "intent": "DRIVER_SELECT",
+      "prompt": "what is pci 8086:100e driver",
+      "answer": "Recommended driver: e1000.",
+      "verdict": "correct",
+      "graded_by": "auto"
+    },
+    {
+      "id": "drv-02",
+      "intent": "DRIVER_SELECT",
+      "prompt": "which driver should I use for my nic",
+      "answer": "Devices: 4 on PCI bus 0. 8086:1237 8086:7000 1234:1111 8086:100e(e1000)",
+      "verdict": "garbage",
+      "graded_by": "human"
+    },
+    {
+      "id": "drv-03",
+      "intent": "DRIVER_SELECT",
+      "prompt": "what driver is loaded right now",
+      "answer": "Unknown PCI device 1234:1111. No matching driver in the knowledge base.",
+      "verdict": "garbage",
+      "graded_by": "human"
+    },
+    {
+      "id": "drv-04",
+      "intent": "DRIVER_SELECT",
+      "prompt": "do you have a driver for the intel gigabit card",
+      "answer": "I am AUTON, an operating system. I answer questions about this machine \u2014 its hardware, drivers, network and the roles it can run. I do not know about creative writing.",
+      "verdict": "garbage",
+      "graded_by": "human"
+    },
+    {
+      "id": "drv-05",
+      "intent": "DRIVER_SELECT",
+      "prompt": "recommend a driver for 8086:100e",
+      "answer": "Recommended driver: e1000.",
+      "verdict": "correct",
+      "graded_by": "human"
+    },
+    {
+      "id": "drv-06",
+      "intent": "DRIVER_SELECT",
+      "prompt": "is e1000 the right driver here",
+      "answer": "The e1000 driver is loaded for 8086:100e.",
+      "verdict": "correct",
+      "graded_by": "human"
+    },
+    {
+      "id": "drv-07",
+      "intent": "DRIVER_SELECT",
+      "prompt": "what driver would a realtek card need",
+      "answer": "Realtek is not in the knowledge base. Give me its PCI id and I will look it up.",
+      "verdict": "honest_roadmap",
+      "graded_by": "human"
+    },
+    {
+      "id": "cfg-01",
+      "intent": "INSTALL_CONFIGURE",
+      "prompt": "what is my ip",
+      "answer": "My IP is 10.0.2.15 (gateway 10.0.2.2, dns 10.0.2.3).",
+      "verdict": "correct",
+      "graded_by": "auto"
+    },
+    {
+      "id": "cfg-02",
+      "intent": "INSTALL_CONFIGURE",
+      "prompt": "what is my hostname",
+      "answer": "Hostname is auton.",
+      "verdict": "correct",
+      "graded_by": "auto"
+    },
+    {
+      "id": "cfg-03",
+      "intent": "INSTALL_CONFIGURE",
+      "prompt": "set hostname evalbox",
+      "answer": "Hostname set to evalbox.",
+      "verdict": "correct",
+      "graded_by": "auto"
+    },
+    {
+      "id": "cfg-04",
+      "intent": "INSTALL_CONFIGURE",
+      "prompt": "what is my hostname now",
+      "answer": "Hostname is evalbox.",
+      "verdict": "correct",
+      "graded_by": "auto"
+    },
+    {
+      "id": "cfg-05",
+      "intent": "INSTALL_CONFIGURE",
+      "prompt": "set hostname auton",
+      "answer": "Hostname set to auton.",
+      "verdict": "correct",
+      "graded_by": "auto"
+    },
+    {
+      "id": "cfg-06",
+      "intent": "INSTALL_CONFIGURE",
+      "prompt": "how is networking configured on this box",
+      "answer": "Memory: 255 MB RAM.",
+      "verdict": "garbage",
+      "graded_by": "human"
+    },
+    {
+      "id": "cfg-07",
+      "intent": "INSTALL_CONFIGURE",
+      "prompt": "what is my gateway address",
+      "answer": "My IP is 10.0.2.15 (gateway 10.0.2.2, dns 10.0.2.3).",
+      "verdict": "correct",
+      "graded_by": "human"
+    },
+    {
+      "id": "cfg-08",
+      "intent": "INSTALL_CONFIGURE",
+      "prompt": "did you get an address from dhcp",
+      "answer": "Role 'DHCP server': roadmap - this host is a DHCP client; serving leases is next. I recognize the request and will run it once that subsystem exists.",
+      "verdict": "garbage",
+      "graded_by": "human"
+    },
+    {
+      "id": "app-01",
+      "intent": "APP_INSTALL",
+      "prompt": "what can you do",
+      "answer": "I can turn this machine into a server role from chat:\n  web server - ready\n  DNS server - ready\n  file server - roadmap\n  email server - roadmap\n  database server - roadmap\n  SSH server - roadmap\n  DHCP server - roadmap\n  desktop apps - roadmap\n  containers - roadmap\n  kubernetes - roadmap\n  workloads - roadmap\nAlso ask: what is my ip, hostname, memory, devices, uptime, status.",
+      "verdict": "correct",
+      "graded_by": "auto"
+    },
+    {
+      "id": "app-02",
+      "intent": "APP_INSTALL",
+      "prompt": "can you run a database server",
+      "answer": "Role 'database server': roadmap - needs persistent storage and a query engine. I recognize the request and will run it once that subsystem exists.",
+      "verdict": "honest_roadmap",
+      "graded_by": "auto"
+    },
+    {
+      "id": "app-03",
+      "intent": "APP_INSTALL",
+      "prompt": "install a web server for me",
+      "answer": "Configuring this machine as a web server (in-kernel HTTP on port 80)...\n[HTTP] listening on :80 (press any key to stop)\n[HTTP] stopped",
+      "verdict": "correct",
+      "graded_by": "human"
+    },
+    {
+      "id": "app-04",
+      "intent": "APP_INSTALL",
+      "prompt": "can you be a file server",
+      "answer": "Role 'file server': roadmap - needs a filesystem; would serve a docroot over HTTP. I recognize the request and will run it once that subsystem exists.",
+      "verdict": "honest_roadmap",
+      "graded_by": "auto"
+    },
+    {
+      "id": "app-05",
+      "intent": "APP_INSTALL",
+      "prompt": "set up email on this machine",
+      "answer": "Role 'email server': roadmap - needs SMTP/IMAP and mail storage. I recognize the request and will run it once that subsystem exists.",
+      "verdict": "honest_roadmap",
+      "graded_by": "human"
+    },
+    {
+      "id": "app-06",
+      "intent": "APP_INSTALL",
+      "prompt": "can you run kubernetes",
+      "answer": "Role 'kubernetes': roadmap - host control plane drives kubectl today; in-kernel needs a container runtime + scheduler. I recognize the request and will run it once that subsystem exists.",
+      "verdict": "honest_roadmap",
+      "graded_by": "auto"
+    },
+    {
+      "id": "app-07",
+      "intent": "APP_INSTALL",
+      "prompt": "i need ssh access to this host",
+      "answer": "Role 'SSH server': roadmap - needs crypto (key exchange, ciphers) and a PTY. I recognize the request and will run it once that subsystem exists.",
+      "verdict": "honest_roadmap",
+      "graded_by": "human"
+    },
+    {
+      "id": "app-09",
+      "intent": "APP_INSTALL",
+      "prompt": "run docker containers here",
+      "answer": "Role 'containers': roadmap - host control plane runs Docker today; in-kernel needs an OCI runtime. I recognize the request and will run it once that subsystem exists.",
+      "verdict": "honest_roadmap",
+      "graded_by": "human"
+    },
+    {
+      "id": "sys-01",
+      "intent": "SYSTEM_MANAGE",
+      "prompt": "how much memory",
+      "answer": "Memory: 255 MB RAM.",
+      "verdict": "correct",
+      "graded_by": "auto"
+    },
+    {
+      "id": "sys-02",
+      "intent": "SYSTEM_MANAGE",
+      "prompt": "status",
+      "answer": "AUTON auton: IP 10.0.2.15, 255 MB RAM, 4 devices, up 51s.",
+      "verdict": "correct",
+      "graded_by": "auto"
+    },
+    {
+      "id": "sys-03",
+      "intent": "SYSTEM_MANAGE",
+      "prompt": "uptime",
+      "answer": "Uptime: 53 seconds.",
+      "verdict": "correct",
+      "graded_by": "auto"
+    },
+    {
+      "id": "sys-04",
+      "intent": "SYSTEM_MANAGE",
+      "prompt": "how long have you been running",
+      "answer": "Uptime: 12 seconds.",
+      "verdict": "correct",
+      "graded_by": "human"
+    },
+    {
+      "id": "sys-05",
+      "intent": "SYSTEM_MANAGE",
+      "prompt": "are you running low on memory",
+      "answer": "Memory: 255 MB RAM.",
+      "verdict": "correct",
+      "graded_by": "human"
+    },
+    {
+      "id": "sys-06",
+      "intent": "SYSTEM_MANAGE",
+      "prompt": "give me a summary of this system",
+      "answer": "AUTON auton: IP 10.0.2.15, 255 MB RAM, 4 devices, up 57s.",
+      "verdict": "correct",
+      "graded_by": "human"
+    },
+    {
+      "id": "sys-07",
+      "intent": "SYSTEM_MANAGE",
+      "prompt": "how much ram is free",
+      "answer": "Memory: 255 MB RAM.",
+      "verdict": "garbage",
+      "graded_by": "human"
+    },
+    {
+      "id": "sys-08",
+      "intent": "SYSTEM_MANAGE",
+      "prompt": "who are you",
+      "answer": "I am AUTON, an operating system. I answer questions about this machine \u2014 its hardware, drivers, network and the roles it can run. I do not know about creative writing.",
+      "verdict": "correct",
+      "graded_by": "human"
+    },
+    {
+      "id": "tsh-01",
+      "intent": "TROUBLESHOOT",
+      "prompt": "why is the network down",
+      "answer": "I am AUTON, an operating system. I answer questions about this machine \u2014 its hardware, drivers, network and the roles it can run. I do not know about the weather.",
+      "verdict": "garbage",
+      "graded_by": "human"
+    },
+    {
+      "id": "tsh-02",
+      "intent": "TROUBLESHOOT",
+      "prompt": "my web server is not responding, what should I check",
+      "answer": "Configuring this machine as a web server (in-kernel HTTP on port 80)...\n[HTTP] listening on :80 (press any key to stop)\n[HTTP] stopped",
+      "verdict": "garbage",
+      "graded_by": "human"
+    },
+    {
+      "id": "tsh-03",
+      "intent": "TROUBLESHOOT",
+      "prompt": "is anything wrong with this machine",
+      "answer": "AUTON host control plane runs Docker today; in-kernel needs an OCI runtime. I recognize the request and will run it once that subsystem exists.",
+      "verdict": "garbage",
+      "graded_by": "human"
+    },
+    {
+      "id": "tsh-04",
+      "intent": "TROUBLESHOOT",
+      "prompt": "the nic is not working, help",
+      "answer": "Devices: 4 on PCI bus 0. 8086:1237 8086:7000 1234:1111 8086:100e(e1000)",
+      "verdict": "garbage",
+      "graded_by": "human"
+    },
+    {
+      "id": "tsh-05",
+      "intent": "TROUBLESHOOT",
+      "prompt": "i cannot reach the internet from here",
+      "answer": "Networking is user-mode NAT: outbound outbound works through the gateway at 10.0.2.2, inbound needs a host port forward.",
+      "verdict": "correct",
+      "graded_by": "human"
+    },
+    {
+      "id": "tsh-06",
+      "intent": "TROUBLESHOOT",
+      "prompt": "why did the boot take so long",
+      "answer": "Boot time is not instrumented. Uptime since boot is reported by 'uptime'.",
+      "verdict": "honest_roadmap",
+      "graded_by": "human"
+    },
+    {
+      "id": "tsh-07",
+      "intent": "TROUBLESHOOT",
+      "prompt": "check whether dhcp succeeded",
+      "answer": "Role 'DHCP server': roadmap - this host is a DHCP client; serving leases is next. I recognize the request and will run it once that subsystem exists.",
+      "verdict": "garbage",
+      "graded_by": "human"
+    },
+    {
+      "id": "ood-01",
+      "intent": "OUT_OF_DOMAIN",
+      "prompt": "what is the weather today",
+      "answer": "I am AUTON, an operating system. I answer questions about this machine \u2014 its hardware, drivers, network and the roles it can run. I do not know about the weather.",
+      "verdict": "honest_roadmap",
+      "graded_by": "human"
+    },
+    {
+      "id": "ood-02",
+      "intent": "OUT_OF_DOMAIN",
+      "prompt": "who won the world cup in 2022",
+      "answer": "I am AUTON, an operating system. I answer questions about this machine \u2014 its hardware, drivers, network and the roles it can run. I do not know about that.",
+      "verdict": "honest_roadmap",
+      "graded_by": "human"
+    },
+    {
+      "id": "ood-03",
+      "intent": "OUT_OF_DOMAIN",
+      "prompt": "write me a poem about kernels",
+      "answer": "I am AUTON, an operating system. I answer questions about this machine \u2014 its hardware, drivers, network and the roles it can run. I do not know about creative writing.",
+      "verdict": "honest_roadmap",
+      "graded_by": "human"
+    },
+    {
+      "id": "ood-04",
+      "intent": "OUT_OF_DOMAIN",
+      "prompt": "what is 47 times 19",
+      "answer": "Unknown PCI device 1022:2000. No matching driver in the knowledge base.",
+      "verdict": "garbage",
+      "graded_by": "human"
+    },
+    {
+      "id": "ood-05",
+      "intent": "OUT_OF_DOMAIN",
+      "prompt": "zxqw flibberty gronk",
+      "answer": "I am AUTON, an operating system. I answer questions about this machine \u2014 its hardware, drivers, network and the roles it can run. I do not know about creative writing.",
+      "verdict": "honest_roadmap",
+      "graded_by": "human"
+    }
+  ]
+}
