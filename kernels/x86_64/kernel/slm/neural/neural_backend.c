@@ -22,6 +22,32 @@
 #define QUANT_FP32 0u
 #define QUANT_INT8 1u
 
+/* Why a model was refused. Returned negative from slm_neural_load_model so the
+ * caller can name the reason on the console: a silent fallback to the rule
+ * engine looks identical to having no model at all, which makes a corrupt
+ * module indistinguishable from an intentional rule-engine boot. */
+#define SLM_ERR_ARGS     -1     /* null data, wrong format, smaller than a header */
+#define SLM_ERR_MAGIC    -2
+#define SLM_ERR_VERSION  -3
+#define SLM_ERR_QUANT    -4
+#define SLM_ERR_GEOMETRY -5     /* layer/head/vocab caps, or dim not divisible */
+#define SLM_ERR_TRUNCATED -6    /* weights or tokenizer block run past the module */
+#define SLM_ERR_NOMEM    -7
+
+const char *slm_neural_error_text(int code)
+{
+	switch (code) {
+	case SLM_ERR_ARGS:      return "bad arguments or module too small";
+	case SLM_ERR_MAGIC:     return "not an AUTON model (bad magic)";
+	case SLM_ERR_VERSION:   return "unsupported format version";
+	case SLM_ERR_QUANT:     return "unsupported quantization mode";
+	case SLM_ERR_GEOMETRY:  return "model geometry out of range";
+	case SLM_ERR_TRUNCATED: return "module truncated";
+	case SLM_ERR_NOMEM:     return "not enough memory for runtime buffers";
+	default:                return "unknown error";
+	}
+}
+
 /* A weight matrix as stored in the file. Exactly one of f32/q8 is non-NULL. */
 typedef struct {
 	const float  *f32;
@@ -100,16 +126,50 @@ static wmat_t take_w(const uint8_t **cur, uint64_t count, int q8)
 int slm_neural_load_model(const void *data, uint64_t size, model_format_t fmt)
 {
 	if (fmt != MODEL_FORMAT_AUTON || !data || size < sizeof(struct flat_header))
-		return -1;
+		return SLM_ERR_ARGS;
 
 	const struct flat_header *h = (const struct flat_header *)data;
-	if (h->magic != MAGIC || h->version != VERSION ||
-	    (h->quant != QUANT_FP32 && h->quant != QUANT_INT8))
-		return -1;
+	if (h->magic != MAGIC)
+		return SLM_ERR_MAGIC;
+	if (h->version != VERSION)
+		return SLM_ERR_VERSION;
+	if (h->quant != QUANT_FP32 && h->quant != QUANT_INT8)
+		return SLM_ERR_QUANT;
 	if (h->n_layers > MAX_LAYERS || h->n_heads == 0 ||
 	    h->n_kv_heads == 0 || h->n_heads % h->n_kv_heads != 0 ||
-	    h->vocab_size > MODEL_MAX_VOCAB_CAP || (h->dim % h->n_heads) != 0)
-		return -1;
+	    h->vocab_size > MODEL_MAX_VOCAB_CAP || (h->dim % h->n_heads) != 0 ||
+	    h->dim == 0 || h->hidden_dim == 0 || h->n_layers == 0)
+		return SLM_ERR_GEOMETRY;
+
+	/* The module is untrusted input: check the weight section fits before any
+	 * pointer walks off the end of it. A truncated module previously got as
+	 * far as parsing the tokenizer block from whatever followed in memory. */
+	{
+		uint64_t hd_ = h->dim / h->n_heads;
+		uint64_t per_layer =
+			(uint64_t)h->dim
+			+ (uint64_t)h->n_heads * hd_ * h->dim
+			+ 2ull * h->n_kv_heads * hd_ * h->dim
+			+ (uint64_t)h->dim * h->n_heads * hd_
+			+ (uint64_t)h->dim
+			+ 3ull * h->hidden_dim * h->dim;
+		uint64_t elems = (uint64_t)h->vocab_size * h->dim
+			       + (uint64_t)h->n_layers * per_layer
+			       + h->dim;
+		uint64_t need;
+		if (h->quant == QUANT_INT8) {
+			/* 2D matrices: 4-byte scale + 1 byte/element. 1D norms stay
+			 * fp32. Count matches SLM/tools/auton_format.py. */
+			uint64_t norms = (uint64_t)h->n_layers * 2ull * h->dim + h->dim;
+			uint64_t mats = elems - norms;
+			uint64_t nmats = 1ull + (uint64_t)h->n_layers * 7ull;
+			need = mats + nmats * 4ull + norms * 4ull;
+		} else {
+			need = elems * 4ull;
+		}
+		if (need > size - sizeof(*h))
+			return SLM_ERR_TRUNCATED;
+	}
 
 	M.dim = h->dim;
 	M.hidden_dim = h->hidden_dim;
@@ -152,13 +212,13 @@ int slm_neural_load_model(const void *data, uint64_t size, model_format_t fmt)
 	t += 4;                                 /* skip max_token_len */
 	for (uint32_t i = 0; i < M.vocab_size; i++) {
 		if (t + 8 > end)
-			return -1;
+			return SLM_ERR_TRUNCATED;
 		t += 4;                         /* skip score */
 		uint32_t len;
 		__builtin_memcpy(&len, t, 4);
 		t += 4;
 		if (t + len > end || len > 255)
-			return -1;
+			return SLM_ERR_TRUNCATED;
 		M.vocab[i] = (const char *)t;
 		M.vocab_len[i] = (uint8_t)len;
 		t += len;
@@ -178,7 +238,7 @@ int slm_neural_load_model(const void *data, uint64_t size, model_format_t fmt)
 	M.key_cache = dma_alloc((uint64_t)M.n_layers * M.ctx * M.kv_dim * 4, 16);
 	M.value_cache = dma_alloc((uint64_t)M.n_layers * M.ctx * M.kv_dim * 4, 16);
 	if (!M.x || !M.logits || !M.key_cache || !M.value_cache)
-		return -1;
+		return SLM_ERR_NOMEM;
 
 	M.pos = 0;
 	M.loaded = 1;
@@ -399,6 +459,45 @@ static uint32_t argmax(const float *v, uint32_t n)
 	return best;
 }
 
+/* Degenerate generation: output that is technically tokens but not an answer.
+ *
+ * A small model that loses the thread emits runs ("machine machine machine")
+ * or short cycles ("driver: driver: driver:"). Printing that is worse than
+ * admitting ignorance — the chat rubric grades it as garbage, and the OS has a
+ * working rule engine to fall back to. Cheap and freestanding by requirement:
+ * no allocation, no libc, one pass plus a bounded tail check.
+ */
+int slm_neural_is_degenerate(const uint32_t *o, uint32_t n)
+{
+	if (n == 0)
+		return 1;
+
+	/* Four identical tokens in a row. English answers do not do this; a
+	 * stuck decoder does it immediately. */
+	uint32_t run = 1;
+	for (uint32_t i = 1; i < n; i++) {
+		run = (o[i] == o[i - 1]) ? run + 1 : 1;
+		if (run >= 4)
+			return 1;
+	}
+
+	/* A short cycle repeating at the tail: period 2 or 3, three times over.
+	 * Checked at the end because that is where a decoder falls into a loop
+	 * after starting sensibly. */
+	for (uint32_t p = 2; p <= 3; p++) {
+		if (n < p * 3)
+			continue;
+		const uint32_t *tail = o + n - p * 3;
+		int same = 1;
+		for (uint32_t k = 0; k < p * 2 && same; k++)
+			if (tail[k] != tail[k + p])
+				same = 0;
+		if (same)
+			return 1;
+	}
+	return 0;
+}
+
 uint32_t slm_neural_infer(const uint32_t *input, uint32_t input_len,
 			  uint32_t *output, uint32_t max_output,
 			  const inference_config_t *cfg)
@@ -427,6 +526,12 @@ uint32_t slm_neural_infer(const uint32_t *input, uint32_t input_len,
 		pos++;
 		next = argmax(M.logits, M.vocab_size);
 	}
+
+	/* Returning 0 makes the caller fall back to the rule engine, which is the
+	 * honest outcome: a real answer from a deterministic path beats a
+	 * degenerate one from the model. */
+	if (slm_neural_is_degenerate(output, n))
+		return 0;
 	return n;
 }
 

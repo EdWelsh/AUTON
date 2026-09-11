@@ -63,7 +63,7 @@ WORK="$ROOT/SLM/work"
 STAGE_LOG="$ART/stages.tsv"
 printf 'stage\tname\tstatus\tseconds\n' > "$STAGE_LOG"
 
-TOTAL_STAGES=$([ "$RUN_EVAL" -eq 1 ] && echo 8 || echo 7)
+TOTAL_STAGES=$([ "$RUN_EVAL" -eq 1 ] && echo 9 || echo 8)
 STAGE_NO=0
 FAILED_STAGE=""
 declare -a STAGE_NAMES=()
@@ -227,6 +227,56 @@ s_eval() {
 	[ "$rc" -eq 0 ] || [ "$rc" -eq 3 ]
 }
 
+# Boot a deliberately unusable model and assert the kernel degrades honestly.
+# The happy path alone would not notice a kernel that faulted on, or silently
+# mis-parsed, a corrupt module — and the module is untrusted input.
+s_fallback() {
+	local bad="$ART/corrupt-model.bin"
+	local fail=0 serial="$ART/serial-fallback.log"
+
+	# Truncated: a real header followed by nothing like enough weights.
+	head -c 100000 "$MODEL_BIN" > "$bad" 2>/dev/null || return 1
+	make -C "$ROOT/kernels/$ARCH" iso-neural MODEL="$bad" >/dev/null 2>&1 || return 1
+
+	: > "$serial"
+	"$QEMU" -cdrom "$NEURAL_ISO" -serial stdio -display none -no-reboot \
+		-m "${MEM:-256M}" > "$serial" 2>/dev/null &
+	local qp=$! waited=0
+	while [ "$waited" -lt "${BOOT_TIMEOUT:-60}" ]; do
+		grep -q '\[BOOT\] OK' "$serial" 2>/dev/null && break
+		kill -0 "$qp" 2>/dev/null || break
+		sleep 1; waited=$((waited + 1))
+	done
+	kill "$qp" 2>/dev/null; wait "$qp" 2>/dev/null || true
+
+	markers_load fallback-rejected || return 1
+	echo "--- corrupt module ---"
+	markers_check "$(cat "$serial")"
+	[ "$MARKERS_FAILED" -eq 0 ] || fail=1
+
+	# No module at all: the rule engine is the intended backend here.
+	make -C "$ROOT/kernels/$ARCH" iso >/dev/null 2>&1 || return 1
+	: > "$serial.nomodule"
+	"$QEMU" -cdrom "$ROOT/kernels/$ARCH/build/auton.iso" -serial stdio \
+		-display none -no-reboot -m "${MEM:-256M}" > "$serial.nomodule" 2>/dev/null &
+	qp=$!; waited=0
+	while [ "$waited" -lt "${BOOT_TIMEOUT:-60}" ]; do
+		grep -q '\[BOOT\] OK' "$serial.nomodule" 2>/dev/null && break
+		kill -0 "$qp" 2>/dev/null || break
+		sleep 1; waited=$((waited + 1))
+	done
+	kill "$qp" 2>/dev/null; wait "$qp" 2>/dev/null || true
+
+	markers_load fallback-no-module || return 1
+	echo "--- no module ---"
+	markers_check "$(cat "$serial.nomodule")"
+	[ "$MARKERS_FAILED" -eq 0 ] || fail=1
+
+	# Restore the real neural ISO for anything downstream.
+	make -C "$ROOT/kernels/$ARCH" iso-neural MODEL="$MODEL_BIN" >/dev/null 2>&1
+	return "$fail"
+}
+
 s_transcript() {
 	# Driven against the rule-engine ISO: these are deterministic system answers,
 	# and rung 3a's model is trained only far enough to prove the pipeline, not
@@ -263,6 +313,7 @@ stage parity     s_parity
 stage iso        s_iso
 stage boot       s_boot
 stage markers    s_markers
+stage fallback   s_fallback
 stage transcript s_transcript
 [ "$RUN_EVAL" -eq 1 ] && stage eval s_eval
 RUN_SECS=$(( $(date +%s) - RUN_START ))

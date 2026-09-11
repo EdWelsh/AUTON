@@ -44,25 +44,33 @@ int slm_init(const hw_summary_t *hw)
 
 	if (hw) {
 		uint32_t ram_mb = (uint32_t)(hw->total_ram_bytes / (1024u * 1024u));
-		{
-			for (uint32_t i = 0; i < hw->module_count; i++) {
-				const boot_module_t *m = &hw->modules[i];
-				const void *data = (const void *)(uintptr_t)m->start;
-				uint64_t size = m->end - m->start;
-				uint32_t need_mb =
-					(uint32_t)(size / (1024u * 1024u)) +
-					NEURAL_HEADROOM_MB;
-				if (ram_mb < need_mb)
-					continue;   /* too big for this machine */
-				if (slm_neural_load_model(data, size,
-							  MODEL_FORMAT_AUTON) == 0) {
-					g_neural_active = 1;
-					char info[96];
-					slm_neural_model_info(info, sizeof(info));
-					kprintf("[SLM] Loaded model: %s\n", info);
-					break;
-				}
+		if (hw->module_count == 0)
+			kprintf("[SLM] No model module; rule engine only\n");
+		for (uint32_t i = 0; i < hw->module_count; i++) {
+			const boot_module_t *m = &hw->modules[i];
+			const void *data = (const void *)(uintptr_t)m->start;
+			uint64_t size = m->end - m->start;
+			uint32_t need_mb =
+				(uint32_t)(size / (1024u * 1024u)) +
+				NEURAL_HEADROOM_MB;
+			if (ram_mb < need_mb) {
+				/* Name the shortfall: "fell back to the rule engine"
+				 * with no reason is indistinguishable from a machine
+				 * that was never given a model. */
+				kprintf("[SLM] Model rejected: needs %u MB, have %u MB\n",
+					need_mb, ram_mb);
+				continue;
 			}
+			int rc = slm_neural_load_model(data, size, MODEL_FORMAT_AUTON);
+			if (rc == 0) {
+				g_neural_active = 1;
+				char info[96];
+				slm_neural_model_info(info, sizeof(info));
+				kprintf("[SLM] Loaded model: %s\n", info);
+				break;
+			}
+			kprintf("[SLM] Model rejected: %s\n",
+				slm_neural_error_text(rc));
 		}
 	}
 	return 0;

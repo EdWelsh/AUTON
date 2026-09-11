@@ -584,6 +584,31 @@ CORE_GATE_TESTS = (
 )
 
 
+# Honest-degradation tests. A model the kernel cannot use must produce a named
+# reason, not a silent fall back to the rule engine — "Backend: rule-engine"
+# alone is indistinguishable from a machine that was never given a model.
+SLM_TESTS += [
+    AcceptanceTest(
+        name="slm_no_module_reported",
+        subsystem="slm",
+        description="Booting without a model module says so",
+        expected_serial_patterns=[r"\[SLM\] No model module"],
+    ),
+    AcceptanceTest(
+        name="slm_reject_reason_reported",
+        subsystem="slm",
+        description="A rejected model names why it was rejected",
+        expected_serial_patterns=[r"\[SLM\] Model rejected: "],
+    ),
+    AcceptanceTest(
+        name="slm_rule_fallback",
+        subsystem="slm",
+        description="Rule engine serves when the neural backend cannot",
+        expected_serial_patterns=[r"\[SLM\] Backend: rule-engine"],
+    ),
+]
+
+
 # --- Canonical serial-marker sets (consumed by shell harnesses) ------------
 #
 # scripts/run-acceptance.sh and scripts/e2e.sh used to carry their own copy of
@@ -616,6 +641,21 @@ SERIAL_MARKER_SETS: dict[str, tuple[str, ...]] = {
     "neural": (
         r"\[SLM\] Loaded model",
         r"\[SLM\] Backend: neural",
+    ),
+    # A model the kernel refuses must say why and still reach a usable prompt.
+    # Asserting only "Backend: rule-engine" would pass for a machine that was
+    # never given a model at all.
+    "fallback-rejected": (
+        r"\[SLM\] Model rejected: ",
+        r"\[SLM\] Backend: rule-engine",
+        r"\[BOOT\] OK",
+    ),
+    # No module supplied: the rule engine is the intended backend, and the
+    # kernel should say that rather than leave it to be inferred.
+    "fallback-no-module": (
+        r"\[SLM\] No model module",
+        r"\[SLM\] Backend: rule-engine",
+        r"\[BOOT\] OK",
     ),
 }
 

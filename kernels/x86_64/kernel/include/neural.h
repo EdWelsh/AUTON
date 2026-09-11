@@ -30,6 +30,17 @@ typedef struct inference_config {
 
 /* Load a model previously placed in memory (a boot module). Parses the flat
  * header and maps tensors. Returns 0 on success, negative on failure. */
+/* Human-readable reason for a negative slm_neural_load_model() result, so a
+ * fallback to the rule engine can say why instead of looking identical to
+ * having no model at all. */
+const char *slm_neural_error_text(int code);
+
+/* True if generated output is a run or short cycle rather than an answer.
+ * Exposed (not static) so tests/degenerate_test.c can exercise it directly:
+ * a guard that only runs when a model happens to misbehave is a guard nobody
+ * has actually checked. */
+int slm_neural_is_degenerate(const uint32_t *out, uint32_t n);
+
 int slm_neural_load_model(const void *model_data, uint64_t model_size,
 			  model_format_t format);
 
