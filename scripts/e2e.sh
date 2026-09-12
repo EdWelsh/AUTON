@@ -63,7 +63,7 @@ WORK="$ROOT/SLM/work"
 STAGE_LOG="$ART/stages.tsv"
 printf 'stage\tname\tstatus\tseconds\n' > "$STAGE_LOG"
 
-TOTAL_STAGES=$([ "$RUN_EVAL" -eq 1 ] && echo 10 || echo 9)
+TOTAL_STAGES=$([ "$RUN_EVAL" -eq 1 ] && echo 11 || echo 10)
 STAGE_NO=0
 FAILED_STAGE=""
 declare -a STAGE_NAMES=()
@@ -284,6 +284,13 @@ s_controlplane() {
 	"$ROOT/scripts/cp-e2e.sh"
 }
 
+# "Speak a goal, AUTON does the steps" — on both the deterministic planner and
+# the live brain, plus the approval gate. Driven with --brain llm rather than
+# auto, so a broken model cannot pass by falling back.
+s_operator() {
+	"$ROOT/scripts/operator-e2e.sh"
+}
+
 s_transcript() {
 	# Driven against the rule-engine ISO: these are deterministic system answers,
 	# and rung 3a's model is trained only far enough to prove the pipeline, not
@@ -322,6 +329,7 @@ stage boot       s_boot
 stage markers    s_markers
 stage fallback   s_fallback
 stage cplane     s_controlplane
+stage operator   s_operator
 stage transcript s_transcript
 [ "$RUN_EVAL" -eq 1 ] && stage eval s_eval
 RUN_SECS=$(( $(date +%s) - RUN_START ))

@@ -171,3 +171,115 @@ def test_live_llm_brain_drives_tools(xlsx_server, smtp_sink, tmp_path):
     tools_used = {a["tool"] for a in result.actions}
     assert "download_file" in tools_used
     assert result.brain.startswith("llm:")
+
+
+# --- operator E2E lane (Phase 5) -------------------------------------------
+
+
+class TestApprovalDefaults:
+    """The default must be to ASK, never to proceed.
+
+    always_allow exists for --yes and for tests. A regression that made it the
+    default would be silent — every scenario here would still pass — and would
+    mean the OS performs irreversible actions without consent. That is why this
+    is asserted directly rather than inferred from the scenarios.
+    """
+
+    def test_operator_defaults_to_denying(self):
+        from controlplane.operator.approval import always_allow, always_deny
+
+        op = Operator()
+        assert op.approval is not always_allow, (
+            "Operator default approval is always_allow — irreversible actions "
+            "would run unattended"
+        )
+        assert op.approval is always_deny
+
+    def test_tool_executor_requires_an_explicit_approval(self, tmp_path):
+        """Stronger than a safe default: there is no default to get wrong.
+
+        ToolExecutor takes `approval` as a required argument, so a caller cannot
+        construct one without deciding who consents to irreversible actions.
+        """
+        with pytest.raises(TypeError):
+            ToolExecutor(workspace=tmp_path / "ws")
+
+    def test_cli_asks_unless_yes_is_passed(self):
+        """--yes opts in explicitly; without it the CLI must prompt."""
+        import inspect
+
+        from controlplane.operator import cli
+
+        src = inspect.getsource(cli.main)
+        assert "always_allow if args.yes else terminal_approval" in src, (
+            "the CLI no longer prompts by default"
+        )
+
+    def test_denied_email_never_reaches_the_sink(self, smtp_sink, tmp_path):
+        from controlplane.operator.approval import always_deny
+
+        cfg, sink = smtp_sink
+        ex = ToolExecutor(workspace=tmp_path / "ws", approval=always_deny, smtp=cfg)
+        out = ex.execute(
+            "send_email",
+            {"to": "boss@example.com", "subject": "Subject", "body": "body"},
+        )
+        assert "NOT sent" in out
+        assert sink.messages == [], "a denied email still reached the SMTP server"
+
+
+class TestWorkspaceContainment:
+    """Tools must not touch anything outside the sandbox, by any spelling."""
+
+    def test_relative_escape_is_blocked(self, tmp_path):
+        from controlplane.operator.approval import always_deny
+
+        ex = ToolExecutor(workspace=tmp_path / "ws", approval=always_deny)
+        out = ex.execute("read_spreadsheet", {"filename": "../../etc/passwd"})
+        assert "escapes the workspace" in out
+
+    def test_absolute_path_outside_workspace_is_blocked(self, tmp_path):
+        from controlplane.operator.approval import always_deny
+
+        ex = ToolExecutor(workspace=tmp_path / "ws", approval=always_deny)
+        out = ex.execute("read_spreadsheet", {"filename": "/etc/passwd"})
+        assert "escapes the workspace" in out, (
+            f"an absolute path outside the workspace was accepted: {out!r}"
+        )
+
+    def test_nested_escape_is_blocked(self, tmp_path):
+        from controlplane.operator.approval import always_deny
+
+        ex = ToolExecutor(workspace=tmp_path / "ws", approval=always_deny)
+        out = ex.execute("read_spreadsheet", {"filename": "sub/../../../etc/passwd"})
+        assert "escapes the workspace" in out
+
+    def test_download_cannot_write_outside_the_workspace(self, xlsx_server, tmp_path):
+        from controlplane.operator.approval import always_deny
+
+        base, _ = xlsx_server
+        ex = ToolExecutor(workspace=tmp_path / "ws", approval=always_deny)
+        out = ex.execute(
+            "download_file", {"url": f"{base}/budget.xlsx", "filename": "../escaped.xlsx"}
+        )
+        assert "escapes the workspace" in out
+        assert not (tmp_path / "escaped.xlsx").exists()
+
+
+class TestBrainProvenance:
+    """TaskResult.brain is the only proof of which path actually ran.
+
+    Asserting the scenario succeeded is not enough: 'auto' silently falls back
+    to the rule engine, so a broken LLM path looks identical to a working one
+    unless provenance is checked.
+    """
+
+    def test_rule_path_reports_rule(self, xlsx_server, smtp_sink, tmp_path):
+        base, _ = xlsx_server
+        cfg, _sink = smtp_sink
+        op = Operator(approval=always_allow, smtp=cfg, workspace_root=tmp_path / "ops")
+        result = op.run(
+            f"get {base}/budget.xlsx, set B2 to 1234, email it to boss@example.com",
+            brain="rule",
+        )
+        assert result.brain == "rule"
