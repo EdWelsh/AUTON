@@ -24,11 +24,15 @@ case "$PY" in /*) ;; *) PY="$ROOT/$PY";; esac
 
 MODEL="rule"
 LABEL=""
+TURNS_SRC=""
+REPLAY=""
 while [ $# -gt 0 ]; do
 	case "$1" in
 		--model) MODEL="${2:?--model needs a value}"; shift 2 ;;
 		--model=*) MODEL="${1#*=}"; shift ;;
 		--label) LABEL="${2:?--label needs a value}"; shift 2 ;;
+		--turns) TURNS_SRC="${2:?--turns needs a value}"; shift 2 ;;
+		--replay) REPLAY="${2:?--replay needs a previous session dir}"; shift 2 ;;
 		--label=*) LABEL="${1#*=}"; shift ;;
 		-h|--help) sed -n '2,18p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
 		*) echo "unknown argument: $1" >&2; exit 2 ;;
@@ -59,14 +63,25 @@ echo "session: ${LABEL:-unlabelled}"
 echo "model:   $FINGERPRINT"
 echo "out:     ${OUT#"$ROOT"/}"
 
-# Turn plan, one per line, in order.
-"$PY" -c "
-import sys, json; sys.path.insert(0, '$ROOT/scripts/lib')
+# Turn plan. --replay reuses a previous session's plan verbatim, which is the
+# only way to compare two rungs on identical input: the planner filters against
+# the eval set, and that set grows as findings are promoted, so a fresh plan is
+# not the same plan a week later.
+if [ -n "$REPLAY" ]; then
+	[ -f "$REPLAY/turns.json" ] || { echo "no turns.json in $REPLAY" >&2; exit 2; }
+	cp "$REPLAY/turns.json" "$OUT/turns.json"
+	"$PY" -c "import json; print(len(json.load(open('$OUT/turns.json'))))" > "$OUT/.count"
+	echo "replay:  ${REPLAY##*/}"
+else
+	"$PY" -c "
+import sys, json, pathlib; sys.path.insert(0, '$ROOT/scripts/lib')
 import session_probe as sp
-turns = sp.plan_turns()
+src = '$TURNS_SRC'
+turns = sp.plan_turns(generated_path=pathlib.Path(src) if src else None)
 json.dump(turns, open('$OUT/turns.json','w'), indent=2)
 print(len(turns))
 " > "$OUT/.count" || { echo "turn planning failed" >&2; exit 1; }
+fi
 echo "turns:   $(cat "$OUT/.count")"
 echo
 

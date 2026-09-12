@@ -56,3 +56,10 @@
 {"id": "ses-06", "intent": "OUT_OF_DOMAIN", "prompt": "what's the kernel version?", "expect": null, "note": "[phase7 session] int8 and fp32 diverge here: int8 answers 'I do not know about the weather'"}
 {"id": "ses-07", "intent": "SYSTEM_MANAGE", "prompt": "meminfo", "expect": null, "note": "[phase7 session] shell idiom for memory; the figure is known"}
 {"id": "ses-08", "intent": "HARDWARE_IDENTIFY", "prompt": "ls /sys/class/net", "expect": null, "note": "[phase7 session] shell idiom for network interfaces; the NIC is known"}
+{"id": "ses-09", "intent": "HARDWARE_IDENTIFY", "prompt": "check for exposed APIs", "expect": null, "note": "[phase7 session2] no device in the question; 3b answers 'Unknown PCI device 1022:2000'"}
+{"id": "ses-10", "intent": "HARDWARE_IDENTIFY", "prompt": "net list all", "expect": null, "note": "[phase7 session2] 3b cites 10ec:8139, which is not on this bus"}
+{"id": "ses-11", "intent": "SYSTEM_MANAGE", "prompt": "i need gpu access", "expect": null, "note": "[phase7 session2] 3b answers about the NIC; there is no GPU"}
+{"id": "ses-12", "intent": "APP_INSTALL", "prompt": "can i run nginx", "expect": null, "note": "[phase7 session2] 3b answers with the kubernetes roadmap note \u2014 wrong role"}
+{"id": "ses-13", "intent": "SYSTEM_MANAGE", "prompt": "check hw info", "expect": null, "note": "[phase7 session2] 3b answers with the DHCP lease"}
+{"id": "ses-14", "intent": "DRIVER_SELECT", "prompt": "what driver does it need?", "expect": null, "note": "[phase7 session2] elliptical follow-up; rule asks for the device, 3b invents 1af4:1001"}
+{"id": "ses-15", "intent": "SYSTEM_MANAGE", "prompt": "check everything", "expect": null, "note": "[phase7 session2] vague catch-all; 3b answers with the DHCP lease"}

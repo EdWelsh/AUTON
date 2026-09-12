@@ -58,24 +58,54 @@ def _known_inputs() -> set[str]:
 
 # Probes planted at fixed positions. Each pair tests one property the eval
 # cannot: the same question far apart, or a state change and a later read.
+# Probes that must appear in every plan and every analysis. A check that
+# quietly does not run looks exactly like a check that passed.
+REQUIRED_PROBES = (
+    "consistency-a", "consistency-b",
+    "state-set", "state-read", "state-read-late", "state-restore",
+    "followup-lead", "followup-elliptic",
+    "followup-pronoun-lead", "followup-pronoun",
+)
+
 CONSISTENCY_PROBE = "what is my ip"
 STATE_SET = "set hostname sessionbox"
 STATE_READ = "what is my hostname"
 STATE_RESTORE = "set hostname auton"
 
 
-def plan_turns(limit: int = 60) -> list[dict]:
+# Elliptical follow-ups. A person who just asked about the IP types "and the
+# memory?" — they do not repeat the whole question. The REPL answers each turn
+# independently, so this is not expected to resolve; what matters is that it
+# deflects rather than confidently answering the PREVIOUS subject, which would
+# be a wrong answer rather than an honest one.
+FOLLOWUP_LEAD = "what is my ip"
+FOLLOWUP_ELLIPTIC = "and the memory?"
+FOLLOWUP_PRONOUN_LEAD = "what is pci 8086:100e"
+FOLLOWUP_PRONOUN = "what driver does it need?"
+
+
+def plan_turns(limit: int = 60, generated_path: Path | None = None) -> list[dict]:
     """Build the turn plan: planted probes interleaved with generated turns."""
     known = _known_inputs()
     generated = []
-    if GENERATED.exists():
-        for line in GENERATED.read_text().splitlines():
+    src = generated_path or GENERATED
+    if src.exists():
+        for line in src.read_text().splitlines():
             if not line.strip():
                 continue
             row = json.loads(line)
             if normalize(row["text"]) in known:
                 continue          # already trained on or evaluated — not discovery
             generated.append(row)
+
+    # The probes are the point of the session; generated turns are the padding
+    # around them. Truncating the tail silently removed consistency-b,
+    # state-read-late and state-restore on a larger batch — and the analyser
+    # then reported no consistency finding at all rather than a failure. Budget
+    # the generated turns instead so every probe always survives.
+    n_probes = 10
+    budget = max(0, limit - n_probes)
+    generated = generated[:budget]
 
     turns: list[dict] = []
 
@@ -93,6 +123,12 @@ def plan_turns(limit: int = 60) -> list[dict]:
     # Mid-session state read: does the early change survive?
     add(STATE_READ, "state-read", "expects sessionbox, set many turns earlier")
 
+    # Elliptical and pronoun follow-ups, each immediately after its lead turn.
+    add(FOLLOWUP_LEAD, "followup-lead", "sets the subject for the next turn")
+    add(FOLLOWUP_ELLIPTIC, "followup-elliptic", "must not answer with the IP again")
+    add(FOLLOWUP_PRONOUN_LEAD, "followup-pronoun-lead", "sets 'it' = 8086:100e")
+    add(FOLLOWUP_PRONOUN, "followup-pronoun", "'it' refers to the previous device")
+
     for row in generated[half:]:
         add(row["text"], "generated", row.get("persona", ""))
 
@@ -101,7 +137,12 @@ def plan_turns(limit: int = 60) -> list[dict]:
     add(STATE_READ, "state-read-late", "expects sessionbox still")
     add(STATE_RESTORE, "state-restore", "leave the machine as we found it")
 
-    return turns[:limit]
+    # Every probe must be present; a missing check is not a passing one.
+    planned = {t["kind"] for t in turns}
+    missing = set(REQUIRED_PROBES) - planned
+    if missing:
+        raise RuntimeError(f"turn plan dropped required probes: {sorted(missing)}")
+    return turns
 
 
 def extract(log: str, turns: list[dict]) -> dict[int, str]:
@@ -128,6 +169,23 @@ def extract(log: str, turns: list[dict]) -> dict[int, str]:
     return answers
 
 
+# Devices actually present on the QEMU bus AUTON boots on. Anything else cited
+# in an answer is a claim about hardware that is not there.
+#
+# This exists because rung 3b emits "Unknown PCI device 10ec:8139" for questions
+# with no device in them ("check for exposed APIs"). The corpus teaches
+# unknown-device answers using ids that are NOT on this bus, so the model
+# learned a deflection template with a real-looking id baked in — and a
+# deflection that names hardware reads as a factual claim.
+BUS_DEVICES = {"8086:1237", "8086:7000", "1234:1111", "8086:100e"}
+_PCI_RE = re.compile(r"\b([0-9a-fA-F]{4}:[0-9a-fA-F]{4})\b")
+
+
+def phantom_devices(answer: str) -> list[str]:
+    """PCI ids cited in an answer that are not on this machine's bus."""
+    return [m for m in _PCI_RE.findall(answer) if m.lower() not in BUS_DEVICES]
+
+
 FALLBACK = "I am AUTON, an operating system"
 RULE_FALLBACK = "I can identify PCI devices"
 
@@ -136,6 +194,14 @@ def analyse(turns: list[dict], answers: dict[int, str]) -> dict:
     """Check the four session properties and collect novel inputs."""
     by_kind = {t["kind"]: t for t in turns}
     findings: list[dict] = []
+
+    absent = [k for k in REQUIRED_PROBES if k not in by_kind]
+    if absent:
+        findings.append({
+            "property": "probe-coverage",
+            "ok": False,
+            "detail": f"probes missing from the session: {absent}",
+        })
 
     def get(kind):
         t = by_kind.get(kind)
@@ -179,7 +245,42 @@ def analyse(turns: list[dict], answers: dict[int, str]) -> dict:
             "detail": f"answered {first:.0%} in the first half, {second:.0%} in the second",
         })
 
-    # 4. Novelty — inputs nobody anticipated, and how the OS met them.
+    # 4. Follow-ups — a wrong answer is worse than a deflection.
+    for lead_kind, follow_kind, subject in (
+        ("followup-lead", "followup-elliptic", "10.0.2.15"),
+        ("followup-pronoun-lead", "followup-pronoun", "82540EM"),
+    ):
+        tl, lead = get(lead_kind)
+        tf, follow = get(follow_kind)
+        if tl and tf:
+            # Repeating the lead's answer verbatim means it answered the old
+            # question while the user asked a new one.
+            parroted = bool(follow.strip()) and follow.strip() == lead.strip()
+            findings.append({
+                "property": "followup",
+                "ok": not parroted,
+                "detail": f"turn {tf['n']} ({tf['text']!r}): "
+                          + ("repeated the previous answer verbatim"
+                             if parroted else f"{follow[:52]!r}"),
+            })
+
+    # 5. Grounding — an answer must not cite hardware that is not present.
+    #    Objective, unlike "is this answer good": either the id is on the bus
+    #    or it is not.
+    phantom = []
+    for t in turns:
+        ans = answers.get(t["n"], "")
+        for dev in phantom_devices(ans):
+            phantom.append({"turn": t["n"], "text": t["text"], "device": dev})
+    findings.append({
+        "property": "grounding",
+        "ok": not phantom,
+        "detail": ("no answer cited hardware outside the bus" if not phantom
+                   else f"{len(phantom)} answers cite absent hardware, e.g. "
+                        f"{phantom[0]['text'][:34]!r} -> {phantom[0]['device']}"),
+    })
+
+    # 6. Novelty — inputs nobody anticipated, and how the OS met them.
     novel = []
     for t in gen:
         ans = answers.get(t["n"], "")
@@ -194,5 +295,6 @@ def analyse(turns: list[dict], answers: dict[int, str]) -> dict:
         "turns": len(turns),
         "answered": sum(1 for v in answers.values() if v.strip()),
         "findings": findings,
+        "phantom": phantom,
         "novel": novel,
     }

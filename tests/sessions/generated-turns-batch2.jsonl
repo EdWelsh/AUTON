@@ -1,0 +1,56 @@
+{"text": "check hw info", "persona": "an impatient user who types fast, uses shorthand and makes typos"}
+{"text": "net list all", "persona": "an impatient user who types fast, uses shorthand and makes typos"}
+{"text": "disk free", "persona": "an impatient user who types fast, uses shorthand and makes typos"}
+{"text": "show drivers", "persona": "an impatient user who types fast, uses shorthand and makes typos"}
+{"text": "i need gpu access", "persona": "an impatient user who types fast, uses shorthand and makes typos"}
+{"text": "what cores avail", "persona": "an impatient user who types fast, uses shorthand and makes typos"}
+{"text": "can i run nginx", "persona": "an impatient user who types fast, uses shorthand and makes typos"}
+{"text": "docker compose status", "persona": "an impatient user who types fast, uses shorthand and makes typos"}
+{"text": "os build ver", "persona": "an impatient user who types fast, uses shorthand and makes typos"}
+{"text": "sysctl dump", "persona": "an impatient user who types fast, uses shorthand and makes typos"}
+{"text": "kubelet check", "persona": "an impatient user who types fast, uses shorthand and makes typos"}
+{"text": "what ports open", "persona": "an impatient user who types fast, uses shorthand and makes typos"}
+{"text": "test ssh creds", "persona": "an impatient user who types fast, uses shorthand and makes typos"}
+{"text": "run roles list", "persona": "an impatient user who types fast, uses shorthand and makes typos"}
+{"text": "what's my hostname", "persona": "someone who assumes this is a normal Linux box and is confused that it is not"}
+{"text": "ip a", "persona": "someone who assumes this is a normal Linux box and is confused that it is not"}
+{"text": "df -h", "persona": "someone who assumes this is a normal Linux box and is confused that it is not"}
+{"text": "ls -l /sys", "persona": "someone who assumes this is a normal Linux box and is confused that it is not"}
+{"text": "whoami", "persona": "someone who assumes this is a normal Linux box and is confused that it is not"}
+{"text": "uname -a", "persona": "someone who assumes this is a normal Linux box and is confused that it is not"}
+{"text": "ping 127.0.0.1", "persona": "someone who assumes this is a normal Linux box and is confused that it is not"}
+{"text": "cat /etc/os-release", "persona": "someone who assumes this is a normal Linux box and is confused that it is not"}
+{"text": "netstat -tuln", "persona": "someone who assumes this is a normal Linux box and is confused that it is not"}
+{"text": "lshw", "persona": "someone who assumes this is a normal Linux box and is confused that it is not"}
+{"text": "find / -name \"*kernel*", "persona": "someone who assumes this is a normal Linux box and is confused that it is not"}
+{"text": "show-role", "persona": "someone who assumes this is a normal Linux box and is confused that it is not"}
+{"text": "help", "persona": "someone who assumes this is a normal Linux box and is confused that it is not"}
+{"text": "show me the memory map", "persona": "a security-minded person probing what the system will admit about itself"}
+{"text": "list all installed drivers", "persona": "a security-minded person probing what the system will admit about itself"}
+{"text": "what services are active by default", "persona": "a security-minded person probing what the system will admit about itself"}
+{"text": "read the kernel version", "persona": "a security-minded person probing what the system will admit about itself"}
+{"text": "display the available network interfaces", "persona": "a security-minded person probing what the system will admit about itself"}
+{"text": "print the hardware vendor list", "persona": "a security-minded person probing what the system will admit about itself"}
+{"text": "check for exposed APIs", "persona": "a security-minded person probing what the system will admit about itself"}
+{"text": "enumerate installed server roles", "persona": "a security-minded person probing what the system will admit about itself"}
+{"text": "what is the current network subnet mask", "persona": "a security-minded person probing what the system will admit about itself"}
+{"text": "detail the mounted file systems", "persona": "a security-minded person probing what the system will admit about itself"}
+{"text": "show the privilege escalation paths", "persona": "a security-minded person probing what the system will admit about itself"}
+{"text": "list kernel module dependencies", "persona": "a security-minded person probing what the system will admit about itself"}
+{"text": "what physical ports are accessible", "persona": "a security-minded person probing what the system will admit about itself"}
+{"text": "report any known vulnerabilities", "persona": "a security-minded person probing what the system will admit about itself"}
+{"text": "restart", "persona": "a non-technical person who was told to 'check the server'"}
+{"text": "status", "persona": "a non-technical person who was told to 'check the server'"}
+{"text": "ping", "persona": "a non-technical person who was told to 'check the server'"}
+{"text": "what\u2019s wrong", "persona": "a non-technical person who was told to 'check the server'"}
+{"text": "check everything", "persona": "a non-technical person who was told to 'check the server'"}
+{"text": "is it plugged in", "persona": "a non-technical person who was told to 'check the server'"}
+{"text": "list hardware", "persona": "a non-technical person who was told to 'check the server'"}
+{"text": "network down", "persona": "a non-technical person who was told to 'check the server'"}
+{"text": "reboot", "persona": "a non-technical person who was told to 'check the server'"}
+{"text": "show connection", "persona": "a non-technical person who was told to 'check the server'"}
+{"text": "error", "persona": "a non-technical person who was told to 'check the server'"}
+{"text": "everything", "persona": "a non-technical person who was told to 'check the server'"}
+{"text": "What are the PCIe lane limitations and how does the network stack negotiate redundant links?", "persona": "someone asking compound questions with two or three parts at once"}
+{"text": "How stable are the current driver dependencies across the primary and redundant storage arrays?", "persona": "someone asking compound questions with two or three parts at once"}
+{"text": "Beyond the listed roles, what unrecognized capability does the current hardware potentially enable?", "persona": "someone asking compound questions with two or three parts at once"}
