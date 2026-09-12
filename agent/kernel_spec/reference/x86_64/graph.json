@@ -1,0 +1,4759 @@
+{
+  "generated": "2026-09-12T13:02:51+00:00",
+  "arch": "x86_64",
+  "source_commit": "211ce6ccb854d2232d180c89818f16e629624ef4",
+  "files": [
+    {
+      "path": "kernels/x86_64/kernel/arch/x86_64/boot/boot.S",
+      "subsystem": "arch",
+      "lines": 150,
+      "includes": []
+    },
+    {
+      "path": "kernels/x86_64/kernel/arch/x86_64/boot/multiboot_header.S",
+      "subsystem": "arch",
+      "lines": 24,
+      "includes": []
+    },
+    {
+      "path": "kernels/x86_64/kernel/arch/x86_64/idt.c",
+      "subsystem": "arch",
+      "lines": 132,
+      "includes": [
+        "io/io.h",
+        "irq.h",
+        "kernel.h",
+        "stdint.h"
+      ]
+    },
+    {
+      "path": "kernels/x86_64/kernel/arch/x86_64/io/io.h",
+      "subsystem": "arch",
+      "lines": 31,
+      "includes": [
+        "stdint.h"
+      ]
+    },
+    {
+      "path": "kernels/x86_64/kernel/arch/x86_64/isr.S",
+      "subsystem": "arch",
+      "lines": 59,
+      "includes": []
+    },
+    {
+      "path": "kernels/x86_64/kernel/boot/boot_info.c",
+      "subsystem": "boot",
+      "lines": 81,
+      "includes": [
+        "boot_info.h",
+        "stdint.h"
+      ]
+    },
+    {
+      "path": "kernels/x86_64/kernel/boot/kernel_main.c",
+      "subsystem": "boot",
+      "lines": 89,
+      "includes": [
+        "boot_info.h",
+        "irq.h",
+        "kernel.h",
+        "net.h",
+        "pci.h",
+        "slm.h",
+        "stdint.h",
+        "sysinfo.h"
+      ]
+    },
+    {
+      "path": "kernels/x86_64/kernel/dev/pci.c",
+      "subsystem": "dev",
+      "lines": 78,
+      "includes": [
+        "../arch/x86_64/io/io.h",
+        "pci.h"
+      ]
+    },
+    {
+      "path": "kernels/x86_64/kernel/drivers/arch/serial_16550.c",
+      "subsystem": "drivers",
+      "lines": 58,
+      "includes": [
+        "../../arch/x86_64/io/io.h",
+        "kernel.h",
+        "stdint.h"
+      ]
+    },
+    {
+      "path": "kernels/x86_64/kernel/include/boot_info.h",
+      "subsystem": "include",
+      "lines": 33,
+      "includes": [
+        "stdint.h"
+      ]
+    },
+    {
+      "path": "kernels/x86_64/kernel/include/console.h",
+      "subsystem": "include",
+      "lines": 12,
+      "includes": [
+        "stdint.h"
+      ]
+    },
+    {
+      "path": "kernels/x86_64/kernel/include/e1000.h",
+      "subsystem": "include",
+      "lines": 24,
+      "includes": [
+        "pci.h",
+        "stdint.h"
+      ]
+    },
+    {
+      "path": "kernels/x86_64/kernel/include/irq.h",
+      "subsystem": "include",
+      "lines": 22,
+      "includes": [
+        "stdint.h"
+      ]
+    },
+    {
+      "path": "kernels/x86_64/kernel/include/kernel.h",
+      "subsystem": "include",
+      "lines": 26,
+      "includes": [
+        "stddef.h",
+        "stdint.h"
+      ]
+    },
+    {
+      "path": "kernels/x86_64/kernel/include/kmath.h",
+      "subsystem": "include",
+      "lines": 13,
+      "includes": [
+        "stdint.h"
+      ]
+    },
+    {
+      "path": "kernels/x86_64/kernel/include/kstr.h",
+      "subsystem": "include",
+      "lines": 16,
+      "includes": [
+        "stdint.h"
+      ]
+    },
+    {
+      "path": "kernels/x86_64/kernel/include/net.h",
+      "subsystem": "include",
+      "lines": 142,
+      "includes": [
+        "stdint.h"
+      ]
+    },
+    {
+      "path": "kernels/x86_64/kernel/include/neural.h",
+      "subsystem": "include",
+      "lines": 69,
+      "includes": [
+        "stdint.h"
+      ]
+    },
+    {
+      "path": "kernels/x86_64/kernel/include/pci.h",
+      "subsystem": "include",
+      "lines": 30,
+      "includes": [
+        "stdint.h"
+      ]
+    },
+    {
+      "path": "kernels/x86_64/kernel/include/phys.h",
+      "subsystem": "include",
+      "lines": 16,
+      "includes": [
+        "stddef.h",
+        "stdint.h"
+      ]
+    },
+    {
+      "path": "kernels/x86_64/kernel/include/roles.h",
+      "subsystem": "include",
+      "lines": 14,
+      "includes": [
+        "stdint.h"
+      ]
+    },
+    {
+      "path": "kernels/x86_64/kernel/include/server.h",
+      "subsystem": "include",
+      "lines": 16,
+      "includes": []
+    },
+    {
+      "path": "kernels/x86_64/kernel/include/slm.h",
+      "subsystem": "include",
+      "lines": 61,
+      "includes": [
+        "boot_info.h",
+        "stdint.h"
+      ]
+    },
+    {
+      "path": "kernels/x86_64/kernel/include/sysinfo.h",
+      "subsystem": "include",
+      "lines": 20,
+      "includes": [
+        "pci.h",
+        "stdint.h"
+      ]
+    },
+    {
+      "path": "kernels/x86_64/kernel/lib/kmath.c",
+      "subsystem": "lib",
+      "lines": 86,
+      "includes": [
+        "kmath.h"
+      ]
+    },
+    {
+      "path": "kernels/x86_64/kernel/lib/kprintf.c",
+      "subsystem": "lib",
+      "lines": 82,
+      "includes": [
+        "kernel.h",
+        "stdarg.h",
+        "stdint.h"
+      ]
+    },
+    {
+      "path": "kernels/x86_64/kernel/lib/kstr.c",
+      "subsystem": "lib",
+      "lines": 56,
+      "includes": [
+        "kstr.h"
+      ]
+    },
+    {
+      "path": "kernels/x86_64/kernel/lib/phys.c",
+      "subsystem": "lib",
+      "lines": 27,
+      "includes": [
+        "kernel.h",
+        "phys.h"
+      ]
+    },
+    {
+      "path": "kernels/x86_64/kernel/lib/string.c",
+      "subsystem": "lib",
+      "lines": 49,
+      "includes": [
+        "kernel.h"
+      ]
+    },
+    {
+      "path": "kernels/x86_64/kernel/net/arp.c",
+      "subsystem": "net",
+      "lines": 113,
+      "includes": [
+        "kernel.h",
+        "net.h"
+      ]
+    },
+    {
+      "path": "kernels/x86_64/kernel/net/dhcp.c",
+      "subsystem": "net",
+      "lines": 161,
+      "includes": [
+        "e1000.h",
+        "kernel.h",
+        "net.h"
+      ]
+    },
+    {
+      "path": "kernels/x86_64/kernel/net/e1000.c",
+      "subsystem": "net",
+      "lines": 235,
+      "includes": [
+        "e1000.h",
+        "kernel.h",
+        "phys.h"
+      ]
+    },
+    {
+      "path": "kernels/x86_64/kernel/net/ipv4.c",
+      "subsystem": "net",
+      "lines": 91,
+      "includes": [
+        "kernel.h",
+        "net.h"
+      ]
+    },
+    {
+      "path": "kernels/x86_64/kernel/net/netif.c",
+      "subsystem": "net",
+      "lines": 167,
+      "includes": [
+        "e1000.h",
+        "kernel.h",
+        "net.h"
+      ]
+    },
+    {
+      "path": "kernels/x86_64/kernel/net/setup.c",
+      "subsystem": "net",
+      "lines": 79,
+      "includes": [
+        "e1000.h",
+        "kernel.h",
+        "net.h",
+        "pci.h"
+      ]
+    },
+    {
+      "path": "kernels/x86_64/kernel/net/tcp.c",
+      "subsystem": "net",
+      "lines": 144,
+      "includes": [
+        "kernel.h",
+        "net.h"
+      ]
+    },
+    {
+      "path": "kernels/x86_64/kernel/server/dns.c",
+      "subsystem": "server",
+      "lines": 54,
+      "includes": [
+        "kernel.h",
+        "net.h",
+        "server.h"
+      ]
+    },
+    {
+      "path": "kernels/x86_64/kernel/server/http.c",
+      "subsystem": "server",
+      "lines": 34,
+      "includes": [
+        "kernel.h",
+        "net.h",
+        "server.h"
+      ]
+    },
+    {
+      "path": "kernels/x86_64/kernel/server/serve.c",
+      "subsystem": "server",
+      "lines": 17,
+      "includes": [
+        "kernel.h",
+        "net.h",
+        "server.h"
+      ]
+    },
+    {
+      "path": "kernels/x86_64/kernel/slm/chat.c",
+      "subsystem": "slm",
+      "lines": 63,
+      "includes": [
+        "console.h",
+        "kernel.h",
+        "roles.h",
+        "slm.h",
+        "sysinfo.h"
+      ]
+    },
+    {
+      "path": "kernels/x86_64/kernel/slm/neural/neural_backend.c",
+      "subsystem": "slm",
+      "lines": 550,
+      "includes": [
+        "kernel.h",
+        "kmath.h",
+        "neural.h",
+        "phys.h"
+      ]
+    },
+    {
+      "path": "kernels/x86_64/kernel/slm/roles.c",
+      "subsystem": "slm",
+      "lines": 124,
+      "includes": [
+        "kernel.h",
+        "kstr.h",
+        "net.h",
+        "roles.h",
+        "server.h"
+      ]
+    },
+    {
+      "path": "kernels/x86_64/kernel/slm/slm.c",
+      "subsystem": "slm",
+      "lines": 417,
+      "includes": [
+        "kernel.h",
+        "net.h",
+        "neural.h",
+        "slm.h"
+      ]
+    },
+    {
+      "path": "kernels/x86_64/kernel/slm/sysinfo.c",
+      "subsystem": "slm",
+      "lines": 211,
+      "includes": [
+        "irq.h",
+        "kernel.h",
+        "kstr.h",
+        "net.h",
+        "slm.h",
+        "sysinfo.h"
+      ]
+    },
+    {
+      "path": "kernels/x86_64/kernel/sys/console.c",
+      "subsystem": "sys",
+      "lines": 48,
+      "includes": [
+        "console.h",
+        "kernel.h"
+      ]
+    }
+  ],
+  "symbols": [
+    {
+      "name": "isr_default",
+      "signature": "void (void)",
+      "line": 42,
+      "static": false,
+      "defined": false,
+      "calls": [],
+      "file": "kernels/x86_64/kernel/arch/x86_64/idt.c",
+      "subsystem": "arch",
+      "kind": "function",
+      "called_by": [
+        "idt_init"
+      ]
+    },
+    {
+      "name": "irq0_stub",
+      "signature": "void (void)",
+      "line": 43,
+      "static": false,
+      "defined": false,
+      "calls": [],
+      "file": "kernels/x86_64/kernel/arch/x86_64/idt.c",
+      "subsystem": "arch",
+      "kind": "function",
+      "called_by": [
+        "idt_init"
+      ]
+    },
+    {
+      "name": "irq_default",
+      "signature": "void (void)",
+      "line": 44,
+      "static": false,
+      "defined": false,
+      "calls": [],
+      "file": "kernels/x86_64/kernel/arch/x86_64/idt.c",
+      "subsystem": "arch",
+      "kind": "function",
+      "called_by": [
+        "idt_init"
+      ]
+    },
+    {
+      "name": "set_entry",
+      "signature": "void (int, void (*)(void))",
+      "line": 46,
+      "static": true,
+      "defined": true,
+      "calls": [],
+      "file": "kernels/x86_64/kernel/arch/x86_64/idt.c",
+      "subsystem": "arch",
+      "kind": "function",
+      "called_by": [
+        "idt_init"
+      ]
+    },
+    {
+      "name": "pic_remap",
+      "signature": "void (void)",
+      "line": 59,
+      "static": true,
+      "defined": true,
+      "calls": [
+        "io_write8"
+      ],
+      "file": "kernels/x86_64/kernel/arch/x86_64/idt.c",
+      "subsystem": "arch",
+      "kind": "function",
+      "called_by": [
+        "idt_init"
+      ]
+    },
+    {
+      "name": "pit_init",
+      "signature": "void (void)",
+      "line": 78,
+      "static": true,
+      "defined": true,
+      "calls": [
+        "io_write8"
+      ],
+      "file": "kernels/x86_64/kernel/arch/x86_64/idt.c",
+      "subsystem": "arch",
+      "kind": "function",
+      "called_by": [
+        "idt_init"
+      ]
+    },
+    {
+      "name": "exception_handler",
+      "signature": "void (void)",
+      "line": 88,
+      "static": false,
+      "defined": true,
+      "calls": [
+        "kprintf"
+      ],
+      "file": "kernels/x86_64/kernel/arch/x86_64/idt.c",
+      "subsystem": "arch",
+      "kind": "function",
+      "called_by": []
+    },
+    {
+      "name": "irq_timer",
+      "signature": "void (void)",
+      "line": 97,
+      "static": false,
+      "defined": true,
+      "calls": [
+        "io_write8"
+      ],
+      "file": "kernels/x86_64/kernel/arch/x86_64/idt.c",
+      "subsystem": "arch",
+      "kind": "function",
+      "called_by": []
+    },
+    {
+      "name": "timer_ticks",
+      "signature": "uint64_t (void)",
+      "line": 103,
+      "static": false,
+      "defined": true,
+      "calls": [],
+      "file": "kernels/x86_64/kernel/arch/x86_64/idt.c",
+      "subsystem": "arch",
+      "kind": "function",
+      "called_by": [
+        "sysinfo_answer"
+      ]
+    },
+    {
+      "name": "irq_eoi_only",
+      "signature": "void (void)",
+      "line": 108,
+      "static": false,
+      "defined": true,
+      "calls": [
+        "io_write8"
+      ],
+      "file": "kernels/x86_64/kernel/arch/x86_64/idt.c",
+      "subsystem": "arch",
+      "kind": "function",
+      "called_by": []
+    },
+    {
+      "name": "idt_init",
+      "signature": "void (void)",
+      "line": 114,
+      "static": false,
+      "defined": true,
+      "calls": [
+        "irq0_stub",
+        "irq_default",
+        "isr_default",
+        "pic_remap",
+        "pit_init",
+        "set_entry"
+      ],
+      "file": "kernels/x86_64/kernel/arch/x86_64/idt.c",
+      "subsystem": "arch",
+      "kind": "function",
+      "called_by": [
+        "kernel_main"
+      ]
+    },
+    {
+      "name": "irq_enable",
+      "signature": "void (void)",
+      "line": 129,
+      "static": false,
+      "defined": true,
+      "calls": [],
+      "file": "kernels/x86_64/kernel/arch/x86_64/idt.c",
+      "subsystem": "arch",
+      "kind": "function",
+      "called_by": [
+        "kernel_main"
+      ]
+    },
+    {
+      "name": "copy_cmdline",
+      "signature": "void (char *, const char *, uint32_t)",
+      "line": 33,
+      "static": true,
+      "defined": true,
+      "calls": [],
+      "file": "kernels/x86_64/kernel/boot/boot_info.c",
+      "subsystem": "boot",
+      "kind": "function",
+      "called_by": [
+        "boot_parse"
+      ]
+    },
+    {
+      "name": "boot_magic_valid",
+      "signature": "int (uint32_t)",
+      "line": 41,
+      "static": false,
+      "defined": true,
+      "calls": [],
+      "file": "kernels/x86_64/kernel/boot/boot_info.c",
+      "subsystem": "boot",
+      "kind": "function",
+      "called_by": [
+        "boot_parse",
+        "kernel_main"
+      ]
+    },
+    {
+      "name": "boot_parse",
+      "signature": "hw_summary_t (uint32_t, uint32_t)",
+      "line": 46,
+      "static": false,
+      "defined": true,
+      "calls": [
+        "boot_magic_valid",
+        "copy_cmdline"
+      ],
+      "file": "kernels/x86_64/kernel/boot/boot_info.c",
+      "subsystem": "boot",
+      "kind": "function",
+      "called_by": [
+        "kernel_main"
+      ]
+    },
+    {
+      "name": "halt_forever",
+      "signature": "void (void)",
+      "line": 17,
+      "static": true,
+      "defined": true,
+      "calls": [],
+      "file": "kernels/x86_64/kernel/boot/kernel_main.c",
+      "subsystem": "boot",
+      "kind": "function",
+      "called_by": [
+        "kernel_main"
+      ]
+    },
+    {
+      "name": "kernel_main",
+      "signature": "void (uint32_t, uint32_t)",
+      "line": 23,
+      "static": false,
+      "defined": true,
+      "calls": [
+        "boot_magic_valid",
+        "boot_parse",
+        "halt_forever",
+        "idt_init",
+        "irq_enable",
+        "kprintf",
+        "net_bringup",
+        "pci_scan",
+        "serial_init",
+        "slm_backend_name",
+        "slm_chat_loop",
+        "slm_driver_for_pci",
+        "slm_init",
+        "sysinfo_init"
+      ],
+      "file": "kernels/x86_64/kernel/boot/kernel_main.c",
+      "subsystem": "boot",
+      "kind": "function",
+      "called_by": []
+    },
+    {
+      "name": "pci_config_addr",
+      "signature": "uint32_t (uint8_t, uint8_t, uint8_t, uint8_t)",
+      "line": 13,
+      "static": true,
+      "defined": true,
+      "calls": [],
+      "file": "kernels/x86_64/kernel/dev/pci.c",
+      "subsystem": "dev",
+      "kind": "function",
+      "called_by": [
+        "pci_config_read32",
+        "pci_config_write32"
+      ]
+    },
+    {
+      "name": "pci_config_read32",
+      "signature": "uint32_t (uint8_t, uint8_t, uint8_t, uint8_t)",
+      "line": 22,
+      "static": false,
+      "defined": true,
+      "calls": [
+        "io_read32",
+        "io_write32",
+        "pci_config_addr"
+      ],
+      "file": "kernels/x86_64/kernel/dev/pci.c",
+      "subsystem": "dev",
+      "kind": "function",
+      "called_by": [
+        "pci_bar",
+        "pci_enable_bus_master",
+        "pci_scan"
+      ]
+    },
+    {
+      "name": "pci_config_write32",
+      "signature": "void (uint8_t, uint8_t, uint8_t, uint8_t, uint32_t)",
+      "line": 28,
+      "static": false,
+      "defined": true,
+      "calls": [
+        "io_write32",
+        "pci_config_addr"
+      ],
+      "file": "kernels/x86_64/kernel/dev/pci.c",
+      "subsystem": "dev",
+      "kind": "function",
+      "called_by": [
+        "pci_enable_bus_master"
+      ]
+    },
+    {
+      "name": "pci_bar",
+      "signature": "uint64_t (const pci_device_t *, uint8_t)",
+      "line": 35,
+      "static": false,
+      "defined": true,
+      "calls": [
+        "pci_config_read32"
+      ],
+      "file": "kernels/x86_64/kernel/dev/pci.c",
+      "subsystem": "dev",
+      "kind": "function",
+      "called_by": [
+        "e1000_init"
+      ]
+    },
+    {
+      "name": "pci_enable_bus_master",
+      "signature": "void (const pci_device_t *)",
+      "line": 52,
+      "static": false,
+      "defined": true,
+      "calls": [
+        "pci_config_read32",
+        "pci_config_write32"
+      ],
+      "file": "kernels/x86_64/kernel/dev/pci.c",
+      "subsystem": "dev",
+      "kind": "function",
+      "called_by": [
+        "e1000_init"
+      ]
+    },
+    {
+      "name": "pci_scan",
+      "signature": "uint32_t (pci_device_t *, uint32_t)",
+      "line": 59,
+      "static": false,
+      "defined": true,
+      "calls": [
+        "pci_config_read32"
+      ],
+      "file": "kernels/x86_64/kernel/dev/pci.c",
+      "subsystem": "dev",
+      "kind": "function",
+      "called_by": [
+        "kernel_main"
+      ]
+    },
+    {
+      "name": "serial_init",
+      "signature": "void (void)",
+      "line": 18,
+      "static": false,
+      "defined": true,
+      "calls": [
+        "io_write8"
+      ],
+      "file": "kernels/x86_64/kernel/drivers/arch/serial_16550.c",
+      "subsystem": "drivers",
+      "kind": "function",
+      "called_by": [
+        "kernel_main"
+      ]
+    },
+    {
+      "name": "serial_putc",
+      "signature": "void (char)",
+      "line": 29,
+      "static": false,
+      "defined": true,
+      "calls": [
+        "io_read8",
+        "io_write8",
+        "serial_putc"
+      ],
+      "file": "kernels/x86_64/kernel/drivers/arch/serial_16550.c",
+      "subsystem": "drivers",
+      "kind": "function",
+      "called_by": [
+        "console_readline",
+        "kprintf",
+        "print_signed",
+        "print_unsigned",
+        "serial_putc",
+        "serial_write"
+      ]
+    },
+    {
+      "name": "serial_write",
+      "signature": "void (const char *)",
+      "line": 38,
+      "static": false,
+      "defined": true,
+      "calls": [
+        "serial_putc"
+      ],
+      "file": "kernels/x86_64/kernel/drivers/arch/serial_16550.c",
+      "subsystem": "drivers",
+      "kind": "function",
+      "called_by": [
+        "console_readline",
+        "kprintf"
+      ]
+    },
+    {
+      "name": "serial_rx_ready",
+      "signature": "int (void)",
+      "line": 46,
+      "static": false,
+      "defined": true,
+      "calls": [
+        "io_read8"
+      ],
+      "file": "kernels/x86_64/kernel/drivers/arch/serial_16550.c",
+      "subsystem": "drivers",
+      "kind": "function",
+      "called_by": [
+        "serial_getc",
+        "server_serve_loop"
+      ]
+    },
+    {
+      "name": "serial_getc",
+      "signature": "char (void)",
+      "line": 53,
+      "static": false,
+      "defined": true,
+      "calls": [
+        "io_read8",
+        "serial_rx_ready"
+      ],
+      "file": "kernels/x86_64/kernel/drivers/arch/serial_16550.c",
+      "subsystem": "drivers",
+      "kind": "function",
+      "called_by": [
+        "console_readline",
+        "server_serve_loop"
+      ]
+    },
+    {
+      "name": "kfabsf",
+      "signature": "float (float)",
+      "line": 13,
+      "static": false,
+      "defined": true,
+      "calls": [],
+      "file": "kernels/x86_64/kernel/lib/kmath.c",
+      "subsystem": "lib",
+      "kind": "function",
+      "called_by": []
+    },
+    {
+      "name": "ksqrtf",
+      "signature": "float (float)",
+      "line": 20,
+      "static": false,
+      "defined": true,
+      "calls": [
+        "__builtin_sqrtf"
+      ],
+      "file": "kernels/x86_64/kernel/lib/kmath.c",
+      "subsystem": "lib",
+      "kind": "function",
+      "called_by": [
+        "forward",
+        "rmsnorm"
+      ]
+    },
+    {
+      "name": "__builtin_sqrtf",
+      "signature": "float (float)",
+      "line": null,
+      "static": false,
+      "defined": false,
+      "calls": [],
+      "file": "kernels/x86_64/kernel/lib/kmath.c",
+      "subsystem": "lib",
+      "kind": "function",
+      "called_by": [
+        "ksqrtf"
+      ]
+    },
+    {
+      "name": "kexpf",
+      "signature": "float (float)",
+      "line": 29,
+      "static": false,
+      "defined": true,
+      "calls": [],
+      "file": "kernels/x86_64/kernel/lib/kmath.c",
+      "subsystem": "lib",
+      "kind": "function",
+      "called_by": [
+        "forward",
+        "rope",
+        "softmax"
+      ]
+    },
+    {
+      "name": "sin_poly",
+      "signature": "float (float)",
+      "line": 58,
+      "static": true,
+      "defined": true,
+      "calls": [],
+      "file": "kernels/x86_64/kernel/lib/kmath.c",
+      "subsystem": "lib",
+      "kind": "function",
+      "called_by": [
+        "ksinf"
+      ]
+    },
+    {
+      "name": "ksinf",
+      "signature": "float (float)",
+      "line": 65,
+      "static": false,
+      "defined": true,
+      "calls": [
+        "sin_poly"
+      ],
+      "file": "kernels/x86_64/kernel/lib/kmath.c",
+      "subsystem": "lib",
+      "kind": "function",
+      "called_by": [
+        "kcosf",
+        "rope"
+      ]
+    },
+    {
+      "name": "kcosf",
+      "signature": "float (float)",
+      "line": 83,
+      "static": false,
+      "defined": true,
+      "calls": [
+        "ksinf"
+      ],
+      "file": "kernels/x86_64/kernel/lib/kmath.c",
+      "subsystem": "lib",
+      "kind": "function",
+      "called_by": [
+        "rope"
+      ]
+    },
+    {
+      "name": "print_unsigned",
+      "signature": "void (uint64_t, unsigned int, int)",
+      "line": 6,
+      "static": true,
+      "defined": true,
+      "calls": [
+        "serial_putc"
+      ],
+      "file": "kernels/x86_64/kernel/lib/kprintf.c",
+      "subsystem": "lib",
+      "kind": "function",
+      "called_by": [
+        "kprintf",
+        "print_signed"
+      ]
+    },
+    {
+      "name": "print_signed",
+      "signature": "void (int64_t)",
+      "line": 24,
+      "static": true,
+      "defined": true,
+      "calls": [
+        "print_unsigned",
+        "serial_putc"
+      ],
+      "file": "kernels/x86_64/kernel/lib/kprintf.c",
+      "subsystem": "lib",
+      "kind": "function",
+      "called_by": [
+        "kprintf"
+      ]
+    },
+    {
+      "name": "kprintf",
+      "signature": "void (const char *, ...)",
+      "line": 34,
+      "static": false,
+      "defined": true,
+      "calls": [
+        "__builtin_va_end",
+        "__builtin_va_start",
+        "print_signed",
+        "print_unsigned",
+        "serial_putc",
+        "serial_write"
+      ],
+      "file": "kernels/x86_64/kernel/lib/kprintf.c",
+      "subsystem": "lib",
+      "kind": "function",
+      "called_by": [
+        "dhcp_run",
+        "dns_server_run",
+        "e1000_debug",
+        "exception_handler",
+        "http_server_run",
+        "kernel_main",
+        "list_roles",
+        "net_bringup",
+        "print_help",
+        "print_ip",
+        "print_mac",
+        "roles_dispatch",
+        "slm_chat_loop",
+        "slm_init"
+      ]
+    },
+    {
+      "name": "__builtin_va_start",
+      "signature": "void (__builtin_va_list &, ...)",
+      "line": null,
+      "static": false,
+      "defined": false,
+      "calls": [],
+      "file": "kernels/x86_64/kernel/lib/kprintf.c",
+      "subsystem": "lib",
+      "kind": "function",
+      "called_by": [
+        "kprintf"
+      ]
+    },
+    {
+      "name": "__builtin_va_end",
+      "signature": "void (__builtin_va_list &)",
+      "line": null,
+      "static": false,
+      "defined": false,
+      "calls": [],
+      "file": "kernels/x86_64/kernel/lib/kprintf.c",
+      "subsystem": "lib",
+      "kind": "function",
+      "called_by": [
+        "kprintf"
+      ]
+    },
+    {
+      "name": "ks_lower",
+      "signature": "char (char)",
+      "line": 4,
+      "static": false,
+      "defined": true,
+      "calls": [],
+      "file": "kernels/x86_64/kernel/lib/kstr.c",
+      "subsystem": "lib",
+      "kind": "function",
+      "called_by": [
+        "ci_find",
+        "is_word_char",
+        "ks_contains"
+      ]
+    },
+    {
+      "name": "ks_contains",
+      "signature": "int (const char *, const char *)",
+      "line": 9,
+      "static": false,
+      "defined": true,
+      "calls": [
+        "ks_lower"
+      ],
+      "file": "kernels/x86_64/kernel/lib/kstr.c",
+      "subsystem": "lib",
+      "kind": "function",
+      "called_by": [
+        "has_action_verb",
+        "is_question",
+        "match",
+        "roles_dispatch",
+        "sysinfo_answer"
+      ]
+    },
+    {
+      "name": "ks_append",
+      "signature": "uint32_t (char *, uint32_t, uint32_t, const char *)",
+      "line": 21,
+      "static": false,
+      "defined": true,
+      "calls": [],
+      "file": "kernels/x86_64/kernel/lib/kstr.c",
+      "subsystem": "lib",
+      "kind": "function",
+      "called_by": [
+        "ks_append_ip",
+        "list_devices",
+        "list_roles",
+        "sysinfo_answer"
+      ]
+    },
+    {
+      "name": "ks_append_dec",
+      "signature": "uint32_t (char *, uint32_t, uint32_t, uint32_t)",
+      "line": 29,
+      "static": false,
+      "defined": true,
+      "calls": [],
+      "file": "kernels/x86_64/kernel/lib/kstr.c",
+      "subsystem": "lib",
+      "kind": "function",
+      "called_by": [
+        "ks_append_ip",
+        "list_devices",
+        "sysinfo_answer"
+      ]
+    },
+    {
+      "name": "ks_append_ip",
+      "signature": "uint32_t (char *, uint32_t, uint32_t, uint32_t)",
+      "line": 46,
+      "static": false,
+      "defined": true,
+      "calls": [
+        "ks_append",
+        "ks_append_dec"
+      ],
+      "file": "kernels/x86_64/kernel/lib/kstr.c",
+      "subsystem": "lib",
+      "kind": "function",
+      "called_by": [
+        "sysinfo_answer"
+      ]
+    },
+    {
+      "name": "dma_alloc",
+      "signature": "void *(size_t, size_t)",
+      "line": 14,
+      "static": false,
+      "defined": true,
+      "calls": [
+        "kmemset"
+      ],
+      "file": "kernels/x86_64/kernel/lib/phys.c",
+      "subsystem": "lib",
+      "kind": "function",
+      "called_by": [
+        "rx_init",
+        "slm_neural_load_model",
+        "tx_init"
+      ]
+    },
+    {
+      "name": "kmemset",
+      "signature": "void *(void *, int, size_t)",
+      "line": 4,
+      "static": false,
+      "defined": true,
+      "calls": [],
+      "file": "kernels/x86_64/kernel/lib/string.c",
+      "subsystem": "lib",
+      "kind": "function",
+      "called_by": [
+        "arp_input",
+        "arp_request",
+        "base_fields",
+        "dma_alloc",
+        "memset",
+        "send_seg",
+        "slm_process_text"
+      ]
+    },
+    {
+      "name": "kmemcpy",
+      "signature": "void *(void *, const void *, size_t)",
+      "line": 12,
+      "static": false,
+      "defined": true,
+      "calls": [],
+      "file": "kernels/x86_64/kernel/lib/string.c",
+      "subsystem": "lib",
+      "kind": "function",
+      "called_by": [
+        "arp_input",
+        "arp_request",
+        "arp_resolve",
+        "base_fields",
+        "cache_put",
+        "dns_on_udp",
+        "e1000_poll",
+        "e1000_tx",
+        "eth_send",
+        "ip_send",
+        "memcpy",
+        "net_init",
+        "parse_options",
+        "send_request",
+        "send_seg",
+        "udp_send"
+      ]
+    },
+    {
+      "name": "kstrlen",
+      "signature": "size_t (const char *)",
+      "line": 21,
+      "static": false,
+      "defined": true,
+      "calls": [],
+      "file": "kernels/x86_64/kernel/lib/string.c",
+      "subsystem": "lib",
+      "kind": "function",
+      "called_by": [
+        "slm_process_text"
+      ]
+    },
+    {
+      "name": "kstrcmp",
+      "signature": "int (const char *, const char *)",
+      "line": 29,
+      "static": false,
+      "defined": true,
+      "calls": [],
+      "file": "kernels/x86_64/kernel/lib/string.c",
+      "subsystem": "lib",
+      "kind": "function",
+      "called_by": [
+        "is_stopword",
+        "list_roles",
+        "slm_chat_loop"
+      ]
+    },
+    {
+      "name": "memcpy",
+      "signature": "void *(void *, const void *, size_t)",
+      "line": 41,
+      "static": false,
+      "defined": true,
+      "calls": [
+        "kmemcpy"
+      ],
+      "file": "kernels/x86_64/kernel/lib/string.c",
+      "subsystem": "lib",
+      "kind": "function",
+      "called_by": []
+    },
+    {
+      "name": "memset",
+      "signature": "void *(void *, int, size_t)",
+      "line": 46,
+      "static": false,
+      "defined": true,
+      "calls": [
+        "kmemset"
+      ],
+      "file": "kernels/x86_64/kernel/lib/string.c",
+      "subsystem": "lib",
+      "kind": "function",
+      "called_by": []
+    },
+    {
+      "name": "cache_put",
+      "signature": "void (ipv4_t, const uint8_t *)",
+      "line": 30,
+      "static": true,
+      "defined": true,
+      "calls": [
+        "kmemcpy"
+      ],
+      "file": "kernels/x86_64/kernel/net/arp.c",
+      "subsystem": "net",
+      "kind": "function",
+      "called_by": [
+        "arp_input"
+      ]
+    },
+    {
+      "name": "arp_request",
+      "signature": "void (ipv4_t)",
+      "line": 50,
+      "static": true,
+      "defined": true,
+      "calls": [
+        "eth_send",
+        "htonl",
+        "htons",
+        "kmemcpy",
+        "kmemset",
+        "net_ip",
+        "net_mac"
+      ],
+      "file": "kernels/x86_64/kernel/net/arp.c",
+      "subsystem": "net",
+      "kind": "function",
+      "called_by": [
+        "arp_resolve",
+        "net_flush_kick"
+      ]
+    },
+    {
+      "name": "net_flush_kick",
+      "signature": "void (void)",
+      "line": 66,
+      "static": false,
+      "defined": true,
+      "calls": [
+        "arp_request",
+        "net_ip"
+      ],
+      "file": "kernels/x86_64/kernel/net/arp.c",
+      "subsystem": "net",
+      "kind": "function",
+      "called_by": []
+    },
+    {
+      "name": "arp_resolve",
+      "signature": "int (ipv4_t, uint8_t *)",
+      "line": 73,
+      "static": false,
+      "defined": true,
+      "calls": [
+        "arp_request",
+        "kmemcpy"
+      ],
+      "file": "kernels/x86_64/kernel/net/arp.c",
+      "subsystem": "net",
+      "kind": "function",
+      "called_by": [
+        "ip_send",
+        "net_bringup"
+      ]
+    },
+    {
+      "name": "arp_input",
+      "signature": "void (const uint8_t *, uint16_t)",
+      "line": 85,
+      "static": false,
+      "defined": true,
+      "calls": [
+        "cache_put",
+        "eth_send",
+        "htonl",
+        "htons",
+        "kmemcpy",
+        "kmemset",
+        "net_ip",
+        "net_mac",
+        "ntohl",
+        "ntohs"
+      ],
+      "file": "kernels/x86_64/kernel/net/arp.c",
+      "subsystem": "net",
+      "kind": "function",
+      "called_by": [
+        "net_poll"
+      ]
+    },
+    {
+      "name": "base_fields",
+      "signature": "uint16_t (struct dhcp_msg *)",
+      "line": 34,
+      "static": true,
+      "defined": true,
+      "calls": [
+        "htonl",
+        "htons",
+        "kmemcpy",
+        "kmemset",
+        "net_mac"
+      ],
+      "file": "kernels/x86_64/kernel/net/dhcp.c",
+      "subsystem": "net",
+      "kind": "function",
+      "called_by": [
+        "send_discover",
+        "send_request"
+      ]
+    },
+    {
+      "name": "send_discover",
+      "signature": "void (void)",
+      "line": 47,
+      "static": true,
+      "defined": true,
+      "calls": [
+        "base_fields",
+        "udp_send"
+      ],
+      "file": "kernels/x86_64/kernel/net/dhcp.c",
+      "subsystem": "net",
+      "kind": "function",
+      "called_by": [
+        "dhcp_run"
+      ]
+    },
+    {
+      "name": "send_request",
+      "signature": "void (void)",
+      "line": 61,
+      "static": true,
+      "defined": true,
+      "calls": [
+        "base_fields",
+        "htonl",
+        "kmemcpy",
+        "udp_send"
+      ],
+      "file": "kernels/x86_64/kernel/net/dhcp.c",
+      "subsystem": "net",
+      "kind": "function",
+      "called_by": [
+        "dhcp_on_udp",
+        "dhcp_run"
+      ]
+    },
+    {
+      "name": "parse_options",
+      "signature": "uint8_t (const uint8_t *, uint16_t)",
+      "line": 79,
+      "static": true,
+      "defined": true,
+      "calls": [
+        "kmemcpy",
+        "ntohl"
+      ],
+      "file": "kernels/x86_64/kernel/net/dhcp.c",
+      "subsystem": "net",
+      "kind": "function",
+      "called_by": [
+        "dhcp_on_udp"
+      ]
+    },
+    {
+      "name": "dhcp_on_udp",
+      "signature": "void (ipv4_t, uint16_t, const uint8_t *, uint16_t)",
+      "line": 108,
+      "static": true,
+      "defined": true,
+      "calls": [
+        "net_set_ipcfg",
+        "ntohl",
+        "parse_options",
+        "send_request"
+      ],
+      "file": "kernels/x86_64/kernel/net/dhcp.c",
+      "subsystem": "net",
+      "kind": "function",
+      "called_by": [
+        "dhcp_run"
+      ]
+    },
+    {
+      "name": "dhcp_run",
+      "signature": "int (void)",
+      "line": 141,
+      "static": false,
+      "defined": true,
+      "calls": [
+        "dhcp_on_udp",
+        "e1000_debug",
+        "kprintf",
+        "net_poll",
+        "send_discover",
+        "send_request",
+        "udp_bind"
+      ],
+      "file": "kernels/x86_64/kernel/net/dhcp.c",
+      "subsystem": "net",
+      "kind": "function",
+      "called_by": [
+        "net_bringup"
+      ]
+    },
+    {
+      "name": "e1000_debug",
+      "signature": "void (void)",
+      "line": 85,
+      "static": false,
+      "defined": true,
+      "calls": [
+        "kprintf"
+      ],
+      "file": "kernels/x86_64/kernel/net/e1000.c",
+      "subsystem": "net",
+      "kind": "function",
+      "called_by": [
+        "dhcp_run"
+      ]
+    },
+    {
+      "name": "reg_read",
+      "signature": "uint32_t (uint32_t)",
+      "line": 95,
+      "static": true,
+      "defined": true,
+      "calls": [],
+      "file": "kernels/x86_64/kernel/net/e1000.c",
+      "subsystem": "net",
+      "kind": "function",
+      "called_by": [
+        "e1000_init",
+        "read_mac"
+      ]
+    },
+    {
+      "name": "reg_write",
+      "signature": "void (uint32_t, uint32_t)",
+      "line": 96,
+      "static": true,
+      "defined": true,
+      "calls": [],
+      "file": "kernels/x86_64/kernel/net/e1000.c",
+      "subsystem": "net",
+      "kind": "function",
+      "called_by": [
+        "e1000_init",
+        "e1000_poll",
+        "e1000_tx",
+        "rx_init",
+        "tx_init"
+      ]
+    },
+    {
+      "name": "delay",
+      "signature": "void (void)",
+      "line": 98,
+      "static": true,
+      "defined": true,
+      "calls": [],
+      "file": "kernels/x86_64/kernel/net/e1000.c",
+      "subsystem": "net",
+      "kind": "function",
+      "called_by": [
+        "e1000_init"
+      ]
+    },
+    {
+      "name": "read_mac",
+      "signature": "void (uint8_t *)",
+      "line": 104,
+      "static": true,
+      "defined": true,
+      "calls": [
+        "reg_read"
+      ],
+      "file": "kernels/x86_64/kernel/net/e1000.c",
+      "subsystem": "net",
+      "kind": "function",
+      "called_by": [
+        "e1000_init"
+      ]
+    },
+    {
+      "name": "rx_init",
+      "signature": "void (void)",
+      "line": 117,
+      "static": true,
+      "defined": true,
+      "calls": [
+        "dma_alloc",
+        "reg_write"
+      ],
+      "file": "kernels/x86_64/kernel/net/e1000.c",
+      "subsystem": "net",
+      "kind": "function",
+      "called_by": [
+        "e1000_init"
+      ]
+    },
+    {
+      "name": "tx_init",
+      "signature": "void (void)",
+      "line": 135,
+      "static": true,
+      "defined": true,
+      "calls": [
+        "dma_alloc",
+        "reg_write"
+      ],
+      "file": "kernels/x86_64/kernel/net/e1000.c",
+      "subsystem": "net",
+      "kind": "function",
+      "called_by": [
+        "e1000_init"
+      ]
+    },
+    {
+      "name": "e1000_init",
+      "signature": "int (const pci_device_t *, uint8_t *)",
+      "line": 153,
+      "static": false,
+      "defined": true,
+      "calls": [
+        "delay",
+        "pci_bar",
+        "pci_enable_bus_master",
+        "read_mac",
+        "reg_read",
+        "reg_write",
+        "rx_init",
+        "tx_init"
+      ],
+      "file": "kernels/x86_64/kernel/net/e1000.c",
+      "subsystem": "net",
+      "kind": "function",
+      "called_by": [
+        "net_bringup"
+      ]
+    },
+    {
+      "name": "e1000_tx",
+      "signature": "int (const void *, uint16_t)",
+      "line": 185,
+      "static": false,
+      "defined": true,
+      "calls": [
+        "kmemcpy",
+        "reg_write"
+      ],
+      "file": "kernels/x86_64/kernel/net/e1000.c",
+      "subsystem": "net",
+      "kind": "function",
+      "called_by": [
+        "eth_send"
+      ]
+    },
+    {
+      "name": "e1000_poll",
+      "signature": "uint16_t (void *, uint16_t)",
+      "line": 210,
+      "static": false,
+      "defined": true,
+      "calls": [
+        "kmemcpy",
+        "reg_write"
+      ],
+      "file": "kernels/x86_64/kernel/net/e1000.c",
+      "subsystem": "net",
+      "kind": "function",
+      "called_by": [
+        "net_poll"
+      ]
+    },
+    {
+      "name": "ip_send",
+      "signature": "void (ipv4_t, uint8_t, const void *, uint16_t)",
+      "line": 11,
+      "static": false,
+      "defined": true,
+      "calls": [
+        "arp_resolve",
+        "eth_send",
+        "htonl",
+        "htons",
+        "kmemcpy",
+        "net_checksum",
+        "net_gw",
+        "net_ip",
+        "net_mask"
+      ],
+      "file": "kernels/x86_64/kernel/net/ipv4.c",
+      "subsystem": "net",
+      "kind": "function",
+      "called_by": [
+        "icmp_echo_reply",
+        "send_seg",
+        "udp_send"
+      ]
+    },
+    {
+      "name": "icmp_echo_reply",
+      "signature": "void (ipv4_t, uint8_t *, uint16_t)",
+      "line": 48,
+      "static": true,
+      "defined": true,
+      "calls": [
+        "ip_send",
+        "net_checksum"
+      ],
+      "file": "kernels/x86_64/kernel/net/ipv4.c",
+      "subsystem": "net",
+      "kind": "function",
+      "called_by": [
+        "ip_input"
+      ]
+    },
+    {
+      "name": "ip_input",
+      "signature": "void (const uint8_t *, uint16_t)",
+      "line": 61,
+      "static": false,
+      "defined": true,
+      "calls": [
+        "icmp_echo_reply",
+        "ntohl",
+        "ntohs",
+        "tcp_input",
+        "udp_input"
+      ],
+      "file": "kernels/x86_64/kernel/net/ipv4.c",
+      "subsystem": "net",
+      "kind": "function",
+      "called_by": [
+        "net_poll"
+      ]
+    },
+    {
+      "name": "csum_add",
+      "signature": "uint32_t (uint32_t, const void *, uint16_t)",
+      "line": 20,
+      "static": false,
+      "defined": true,
+      "calls": [],
+      "file": "kernels/x86_64/kernel/net/netif.c",
+      "subsystem": "net",
+      "kind": "function",
+      "called_by": [
+        "net_checksum",
+        "send_seg",
+        "udp_send"
+      ]
+    },
+    {
+      "name": "csum_fold",
+      "signature": "uint16_t (uint32_t)",
+      "line": 32,
+      "static": false,
+      "defined": true,
+      "calls": [],
+      "file": "kernels/x86_64/kernel/net/netif.c",
+      "subsystem": "net",
+      "kind": "function",
+      "called_by": [
+        "net_checksum",
+        "send_seg",
+        "udp_send"
+      ]
+    },
+    {
+      "name": "net_checksum",
+      "signature": "uint16_t (const void *, uint16_t)",
+      "line": 39,
+      "static": false,
+      "defined": true,
+      "calls": [
+        "csum_add",
+        "csum_fold"
+      ],
+      "file": "kernels/x86_64/kernel/net/netif.c",
+      "subsystem": "net",
+      "kind": "function",
+      "called_by": [
+        "icmp_echo_reply",
+        "ip_send"
+      ]
+    },
+    {
+      "name": "net_init",
+      "signature": "void (const uint8_t *)",
+      "line": 45,
+      "static": false,
+      "defined": true,
+      "calls": [
+        "kmemcpy"
+      ],
+      "file": "kernels/x86_64/kernel/net/netif.c",
+      "subsystem": "net",
+      "kind": "function",
+      "called_by": [
+        "net_bringup"
+      ]
+    },
+    {
+      "name": "net_set_ipcfg",
+      "signature": "void (ipv4_t, ipv4_t, ipv4_t, ipv4_t)",
+      "line": 52,
+      "static": false,
+      "defined": true,
+      "calls": [],
+      "file": "kernels/x86_64/kernel/net/netif.c",
+      "subsystem": "net",
+      "kind": "function",
+      "called_by": [
+        "dhcp_on_udp"
+      ]
+    },
+    {
+      "name": "net_ip",
+      "signature": "ipv4_t (void)",
+      "line": 61,
+      "static": false,
+      "defined": true,
+      "calls": [],
+      "file": "kernels/x86_64/kernel/net/netif.c",
+      "subsystem": "net",
+      "kind": "function",
+      "called_by": [
+        "answer_ip",
+        "arp_input",
+        "arp_request",
+        "dns_on_udp",
+        "ip_send",
+        "net_bringup",
+        "net_flush_kick",
+        "send_seg",
+        "sysinfo_answer"
+      ]
+    },
+    {
+      "name": "net_mask",
+      "signature": "ipv4_t (void)",
+      "line": 62,
+      "static": false,
+      "defined": true,
+      "calls": [],
+      "file": "kernels/x86_64/kernel/net/netif.c",
+      "subsystem": "net",
+      "kind": "function",
+      "called_by": [
+        "ip_send"
+      ]
+    },
+    {
+      "name": "net_gw",
+      "signature": "ipv4_t (void)",
+      "line": 63,
+      "static": false,
+      "defined": true,
+      "calls": [],
+      "file": "kernels/x86_64/kernel/net/netif.c",
+      "subsystem": "net",
+      "kind": "function",
+      "called_by": [
+        "answer_ip",
+        "ip_send",
+        "net_bringup",
+        "sysinfo_answer"
+      ]
+    },
+    {
+      "name": "net_dns",
+      "signature": "ipv4_t (void)",
+      "line": 64,
+      "static": false,
+      "defined": true,
+      "calls": [],
+      "file": "kernels/x86_64/kernel/net/netif.c",
+      "subsystem": "net",
+      "kind": "function",
+      "called_by": [
+        "answer_ip",
+        "sysinfo_answer"
+      ]
+    },
+    {
+      "name": "net_mac",
+      "signature": "const uint8_t *(void)",
+      "line": 65,
+      "static": false,
+      "defined": true,
+      "calls": [],
+      "file": "kernels/x86_64/kernel/net/netif.c",
+      "subsystem": "net",
+      "kind": "function",
+      "called_by": [
+        "arp_input",
+        "arp_request",
+        "base_fields"
+      ]
+    },
+    {
+      "name": "net_is_up",
+      "signature": "int (void)",
+      "line": 66,
+      "static": false,
+      "defined": true,
+      "calls": [],
+      "file": "kernels/x86_64/kernel/net/netif.c",
+      "subsystem": "net",
+      "kind": "function",
+      "called_by": [
+        "answer_ip",
+        "roles_dispatch",
+        "sysinfo_answer"
+      ]
+    },
+    {
+      "name": "eth_send",
+      "signature": "void (const uint8_t *, uint16_t, const void *, uint16_t)",
+      "line": 69,
+      "static": false,
+      "defined": true,
+      "calls": [
+        "e1000_tx",
+        "htons",
+        "kmemcpy"
+      ],
+      "file": "kernels/x86_64/kernel/net/netif.c",
+      "subsystem": "net",
+      "kind": "function",
+      "called_by": [
+        "arp_input",
+        "arp_request",
+        "ip_send"
+      ]
+    },
+    {
+      "name": "net_poll",
+      "signature": "void (void)",
+      "line": 85,
+      "static": false,
+      "defined": true,
+      "calls": [
+        "arp_input",
+        "e1000_poll",
+        "ip_input",
+        "ntohs"
+      ],
+      "file": "kernels/x86_64/kernel/net/netif.c",
+      "subsystem": "net",
+      "kind": "function",
+      "called_by": [
+        "dhcp_run",
+        "net_bringup",
+        "server_serve_loop"
+      ]
+    },
+    {
+      "name": "udp_bind",
+      "signature": "int (uint16_t, udp_handler_t)",
+      "line": 105,
+      "static": false,
+      "defined": true,
+      "calls": [],
+      "file": "kernels/x86_64/kernel/net/netif.c",
+      "subsystem": "net",
+      "kind": "function",
+      "called_by": [
+        "dhcp_run",
+        "dns_server_run"
+      ]
+    },
+    {
+      "name": "udp_send",
+      "signature": "void (ipv4_t, uint16_t, uint16_t, const void *, uint16_t)",
+      "line": 117,
+      "static": false,
+      "defined": true,
+      "calls": [
+        "csum_add",
+        "csum_fold",
+        "htonl",
+        "htons",
+        "ip_send",
+        "kmemcpy"
+      ],
+      "file": "kernels/x86_64/kernel/net/netif.c",
+      "subsystem": "net",
+      "kind": "function",
+      "called_by": [
+        "dns_on_udp",
+        "send_discover",
+        "send_request"
+      ]
+    },
+    {
+      "name": "udp_input",
+      "signature": "void (ipv4_t, const struct udp_hdr *, uint16_t)",
+      "line": 151,
+      "static": false,
+      "defined": true,
+      "calls": [
+        "ntohs"
+      ],
+      "file": "kernels/x86_64/kernel/net/netif.c",
+      "subsystem": "net",
+      "kind": "function",
+      "called_by": [
+        "ip_input"
+      ]
+    },
+    {
+      "name": "is_e1000",
+      "signature": "int (const pci_device_t *)",
+      "line": 9,
+      "static": true,
+      "defined": true,
+      "calls": [],
+      "file": "kernels/x86_64/kernel/net/setup.c",
+      "subsystem": "net",
+      "kind": "function",
+      "called_by": [
+        "net_bringup"
+      ]
+    },
+    {
+      "name": "print_mac",
+      "signature": "void (const uint8_t *)",
+      "line": 15,
+      "static": true,
+      "defined": true,
+      "calls": [
+        "kprintf"
+      ],
+      "file": "kernels/x86_64/kernel/net/setup.c",
+      "subsystem": "net",
+      "kind": "function",
+      "called_by": [
+        "net_bringup"
+      ]
+    },
+    {
+      "name": "print_ip",
+      "signature": "void (ipv4_t)",
+      "line": 31,
+      "static": true,
+      "defined": true,
+      "calls": [
+        "kprintf"
+      ],
+      "file": "kernels/x86_64/kernel/net/setup.c",
+      "subsystem": "net",
+      "kind": "function",
+      "called_by": [
+        "net_bringup"
+      ]
+    },
+    {
+      "name": "net_bringup",
+      "signature": "int (const struct pci_device *, uint32_t)",
+      "line": 37,
+      "static": false,
+      "defined": true,
+      "calls": [
+        "arp_resolve",
+        "dhcp_run",
+        "e1000_init",
+        "is_e1000",
+        "kprintf",
+        "net_gw",
+        "net_init",
+        "net_ip",
+        "net_poll",
+        "print_ip",
+        "print_mac"
+      ],
+      "file": "kernels/x86_64/kernel/net/setup.c",
+      "subsystem": "net",
+      "kind": "function",
+      "called_by": [
+        "kernel_main"
+      ]
+    },
+    {
+      "name": "send_seg",
+      "signature": "void (uint8_t, const void *, uint16_t)",
+      "line": 20,
+      "static": true,
+      "defined": true,
+      "calls": [
+        "csum_add",
+        "csum_fold",
+        "htonl",
+        "htons",
+        "ip_send",
+        "kmemcpy",
+        "kmemset",
+        "net_ip"
+      ],
+      "file": "kernels/x86_64/kernel/net/tcp.c",
+      "subsystem": "net",
+      "kind": "function",
+      "called_by": [
+        "deliver",
+        "tcp_close",
+        "tcp_input",
+        "tcp_send"
+      ]
+    },
+    {
+      "name": "tcp_listen",
+      "signature": "void (uint16_t, tcp_handler_t)",
+      "line": 56,
+      "static": false,
+      "defined": true,
+      "calls": [],
+      "file": "kernels/x86_64/kernel/net/tcp.c",
+      "subsystem": "net",
+      "kind": "function",
+      "called_by": [
+        "http_server_run"
+      ]
+    },
+    {
+      "name": "tcp_send",
+      "signature": "void (const void *, uint16_t)",
+      "line": 63,
+      "static": false,
+      "defined": true,
+      "calls": [
+        "send_seg"
+      ],
+      "file": "kernels/x86_64/kernel/net/tcp.c",
+      "subsystem": "net",
+      "kind": "function",
+      "called_by": [
+        "http_on_data"
+      ]
+    },
+    {
+      "name": "tcp_close",
+      "signature": "void (void)",
+      "line": 71,
+      "static": false,
+      "defined": true,
+      "calls": [
+        "send_seg"
+      ],
+      "file": "kernels/x86_64/kernel/net/tcp.c",
+      "subsystem": "net",
+      "kind": "function",
+      "called_by": [
+        "http_on_data"
+      ]
+    },
+    {
+      "name": "deliver",
+      "signature": "void (const uint8_t *, uint16_t)",
+      "line": 80,
+      "static": true,
+      "defined": true,
+      "calls": [
+        "send_seg"
+      ],
+      "file": "kernels/x86_64/kernel/net/tcp.c",
+      "subsystem": "net",
+      "kind": "function",
+      "called_by": [
+        "tcp_input"
+      ]
+    },
+    {
+      "name": "tcp_input",
+      "signature": "void (ipv4_t, const uint8_t *, uint16_t)",
+      "line": 88,
+      "static": false,
+      "defined": true,
+      "calls": [
+        "deliver",
+        "ntohl",
+        "ntohs",
+        "send_seg"
+      ],
+      "file": "kernels/x86_64/kernel/net/tcp.c",
+      "subsystem": "net",
+      "kind": "function",
+      "called_by": [
+        "ip_input"
+      ]
+    },
+    {
+      "name": "dns_on_udp",
+      "signature": "void (ipv4_t, uint16_t, const uint8_t *, uint16_t)",
+      "line": 9,
+      "static": true,
+      "defined": true,
+      "calls": [
+        "htonl",
+        "kmemcpy",
+        "net_ip",
+        "udp_send"
+      ],
+      "file": "kernels/x86_64/kernel/server/dns.c",
+      "subsystem": "server",
+      "kind": "function",
+      "called_by": [
+        "dns_server_run"
+      ]
+    },
+    {
+      "name": "dns_server_run",
+      "signature": "void (void)",
+      "line": 48,
+      "static": false,
+      "defined": true,
+      "calls": [
+        "dns_on_udp",
+        "kprintf",
+        "server_serve_loop",
+        "udp_bind"
+      ],
+      "file": "kernels/x86_64/kernel/server/dns.c",
+      "subsystem": "server",
+      "kind": "function",
+      "called_by": []
+    },
+    {
+      "name": "http_on_data",
+      "signature": "void (const uint8_t *, uint16_t)",
+      "line": 19,
+      "static": true,
+      "defined": true,
+      "calls": [
+        "tcp_close",
+        "tcp_send"
+      ],
+      "file": "kernels/x86_64/kernel/server/http.c",
+      "subsystem": "server",
+      "kind": "function",
+      "called_by": [
+        "http_server_run"
+      ]
+    },
+    {
+      "name": "http_server_run",
+      "signature": "void (void)",
+      "line": 28,
+      "static": false,
+      "defined": true,
+      "calls": [
+        "http_on_data",
+        "kprintf",
+        "server_serve_loop",
+        "tcp_listen"
+      ],
+      "file": "kernels/x86_64/kernel/server/http.c",
+      "subsystem": "server",
+      "kind": "function",
+      "called_by": []
+    },
+    {
+      "name": "server_serve_loop",
+      "signature": "void (void)",
+      "line": 7,
+      "static": false,
+      "defined": true,
+      "calls": [
+        "net_poll",
+        "serial_getc",
+        "serial_rx_ready"
+      ],
+      "file": "kernels/x86_64/kernel/server/serve.c",
+      "subsystem": "server",
+      "kind": "function",
+      "called_by": [
+        "dns_server_run",
+        "http_server_run"
+      ]
+    },
+    {
+      "name": "print_help",
+      "signature": "void (void)",
+      "line": 12,
+      "static": true,
+      "defined": true,
+      "calls": [
+        "kprintf"
+      ],
+      "file": "kernels/x86_64/kernel/slm/chat.c",
+      "subsystem": "slm",
+      "kind": "function",
+      "called_by": [
+        "slm_chat_loop"
+      ]
+    },
+    {
+      "name": "slm_chat_loop",
+      "signature": "void (void)",
+      "line": 25,
+      "static": false,
+      "defined": true,
+      "calls": [
+        "console_readline",
+        "kprintf",
+        "kstrcmp",
+        "print_help",
+        "roles_dispatch",
+        "slm_process_text",
+        "sysinfo_answer"
+      ],
+      "file": "kernels/x86_64/kernel/slm/chat.c",
+      "subsystem": "slm",
+      "kind": "function",
+      "called_by": [
+        "kernel_main"
+      ]
+    },
+    {
+      "name": "slm_neural_error_text",
+      "signature": "const char *(int)",
+      "line": 37,
+      "static": false,
+      "defined": true,
+      "calls": [],
+      "file": "kernels/x86_64/kernel/slm/neural/neural_backend.c",
+      "subsystem": "slm",
+      "kind": "function",
+      "called_by": [
+        "slm_init"
+      ]
+    },
+    {
+      "name": "take",
+      "signature": "const float *(const uint8_t **, uint32_t)",
+      "line": 103,
+      "static": true,
+      "defined": true,
+      "calls": [],
+      "file": "kernels/x86_64/kernel/slm/neural/neural_backend.c",
+      "subsystem": "slm",
+      "kind": "function",
+      "called_by": [
+        "slm_neural_load_model"
+      ]
+    },
+    {
+      "name": "take_w",
+      "signature": "wmat_t (const uint8_t **, uint64_t, int)",
+      "line": 111,
+      "static": true,
+      "defined": true,
+      "calls": [
+        "__builtin_memcpy"
+      ],
+      "file": "kernels/x86_64/kernel/slm/neural/neural_backend.c",
+      "subsystem": "slm",
+      "kind": "function",
+      "called_by": [
+        "slm_neural_load_model"
+      ]
+    },
+    {
+      "name": "__builtin_memcpy",
+      "signature": "void *(void *, const void *, unsigned long)",
+      "line": 115,
+      "static": false,
+      "defined": false,
+      "calls": [],
+      "file": "kernels/x86_64/kernel/slm/neural/neural_backend.c",
+      "subsystem": "slm",
+      "kind": "function",
+      "called_by": [
+        "forward",
+        "slm_neural_load_model",
+        "take_w"
+      ]
+    },
+    {
+      "name": "slm_neural_load_model",
+      "signature": "int (const void *, uint64_t, model_format_t)",
+      "line": 126,
+      "static": false,
+      "defined": true,
+      "calls": [
+        "__builtin_memcpy",
+        "dma_alloc",
+        "take",
+        "take_w"
+      ],
+      "file": "kernels/x86_64/kernel/slm/neural/neural_backend.c",
+      "subsystem": "slm",
+      "kind": "function",
+      "called_by": [
+        "slm_init"
+      ]
+    },
+    {
+      "name": "slm_neural_available",
+      "signature": "int (void)",
+      "line": 248,
+      "static": false,
+      "defined": true,
+      "calls": [],
+      "file": "kernels/x86_64/kernel/slm/neural/neural_backend.c",
+      "subsystem": "slm",
+      "kind": "function",
+      "called_by": [
+        "slm_process_text"
+      ]
+    },
+    {
+      "name": "slm_neural_reset_cache",
+      "signature": "void (void)",
+      "line": 253,
+      "static": false,
+      "defined": true,
+      "calls": [],
+      "file": "kernels/x86_64/kernel/slm/neural/neural_backend.c",
+      "subsystem": "slm",
+      "kind": "function",
+      "called_by": [
+        "slm_neural_infer"
+      ]
+    },
+    {
+      "name": "matmul",
+      "signature": "void (float *, const float *, const wmat_t *, uint32_t, uint32_t)",
+      "line": 259,
+      "static": true,
+      "defined": true,
+      "calls": [],
+      "file": "kernels/x86_64/kernel/slm/neural/neural_backend.c",
+      "subsystem": "slm",
+      "kind": "function",
+      "called_by": [
+        "forward"
+      ]
+    },
+    {
+      "name": "rmsnorm",
+      "signature": "void (float *, const float *, const float *, uint32_t)",
+      "line": 284,
+      "static": true,
+      "defined": true,
+      "calls": [
+        "ksqrtf"
+      ],
+      "file": "kernels/x86_64/kernel/slm/neural/neural_backend.c",
+      "subsystem": "slm",
+      "kind": "function",
+      "called_by": [
+        "forward"
+      ]
+    },
+    {
+      "name": "softmax",
+      "signature": "void (float *, uint32_t)",
+      "line": 294,
+      "static": true,
+      "defined": true,
+      "calls": [
+        "kexpf"
+      ],
+      "file": "kernels/x86_64/kernel/slm/neural/neural_backend.c",
+      "subsystem": "slm",
+      "kind": "function",
+      "called_by": [
+        "forward"
+      ]
+    },
+    {
+      "name": "rope",
+      "signature": "void (float *, uint32_t, uint32_t, uint32_t)",
+      "line": 310,
+      "static": true,
+      "defined": true,
+      "calls": [
+        "kcosf",
+        "kexpf",
+        "ksinf"
+      ],
+      "file": "kernels/x86_64/kernel/slm/neural/neural_backend.c",
+      "subsystem": "slm",
+      "kind": "function",
+      "called_by": [
+        "forward"
+      ]
+    },
+    {
+      "name": "forward",
+      "signature": "void (uint32_t, uint32_t)",
+      "line": 330,
+      "static": true,
+      "defined": true,
+      "calls": [
+        "__builtin_memcpy",
+        "kexpf",
+        "ksqrtf",
+        "matmul",
+        "rmsnorm",
+        "rope",
+        "softmax"
+      ],
+      "file": "kernels/x86_64/kernel/slm/neural/neural_backend.c",
+      "subsystem": "slm",
+      "kind": "function",
+      "called_by": [
+        "slm_neural_infer"
+      ]
+    },
+    {
+      "name": "slm_neural_tokenize",
+      "signature": "uint32_t (const char *, uint32_t, uint32_t *, uint32_t)",
+      "line": 403,
+      "static": false,
+      "defined": true,
+      "calls": [],
+      "file": "kernels/x86_64/kernel/slm/neural/neural_backend.c",
+      "subsystem": "slm",
+      "kind": "function",
+      "called_by": [
+        "slm_process_text"
+      ]
+    },
+    {
+      "name": "slm_neural_detokenize",
+      "signature": "uint32_t (const uint32_t *, uint32_t, char *, uint32_t)",
+      "line": 434,
+      "static": false,
+      "defined": true,
+      "calls": [],
+      "file": "kernels/x86_64/kernel/slm/neural/neural_backend.c",
+      "subsystem": "slm",
+      "kind": "function",
+      "called_by": [
+        "slm_process_text"
+      ]
+    },
+    {
+      "name": "argmax",
+      "signature": "uint32_t (const float *, uint32_t)",
+      "line": 453,
+      "static": true,
+      "defined": true,
+      "calls": [],
+      "file": "kernels/x86_64/kernel/slm/neural/neural_backend.c",
+      "subsystem": "slm",
+      "kind": "function",
+      "called_by": [
+        "slm_neural_infer"
+      ]
+    },
+    {
+      "name": "slm_neural_is_degenerate",
+      "signature": "int (const uint32_t *, uint32_t)",
+      "line": 470,
+      "static": false,
+      "defined": true,
+      "calls": [],
+      "file": "kernels/x86_64/kernel/slm/neural/neural_backend.c",
+      "subsystem": "slm",
+      "kind": "function",
+      "called_by": [
+        "slm_neural_infer"
+      ]
+    },
+    {
+      "name": "slm_neural_infer",
+      "signature": "uint32_t (const uint32_t *, uint32_t, uint32_t *, uint32_t, const inference_config_t *)",
+      "line": 501,
+      "static": false,
+      "defined": true,
+      "calls": [
+        "argmax",
+        "forward",
+        "slm_neural_is_degenerate",
+        "slm_neural_reset_cache"
+      ],
+      "file": "kernels/x86_64/kernel/slm/neural/neural_backend.c",
+      "subsystem": "slm",
+      "kind": "function",
+      "called_by": [
+        "slm_process_text"
+      ]
+    },
+    {
+      "name": "slm_neural_model_info",
+      "signature": "void (char *, uint32_t)",
+      "line": 538,
+      "static": false,
+      "defined": true,
+      "calls": [],
+      "file": "kernels/x86_64/kernel/slm/neural/neural_backend.c",
+      "subsystem": "slm",
+      "kind": "function",
+      "called_by": [
+        "slm_init"
+      ]
+    },
+    {
+      "name": "has_action_verb",
+      "signature": "int (const char *)",
+      "line": 45,
+      "static": true,
+      "defined": true,
+      "calls": [
+        "ks_contains"
+      ],
+      "file": "kernels/x86_64/kernel/slm/roles.c",
+      "subsystem": "slm",
+      "kind": "function",
+      "called_by": [
+        "roles_dispatch"
+      ]
+    },
+    {
+      "name": "is_question",
+      "signature": "int (const char *)",
+      "line": 56,
+      "static": true,
+      "defined": true,
+      "calls": [
+        "ks_contains"
+      ],
+      "file": "kernels/x86_64/kernel/slm/roles.c",
+      "subsystem": "slm",
+      "kind": "function",
+      "called_by": [
+        "roles_dispatch"
+      ]
+    },
+    {
+      "name": "match",
+      "signature": "const capability_t *(const char *)",
+      "line": 62,
+      "static": true,
+      "defined": true,
+      "calls": [
+        "ks_contains"
+      ],
+      "file": "kernels/x86_64/kernel/slm/roles.c",
+      "subsystem": "slm",
+      "kind": "function",
+      "called_by": [
+        "roles_dispatch"
+      ]
+    },
+    {
+      "name": "list_roles",
+      "signature": "void (void)",
+      "line": 70,
+      "static": true,
+      "defined": true,
+      "calls": [
+        "kprintf",
+        "ks_append",
+        "kstrcmp"
+      ],
+      "file": "kernels/x86_64/kernel/slm/roles.c",
+      "subsystem": "slm",
+      "kind": "function",
+      "called_by": [
+        "roles_dispatch"
+      ]
+    },
+    {
+      "name": "roles_dispatch",
+      "signature": "int (const char *)",
+      "line": 93,
+      "static": false,
+      "defined": true,
+      "calls": [
+        "has_action_verb",
+        "is_question",
+        "kprintf",
+        "ks_contains",
+        "list_roles",
+        "match",
+        "net_is_up"
+      ],
+      "file": "kernels/x86_64/kernel/slm/roles.c",
+      "subsystem": "slm",
+      "kind": "function",
+      "called_by": [
+        "slm_chat_loop"
+      ]
+    },
+    {
+      "name": "slm_init",
+      "signature": "int (const hw_summary_t *)",
+      "line": 39,
+      "static": false,
+      "defined": true,
+      "calls": [
+        "kprintf",
+        "slm_neural_error_text",
+        "slm_neural_load_model",
+        "slm_neural_model_info"
+      ],
+      "file": "kernels/x86_64/kernel/slm/slm.c",
+      "subsystem": "slm",
+      "kind": "function",
+      "called_by": [
+        "kernel_main"
+      ]
+    },
+    {
+      "name": "slm_backend_name",
+      "signature": "const char *(void)",
+      "line": 79,
+      "static": false,
+      "defined": true,
+      "calls": [],
+      "file": "kernels/x86_64/kernel/slm/slm.c",
+      "subsystem": "slm",
+      "kind": "function",
+      "called_by": [
+        "kernel_main"
+      ]
+    },
+    {
+      "name": "kb_lookup",
+      "signature": "const struct pci_driver_rule *(uint16_t, uint16_t)",
+      "line": 84,
+      "static": true,
+      "defined": true,
+      "calls": [],
+      "file": "kernels/x86_64/kernel/slm/slm.c",
+      "subsystem": "slm",
+      "kind": "function",
+      "called_by": [
+        "answer_driver",
+        "answer_identify",
+        "slm_driver_for_pci"
+      ]
+    },
+    {
+      "name": "slm_driver_for_pci",
+      "signature": "const char *(uint16_t, uint16_t)",
+      "line": 93,
+      "static": false,
+      "defined": true,
+      "calls": [
+        "kb_lookup"
+      ],
+      "file": "kernels/x86_64/kernel/slm/slm.c",
+      "subsystem": "slm",
+      "kind": "function",
+      "called_by": [
+        "kernel_main",
+        "list_devices"
+      ]
+    },
+    {
+      "name": "lower",
+      "signature": "char (char)",
+      "line": 105,
+      "static": true,
+      "defined": true,
+      "calls": [],
+      "file": "kernels/x86_64/kernel/slm/slm.c",
+      "subsystem": "slm",
+      "kind": "function",
+      "called_by": [
+        "contains",
+        "hex_val"
+      ]
+    },
+    {
+      "name": "contains",
+      "signature": "int (const char *, const char *)",
+      "line": 111,
+      "static": true,
+      "defined": true,
+      "calls": [
+        "lower"
+      ],
+      "file": "kernels/x86_64/kernel/slm/slm.c",
+      "subsystem": "slm",
+      "kind": "function",
+      "called_by": [
+        "is_ip_query",
+        "slm_classify_intent",
+        "slm_is_web_server_request"
+      ]
+    },
+    {
+      "name": "hex_val",
+      "signature": "int (char)",
+      "line": 123,
+      "static": true,
+      "defined": true,
+      "calls": [
+        "lower"
+      ],
+      "file": "kernels/x86_64/kernel/slm/slm.c",
+      "subsystem": "slm",
+      "kind": "function",
+      "called_by": [
+        "parse_pci_id"
+      ]
+    },
+    {
+      "name": "parse_pci_id",
+      "signature": "int (const char *, uint16_t *, uint16_t *)",
+      "line": 134,
+      "static": true,
+      "defined": true,
+      "calls": [
+        "hex_val"
+      ],
+      "file": "kernels/x86_64/kernel/slm/slm.c",
+      "subsystem": "slm",
+      "kind": "function",
+      "called_by": [
+        "answer_driver",
+        "answer_identify",
+        "slm_classify_intent"
+      ]
+    },
+    {
+      "name": "append",
+      "signature": "uint32_t (char *, uint32_t, uint32_t, const char *)",
+      "line": 165,
+      "static": true,
+      "defined": true,
+      "calls": [],
+      "file": "kernels/x86_64/kernel/slm/slm.c",
+      "subsystem": "slm",
+      "kind": "function",
+      "called_by": [
+        "answer_driver",
+        "answer_identify",
+        "answer_ip",
+        "append_ip",
+        "slm_process_text"
+      ]
+    },
+    {
+      "name": "append_hex4",
+      "signature": "uint32_t (char *, uint32_t, uint32_t, uint16_t)",
+      "line": 173,
+      "static": true,
+      "defined": true,
+      "calls": [],
+      "file": "kernels/x86_64/kernel/slm/slm.c",
+      "subsystem": "slm",
+      "kind": "function",
+      "called_by": [
+        "answer_identify"
+      ]
+    },
+    {
+      "name": "append_dec",
+      "signature": "uint32_t (char *, uint32_t, uint32_t, uint32_t)",
+      "line": 184,
+      "static": true,
+      "defined": true,
+      "calls": [],
+      "file": "kernels/x86_64/kernel/slm/slm.c",
+      "subsystem": "slm",
+      "kind": "function",
+      "called_by": [
+        "append_ip"
+      ]
+    },
+    {
+      "name": "append_ip",
+      "signature": "uint32_t (char *, uint32_t, uint32_t, uint32_t)",
+      "line": 201,
+      "static": true,
+      "defined": true,
+      "calls": [
+        "append",
+        "append_dec"
+      ],
+      "file": "kernels/x86_64/kernel/slm/slm.c",
+      "subsystem": "slm",
+      "kind": "function",
+      "called_by": [
+        "answer_ip"
+      ]
+    },
+    {
+      "name": "is_ip_query",
+      "signature": "int (const char *)",
+      "line": 214,
+      "static": true,
+      "defined": true,
+      "calls": [
+        "contains"
+      ],
+      "file": "kernels/x86_64/kernel/slm/slm.c",
+      "subsystem": "slm",
+      "kind": "function",
+      "called_by": [
+        "slm_process_text"
+      ]
+    },
+    {
+      "name": "slm_is_web_server_request",
+      "signature": "int (const char *)",
+      "line": 221,
+      "static": false,
+      "defined": true,
+      "calls": [
+        "contains"
+      ],
+      "file": "kernels/x86_64/kernel/slm/slm.c",
+      "subsystem": "slm",
+      "kind": "function",
+      "called_by": []
+    },
+    {
+      "name": "answer_ip",
+      "signature": "void (slm_intent_result_t *)",
+      "line": 235,
+      "static": true,
+      "defined": true,
+      "calls": [
+        "append",
+        "append_ip",
+        "net_dns",
+        "net_gw",
+        "net_ip",
+        "net_is_up"
+      ],
+      "file": "kernels/x86_64/kernel/slm/slm.c",
+      "subsystem": "slm",
+      "kind": "function",
+      "called_by": [
+        "slm_process_text"
+      ]
+    },
+    {
+      "name": "slm_classify_intent",
+      "signature": "slm_intent_t (const char *, uint32_t)",
+      "line": 254,
+      "static": false,
+      "defined": true,
+      "calls": [
+        "contains",
+        "parse_pci_id"
+      ],
+      "file": "kernels/x86_64/kernel/slm/slm.c",
+      "subsystem": "slm",
+      "kind": "function",
+      "called_by": [
+        "slm_process_text"
+      ]
+    },
+    {
+      "name": "answer_identify",
+      "signature": "void (const char *, slm_intent_result_t *)",
+      "line": 282,
+      "static": true,
+      "defined": true,
+      "calls": [
+        "append",
+        "append_hex4",
+        "kb_lookup",
+        "parse_pci_id"
+      ],
+      "file": "kernels/x86_64/kernel/slm/slm.c",
+      "subsystem": "slm",
+      "kind": "function",
+      "called_by": [
+        "slm_process_text"
+      ]
+    },
+    {
+      "name": "answer_driver",
+      "signature": "void (const char *, slm_intent_result_t *)",
+      "line": 308,
+      "static": true,
+      "defined": true,
+      "calls": [
+        "append",
+        "kb_lookup",
+        "parse_pci_id"
+      ],
+      "file": "kernels/x86_64/kernel/slm/slm.c",
+      "subsystem": "slm",
+      "kind": "function",
+      "called_by": [
+        "slm_process_text"
+      ]
+    },
+    {
+      "name": "slm_process_text",
+      "signature": "int (const char *, uint32_t, slm_intent_result_t *)",
+      "line": 329,
+      "static": false,
+      "defined": true,
+      "calls": [
+        "answer_driver",
+        "answer_identify",
+        "answer_ip",
+        "append",
+        "is_ip_query",
+        "kmemset",
+        "kstrlen",
+        "slm_classify_intent",
+        "slm_neural_available",
+        "slm_neural_detokenize",
+        "slm_neural_infer",
+        "slm_neural_tokenize"
+      ],
+      "file": "kernels/x86_64/kernel/slm/slm.c",
+      "subsystem": "slm",
+      "kind": "function",
+      "called_by": [
+        "slm_chat_loop"
+      ]
+    },
+    {
+      "name": "sysinfo_init",
+      "signature": "void (uint32_t, const pci_device_t *, uint32_t)",
+      "line": 17,
+      "static": false,
+      "defined": true,
+      "calls": [],
+      "file": "kernels/x86_64/kernel/slm/sysinfo.c",
+      "subsystem": "slm",
+      "kind": "function",
+      "called_by": [
+        "kernel_main"
+      ]
+    },
+    {
+      "name": "sysinfo_hostname",
+      "signature": "const char *(void)",
+      "line": 27,
+      "static": false,
+      "defined": true,
+      "calls": [],
+      "file": "kernels/x86_64/kernel/slm/sysinfo.c",
+      "subsystem": "slm",
+      "kind": "function",
+      "called_by": []
+    },
+    {
+      "name": "ci_find",
+      "signature": "int (const char *, const char *)",
+      "line": 33,
+      "static": true,
+      "defined": true,
+      "calls": [
+        "ks_lower"
+      ],
+      "file": "kernels/x86_64/kernel/slm/sysinfo.c",
+      "subsystem": "slm",
+      "kind": "function",
+      "called_by": [
+        "extract_hostname"
+      ]
+    },
+    {
+      "name": "is_word_char",
+      "signature": "int (char)",
+      "line": 45,
+      "static": true,
+      "defined": true,
+      "calls": [
+        "ks_lower"
+      ],
+      "file": "kernels/x86_64/kernel/slm/sysinfo.c",
+      "subsystem": "slm",
+      "kind": "function",
+      "called_by": [
+        "extract_hostname"
+      ]
+    },
+    {
+      "name": "is_stopword",
+      "signature": "int (const char *)",
+      "line": 52,
+      "static": true,
+      "defined": true,
+      "calls": [
+        "kstrcmp"
+      ],
+      "file": "kernels/x86_64/kernel/slm/sysinfo.c",
+      "subsystem": "slm",
+      "kind": "function",
+      "called_by": [
+        "extract_hostname"
+      ]
+    },
+    {
+      "name": "extract_hostname",
+      "signature": "int (const char *, char *, uint32_t)",
+      "line": 61,
+      "static": true,
+      "defined": true,
+      "calls": [
+        "ci_find",
+        "is_stopword",
+        "is_word_char"
+      ],
+      "file": "kernels/x86_64/kernel/slm/sysinfo.c",
+      "subsystem": "slm",
+      "kind": "function",
+      "called_by": [
+        "sysinfo_answer"
+      ]
+    },
+    {
+      "name": "list_devices",
+      "signature": "void (char *, uint32_t)",
+      "line": 88,
+      "static": true,
+      "defined": true,
+      "calls": [
+        "ks_append",
+        "ks_append_dec",
+        "slm_driver_for_pci"
+      ],
+      "file": "kernels/x86_64/kernel/slm/sysinfo.c",
+      "subsystem": "slm",
+      "kind": "function",
+      "called_by": [
+        "sysinfo_answer"
+      ]
+    },
+    {
+      "name": "sysinfo_answer",
+      "signature": "int (const char *, char *, uint32_t)",
+      "line": 116,
+      "static": false,
+      "defined": true,
+      "calls": [
+        "extract_hostname",
+        "ks_append",
+        "ks_append_dec",
+        "ks_append_ip",
+        "ks_contains",
+        "list_devices",
+        "net_dns",
+        "net_gw",
+        "net_ip",
+        "net_is_up",
+        "timer_ticks"
+      ],
+      "file": "kernels/x86_64/kernel/slm/sysinfo.c",
+      "subsystem": "slm",
+      "kind": "function",
+      "called_by": [
+        "slm_chat_loop"
+      ]
+    },
+    {
+      "name": "console_readline",
+      "signature": "uint32_t (char *, uint32_t)",
+      "line": 11,
+      "static": false,
+      "defined": true,
+      "calls": [
+        "serial_getc",
+        "serial_putc",
+        "serial_write"
+      ],
+      "file": "kernels/x86_64/kernel/sys/console.c",
+      "subsystem": "sys",
+      "kind": "function",
+      "called_by": [
+        "slm_chat_loop"
+      ]
+    }
+  ],
+  "structs": [
+    {
+      "name": "idt_entry",
+      "line": 24,
+      "fields": [
+        {
+          "name": "off_lo",
+          "type": "uint16_t"
+        },
+        {
+          "name": "sel",
+          "type": "uint16_t"
+        },
+        {
+          "name": "ist",
+          "type": "uint8_t"
+        },
+        {
+          "name": "type_attr",
+          "type": "uint8_t"
+        },
+        {
+          "name": "off_mid",
+          "type": "uint16_t"
+        },
+        {
+          "name": "off_hi",
+          "type": "uint32_t"
+        },
+        {
+          "name": "zero",
+          "type": "uint32_t"
+        }
+      ],
+      "file": "kernels/x86_64/kernel/arch/x86_64/idt.c",
+      "subsystem": "arch"
+    },
+    {
+      "name": "idt_ptr",
+      "line": 34,
+      "fields": [
+        {
+          "name": "limit",
+          "type": "uint16_t"
+        },
+        {
+          "name": "base",
+          "type": "uint64_t"
+        }
+      ],
+      "file": "kernels/x86_64/kernel/arch/x86_64/idt.c",
+      "subsystem": "arch"
+    },
+    {
+      "name": "mb2_tag",
+      "line": 13,
+      "fields": [
+        {
+          "name": "type",
+          "type": "uint32_t"
+        },
+        {
+          "name": "size",
+          "type": "uint32_t"
+        }
+      ],
+      "file": "kernels/x86_64/kernel/boot/boot_info.c",
+      "subsystem": "boot"
+    },
+    {
+      "name": "mb2_tag_basic_mem",
+      "line": 18,
+      "fields": [
+        {
+          "name": "type",
+          "type": "uint32_t"
+        },
+        {
+          "name": "size",
+          "type": "uint32_t"
+        },
+        {
+          "name": "mem_lower",
+          "type": "uint32_t"
+        },
+        {
+          "name": "mem_upper",
+          "type": "uint32_t"
+        }
+      ],
+      "file": "kernels/x86_64/kernel/boot/boot_info.c",
+      "subsystem": "boot"
+    },
+    {
+      "name": "mb2_tag_module",
+      "line": 25,
+      "fields": [
+        {
+          "name": "type",
+          "type": "uint32_t"
+        },
+        {
+          "name": "size",
+          "type": "uint32_t"
+        },
+        {
+          "name": "mod_start",
+          "type": "uint32_t"
+        },
+        {
+          "name": "mod_end",
+          "type": "uint32_t"
+        },
+        {
+          "name": "cmdline",
+          "type": "char[]"
+        }
+      ],
+      "file": "kernels/x86_64/kernel/boot/boot_info.c",
+      "subsystem": "boot"
+    },
+    {
+      "name": "arp_pkt",
+      "line": 9,
+      "fields": [
+        {
+          "name": "htype",
+          "type": "uint16_t"
+        },
+        {
+          "name": "ptype",
+          "type": "uint16_t"
+        },
+        {
+          "name": "hlen",
+          "type": "uint8_t"
+        },
+        {
+          "name": "plen",
+          "type": "uint8_t"
+        },
+        {
+          "name": "oper",
+          "type": "uint16_t"
+        },
+        {
+          "name": "sha",
+          "type": "uint8_t[6]"
+        },
+        {
+          "name": "spa",
+          "type": "uint32_t"
+        },
+        {
+          "name": "tha",
+          "type": "uint8_t[6]"
+        },
+        {
+          "name": "tpa",
+          "type": "uint32_t"
+        }
+      ],
+      "file": "kernels/x86_64/kernel/net/arp.c",
+      "subsystem": "net"
+    },
+    {
+      "name": "arp_entry",
+      "line": 21,
+      "fields": [
+        {
+          "name": "ip",
+          "type": "ipv4_t"
+        },
+        {
+          "name": "mac",
+          "type": "uint8_t[6]"
+        },
+        {
+          "name": "valid",
+          "type": "int"
+        }
+      ],
+      "file": "kernels/x86_64/kernel/net/arp.c",
+      "subsystem": "net"
+    },
+    {
+      "name": "dhcp_msg",
+      "line": 17,
+      "fields": [
+        {
+          "name": "op",
+          "type": "uint8_t"
+        },
+        {
+          "name": "htype",
+          "type": "uint8_t"
+        },
+        {
+          "name": "hlen",
+          "type": "uint8_t"
+        },
+        {
+          "name": "hops",
+          "type": "uint8_t"
+        },
+        {
+          "name": "xid",
+          "type": "uint32_t"
+        },
+        {
+          "name": "secs",
+          "type": "uint16_t"
+        },
+        {
+          "name": "flags",
+          "type": "uint16_t"
+        },
+        {
+          "name": "ciaddr",
+          "type": "uint32_t"
+        },
+        {
+          "name": "yiaddr",
+          "type": "uint32_t"
+        },
+        {
+          "name": "siaddr",
+          "type": "uint32_t"
+        },
+        {
+          "name": "giaddr",
+          "type": "uint32_t"
+        },
+        {
+          "name": "chaddr",
+          "type": "uint8_t[16]"
+        },
+        {
+          "name": "sname",
+          "type": "uint8_t[64]"
+        },
+        {
+          "name": "file",
+          "type": "uint8_t[128]"
+        },
+        {
+          "name": "magic",
+          "type": "uint32_t"
+        },
+        {
+          "name": "options",
+          "type": "uint8_t[64]"
+        }
+      ],
+      "file": "kernels/x86_64/kernel/net/dhcp.c",
+      "subsystem": "net"
+    },
+    {
+      "name": "rx_desc",
+      "line": 53,
+      "fields": [
+        {
+          "name": "addr",
+          "type": "uint64_t"
+        },
+        {
+          "name": "length",
+          "type": "uint16_t"
+        },
+        {
+          "name": "checksum",
+          "type": "uint16_t"
+        },
+        {
+          "name": "status",
+          "type": "uint8_t"
+        },
+        {
+          "name": "errors",
+          "type": "uint8_t"
+        },
+        {
+          "name": "special",
+          "type": "uint16_t"
+        }
+      ],
+      "file": "kernels/x86_64/kernel/net/e1000.c",
+      "subsystem": "net"
+    },
+    {
+      "name": "tx_desc",
+      "line": 62,
+      "fields": [
+        {
+          "name": "addr",
+          "type": "uint64_t"
+        },
+        {
+          "name": "length",
+          "type": "uint16_t"
+        },
+        {
+          "name": "cso",
+          "type": "uint8_t"
+        },
+        {
+          "name": "cmd",
+          "type": "uint8_t"
+        },
+        {
+          "name": "status",
+          "type": "uint8_t"
+        },
+        {
+          "name": "css",
+          "type": "uint8_t"
+        },
+        {
+          "name": "special",
+          "type": "uint16_t"
+        }
+      ],
+      "file": "kernels/x86_64/kernel/net/e1000.c",
+      "subsystem": "net"
+    },
+    {
+      "name": "udp_binding",
+      "line": 13,
+      "fields": [
+        {
+          "name": "port",
+          "type": "uint16_t"
+        },
+        {
+          "name": "handler",
+          "type": "udp_handler_t"
+        }
+      ],
+      "file": "kernels/x86_64/kernel/net/netif.c",
+      "subsystem": "net"
+    },
+    {
+      "name": "flat_header",
+      "line": 61,
+      "fields": [
+        {
+          "name": "magic",
+          "type": "uint32_t"
+        },
+        {
+          "name": "version",
+          "type": "uint32_t"
+        },
+        {
+          "name": "dim",
+          "type": "uint32_t"
+        },
+        {
+          "name": "hidden_dim",
+          "type": "uint32_t"
+        },
+        {
+          "name": "n_layers",
+          "type": "uint32_t"
+        },
+        {
+          "name": "n_heads",
+          "type": "uint32_t"
+        },
+        {
+          "name": "n_kv_heads",
+          "type": "uint32_t"
+        },
+        {
+          "name": "vocab_size",
+          "type": "uint32_t"
+        },
+        {
+          "name": "seq_len",
+          "type": "uint32_t"
+        },
+        {
+          "name": "quant",
+          "type": "uint32_t"
+        }
+      ],
+      "file": "kernels/x86_64/kernel/slm/neural/neural_backend.c",
+      "subsystem": "slm"
+    },
+    {
+      "name": "model",
+      "line": 66,
+      "fields": [
+        {
+          "name": "dim",
+          "type": "uint32_t"
+        },
+        {
+          "name": "hidden_dim",
+          "type": "uint32_t"
+        },
+        {
+          "name": "n_layers",
+          "type": "uint32_t"
+        },
+        {
+          "name": "n_heads",
+          "type": "uint32_t"
+        },
+        {
+          "name": "n_kv_heads",
+          "type": "uint32_t"
+        },
+        {
+          "name": "vocab_size",
+          "type": "uint32_t"
+        },
+        {
+          "name": "seq_len",
+          "type": "uint32_t"
+        },
+        {
+          "name": "head_dim",
+          "type": "uint32_t"
+        },
+        {
+          "name": "kv_dim",
+          "type": "uint32_t"
+        },
+        {
+          "name": "token_emb",
+          "type": "wmat_t"
+        },
+        {
+          "name": "rms_att",
+          "type": "const float *[16]"
+        },
+        {
+          "name": "wq",
+          "type": "wmat_t[16]"
+        },
+        {
+          "name": "wk",
+          "type": "wmat_t[16]"
+        },
+        {
+          "name": "wv",
+          "type": "wmat_t[16]"
+        },
+        {
+          "name": "wo",
+          "type": "wmat_t[16]"
+        },
+        {
+          "name": "rms_ffn",
+          "type": "const float *[16]"
+        },
+        {
+          "name": "w1",
+          "type": "wmat_t[16]"
+        },
+        {
+          "name": "w2",
+          "type": "wmat_t[16]"
+        },
+        {
+          "name": "w3",
+          "type": "wmat_t[16]"
+        },
+        {
+          "name": "rms_final",
+          "type": "const float *"
+        },
+        {
+          "name": "vocab",
+          "type": "const char *[32000]"
+        },
+        {
+          "name": "vocab_len",
+          "type": "uint8_t[32000]"
+        },
+        {
+          "name": "x",
+          "type": "float *"
+        },
+        {
+          "name": "xb",
+          "type": "float *"
+        },
+        {
+          "name": "xb2",
+          "type": "float *"
+        },
+        {
+          "name": "hb",
+          "type": "float *"
+        },
+        {
+          "name": "hb2",
+          "type": "float *"
+        },
+        {
+          "name": "q",
+          "type": "float *"
+        },
+        {
+          "name": "att",
+          "type": "float *"
+        },
+        {
+          "name": "logits",
+          "type": "float *"
+        },
+        {
+          "name": "key_cache",
+          "type": "float *"
+        },
+        {
+          "name": "value_cache",
+          "type": "float *"
+        },
+        {
+          "name": "ctx",
+          "type": "uint32_t"
+        },
+        {
+          "name": "quant",
+          "type": "uint32_t"
+        },
+        {
+          "name": "pos",
+          "type": "uint32_t"
+        },
+        {
+          "name": "loaded",
+          "type": "int"
+        }
+      ],
+      "file": "kernels/x86_64/kernel/slm/neural/neural_backend.c",
+      "subsystem": "slm"
+    },
+    {
+      "name": "capability",
+      "line": 12,
+      "fields": [
+        {
+          "name": "keyword",
+          "type": "const char *"
+        },
+        {
+          "name": "name",
+          "type": "const char *"
+        },
+        {
+          "name": "status",
+          "type": "cap_status_t"
+        },
+        {
+          "name": "note",
+          "type": "const char *"
+        },
+        {
+          "name": "action",
+          "type": "void (*)(void)"
+        }
+      ],
+      "file": "kernels/x86_64/kernel/slm/roles.c",
+      "subsystem": "slm"
+    },
+    {
+      "name": "pci_driver_rule",
+      "line": 18,
+      "fields": [
+        {
+          "name": "vendor",
+          "type": "uint16_t"
+        },
+        {
+          "name": "device",
+          "type": "uint16_t"
+        },
+        {
+          "name": "name",
+          "type": "const char *"
+        },
+        {
+          "name": "driver",
+          "type": "const char *"
+        }
+      ],
+      "file": "kernels/x86_64/kernel/slm/slm.c",
+      "subsystem": "slm"
+    }
+  ],
+  "enums": [
+    {
+      "name": "(anonymous)",
+      "line": 29,
+      "values": [
+        "ST_INIT",
+        "ST_OFFERED",
+        "ST_DONE",
+        "ST_FAIL"
+      ],
+      "file": "kernels/x86_64/kernel/net/dhcp.c",
+      "subsystem": "net"
+    },
+    {
+      "name": "(anonymous)",
+      "line": 12,
+      "values": [
+        "S_CLOSED",
+        "S_LISTEN",
+        "S_SYN_RCVD",
+        "S_ESTABLISHED"
+      ],
+      "file": "kernels/x86_64/kernel/net/tcp.c",
+      "subsystem": "net"
+    },
+    {
+      "name": "(anonymous)",
+      "line": 10,
+      "values": [
+        "CAP_WORKING",
+        "CAP_ROADMAP"
+      ],
+      "file": "kernels/x86_64/kernel/slm/roles.c",
+      "subsystem": "slm"
+    }
+  ],
+  "macros": [
+    {
+      "name": "PIC1_CMD",
+      "file": "kernels/x86_64/kernel/arch/x86_64/idt.c",
+      "subsystem": "arch",
+      "value": "0x20"
+    },
+    {
+      "name": "PIC1_DATA",
+      "file": "kernels/x86_64/kernel/arch/x86_64/idt.c",
+      "subsystem": "arch",
+      "value": "0x21"
+    },
+    {
+      "name": "PIC2_CMD",
+      "file": "kernels/x86_64/kernel/arch/x86_64/idt.c",
+      "subsystem": "arch",
+      "value": "0xA0"
+    },
+    {
+      "name": "PIC2_DATA",
+      "file": "kernels/x86_64/kernel/arch/x86_64/idt.c",
+      "subsystem": "arch",
+      "value": "0xA1"
+    },
+    {
+      "name": "PIC_EOI",
+      "file": "kernels/x86_64/kernel/arch/x86_64/idt.c",
+      "subsystem": "arch",
+      "value": "0x20"
+    },
+    {
+      "name": "PIT_CH0",
+      "file": "kernels/x86_64/kernel/arch/x86_64/idt.c",
+      "subsystem": "arch",
+      "value": "0x40"
+    },
+    {
+      "name": "PIT_CMD",
+      "file": "kernels/x86_64/kernel/arch/x86_64/idt.c",
+      "subsystem": "arch",
+      "value": "0x43"
+    },
+    {
+      "name": "PIT_HZ",
+      "file": "kernels/x86_64/kernel/arch/x86_64/idt.c",
+      "subsystem": "arch",
+      "value": "1000u"
+    },
+    {
+      "name": "PIT_BASE",
+      "file": "kernels/x86_64/kernel/arch/x86_64/idt.c",
+      "subsystem": "arch",
+      "value": "1193182u"
+    },
+    {
+      "name": "IRQ_BASE",
+      "file": "kernels/x86_64/kernel/arch/x86_64/idt.c",
+      "subsystem": "arch",
+      "value": "32"
+    },
+    {
+      "name": "AUTON_ARCH_IO_H",
+      "file": "kernels/x86_64/kernel/arch/x86_64/io/io.h",
+      "subsystem": "arch",
+      "value": "#include <stdint.h>"
+    },
+    {
+      "name": "MB2_BOOT_MAGIC",
+      "file": "kernels/x86_64/kernel/boot/boot_info.c",
+      "subsystem": "boot",
+      "value": "0x36D76289u"
+    },
+    {
+      "name": "MB2_TAG_END",
+      "file": "kernels/x86_64/kernel/boot/boot_info.c",
+      "subsystem": "boot",
+      "value": "0u"
+    },
+    {
+      "name": "MB2_TAG_MODULE",
+      "file": "kernels/x86_64/kernel/boot/boot_info.c",
+      "subsystem": "boot",
+      "value": "3u"
+    },
+    {
+      "name": "MB2_TAG_BASIC_MEM",
+      "file": "kernels/x86_64/kernel/boot/boot_info.c",
+      "subsystem": "boot",
+      "value": "4u"
+    },
+    {
+      "name": "PAGE_SIZE",
+      "file": "kernels/x86_64/kernel/boot/kernel_main.c",
+      "subsystem": "boot",
+      "value": "4096u"
+    },
+    {
+      "name": "PCI_CONFIG_ADDR",
+      "file": "kernels/x86_64/kernel/dev/pci.c",
+      "subsystem": "dev",
+      "value": "0xCF8"
+    },
+    {
+      "name": "PCI_CONFIG_DATA",
+      "file": "kernels/x86_64/kernel/dev/pci.c",
+      "subsystem": "dev",
+      "value": "0xCFC"
+    },
+    {
+      "name": "PCI_CMD",
+      "file": "kernels/x86_64/kernel/dev/pci.c",
+      "subsystem": "dev",
+      "value": "0x04"
+    },
+    {
+      "name": "PCI_BAR0",
+      "file": "kernels/x86_64/kernel/dev/pci.c",
+      "subsystem": "dev",
+      "value": "0x10"
+    },
+    {
+      "name": "PCI_CMD_MEMORY",
+      "file": "kernels/x86_64/kernel/dev/pci.c",
+      "subsystem": "dev",
+      "value": "0x0002"
+    },
+    {
+      "name": "PCI_CMD_MASTER",
+      "file": "kernels/x86_64/kernel/dev/pci.c",
+      "subsystem": "dev",
+      "value": "0x0004"
+    },
+    {
+      "name": "COM1",
+      "file": "kernels/x86_64/kernel/drivers/arch/serial_16550.c",
+      "subsystem": "drivers",
+      "value": "0x3F8"
+    },
+    {
+      "name": "REG_DATA",
+      "file": "kernels/x86_64/kernel/drivers/arch/serial_16550.c",
+      "subsystem": "drivers",
+      "value": "(COM1 + 0)"
+    },
+    {
+      "name": "REG_IER",
+      "file": "kernels/x86_64/kernel/drivers/arch/serial_16550.c",
+      "subsystem": "drivers",
+      "value": "(COM1 + 1)"
+    },
+    {
+      "name": "REG_FCR",
+      "file": "kernels/x86_64/kernel/drivers/arch/serial_16550.c",
+      "subsystem": "drivers",
+      "value": "(COM1 + 2)"
+    },
+    {
+      "name": "REG_LCR",
+      "file": "kernels/x86_64/kernel/drivers/arch/serial_16550.c",
+      "subsystem": "drivers",
+      "value": "(COM1 + 3)"
+    },
+    {
+      "name": "REG_MCR",
+      "file": "kernels/x86_64/kernel/drivers/arch/serial_16550.c",
+      "subsystem": "drivers",
+      "value": "(COM1 + 4)"
+    },
+    {
+      "name": "REG_LSR",
+      "file": "kernels/x86_64/kernel/drivers/arch/serial_16550.c",
+      "subsystem": "drivers",
+      "value": "(COM1 + 5)"
+    },
+    {
+      "name": "LSR_DATA_READY",
+      "file": "kernels/x86_64/kernel/drivers/arch/serial_16550.c",
+      "subsystem": "drivers",
+      "value": "0x01"
+    },
+    {
+      "name": "LSR_THR_EMPTY",
+      "file": "kernels/x86_64/kernel/drivers/arch/serial_16550.c",
+      "subsystem": "drivers",
+      "value": "0x20"
+    },
+    {
+      "name": "AUTON_BOOT_INFO_H",
+      "file": "kernels/x86_64/kernel/include/boot_info.h",
+      "subsystem": "include",
+      "value": "#include <stdint.h>"
+    },
+    {
+      "name": "BOOT_MAX_MODULES",
+      "file": "kernels/x86_64/kernel/include/boot_info.h",
+      "subsystem": "include",
+      "value": "8"
+    },
+    {
+      "name": "AUTON_CONSOLE_H",
+      "file": "kernels/x86_64/kernel/include/console.h",
+      "subsystem": "include",
+      "value": "#include <stdint.h>"
+    },
+    {
+      "name": "AUTON_E1000_H",
+      "file": "kernels/x86_64/kernel/include/e1000.h",
+      "subsystem": "include",
+      "value": "#include <stdint.h>"
+    },
+    {
+      "name": "AUTON_IRQ_H",
+      "file": "kernels/x86_64/kernel/include/irq.h",
+      "subsystem": "include",
+      "value": "#include <stdint.h>"
+    },
+    {
+      "name": "AUTON_KERNEL_H",
+      "file": "kernels/x86_64/kernel/include/kernel.h",
+      "subsystem": "include",
+      "value": "#include <stdint.h>"
+    },
+    {
+      "name": "AUTON_KMATH_H",
+      "file": "kernels/x86_64/kernel/include/kmath.h",
+      "subsystem": "include",
+      "value": "#include <stdint.h>"
+    },
+    {
+      "name": "AUTON_KSTR_H",
+      "file": "kernels/x86_64/kernel/include/kstr.h",
+      "subsystem": "include",
+      "value": "#include <stdint.h>"
+    },
+    {
+      "name": "AUTON_NET_H",
+      "file": "kernels/x86_64/kernel/include/net.h",
+      "subsystem": "include",
+      "value": "#include <stdint.h>"
+    },
+    {
+      "name": "ETHERTYPE_IP",
+      "file": "kernels/x86_64/kernel/include/net.h",
+      "subsystem": "include",
+      "value": "0x0800"
+    },
+    {
+      "name": "ETHERTYPE_ARP",
+      "file": "kernels/x86_64/kernel/include/net.h",
+      "subsystem": "include",
+      "value": "0x0806"
+    },
+    {
+      "name": "IP_PROTO_ICMP",
+      "file": "kernels/x86_64/kernel/include/net.h",
+      "subsystem": "include",
+      "value": "1"
+    },
+    {
+      "name": "IP_PROTO_TCP",
+      "file": "kernels/x86_64/kernel/include/net.h",
+      "subsystem": "include",
+      "value": "6"
+    },
+    {
+      "name": "IP_PROTO_UDP",
+      "file": "kernels/x86_64/kernel/include/net.h",
+      "subsystem": "include",
+      "value": "17"
+    },
+    {
+      "name": "IP_BROADCAST",
+      "file": "kernels/x86_64/kernel/include/net.h",
+      "subsystem": "include",
+      "value": "IPV4(255, 255, 255, 255)"
+    },
+    {
+      "name": "TCP_FIN",
+      "file": "kernels/x86_64/kernel/include/net.h",
+      "subsystem": "include",
+      "value": "0x01"
+    },
+    {
+      "name": "TCP_SYN",
+      "file": "kernels/x86_64/kernel/include/net.h",
+      "subsystem": "include",
+      "value": "0x02"
+    },
+    {
+      "name": "TCP_RST",
+      "file": "kernels/x86_64/kernel/include/net.h",
+      "subsystem": "include",
+      "value": "0x04"
+    },
+    {
+      "name": "TCP_PSH",
+      "file": "kernels/x86_64/kernel/include/net.h",
+      "subsystem": "include",
+      "value": "0x08"
+    },
+    {
+      "name": "TCP_ACK",
+      "file": "kernels/x86_64/kernel/include/net.h",
+      "subsystem": "include",
+      "value": "0x10"
+    },
+    {
+      "name": "AUTON_NEURAL_H",
+      "file": "kernels/x86_64/kernel/include/neural.h",
+      "subsystem": "include",
+      "value": "#include <stdint.h>"
+    },
+    {
+      "name": "MODEL_MAX_VOCAB_CAP",
+      "file": "kernels/x86_64/kernel/include/neural.h",
+      "subsystem": "include",
+      "value": "32000u"
+    },
+    {
+      "name": "AUTON_PCI_H",
+      "file": "kernels/x86_64/kernel/include/pci.h",
+      "subsystem": "include",
+      "value": "#include <stdint.h>"
+    },
+    {
+      "name": "AUTON_PHYS_H",
+      "file": "kernels/x86_64/kernel/include/phys.h",
+      "subsystem": "include",
+      "value": "#include <stdint.h>"
+    },
+    {
+      "name": "AUTON_ROLES_H",
+      "file": "kernels/x86_64/kernel/include/roles.h",
+      "subsystem": "include",
+      "value": "#include <stdint.h>"
+    },
+    {
+      "name": "AUTON_SERVER_H",
+      "file": "kernels/x86_64/kernel/include/server.h",
+      "subsystem": "include",
+      "value": "/* Poll the network, servicing connections, until a key is pressed on the"
+    },
+    {
+      "name": "AUTON_SLM_H",
+      "file": "kernels/x86_64/kernel/include/slm.h",
+      "subsystem": "include",
+      "value": "#include <stdint.h>"
+    },
+    {
+      "name": "AUTON_SYSINFO_H",
+      "file": "kernels/x86_64/kernel/include/sysinfo.h",
+      "subsystem": "include",
+      "value": "#include <stdint.h>"
+    },
+    {
+      "name": "KM_PI",
+      "file": "kernels/x86_64/kernel/lib/kmath.c",
+      "subsystem": "lib",
+      "value": "3.14159265358979323846f"
+    },
+    {
+      "name": "KM_PI_2",
+      "file": "kernels/x86_64/kernel/lib/kmath.c",
+      "subsystem": "lib",
+      "value": "1.57079632679489661923f"
+    },
+    {
+      "name": "KM_2PI",
+      "file": "kernels/x86_64/kernel/lib/kmath.c",
+      "subsystem": "lib",
+      "value": "6.28318530717958647692f"
+    },
+    {
+      "name": "ARENA_SIZE",
+      "file": "kernels/x86_64/kernel/lib/phys.c",
+      "subsystem": "lib",
+      "value": "(12u * 1024u * 1024u)"
+    },
+    {
+      "name": "ARP_CACHE",
+      "file": "kernels/x86_64/kernel/net/arp.c",
+      "subsystem": "net",
+      "value": "16"
+    },
+    {
+      "name": "ARP_REQUEST",
+      "file": "kernels/x86_64/kernel/net/arp.c",
+      "subsystem": "net",
+      "value": "1"
+    },
+    {
+      "name": "ARP_REPLY",
+      "file": "kernels/x86_64/kernel/net/arp.c",
+      "subsystem": "net",
+      "value": "2"
+    },
+    {
+      "name": "DHCP_XID",
+      "file": "kernels/x86_64/kernel/net/dhcp.c",
+      "subsystem": "net",
+      "value": "0x41555401u         /* \"AUT\\1\" */"
+    },
+    {
+      "name": "DHCP_MAGIC",
+      "file": "kernels/x86_64/kernel/net/dhcp.c",
+      "subsystem": "net",
+      "value": "0x63825363u"
+    },
+    {
+      "name": "DHCP_CLIENT_PORT",
+      "file": "kernels/x86_64/kernel/net/dhcp.c",
+      "subsystem": "net",
+      "value": "68"
+    },
+    {
+      "name": "DHCP_SERVER_PORT",
+      "file": "kernels/x86_64/kernel/net/dhcp.c",
+      "subsystem": "net",
+      "value": "67"
+    },
+    {
+      "name": "DHCP_DISCOVER",
+      "file": "kernels/x86_64/kernel/net/dhcp.c",
+      "subsystem": "net",
+      "value": "1"
+    },
+    {
+      "name": "DHCP_OFFER",
+      "file": "kernels/x86_64/kernel/net/dhcp.c",
+      "subsystem": "net",
+      "value": "2"
+    },
+    {
+      "name": "DHCP_REQUEST",
+      "file": "kernels/x86_64/kernel/net/dhcp.c",
+      "subsystem": "net",
+      "value": "3"
+    },
+    {
+      "name": "DHCP_ACK",
+      "file": "kernels/x86_64/kernel/net/dhcp.c",
+      "subsystem": "net",
+      "value": "5"
+    },
+    {
+      "name": "DHCP_RESEND_EVERY",
+      "file": "kernels/x86_64/kernel/net/dhcp.c",
+      "subsystem": "net",
+      "value": "50            /* ticks (~ms) between retransmits */"
+    },
+    {
+      "name": "DHCP_MAX_TICKS",
+      "file": "kernels/x86_64/kernel/net/dhcp.c",
+      "subsystem": "net",
+      "value": "4000          /* ~4 s overall timeout */"
+    },
+    {
+      "name": "REG_CTRL",
+      "file": "kernels/x86_64/kernel/net/e1000.c",
+      "subsystem": "net",
+      "value": "0x0000"
+    },
+    {
+      "name": "REG_STATUS",
+      "file": "kernels/x86_64/kernel/net/e1000.c",
+      "subsystem": "net",
+      "value": "0x0008"
+    },
+    {
+      "name": "REG_ICR",
+      "file": "kernels/x86_64/kernel/net/e1000.c",
+      "subsystem": "net",
+      "value": "0x00C0"
+    },
+    {
+      "name": "REG_IMC",
+      "file": "kernels/x86_64/kernel/net/e1000.c",
+      "subsystem": "net",
+      "value": "0x00D8"
+    },
+    {
+      "name": "REG_RCTL",
+      "file": "kernels/x86_64/kernel/net/e1000.c",
+      "subsystem": "net",
+      "value": "0x0100"
+    },
+    {
+      "name": "REG_TCTL",
+      "file": "kernels/x86_64/kernel/net/e1000.c",
+      "subsystem": "net",
+      "value": "0x0400"
+    },
+    {
+      "name": "REG_TIPG",
+      "file": "kernels/x86_64/kernel/net/e1000.c",
+      "subsystem": "net",
+      "value": "0x0410"
+    },
+    {
+      "name": "REG_RDBAL",
+      "file": "kernels/x86_64/kernel/net/e1000.c",
+      "subsystem": "net",
+      "value": "0x2800"
+    },
+    {
+      "name": "REG_RDBAH",
+      "file": "kernels/x86_64/kernel/net/e1000.c",
+      "subsystem": "net",
+      "value": "0x2804"
+    },
+    {
+      "name": "REG_RDLEN",
+      "file": "kernels/x86_64/kernel/net/e1000.c",
+      "subsystem": "net",
+      "value": "0x2808"
+    },
+    {
+      "name": "REG_RDH",
+      "file": "kernels/x86_64/kernel/net/e1000.c",
+      "subsystem": "net",
+      "value": "0x2810"
+    },
+    {
+      "name": "REG_RDT",
+      "file": "kernels/x86_64/kernel/net/e1000.c",
+      "subsystem": "net",
+      "value": "0x2818"
+    },
+    {
+      "name": "REG_TDBAL",
+      "file": "kernels/x86_64/kernel/net/e1000.c",
+      "subsystem": "net",
+      "value": "0x3800"
+    },
+    {
+      "name": "REG_TDBAH",
+      "file": "kernels/x86_64/kernel/net/e1000.c",
+      "subsystem": "net",
+      "value": "0x3804"
+    },
+    {
+      "name": "REG_TDLEN",
+      "file": "kernels/x86_64/kernel/net/e1000.c",
+      "subsystem": "net",
+      "value": "0x3808"
+    },
+    {
+      "name": "REG_TDH",
+      "file": "kernels/x86_64/kernel/net/e1000.c",
+      "subsystem": "net",
+      "value": "0x3810"
+    },
+    {
+      "name": "REG_TDT",
+      "file": "kernels/x86_64/kernel/net/e1000.c",
+      "subsystem": "net",
+      "value": "0x3818"
+    },
+    {
+      "name": "REG_RAL",
+      "file": "kernels/x86_64/kernel/net/e1000.c",
+      "subsystem": "net",
+      "value": "0x5400"
+    },
+    {
+      "name": "REG_RAH",
+      "file": "kernels/x86_64/kernel/net/e1000.c",
+      "subsystem": "net",
+      "value": "0x5404"
+    },
+    {
+      "name": "REG_MTA",
+      "file": "kernels/x86_64/kernel/net/e1000.c",
+      "subsystem": "net",
+      "value": "0x5200          /* 128 entries */"
+    },
+    {
+      "name": "CTRL_SLU",
+      "file": "kernels/x86_64/kernel/net/e1000.c",
+      "subsystem": "net",
+      "value": "0x00000040      /* set link up */"
+    },
+    {
+      "name": "CTRL_ASDE",
+      "file": "kernels/x86_64/kernel/net/e1000.c",
+      "subsystem": "net",
+      "value": "0x00000020      /* auto-speed detect enable */"
+    },
+    {
+      "name": "CTRL_RST",
+      "file": "kernels/x86_64/kernel/net/e1000.c",
+      "subsystem": "net",
+      "value": "0x04000000      /* device reset */"
+    },
+    {
+      "name": "RCTL_EN",
+      "file": "kernels/x86_64/kernel/net/e1000.c",
+      "subsystem": "net",
+      "value": "0x00000002"
+    },
+    {
+      "name": "RCTL_BAM",
+      "file": "kernels/x86_64/kernel/net/e1000.c",
+      "subsystem": "net",
+      "value": "0x00008000      /* accept broadcast */"
+    },
+    {
+      "name": "RCTL_SECRC",
+      "file": "kernels/x86_64/kernel/net/e1000.c",
+      "subsystem": "net",
+      "value": "0x04000000      /* strip Ethernet CRC */"
+    },
+    {
+      "name": "TCTL_EN",
+      "file": "kernels/x86_64/kernel/net/e1000.c",
+      "subsystem": "net",
+      "value": "0x00000002"
+    },
+    {
+      "name": "TCTL_PSP",
+      "file": "kernels/x86_64/kernel/net/e1000.c",
+      "subsystem": "net",
+      "value": "0x00000008      /* pad short packets */"
+    },
+    {
+      "name": "TXD_CMD_EOP",
+      "file": "kernels/x86_64/kernel/net/e1000.c",
+      "subsystem": "net",
+      "value": "0x01"
+    },
+    {
+      "name": "TXD_CMD_IFCS",
+      "file": "kernels/x86_64/kernel/net/e1000.c",
+      "subsystem": "net",
+      "value": "0x02"
+    },
+    {
+      "name": "TXD_CMD_RS",
+      "file": "kernels/x86_64/kernel/net/e1000.c",
+      "subsystem": "net",
+      "value": "0x08"
+    },
+    {
+      "name": "TXD_STA_DD",
+      "file": "kernels/x86_64/kernel/net/e1000.c",
+      "subsystem": "net",
+      "value": "0x01"
+    },
+    {
+      "name": "RXD_STA_DD",
+      "file": "kernels/x86_64/kernel/net/e1000.c",
+      "subsystem": "net",
+      "value": "0x01"
+    },
+    {
+      "name": "RXD_STA_EOP",
+      "file": "kernels/x86_64/kernel/net/e1000.c",
+      "subsystem": "net",
+      "value": "0x02"
+    },
+    {
+      "name": "NUM_RX",
+      "file": "kernels/x86_64/kernel/net/e1000.c",
+      "subsystem": "net",
+      "value": "32"
+    },
+    {
+      "name": "NUM_TX",
+      "file": "kernels/x86_64/kernel/net/e1000.c",
+      "subsystem": "net",
+      "value": "32"
+    },
+    {
+      "name": "BUF_SIZE",
+      "file": "kernels/x86_64/kernel/net/e1000.c",
+      "subsystem": "net",
+      "value": "2048"
+    },
+    {
+      "name": "FRAME_MAX",
+      "file": "kernels/x86_64/kernel/net/ipv4.c",
+      "subsystem": "net",
+      "value": "1600"
+    },
+    {
+      "name": "FRAME_MAX",
+      "file": "kernels/x86_64/kernel/net/netif.c",
+      "subsystem": "net",
+      "value": "1600"
+    },
+    {
+      "name": "UDP_BINDINGS",
+      "file": "kernels/x86_64/kernel/net/netif.c",
+      "subsystem": "net",
+      "value": "8"
+    },
+    {
+      "name": "TCP_WINDOW",
+      "file": "kernels/x86_64/kernel/net/tcp.c",
+      "subsystem": "net",
+      "value": "8192u"
+    },
+    {
+      "name": "TCP_ISS",
+      "file": "kernels/x86_64/kernel/net/tcp.c",
+      "subsystem": "net",
+      "value": "0x00001000u"
+    },
+    {
+      "name": "SEGBUF",
+      "file": "kernels/x86_64/kernel/net/tcp.c",
+      "subsystem": "net",
+      "value": "1600"
+    },
+    {
+      "name": "DNS_PORT",
+      "file": "kernels/x86_64/kernel/server/dns.c",
+      "subsystem": "server",
+      "value": "53"
+    },
+    {
+      "name": "LINE_MAX",
+      "file": "kernels/x86_64/kernel/slm/chat.c",
+      "subsystem": "slm",
+      "value": "256"
+    },
+    {
+      "name": "MAGIC",
+      "file": "kernels/x86_64/kernel/slm/neural/neural_backend.c",
+      "subsystem": "slm",
+      "value": "0x4E4F5455u          /* \"UTON\" little-endian */"
+    },
+    {
+      "name": "VERSION",
+      "file": "kernels/x86_64/kernel/slm/neural/neural_backend.c",
+      "subsystem": "slm",
+      "value": "2u"
+    },
+    {
+      "name": "QUANT_FP32",
+      "file": "kernels/x86_64/kernel/slm/neural/neural_backend.c",
+      "subsystem": "slm",
+      "value": "0u"
+    },
+    {
+      "name": "QUANT_INT8",
+      "file": "kernels/x86_64/kernel/slm/neural/neural_backend.c",
+      "subsystem": "slm",
+      "value": "1u"
+    },
+    {
+      "name": "SLM_ERR_ARGS",
+      "file": "kernels/x86_64/kernel/slm/neural/neural_backend.c",
+      "subsystem": "slm",
+      "value": "-1     /* null data, wrong format, smaller than a header */"
+    },
+    {
+      "name": "SLM_ERR_MAGIC",
+      "file": "kernels/x86_64/kernel/slm/neural/neural_backend.c",
+      "subsystem": "slm",
+      "value": "-2"
+    },
+    {
+      "name": "SLM_ERR_VERSION",
+      "file": "kernels/x86_64/kernel/slm/neural/neural_backend.c",
+      "subsystem": "slm",
+      "value": "-3"
+    },
+    {
+      "name": "SLM_ERR_QUANT",
+      "file": "kernels/x86_64/kernel/slm/neural/neural_backend.c",
+      "subsystem": "slm",
+      "value": "-4"
+    },
+    {
+      "name": "SLM_ERR_GEOMETRY",
+      "file": "kernels/x86_64/kernel/slm/neural/neural_backend.c",
+      "subsystem": "slm",
+      "value": "-5     /* layer/head/vocab caps, or dim not divisible */"
+    },
+    {
+      "name": "SLM_ERR_TRUNCATED",
+      "file": "kernels/x86_64/kernel/slm/neural/neural_backend.c",
+      "subsystem": "slm",
+      "value": "-6    /* weights or tokenizer block run past the module */"
+    },
+    {
+      "name": "SLM_ERR_NOMEM",
+      "file": "kernels/x86_64/kernel/slm/neural/neural_backend.c",
+      "subsystem": "slm",
+      "value": "-7"
+    },
+    {
+      "name": "MAX_LAYERS",
+      "file": "kernels/x86_64/kernel/slm/neural/neural_backend.c",
+      "subsystem": "slm",
+      "value": "16"
+    },
+    {
+      "name": "MAX_CTX",
+      "file": "kernels/x86_64/kernel/slm/neural/neural_backend.c",
+      "subsystem": "slm",
+      "value": "256                  /* cap context to bound KV-cache size */"
+    },
+    {
+      "name": "MAX_TOKENS",
+      "file": "kernels/x86_64/kernel/slm/neural/neural_backend.c",
+      "subsystem": "slm",
+      "value": "64"
+    },
+    {
+      "name": "NCAPS",
+      "file": "kernels/x86_64/kernel/slm/roles.c",
+      "subsystem": "slm",
+      "value": "((int)(sizeof(caps) / sizeof(caps[0])))"
+    },
+    {
+      "name": "NEURAL_HEADROOM_MB",
+      "file": "kernels/x86_64/kernel/slm/slm.c",
+      "subsystem": "slm",
+      "value": "24u"
+    },
+    {
+      "name": "R_CAP",
+      "file": "kernels/x86_64/kernel/slm/slm.c",
+      "subsystem": "slm",
+      "value": "(uint32_t)sizeof(((slm_intent_result_t *)0)->response)"
+    },
+    {
+      "name": "MAX_DEVS",
+      "file": "kernels/x86_64/kernel/slm/sysinfo.c",
+      "subsystem": "slm",
+      "value": "32"
+    },
+    {
+      "name": "CH_BACKSPACE",
+      "file": "kernels/x86_64/kernel/sys/console.c",
+      "subsystem": "sys",
+      "value": "0x08"
+    },
+    {
+      "name": "CH_DELETE",
+      "file": "kernels/x86_64/kernel/sys/console.c",
+      "subsystem": "sys",
+      "value": "0x7F"
+    },
+    {
+      "name": "CH_CR",
+      "file": "kernels/x86_64/kernel/sys/console.c",
+      "subsystem": "sys",
+      "value": "'\\r'"
+    },
+    {
+      "name": "CH_LF",
+      "file": "kernels/x86_64/kernel/sys/console.c",
+      "subsystem": "sys",
+      "value": "'\\n'"
+    }
+  ],
+  "subsystems": {
+    "arch": {
+      "files": 5,
+      "lines": 396,
+      "symbols": 12,
+      "depends_on": [
+        "lib"
+      ],
+      "spec": "arch/x86_64.md"
+    },
+    "boot": {
+      "files": 2,
+      "lines": 170,
+      "symbols": 5,
+      "depends_on": [
+        "arch",
+        "dev",
+        "drivers",
+        "lib",
+        "net",
+        "slm"
+      ],
+      "spec": "subsystems/boot.md"
+    },
+    "dev": {
+      "files": 1,
+      "lines": 78,
+      "symbols": 6,
+      "depends_on": [],
+      "spec": "subsystems/dev.md"
+    },
+    "drivers": {
+      "files": 1,
+      "lines": 58,
+      "symbols": 5,
+      "depends_on": [],
+      "spec": "subsystems/drivers.md"
+    },
+    "include": {
+      "files": 15,
+      "lines": 514,
+      "symbols": 0,
+      "depends_on": [],
+      "spec": ""
+    },
+    "lib": {
+      "files": 5,
+      "lines": 300,
+      "symbols": 24,
+      "depends_on": [
+        "drivers"
+      ],
+      "spec": "subsystems/mm.md"
+    },
+    "net": {
+      "files": 7,
+      "lines": 990,
+      "symbols": 50,
+      "depends_on": [
+        "dev",
+        "lib"
+      ],
+      "spec": "subsystems/net.md"
+    },
+    "server": {
+      "files": 3,
+      "lines": 105,
+      "symbols": 5,
+      "depends_on": [
+        "drivers",
+        "lib",
+        "net"
+      ],
+      "spec": "subsystems/net.md"
+    },
+    "slm": {
+      "files": 5,
+      "lines": 1365,
+      "symbols": 52,
+      "depends_on": [
+        "arch",
+        "lib",
+        "net",
+        "sys"
+      ],
+      "spec": "subsystems/slm.md"
+    },
+    "sys": {
+      "files": 1,
+      "lines": 48,
+      "symbols": 1,
+      "depends_on": [
+        "drivers"
+      ],
+      "spec": "subsystems/sys.md"
+    }
+  },
+  "unparsed": []
+}
