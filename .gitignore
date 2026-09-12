@@ -71,3 +71,9 @@ SLM/models/exports/
 
 # E2E run artifacts (serial logs, manifests, timings) — regenerated per run.
 .artifacts/
+
+# Kernel trees are agent-generated output, not source.
+# README.md:11 — "We do not write the kernel. The agents do."
+# The last hand-written reference is tag kernel-reference-v1; its structure is
+# preserved in agent/kernel_spec/reference/ and its contracts in the spec.
+kernels/

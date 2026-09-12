@@ -19,7 +19,16 @@ if ! preflight_out="$("$ROOT/scripts/preflight.sh" 2>&1)"; then
 	exit 1
 fi
 
-cd "$ROOT/kernels/$ARCH"
+KDIR="$ROOT/kernels/$ARCH"
+# The kernel tree is agent-generated output and may not exist. Say so plainly:
+# "build failed" implies a broken build, not an absent one.
+if [ ! -d "$KDIR/kernel" ]; then
+	echo "no kernel tree at ${KDIR#"$ROOT"/}" >&2
+	echo "AUTON's premise is that the agents write it (README.md). Generate one," >&2
+	echo "or restore the reference: git checkout kernel-reference-v1 -- kernels/" >&2
+	exit 2
+fi
+cd "$KDIR"
 
 if [ -n "${MODEL:-}" ]; then
 	# Boot the on-device model as a Multiboot2 module. Needs >=128 MB for the
