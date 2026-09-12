@@ -7,6 +7,8 @@
 #   --rung {3a,3b,3c}  training rung (default 3a: tiny model, existing corpus)
 #   --skip-train       reuse the last checkpoint in SLM/work (fast iteration)
 #   --eval             add the graded chat eval as a final stage
+#   --target DIR       kernel tree to validate (default: kernels/<arch>).
+#                      Point this at agent-generated output.
 #   --keep N           artifact dirs to retain (default 10)
 #
 # Exits non-zero on the first failing stage. Artifacts are written either way.
@@ -25,6 +27,13 @@ PY="${PYTHON:-$ROOT/.venv/bin/python}"
 case "$PY" in /*) ;; *) PY="$ROOT/$PY";; esac   # absolutize before any cd
 
 ARCH="${ARCH:-x86_64}"
+# The kernel tree is a TARGET, not a fixed path. In the intent-compiler model
+# the tree is agent-generated output — `AUTON train "<intent>" --output ./Doom`
+# — so the spine must validate whatever was just produced. Defaults to the
+# in-repo reference tree when one exists.
+TARGET="${TARGET:-$ROOT/kernels/$ARCH}"
+case "$TARGET" in /*) ;; *) TARGET="$ROOT/$TARGET";; esac
+
 RUNG="3a"
 SKIP_TRAIN=0
 RUN_EVAL=0
@@ -38,6 +47,8 @@ while [ $# -gt 0 ]; do
 		--rung=*)     RUNG="${1#*=}"; shift ;;
 		--skip-train) SKIP_TRAIN=1; shift ;;
 		--eval)       RUN_EVAL=1; shift ;;
+		--target)     TARGET="${2:?--target needs a directory}"; shift 2 ;;
+		--target=*)   TARGET="${1#*=}"; shift ;;
 		--keep)       KEEP="${2:?--keep needs a value}"; shift 2 ;;
 		--keep=*)     KEEP="${1#*=}"; shift ;;
 		-h|--help)    usage; exit 0 ;;
@@ -124,7 +135,7 @@ VOCAB="$WORK/vocab.json"
 TOKENS="$WORK/tokens.jsonl"
 CKPT="$WORK/final.pt"
 MODEL_BIN="$WORK/auton-slm.bin"
-NEURAL_ISO="$ROOT/kernels/$ARCH/build/auton-neural.iso"
+NEURAL_ISO="$TARGET/build/auton-neural.iso"
 SERIAL_LOG="$ART/serial-neural.log"
 TRANSCRIPT_FILE="${TRANSCRIPT_FILE:-$ROOT/tests/transcripts/boot-basics.txt}"
 
@@ -162,11 +173,12 @@ s_export() {
 }
 
 s_parity() {
-	"$ROOT/kernels/$ARCH/tests/neural_parity.sh" "$MODEL_BIN" "$CKPT" "$VOCAB"
+	KERNEL_TREE="$TARGET" "$ROOT/tests/kernel/neural_parity.sh" \
+		"$MODEL_BIN" "$CKPT" "$VOCAB"
 }
 
 s_iso() {
-	make -C "$ROOT/kernels/$ARCH" iso-neural MODEL="$MODEL_BIN"
+	make -C "$TARGET" iso-neural MODEL="$MODEL_BIN"
 }
 
 s_boot() {
@@ -236,7 +248,7 @@ s_fallback() {
 
 	# Truncated: a real header followed by nothing like enough weights.
 	head -c 100000 "$MODEL_BIN" > "$bad" 2>/dev/null || return 1
-	make -C "$ROOT/kernels/$ARCH" iso-neural MODEL="$bad" >/dev/null 2>&1 || return 1
+	make -C "$TARGET" iso-neural MODEL="$bad" >/dev/null 2>&1 || return 1
 
 	: > "$serial"
 	"$QEMU" -cdrom "$NEURAL_ISO" -serial stdio -display none -no-reboot \
@@ -255,9 +267,9 @@ s_fallback() {
 	[ "$MARKERS_FAILED" -eq 0 ] || fail=1
 
 	# No module at all: the rule engine is the intended backend here.
-	make -C "$ROOT/kernels/$ARCH" iso >/dev/null 2>&1 || return 1
+	make -C "$TARGET" iso >/dev/null 2>&1 || return 1
 	: > "$serial.nomodule"
-	"$QEMU" -cdrom "$ROOT/kernels/$ARCH/build/auton.iso" -serial stdio \
+	"$QEMU" -cdrom "$TARGET/build/auton.iso" -serial stdio \
 		-display none -no-reboot -m "${MEM:-256M}" > "$serial.nomodule" 2>/dev/null &
 	qp=$!; waited=0
 	while [ "$waited" -lt "${BOOT_TIMEOUT:-60}" ]; do
@@ -273,7 +285,7 @@ s_fallback() {
 	[ "$MARKERS_FAILED" -eq 0 ] || fail=1
 
 	# Restore the real neural ISO for anything downstream.
-	make -C "$ROOT/kernels/$ARCH" iso-neural MODEL="$MODEL_BIN" >/dev/null 2>&1
+	make -C "$TARGET" iso-neural MODEL="$MODEL_BIN" >/dev/null 2>&1
 	return "$fail"
 }
 
@@ -295,8 +307,8 @@ s_transcript() {
 	# Driven against the rule-engine ISO: these are deterministic system answers,
 	# and rung 3a's model is trained only far enough to prove the pipeline, not
 	# to hold a conversation. Chat quality is graded in Phase 6.
-	local iso="$ROOT/kernels/$ARCH/build/auton.iso"
-	[ -f "$iso" ] || make -C "$ROOT/kernels/$ARCH" iso >/dev/null || return 1
+	local iso="$TARGET/build/auton.iso"
+	[ -f "$iso" ] || make -C "$TARGET" iso >/dev/null || return 1
 	"$ROOT/scripts/transcript.sh" "$TRANSCRIPT_FILE" "$iso" "$ART/serial-transcript.log"
 }
 
@@ -308,6 +320,15 @@ echo
 # A gate, not one of the seven: if the host cannot do the work there is nothing
 # to report per-stage. Runs before training so a missing tool or a full disk
 # costs seconds, not a training run.
+if [ ! -d "$TARGET/kernel" ]; then
+	echo "no kernel tree at ${TARGET#"$ROOT"/}"
+	echo
+	echo "The spine validates a kernel tree; none is present. Either generate"
+	echo "one (AUTON's premise: the agents write it) or restore the reference"
+	echo "tree, then re-run with --target <dir>."
+	exit 2
+fi
+
 printf '[0/%d] %-10s ... ' "$TOTAL_STAGES" "preflight"
 if CHECK_E2E=1 "$ROOT/scripts/preflight.sh" > "$ART/0-preflight.log" 2>&1; then
 	echo "ok"
