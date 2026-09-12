@@ -164,10 +164,18 @@ typedef struct token_list {
 ### Neural Backend
 
 ```c
-/* Model format */
+/* Model format.
+ *
+ * AUTON is the shipping format: a flat, run-in-place layout so a freestanding
+ * kernel can execute a model directly out of a boot module with no parsing, no
+ * allocation, and no relocation. GGUF and ONNX are container formats that
+ * assume a host runtime; they remain aspirational.
+ *
+ * Every generated kernel MUST implement MODEL_FORMAT_AUTON, on any target. */
 typedef enum model_format {
-    MODEL_FORMAT_GGUF,      /* GGUF (llama.cpp format) */
-    MODEL_FORMAT_ONNX,      /* ONNX (Open Neural Network Exchange) */
+    MODEL_FORMAT_AUTON,     /* AUTON flat format */
+    MODEL_FORMAT_GGUF,      /* aspirational */
+    MODEL_FORMAT_ONNX,      /* aspirational */
 } model_format_t;
 
 /* Quantization level */
@@ -178,13 +186,23 @@ typedef enum quant_type {
     QUANT_INT4  = 3,        /* 4-bit integer quantization (most compact) */
 } quant_type_t;
 
-/* GGUF file header (simplified) */
-typedef struct gguf_header {
-    uint32_t magic;         /* 0x46475547 "GGUF" */
-    uint32_t version;
-    uint64_t tensor_count;
-    uint64_t metadata_kv_count;
-} __attribute__((packed)) gguf_header_t;
+/* AUTON flat model header: ten little-endian u32 fields, no padding.
+ *
+ * Target-neutral by construction — byte order is fixed little-endian on the
+ * wire, so a big-endian target byte-swaps on load rather than forking the
+ * format. One exporter serves every generated kernel. */
+typedef struct flat_header {
+    uint32_t magic;         /* 0x4E4F5455 "UTON" */
+    uint32_t version;       /* exact-match; see "Format Versioning" */
+    uint32_t dim;
+    uint32_t hidden_dim;
+    uint32_t n_layers;
+    uint32_t n_heads;
+    uint32_t n_kv_heads;    /* GQA: n_heads % n_kv_heads == 0 */
+    uint32_t vocab_size;
+    uint32_t seq_len;
+    uint32_t quant;         /* quant_type_t */
+} __attribute__((packed)) flat_header_t;
 
 /* Tensor descriptor */
 typedef struct tensor_desc {
@@ -239,6 +257,106 @@ typedef struct inference_config {
     int      greedy;            /* 1 = always pick highest logit */
 } inference_config_t;
 ```
+
+### Prompt Contract (REQUIRED)
+
+**The highest-impact contract in this subsystem.** A kernel that gets it wrong ships a model
+that looks trained and answers nothing.
+
+The model is trained on a stream of
+
+```
+<bos> question <sep> answer <eos>
+```
+
+so `<sep>` is the boundary between asking and answering. The kernel MUST build its prompt as
+`<bos> question <sep>` and generate from there. Ending the prompt at the separator is what
+places generation in *answer* position.
+
+Feeding the bare question makes the model continue the **question**: it emits question
+fragments, echoes the prompt, and prints `<sep>` as visible text. Observed directly — a model
+whose graded score rose from 42% to 78% on this change alone, with no retraining.
+
+Special token ids are fixed by the vocabulary and MUST NOT be renumbered. Every generated
+kernel, on every target, uses these:
+
+| id | token | meaning |
+|---|---|---|
+| 0 | `<pad>` | stop generation |
+| 1 | `<unk>` | out of vocabulary |
+| 2 | `<bos>` | prompt start |
+| 3 | `<eos>` | stop generation |
+| 4 | `<sep>` | question/answer boundary |
+
+Generation stops on `<pad>`, `<eos>`, **or `<sep>`** — a generated separator means the model
+has started a new question/answer pair, which is prompt grammar, not answer text.
+
+Output cap: answers run to roughly 30-40 tokens, since a capability note is a full sentence.
+A cap that truncates mid-sentence scores as garbage. **The output buffer MUST be at least as
+large as the cap** — a real and easily generated buffer-overflow path.
+
+### Untrusted Module Validation (REQUIRED)
+
+A boot module is untrusted input: it is whatever the bootloader was handed. Before any pointer
+walks into the weight section, the loader MUST verify the declared geometry fits within the
+module, computed for the declared quantization mode:
+
+```
+expected_weight_bytes(header) <= module_size - sizeof(flat_header_t)
+```
+
+Without this, a truncated module passes the header check and then parses its vocabulary from
+whatever memory follows it — observed behaviour, fixed by bounds-checking first. This is a
+memory-safety requirement, not a robustness nicety, and it applies identically on every
+architecture.
+
+Every rejection MUST be distinguishable. A single "load failed" cannot be told apart from "no
+model was supplied", which makes a corrupt module look like an intentional rule-engine boot:
+
+| reason | condition |
+|---|---|
+| bad arguments / too small | null data, wrong format, smaller than a header |
+| bad magic | not an AUTON model |
+| unsupported version | see "Format Versioning" |
+| unsupported quantization | `quant` not implemented by this kernel |
+| geometry out of range | layer/head/vocab caps, `dim % n_heads != 0`, any zero dimension |
+| truncated | weights or vocabulary run past the module |
+| out of memory | runtime buffers could not be allocated |
+
+The kernel MUST print the reason and continue to the rule engine. Honest degradation is the
+project convention (`roles.c`, `CAP_ROADMAP`); a silent fallback is not.
+
+### Degenerate Output Guard (REQUIRED)
+
+Generated tokens are not automatically an answer. A small model that loses the thread emits
+runs (`machine machine machine`) or short cycles (`driver: driver: driver:`). Printing that is
+worse than admitting ignorance, and the kernel has a working rule engine to fall back to.
+
+Reject the generation and fall back when output is:
+
+- empty;
+- four or more identical tokens consecutively;
+- a period-2 or period-3 cycle repeating at the tail.
+
+The guard MUST be allocation-free and freestanding — one pass plus a bounded tail check — so
+it is implementable on the smallest target. It MUST NOT reject legitimate short answers: a
+three-token run, a word repeated non-adjacently, and one- or two-token outputs are all valid.
+
+Test both directions. A guard that only executes when a model misbehaves is a guard nobody has
+verified; it needs positive cases (runs, cycles, empty) and negative cases (ordinary
+sentences) exercised directly.
+
+### Format Versioning (REQUIRED)
+
+`version` is checked for **exact** equality, never as a minimum. A model whose vocabulary
+predates `<sep>` cannot be prompted by a kernel that appends id 4 — it would receive a real
+word in that position and produce silently wrong output instead of a load error. Exact
+matching converts that into an honest rejection.
+
+Bump `version` whenever the byte layout or the special-token contract changes, and bump the
+exporter and every generated loader in the **same change**. An exporter and loader that
+disagree produce a plausible-looking model that is wrong — the worst available failure mode,
+because nothing reports it.
 
 ### Knowledge Base
 
@@ -488,9 +606,17 @@ void slm_neural_model_info(char *buf, uint32_t buf_size);
 slm_init(hw_summary):
   1. Load knowledge base (slm_kb_load)
   2. Initialize context manager
-  3. Check available memory from hw_summary->total_ram_bytes:
-     - < 128MB:  select RULE_ENGINE backend
-     - >= 128MB: attempt NEURAL backend
+  3. For each candidate model module, compute what THAT MODEL costs:
+       need_mb = module_size_mb + NEURAL_HEADROOM_MB
+     and select NEURAL only if total_ram_bytes >= need_mb.
+
+     A flat threshold is WRONG and MUST NOT be generated. A fixed 128 MB gate
+     refuses a 6 MB quantized model on a 96 MB machine for no reason the
+     hardware justifies — which makes quantization pointless, since a lower
+     RAM floor is the entire benefit of a smaller model. Headroom covers the
+     KV cache, activation buffers, and the kernel itself.
+
+     On refusal, report the shortfall: "needs N MB, have M MB".
   4. If NEURAL selected:
      a. Check if model data exists (boot module or initramfs)
      b. If model found: slm_neural_load_model()
@@ -593,10 +719,22 @@ neural_process_intent(intent, sub_cmd, args, result):
 
 ```
 For INT8 quantization:
-  1. Weights stored as int8_t + scale factor (per-group)
-  2. Dequantize on the fly: float_val = int8_val * scale
-  3. Accumulate in float32: result += dequant(A[i]) * dequant(B[i])
-  4. No SIMD required (pure C loop), but SIMD-friendly layout for future
+  1. int8_t codes preceded by one f32 scale per tensor. 1D norm vectors stay
+     f32: quantizing a per-channel scale vector costs accuracy for almost no
+     bytes.
+  2. Dequantize INLINE, never on load. A hard requirement, not a preference:
+     the model runs in place from the boot module, so expanding int8 to f32 at
+     load costs the module PLUS an equal-sized allocation. Measured on x86_64:
+     5.9 MB module + 23.5 MB expansion = 29.4 MB resident, WORSE than shipping
+     f32 at 23.5 MB. Inline keeps 5.9 MB, and is the only strategy that
+     delivers the lower RAM floor quantization exists for.
+  3. Apply the tensor scale ONCE to the accumulated integer dot product, not
+     per weight: sum(code[i] * x[i]) * scale.
+  4. Accumulate in float32.
+  5. No SIMD required (pure C loop). Where the HAL exposes a vector unit
+     (x86 SSE/AVX, AArch64 NEON, RISC-V V) the inner loop MAY use it; the
+     layout is deliberately SIMD-friendly. Correctness MUST NOT depend on it —
+     a generated kernel for a target without SIMD is still valid.
 
 For INT4 quantization:
   1. Two weights packed per byte (4 bits each)

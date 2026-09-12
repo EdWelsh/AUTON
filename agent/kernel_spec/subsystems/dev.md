@@ -502,24 +502,75 @@ dev_acpi_init(rsdp_phys, is_v2):
 
 ### SLM Device Identification Flow
 
+**A device fact MUST come from a table lookup, never from model generation.**
+
+This flow previously specified "SLM responds with device name and type" and "SLM responds
+with driver name". That is generation, and it is unsound: a language model asked for a device
+id will always be able to produce plausible hex. Measured on a real build — 5 citations of
+hardware absent from the bus per 50 novel turns from the generated path, and **0** from the
+deterministic path on identical input. Answers like `Unknown PCI device 10ec:8139` were
+produced for questions containing no device at all.
+
+Scaling matters here: a knowledge base of four devices makes that a curiosity, and a table of
+~36,000 PCI ids makes it indistinguishable from a working system until the wrong driver
+loads. The architecture must make a phantom id **impossible**, not merely unlikely.
+
 ```
-dev_slm_identify_devices():
+dev_identify_devices():
   For each device with state == DEV_STATE_DISCOVERED:
-    1. Build summary string via dev_build_slm_summary()
-       Example: "PCI 8086:100E class=02:00 [MMIO=0xFEBC0000/128KB IRQ=11]"
-    2. Send HARDWARE_IDENTIFY intent to SLM via IPC:
-       args = summary string
-    3. SLM responds with device name and type
-       Example: "Intel 82540EM Gigabit Ethernet (e1000)"
-    4. Update device->name and device->type
-    5. Set state = DEV_STATE_IDENTIFIED
-    6. Send DRIVER_SELECT intent to SLM:
-       args = device name + type
-    7. SLM responds with driver name
-       Example: "e1000"
-    8. Call dev_slm_load_driver(dev->dev_id, "e1000")
-    9. If successful: state = DEV_STATE_DRIVER_BOUND -> DEV_STATE_ACTIVE
+    1. Read the identity tuple from the bus via the HAL — arch-neutral:
+         PCI:         vendor, device, class, subclass, subsystem, revision
+         USB:         idVendor, idProduct, class, subclass, protocol
+         Device tree: compatible[] strings          (ARM, RISC-V)
+         ACPI:        _HID / _CID                   (x86, ARM servers)
+       The mechanism is arch_pci_config_read32() / arch_firmware_parse();
+       the kernel does NOT care which firmware type supplied it.
+
+    2. EXACT LOOKUP in the device table (see "Device Table"):
+         hit  -> name, driver, confidence
+         miss -> no name, no driver
+
+    3a. On hit:  device->name / ->type from the TABLE, not from the model.
+        state = DEV_STATE_IDENTIFIED
+
+    3b. On miss: state = DEV_STATE_UNIDENTIFIED, and the honest answer echoes
+        the raw identity tuple read in step 1:
+          "Unknown PCI device 10ec:8139. No matching driver in the table."
+        The id in that sentence MUST be the one read from the bus. It is never
+        supplied by the model, and the kernel MUST NOT substitute a similar id.
+
+    4. Driver availability comes from the table, and has three states:
+         present            -> bind it
+         known, not built   -> name it and say it was not included in this build
+         unknown            -> say so
+       "Known but not built" is a normal outcome for an intent-scoped OS and
+       MUST be reported as such rather than as a failure.
+
+    5. dev_load_driver(dev->dev_id, driver_from_table)
+    6. If successful: state = DEV_STATE_DRIVER_BOUND -> DEV_STATE_ACTIVE
 ```
+
+**The SLM's role in this flow is phrasing, not identification.** It decides that the user
+asked a hardware question and renders the table's answer as a sentence. It is never asked
+what a device is, and it has no mechanism to answer that question.
+
+### Device Table
+
+A compiled, read-only table shipped **inside the model file** as its own section, so there is
+one artifact, one version contract, and no way for model and table to drift apart.
+
+| Requirement | Detail |
+|---|---|
+| Sources | `pci.ids`, `usb.ids`, device-tree `compatible` strings, ACPI `_HID`s |
+| Layout | Sorted identity keys + offsets into a string pool; binary search |
+| Access | Usable as mapped bytes — no parsing, no allocation at boot |
+| Driver mapping | identity -> driver name -> availability |
+| Scoping | An intent-scoped build ships only the device classes its manifest requires. A Doom OS needs input and display; it does not need every NIC ever made |
+
+**Hardware variety is the point.** A generated OS may be installed on QEMU, a laptop, a Pi, or
+a RISC-V board. The identity tuple differs per bus and the firmware differs per architecture —
+both are already abstracted by the Device Discovery HAL. What must not differ is the rule:
+enumerate from silicon, look up in the table, and say honestly when the table has no entry.
 
 ### Driver Binding
 
