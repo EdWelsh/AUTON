@@ -283,7 +283,12 @@ class OrchestrationEngine:
             self.state.save(state_path)
             logger.info("--- Phase 3: Development ---")
 
-            max_iterations = 50
+            # Configurable so a local run can be capped tightly: a local model
+            # that cannot tool-call reliably will otherwise spend fifty
+            # iterations discovering that. [orchestrator].max_iterations
+            max_iterations = int(
+                self.config.get("orchestrator", {}).get("max_iterations", 50)
+            )
             for iteration in range(max_iterations):
                 self.state.iteration = iteration
                 self.state.total_cost_usd = self.cost_tracker.total_cost_usd

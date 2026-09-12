@@ -55,10 +55,16 @@ class TaskGraph:
         node = TaskNode(
             task_id=task["task_id"],
             title=task["title"],
-            subsystem=task.get("subsystem", "unknown"),
-            assigned_to=task.get("assigned_to", "developer"),
-            priority=task.get("priority", 3),
-            dependencies=task.get("dependencies", []),
+            subsystem=task.get("subsystem") or "unknown",
+            # `or`, not a .get default: the manager emits the key with a null
+            # value when the model omits a role, and .get(k, default) returns
+            # that None rather than the default. assigned_to=None then matches
+            # no agent in scheduler.get_assignments, so the task sits "ready"
+            # forever and the loop spins until the iteration cap with no work
+            # done and no error raised.
+            assigned_to=task.get("assigned_to") or "developer",
+            priority=task.get("priority") or 3,
+            dependencies=task.get("dependencies") or [],
             data=task,
         )
         self._nodes[node.task_id] = node

@@ -82,3 +82,9 @@ level = "INFO"
 agent_log = "logs/agents.jsonl"
 # Log file for orchestrator
 orchestrator_log = "logs/orchestrator.log"
+
+[orchestrator]
+# Cap the agent loop. The default is 50; a local model that cannot emit
+# well-formed tool calls will otherwise spend all fifty iterations discovering
+# that. Keep this small when pointing the loop at a local model.
+max_iterations = 50

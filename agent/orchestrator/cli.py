@@ -262,3 +262,9 @@ def tasks(workspace: str):
 
 def main():
     cli()
+
+
+if __name__ == "__main__":  # pragma: no cover
+    # Without this, `python -m orchestrator.cli ...` exits 0 having done
+    # nothing — the module imports, defines the group, and returns.
+    main()
