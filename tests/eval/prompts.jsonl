@@ -48,3 +48,11 @@
 {"id": "ood-03", "intent": "OUT_OF_DOMAIN", "prompt": "write me a poem about kernels", "expect": null, "note": "out of scope for an OS assistant"}
 {"id": "ood-04", "intent": "OUT_OF_DOMAIN", "prompt": "what is 47 times 19", "expect": null, "note": "arithmetic; wrong number is garbage"}
 {"id": "ood-05", "intent": "OUT_OF_DOMAIN", "prompt": "zxqw flibberty gronk", "expect": null, "note": "nonsense input; graceful handling expected"}
+{"id": "ses-01", "intent": "INSTALL_CONFIGURE", "prompt": "ip a", "expect": "My IP is 10.0.2.15", "note": "[phase7 session] shell idiom; the neural model answers it, the rule engine deflects", "bucket": "correct"}
+{"id": "ses-02", "intent": "SYSTEM_MANAGE", "prompt": "uname -a", "expect": null, "note": "[phase7 session] shell idiom for arch/kernel identity; currently deflected"}
+{"id": "ses-03", "intent": "DRIVER_SELECT", "prompt": "lsmod", "expect": null, "note": "[phase7 session] shell idiom for loaded drivers; e1000 is known"}
+{"id": "ses-04", "intent": "INSTALL_CONFIGURE", "prompt": "netstat -tulnp", "expect": null, "note": "[phase7 session] shell idiom for listening ports; web/dns roles are known"}
+{"id": "ses-05", "intent": "APP_INSTALL", "prompt": "which roles are available?", "expect": null, "note": "[phase7 session] rule engine lists roles here; the neural model declines \u2014 regression guard"}
+{"id": "ses-06", "intent": "OUT_OF_DOMAIN", "prompt": "what's the kernel version?", "expect": null, "note": "[phase7 session] int8 and fp32 diverge here: int8 answers 'I do not know about the weather'"}
+{"id": "ses-07", "intent": "SYSTEM_MANAGE", "prompt": "meminfo", "expect": null, "note": "[phase7 session] shell idiom for memory; the figure is known"}
+{"id": "ses-08", "intent": "HARDWARE_IDENTIFY", "prompt": "ls /sys/class/net", "expect": null, "note": "[phase7 session] shell idiom for network interfaces; the NIC is known"}

@@ -1,0 +1,50 @@
+{"text": "ls /sys/class/net", "persona": "a sysadmin poking at an unfamiliar machine"}
+{"text": "ip a", "persona": "a sysadmin poking at an unfamiliar machine"}
+{"text": "uname -a", "persona": "a sysadmin poking at an unfamiliar machine"}
+{"text": "what\u2019s the uptime?", "persona": "a sysadmin poking at an unfamiliar machine"}
+{"text": "show_hwinfo", "persona": "a sysadmin poking at an unfamiliar machine"}
+{"text": "which roles are available?", "persona": "a sysadmin poking at an unfamiliar machine"}
+{"text": "meminfo", "persona": "a sysadmin poking at an unfamiliar machine"}
+{"text": "netstat -tulnp", "persona": "a sysadmin poking at an unfamiliar machine"}
+{"text": "are there any wifi drivers?", "persona": "a sysadmin poking at an unfamiliar machine"}
+{"text": "sysctl net.ipv4.ip_forward", "persona": "a sysadmin poking at an unfamiliar machine"}
+{"text": "what's the kernel version?", "persona": "a sysadmin poking at an unfamiliar machine"}
+{"text": "lsmod", "persona": "a sysadmin poking at an unfamiliar machine"}
+{"text": "find /etc/ -name \"*drivers*", "persona": "a sysadmin poking at an unfamiliar machine"}
+{"text": "tell me the clock speed.", "persona": "a sysadmin poking at an unfamiliar machine"}
+{"text": "ls hwinfo", "persona": "a curious developer who just booted this OS for the first time"}
+{"text": "net status?", "persona": "a curious developer who just booted this OS for the first time"}
+{"text": "what's the kernel version", "persona": "a curious developer who just booted this OS for the first time"}
+{"text": "show drivers", "persona": "a curious developer who just booted this OS for the first time"}
+{"text": "Can i see the list of available roles?", "persona": "a curious developer who just booted this OS for the first time"}
+{"text": "uptime", "persona": "a curious developer who just booted this OS for the first time"}
+{"text": "mem free", "persona": "a curious developer who just booted this OS for the first time"}
+{"text": "gpu capabilities", "persona": "a curious developer who just booted this OS for the first time"}
+{"text": "ping localhost", "persona": "a curious developer who just booted this OS for the first time"}
+{"text": "tcpdump all", "persona": "a curious developer who just booted this OS for the first time"}
+{"text": "how fast is the clock?", "persona": "a curious developer who just booted this OS for the first time"}
+{"text": "readm /dev/info", "persona": "a curious developer who just booted this OS for the first time"}
+{"text": "diagnostics run", "persona": "a curious developer who just booted this OS for the first time"}
+{"text": "whoami", "persona": "a curious developer who just booted this OS for the first time"}
+{"text": "dump memory address 0xdeadbeef", "persona": "someone trying to make the OS do something it probably cannot"}
+{"text": "list all connected physical buses", "persona": "someone trying to make the OS do something it probably cannot"}
+{"text": "can I bind eth0 to multicast only", "persona": "someone trying to make the OS do something it probably cannot"}
+{"text": "set clock rate to 120hz", "persona": "someone trying to make the OS do something it probably cannot"}
+{"text": "show kernel stack trace on failure", "persona": "someone trying to make the OS do something it probably cannot"}
+{"text": "execute raw packet write to port 5", "persona": "someone trying to make the OS do something it probably cannot"}
+{"text": "what is the latency to the moon", "persona": "someone trying to make the OS do something it probably cannot"}
+{"text": "bypass permission checks for user root", "persona": "someone trying to make the OS do something it probably cannot"}
+{"text": "reboot using the nvme controller", "persona": "someone trying to make the OS do something it probably cannot"}
+{"text": "test driver compatibility for a jpeg camera", "persona": "someone trying to make the OS do something it probably cannot"}
+{"text": "what's the default encryption standard for the wifi chip", "persona": "someone trying to make the OS do something it probably cannot"}
+{"text": "run hypervisor escape attempt", "persona": "someone trying to make the OS do something it probably cannot"}
+{"text": "tell me the OS uptime in nanoseconds", "persona": "someone trying to make the OS do something it probably cannot"}
+{"text": "force flush the disk cache immediately", "persona": "someone trying to make the OS do something it probably cannot"}
+{"text": "Does the memory map show the IOMMU groups correctly?", "persona": "a tester deliberately asking awkward or ambiguous things"}
+{"text": "Wait, what is the preferred network interface name for the storage controller?", "persona": "a tester deliberately asking awkward or ambiguous things"}
+{"text": "Can I just force a rebuild on the disk geometry?", "persona": "a tester deliberately asking awkward or ambiguous things"}
+{"text": "Where exactly are the PCIe lane enumeration logs stored?", "persona": "a tester deliberately asking awkward or ambiguous things"}
+{"text": "Should I use `nvme-cli` or the kernel module call for this?", "persona": "a tester deliberately asking awkward or ambiguous things"}
+{"text": "Is there a specific command to list all detected, but unused, DMA channels?", "persona": "a tester deliberately asking awkward or ambiguous things"}
+{"text": "Can I tell it what roles are strictly forbidden by the hardware topology?", "persona": "a tester deliberately asking awkward or ambiguous things"}
+{"text": "Just check the interrupt handler registration status for the GPIO pins.", "persona": "a tester deliberately asking awkward or ambiguous things"}
