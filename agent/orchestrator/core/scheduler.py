@@ -47,10 +47,34 @@ class Scheduler:
         logger.info("Registered %s agent: %s", role, agent.agent_id)
 
     def get_available_agent(self, role: str) -> AgentSlot | None:
-        """Get an idle agent of the given role."""
-        for slot in self._agents.get(role, []):
+        """Get an idle agent of the given role, or None with a stated reason.
+
+        Three conditions gate availability and all three used to fail silently,
+        which is indistinguishable from having no work to do. An unsatisfiable
+        role is now logged: a task assigned to a role with no registered agent
+        can never run, and that is a configuration error, not a quiet wait.
+        """
+        slots = self._agents.get(role)
+        if slots is None:
+            logger.warning(
+                "No agent pool for role %r (known roles: %s)",
+                role, sorted(self._agents),
+            )
+            return None
+        if not slots:
+            logger.warning(
+                "Role %r has a pool but no registered agents — tasks assigned "
+                "to it can never be dispatched", role,
+            )
+            return None
+        for slot in slots:
             if not slot.busy and slot.agent.state in (AgentState.IDLE, AgentState.DONE):
                 return slot
+        logger.info(
+            "All %d %s agent(s) unavailable: %s",
+            len(slots), role,
+            [(s.agent.agent_id, "busy" if s.busy else str(s.agent.state)) for s in slots],
+        )
         return None
 
     def get_assignments(self) -> list[tuple[AgentSlot, TaskNode]]:

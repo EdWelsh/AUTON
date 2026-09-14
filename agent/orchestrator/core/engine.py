@@ -153,6 +153,11 @@ class OrchestrationEngine:
         self._agents["architect"] = self._create_agent(
             "architect-01", AgentRole.ARCHITECT, ArchitectAgent
         )
+        # The architect must be SCHEDULABLE, not merely constructed. The
+        # manager's prompt advertises "architect" as an assignable role
+        # (manager_agent.py:70), so every design task it produced was routed to
+        # an empty pool and silently never dispatched.
+        self.scheduler.register_agent("architect", self._agents["architect"])
         self._agents["integrator"] = self._create_agent(
             "integrator-01", AgentRole.INTEGRATOR, IntegratorAgent
         )
