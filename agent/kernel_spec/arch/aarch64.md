@@ -1712,3 +1712,31 @@ static inline void arch_halt(void)
 11. **Page Fault Diagnostic**: An intentional access to unmapped address `0xDEAD000000000000` triggers a data abort. The handler prints: ESR (EC=0x25), ELR (faulting instruction PC), FAR (`0xDEAD000000000000`), and the kernel does not crash (it either recovers or panics cleanly).
 
 12. **No x86 Dependencies**: The AArch64 HAL contains zero references to x86-specific constructs: no `inb`/`outb`, no GDT/IDT, no PIT/PIC, no VGA, no Multiboot2, no NASM syntax, no CR3/CR4 registers, no `int` instructions.
+
+## Silicon Identity
+
+Implements `arch_cpu_identity()` (see [hal.md](hal.md) category 8).
+
+| Field | Source |
+|---|---|
+| `vendor` | `MIDR_EL1[31:24]` Implementer, mapped to a name (`0x41` = "ARM", `0x51` = "Qualcomm", `0x61` = "Apple") |
+| `family` | `MIDR_EL1[15:4]` PartNum |
+| `model` | `MIDR_EL1[23:20]` Variant |
+| `stepping` | `MIDR_EL1[3:0]` Revision |
+| `microcode_rev` | **no equivalent** — `IDENT_UNKNOWN`, never 0 |
+| `brand` | not architecturally available; leave empty |
+| `board_*` | device-tree root `compatible` and `model` properties |
+
+```c
+uint64_t midr;
+asm volatile("mrs %0, MIDR_EL1" : "=r"(midr));
+```
+
+`REVIDR_EL1` carries implementation-defined revision detail that some Arm
+errata notices reference alongside MIDR. Capture it when the errata table needs
+it; it is not part of the portable record.
+
+Arm errata are keyed on `(implementer, part_num, variant, revision)` — the
+`r<variant>p<revision>` notation in Arm's Software Developer Errata Notices.
+The same core appears in SoCs from many vendors, so the *core* revision is the
+key, not the SoC part number.

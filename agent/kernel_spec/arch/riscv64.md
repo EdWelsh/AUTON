@@ -1506,3 +1506,34 @@ The RISC-V HAL implementation is complete when all of the following tests pass o
 ### SBI Tests
 
 16. **SBI functional**: `sbi_ecall()` with the Base extension (EID 0x10, FID 0) returns a valid SBI specification version. Legacy console putchar (EID 0x01) outputs a character.
+
+## Silicon Identity
+
+Implements `arch_cpu_identity()` (see [hal.md](hal.md) category 8).
+
+| Field | Source |
+|---|---|
+| `vendor` | `mvendorid` CSR — a JEDEC manufacturer ID, not a string; render as `"JEDEC:<bank>:<id>"` |
+| `family` | `marchid` CSR |
+| `model` | `mimpid` CSR |
+| `stepping` | not separately encoded — 0 with `version_src = IDENT_READ` |
+| `microcode_rev` | **no equivalent** — `IDENT_UNKNOWN` |
+| `board_*` | device-tree root `compatible` and `model` |
+
+```c
+uint64_t vendor, arch, impl;
+asm volatile("csrr %0, mvendorid" : "=r"(vendor));
+asm volatile("csrr %0, marchid"   : "=r"(arch));
+asm volatile("csrr %0, mimpid"    : "=r"(impl));
+```
+
+All three CSRs read 0 on implementations that do not implement them, and **0 is
+a legal value meaning "not implemented"** — which here is genuinely unknown
+rather than a reading. Report `IDENT_UNKNOWN` when all three are 0, and
+`IDENT_READ` otherwise. This is the one architecture where the register cannot
+distinguish the two cases for us.
+
+RISC-V International publishes no central errata document; defects belong to
+implementations, keyed on these three CSRs. See
+`agent/hardware/vendors.yaml` — the `riscv-international` record states that
+gap explicitly.

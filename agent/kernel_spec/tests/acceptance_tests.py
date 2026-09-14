@@ -469,6 +469,22 @@ NET_TESTS = [
     ),
 ]
 
+# Silicon identity tests
+IDENTITY_TESTS = [
+    AcceptanceTest(
+        name="identity_cpu_captured",
+        subsystem="dev",
+        description="CPU vendor, family/model/stepping and microcode revision are captured",
+        # `unknown` is an accepted value on purpose: an architecture with no
+        # microcode MSR must say so rather than reporting 0, and the marker has
+        # to permit the honest answer or it would force a lie.
+        expected_serial_patterns=[
+            r"\[CPU\] \S+ family \d+ model \d+ stepping \d+ microcode (0x[0-9a-fA-F]+|unknown)",
+        ],
+        requires_subsystems=["boot", "dev"],
+    ),
+]
+
 # Integration tests
 INTEGRATION_TESTS = [
     AcceptanceTest(
@@ -517,7 +533,7 @@ ALL_TESTS = {
     "mm": MM_TESTS,
     "sched": SCHED_TESTS,
     "ipc": IPC_TESTS,
-    "dev": DEV_TESTS,
+    "dev": DEV_TESTS + IDENTITY_TESTS,
     "slm": SLM_TESTS,
     "drivers": DRIVER_TESTS,
     "fs": FS_TESTS,
@@ -563,7 +579,7 @@ def get_all_tests(arch: str) -> dict[str, list[AcceptanceTest]]:
         "mm": MM_TESTS,
         "sched": SCHED_TESTS,
         "ipc": IPC_TESTS,
-        "dev": DEV_TESTS,
+        "dev": DEV_TESTS + IDENTITY_TESTS,
         "slm": SLM_TESTS,
         "drivers": get_driver_tests(arch),
         "fs": FS_TESTS,
@@ -641,6 +657,12 @@ SERIAL_MARKER_SETS: dict[str, tuple[str, ...]] = {
         r"\[SLM\] Rule engine initialized",
         r"\[SLM\] Ready",
         r"\[BOOT\] OK",
+    ),
+    # Silicon identity: asserted separately from "boot" so a kernel that boots
+    # without capturing identity fails visibly rather than being assumed to
+    # have it. Every errata lookup is keyed on this line.
+    "identity": (
+        r"\[CPU\] \S+ family \d+ model \d+ stepping \d+ microcode (0x[0-9a-fA-F]+|unknown)",
     ),
     # Additionally required when booting with the on-device model as a
     # Multiboot2 module: the model is loaded and the neural backend selected.

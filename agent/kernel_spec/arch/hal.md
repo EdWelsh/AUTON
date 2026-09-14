@@ -187,6 +187,57 @@ void arch_pci_config_write32(uint8_t bus, uint8_t dev, uint8_t func, uint8_t off
 int arch_firmware_parse(void *boot_firmware_data);
 ```
 
+### 8. Silicon Identity HAL (`kernel/arch/<arch>/cpu/identity.c`)
+
+Which silicon is actually running. Every errata record, every mitigation and
+every conformance result is keyed on this, so it is captured once at boot and
+read from a register — never inferred, and never produced by the model.
+
+```c
+/* How confident we are in a field. `unknown` is NOT zero: an errata lookup
+ * that reads an uncaptured microcode revision as revision 0 concludes a
+ * patched machine is unpatched, or the reverse. Both are worse than saying
+ * "I did not look". */
+typedef enum {
+    IDENT_UNKNOWN = 0,   /* not read, or the mechanism is unavailable here */
+    IDENT_READ    = 1,   /* read from the architectural register */
+    IDENT_FIRMWARE = 2,  /* read from firmware tables (SMBIOS / device tree) */
+} ident_source_t;
+
+typedef struct silicon_identity {
+    /* CPUID 0x0 / MIDR_EL1 implementer / mvendorid. NUL-terminated. */
+    char     vendor[13];
+    /* x86: CPUID 0x1 family/model/stepping, extended fields folded in.
+     * AArch64: MIDR_EL1 PartNum / Variant / Revision.
+     * RISC-V: marchid / mimpid, with mvendorid as the vendor. */
+    uint32_t family, model, stepping;
+    /* x86: IA32_BIOS_SIGN_ID. Elsewhere usually unavailable — say so rather
+     * than reporting 0. */
+    uint64_t microcode_rev;
+    /* CPUID 0x80000002-4 where available; empty otherwise. */
+    char     brand[49];
+    /* SMBIOS type 1/2 on x86, device-tree root compatible elsewhere. */
+    char     board_vendor[64], board_product[64];
+    uint8_t  firmware_type;             /* firmware_type_t */
+
+    /* One source per field group. A consumer must check these before using a
+     * value; that is the whole reason they exist. */
+    ident_source_t vendor_src, version_src, microcode_src, board_src;
+} silicon_identity_t;
+
+/* Populate the record. Fields that cannot be read are left zeroed with their
+ * source set to IDENT_UNKNOWN. Returns the number of field groups read. */
+int arch_cpu_identity(silicon_identity_t *out);
+```
+
+The structure is deliberately target-neutral: three architectures populate the
+same fields from different registers, and nothing here is x86-shaped. `family`
+/`model`/`stepping` carry MIDR's PartNum/Variant/Revision on AArch64 and
+marchid/mimpid on RISC-V; the *names* are x86 heritage, the *shape* is not.
+
+`microcode_rev` has no meaningful equivalent outside x86. That is reported as
+`IDENT_UNKNOWN`, not as 0 — see the enum comment.
+
 ## Memory Layout Contract
 
 Each architecture defines in `kernel/arch/<arch>/include/arch_memory.h`:

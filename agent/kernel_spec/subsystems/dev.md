@@ -634,6 +634,57 @@ dev_hotplug_monitor() [runs as background kernel thread]:
 | `kernel/dev/hotplug.c`    | Hot-plug monitoring thread |
 | `kernel/include/dev.h`    | Device framework interface and data structures |
 
+## Silicon Identity (REQUIRED)
+
+Device identification says what is *attached*. Silicon identity says what is
+*running*, and it is the join key for every errata record, mitigation and
+conformance result in the hardware-truth work.
+
+Captured once during device-framework init via `arch_cpu_identity()`
+([hal.md](../arch/hal.md) category 8), stored, and served from the record
+thereafter. It is never re-read per query and never produced by the model — the
+same retrieval-not-generation rule that applies to PCI ids, for the same
+reason: a model asked what CPU it is running on will produce a plausible one.
+
+### Reporting
+
+One boot line, after the PCI scan:
+
+```
+[CPU] GenuineIntel family 6 model 151 stepping 2 microcode 0x429
+```
+
+Unknown fields are printed as `unknown`, never as `0`:
+
+```
+[CPU] ARM family 3401 model 0 stepping 1 microcode unknown
+```
+
+The distinction is the whole point. `microcode 0x0` says the machine carries no
+update; `microcode unknown` says nobody looked. An errata lookup that confuses
+them reports a patched machine as vulnerable, or a vulnerable one as patched.
+
+### Interface
+
+```c
+/* The captured record. Valid after dev_init(). */
+const silicon_identity_t *dev_silicon_identity(void);
+
+/* Render the record as the boot line above, into buf. Used by both the boot
+ * report and the chat answer, so the two cannot disagree. */
+uint32_t dev_identity_string(char *buf, uint32_t buf_size);
+```
+
+Both callers share `dev_identity_string` deliberately: a chat answer that
+contradicts the boot line is the failure mode this interface exists to prevent.
+
+### Chat
+
+`what cpu is this`, `what processor`, `what silicon am i running` are answered
+from the record by the deterministic path, before the model is consulted — as
+`is_ip_query` already does for the address. The answer is a fact from a
+register.
+
 ## Dependencies
 
 - **mm**: `kmalloc`/`kfree` for device_t and driver_t allocation; `vmm_map_range` for MMIO BAR mapping
