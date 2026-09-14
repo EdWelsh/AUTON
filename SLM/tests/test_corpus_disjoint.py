@@ -118,3 +118,76 @@ def test_held_out_split_is_disjoint_by_fact(corpus):
     assert train and held, "split produced an empty side"
     assert not ({r["fact"] for r in train} & {r["fact"] for r in held}), \
         "a fact appears on both sides of the split"
+
+
+# --- grounding ------------------------------------------------------------- #
+# A corpus that teaches an id the machine does not have produces a model that
+# cites it. Measured: 5 phantom citations per 50 novel turns, against 0 from the
+# deterministic path. These are the cheapest place to catch that — long before a
+# training run, an export and a boot.
+
+PCI_ID = re.compile(r"\b[0-9a-f]{4}:[0-9a-f]{4}\b")
+
+
+def test_no_response_cites_an_id_absent_from_the_bus(corpus):
+    """Every PCI id in an answer must be a device this machine actually has.
+
+    The corpus previously taught 10ec:8139 and 1022:2000 — a Realtek NIC and an
+    AMD bridge on no bus AUTON boots — in 14 records each.
+    """
+    import sys
+
+    sys.path.insert(0, str(ROOT / "SLM" / "tools"))
+    from build_corpus import BUS_DEVICES
+
+    on_bus = set(BUS_DEVICES)
+    offenders = [
+        (r["fact"], ident)
+        for r in corpus
+        for ident in PCI_ID.findall(r["response"].lower())
+        if ident not in on_bus
+    ]
+    assert not offenders, f"responses cite ids absent from the bus: {offenders[:5]}"
+
+
+def test_the_bus_list_and_the_devices_answer_agree(corpus):
+    """`SYS_FACTS["devices"]` is rendered from BUS_DEVICES rather than restated,
+    so the two cannot drift. This pins that they have not."""
+    import sys
+
+    sys.path.insert(0, str(ROOT / "SLM" / "tools"))
+    from build_corpus import BUS_DEVICES
+
+    answers = [r["response"] for r in corpus if r["fact"] == "sys:devices"]
+    assert answers, "no devices answer in the corpus"
+    for ident in BUS_DEVICES:
+        assert ident in answers[0], f"{ident} on the bus but not in the answer"
+    assert str(len(BUS_DEVICES)) in answers[0]
+
+
+def test_a_question_with_no_id_is_taught_to_ask_for_one(corpus):
+    """The actual gap. With no record for `i need gpu access`, the model reached
+    for the nearest neighbour — the unknown-device template — and answered with
+    a device the asker never mentioned."""
+    clarifications = [r for r in corpus if r["fact"] == "clarify:no-device-id"]
+
+    assert len(clarifications) >= 20, f"only {len(clarifications)} clarification records"
+    for r in clarifications:
+        assert not PCI_ID.findall(r["response"]), \
+            f"a clarification for a question with no id cites one: {r['response']}"
+        assert not PCI_ID.findall(r["text"]), \
+            f"{r['text']!r} contains an id, so it is not a no-id question"
+
+
+def test_category_questions_do_not_collide_with_the_bus_listing(corpus):
+    """`what gpu do i have` must ask for an id; `what devices` must list the bus.
+    If a phrasing lands in both classes the model is taught two answers for one
+    question."""
+    listing = {normalize(r["text"]) for r in corpus if r["fact"] == "sys:devices"}
+    clarify = {normalize(r["text"]) for r in corpus if r["fact"] == "clarify:no-device-id"}
+
+    assert not (listing & clarify), f"taught both ways: {listing & clarify}"
+    for a in clarify:
+        for b in listing:
+            assert jaccard(tokens(a), tokens(b)) < NEAR_DUPLICATE_JACCARD, \
+                f"near-duplicate across classes: {a!r} vs {b!r}"

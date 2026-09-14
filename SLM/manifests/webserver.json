@@ -1,0 +1,8 @@
+{
+  "intent": "I want to host this repo",
+  "requires": ["boot", "mm(allocator)", "dev(pci)", "drivers(e1000)", "net",
+               "slm(scoped)", "sys(terminal)"],
+  "excludes": ["ipc", "sched(preemptive)", "fs(writable)"],
+  "assets": [],
+  "markers": ["[NET] dhcp bound", "[HTTP] listening on 80"]
+}
