@@ -157,15 +157,89 @@ void *pmm_alloc_contiguous(uint32_t page_count);
  * Panics on double-free (bit already clear). */
 void pmm_free_page(void *phys_addr);
 
-/* Return count of free pages */
+/* Return count of free pages. Queryable at any time, not only at boot:
+ * slm_init() sizes its headroom from this rather than from a constant, and
+ * the chat answers "how much memory is free" from it. Answering with the
+ * total instead is graded as garbage by the eval rubric, and was. */
 uint64_t pmm_free_count(void);
 
 /* Return total usable pages detected at boot */
 uint64_t pmm_total_count(void);
 
-/* Mark a physical address range as used (for reserved regions) */
+/* Return pages excluded from allocation (see Reserved Regions). total =
+ * reserved + free + allocated; a generator that cannot make those add up has
+ * a bug in its reserved-region handling. */
+uint64_t pmm_reserved_count(void);
+
+/* Mark a physical address range as used (for reserved regions).
+ * Rounds start down and end up to frame boundaries — a reserved region that
+ * begins mid-frame must reserve the whole frame, or the other half is handed
+ * out and the region is corrupted. */
 void pmm_mark_used(uint64_t phys_start, uint64_t size);
+
+/* Physically contiguous allocation with caller-specified alignment, for DMA.
+ *
+ * PRESERVED CONTRACT. The retired tree's lib/phys.c provided this as a bump
+ * allocator with no free, and every driver plus the neural backend calls it.
+ * The replacement must keep both guarantees — physical contiguity and the
+ * requested alignment — because a generated allocator that silently returns
+ * unaligned or discontiguous memory to a DMA caller produces corruption that
+ * presents as a driver bug, far from its cause.
+ *
+ * `align` must be a power of two and at least 8. Returns NULL on failure;
+ * never returns a partially-satisfying block. */
+void *dma_alloc(unsigned long size, unsigned long align);
+
+/* Release a dma_alloc block. `dma_free(NULL)` is a no-op. */
+void dma_free(void *ptr);
 ```
+
+### Reserved Regions (REQUIRED)
+
+A frame in any of these must never be returned by `pmm_alloc_page`,
+`pmm_alloc_contiguous` or `dma_alloc`. The PMM marks them before it satisfies a
+single request.
+
+| Region | Source | Why |
+|---|---|---|
+| Frame 0 | fixed | A NULL return must be distinguishable from a valid allocation |
+| Kernel image | linker symbols `__kernel_start` / `__kernel_end` | Handing out the running code is immediate |
+| The bitmap itself | placed by `pmm_init` | See below |
+| **Boot modules** | Multiboot2 tag type 3, each `mod_start`..`mod_end` | **The model runs in place from its module.** It is never copied — that is the whole point of the flat format. A PMM that hands this memory out corrupts the running model, and the symptom is degenerate output much later, which looks like a bad model rather than an allocator bug |
+| Firmware-reserved | Multiboot2 memory-map entries with `type != 1` | Not RAM, or claimed by ACPI/firmware |
+| SLM pool | `slm_pool_init` | Contiguous by construction, reserved early (see SLM Memory Pool) |
+
+Boot modules are the one a generator is most likely to miss: the memory map
+reports them as available RAM, because from the firmware's point of view they
+are. Only the module tags say otherwise.
+
+### Bitmap Placement (REQUIRED)
+
+The bitmap needs `total_frames / 8` bytes, and it cannot allocate them — it is
+what allocation depends on. `pmm_init` therefore:
+
+1. Computes `total_frames` from the memory map.
+2. Chooses the lowest available region large enough to hold the bitmap that does
+   not overlap the kernel image or any boot module.
+3. Places the bitmap there, zeroes it, then marks every reserved region used —
+   **including the frames the bitmap now occupies**.
+
+Step 3's last clause is the subtle one. A bitmap that does not mark itself is
+handed out on the first allocation that reaches it, and every allocation
+afterwards reads corrupted state.
+
+### Reporting (REQUIRED)
+
+`pmm_init` ends by printing exactly:
+
+```
+[MM] PMM initialized: <total> pages total, <reserved> reserved, <free> free
+```
+
+The three numbers must satisfy `total == reserved + free` at init. The previous
+format reported only a free count, which nothing could verify — any number at
+all satisfied `\[MM\] PMM initialized: \d+ pages free`, including a wrong one.
+
 
 ### Virtual Memory Manager (`kernel/include/mm.h`)
 
@@ -220,12 +294,46 @@ void *kmalloc(size_t size);
 void *kzalloc(size_t size);
 
 /* Free previously allocated kernel memory.
- * Determines size class from slab metadata. */
+ * Determines size class from slab metadata.
+ *
+ * kfree(NULL) is LEGAL and is a no-op. Every error path in the kernel ends in
+ * a cleanup that frees whatever it got, and making NULL illegal turns each of
+ * those into a branch a generator will eventually forget. */
 void kfree(void *ptr);
 
 /* Print slab allocator statistics to serial (debug). */
 void slab_dump_stats(void);
 ```
+
+### General vs DMA allocation (REQUIRED)
+
+Two allocators, and a generator must not conflate them:
+
+| | `kmalloc` | `dma_alloc` |
+|---|---|---|
+| Returns | virtual address | physical address, identity-mapped |
+| Contiguity | virtual only | **physically contiguous** |
+| Alignment | `sizeof(void *)`, or the size class where larger | **caller-specified**, power of two |
+| Use | kernel objects, buffers, strings | descriptor rings, packet buffers, model weights |
+| On failure | NULL | NULL |
+
+`kmalloc` is the default. `dma_alloc` exists only because hardware reads the
+memory without going through the MMU, so a driver that takes a `kmalloc` pointer
+and hands it to a NIC gets whatever physical pages happened to back it.
+
+### kmalloc semantics (REQUIRED)
+
+- `kmalloc(0)` returns NULL. A unique non-NULL pointer would be defensible in
+  userspace; in a kernel it is one more thing to free correctly for no benefit.
+- Returned memory is **not** zeroed. `kzalloc` is the zeroing form, and a
+  generator that zeroes in `kmalloc` makes every caller pay for it silently.
+- A failed `kmalloc` returns NULL and allocates nothing. Partial success is not
+  a state any caller is written to handle.
+- Double-free is a bug the allocator must detect, not absorb: `kfree` on a
+  pointer whose slab metadata says free panics with the address. Absorbing it
+  hides a use-after-free that will corrupt unrelated memory later.
+- `kfree` on a pointer the allocator never returned panics. Silently ignoring it
+  turns a pointer-arithmetic bug into a leak plus corruption.
 
 ### SLM Memory Pool (`kernel/include/mm.h`)
 

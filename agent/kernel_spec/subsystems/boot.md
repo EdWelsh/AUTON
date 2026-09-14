@@ -126,6 +126,18 @@ Architecture-specific boot (`arch_boot_init()`) handles: mode transitions, early
 3. Initialize CPU via `arch_cpu_init()`
 4. Initialize interrupts via `arch_interrupt_init()`
 5. Initialize PMM using `boot_info.mmap`
+
+   **The full memory map (Multiboot2 tag type 6) is required**, not the
+   basic-memory tag (type 4). Type 4 reports only "lower" and "upper" totals and
+   says nothing about which regions are usable, so a PMM built from it hands out
+   firmware-reserved memory. The retired tree parsed type 4 only.
+
+   **Boot-module tags (type 3) must also be parsed and their ranges passed to
+   the PMM as reserved**, even when no module is present. The memory map lists
+   module memory as available RAM — from the firmware's point of view it is —
+   and the model runs in place from its module, so a PMM that does not hear
+   about them will eventually allocate over a running model. See
+   [mm.md](mm.md) → Reserved Regions.
 6. Initialize VMM via `arch_mmu_init()` + portable higher-half mapping
 7. Initialize slab allocator
 8. Initialize core drivers via `drivers_init_core()` (arch-specific serial, display, timer, input)

@@ -26,7 +26,7 @@ GOOD_SERIAL = "\n".join(
         "[BOOT] Interrupts initialized",
         "[BOOT] Hardware summary: 127 MB RAM",
         "[DRV] Serial 16550 initialized",
-        "[MM] PMM initialized: 32639 pages free",
+        "[MM] PMM initialized: 32768 pages total, 129 reserved, 32639 free",
         "[SCHED] Scheduler initialized",
         "[DEV] PCI scan: 4 devices found",
         "[SLM] Rule engine initialized",

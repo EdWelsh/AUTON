@@ -135,9 +135,15 @@ MM_TESTS = [
     AcceptanceTest(
         name="mm_pmm_init",
         subsystem="mm",
-        description="PMM initializes from boot memory map",
+        description="PMM reports total, reserved and free frames",
+        # The old pattern was `\d+ pages free` — satisfied by any number at
+        # all, including a wrong one, so the marker asserted only that the line
+        # was printed. Requiring all three makes the numbers checkable: they
+        # must add up, and a PMM that forgot to reserve the boot modules
+        # reports reserved=0 and fails here rather than corrupting the model
+        # some minutes later.
         expected_serial_patterns=[
-            r"\[MM\] PMM initialized: \d+ pages free",
+            r"\[MM\] PMM initialized: \d+ pages total, \d+ reserved, \d+ free",
         ],
         requires_subsystems=["boot"],
     ),
@@ -471,7 +477,7 @@ INTEGRATION_TESTS = [
         description="Full system: boot → init subsystems → SLM ready",
         expected_serial_patterns=[
             r"AUTON Kernel booting",
-            r"\[MM\] PMM initialized",
+            r"\[MM\] PMM initialized: \d+ pages total, \d+ reserved, \d+ free",
             r"\[SCHED\] Scheduler initialized",
             r"\[SLM\] .+ engine initialized",
             r"\[SLM\] Ready",
@@ -629,7 +635,7 @@ SERIAL_MARKER_SETS: dict[str, tuple[str, ...]] = {
         r"\[BOOT\] 64-bit GDT loaded",
         r"\[BOOT\] Interrupts initialized",
         r"\[DRV\] Serial .+ initialized",
-        r"\[MM\] PMM initialized",
+        r"\[MM\] PMM initialized: \d+ pages total, \d+ reserved, \d+ free",
         r"\[SCHED\] Scheduler initialized",
         r"\[DEV\] PCI scan: \d+ devices found",
         r"\[SLM\] Rule engine initialized",
