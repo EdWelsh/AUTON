@@ -73,7 +73,9 @@ echo "prompts: ${PROMPTS#"$ROOT"/}  rubric: tests/eval/rubric.md"
 # Re-booting per prompt would cost 50 boots; the plan's mitigation is a single
 # serial session for the whole set.
 ANSWERS="$(mktemp)"
-LOG="$(mktemp)"
+# EVAL_KEEP_LOG=<path> preserves the raw serial capture. A truncated or crashed
+# run is only diagnosable from it, and it is deleted on exit by default.
+LOG="${EVAL_KEEP_LOG:-$(mktemp)}"
 PIPE="$(mktemp -u)"; mkfifo "$PIPE"
 
 # Stock macOS bash is 3.2 — no mapfile. Read portably.
@@ -92,24 +94,92 @@ for l in open(sys.argv[1]):
 "$QEMU" -cdrom "$ISO" -serial stdio -display none -no-reboot -m "$MEM" \
 	< "$PIPE" > "$LOG" 2>/dev/null &
 QPID=$!
-( sleep "${EVAL_TIMEOUT:-300}"; kill -TERM "$QPID" 2>/dev/null ) >/dev/null 2>&1 &
+# The watchdog has to outlast the whole prompt set, not a typical one. A fixed
+# 300s was fine for 50 rule-engine prompts and silently truncated a 65-prompt
+# neural run at ses-05: scalar fp32 inference under emulation costs seconds per
+# answer, and the last 11 prompts were never sent. Scale it with the prompt
+# count and the model, and leave EVAL_TIMEOUT as an override.
+if [ "$MODEL" = "rule" ]; then PER_PROMPT="${EVAL_PER_PROMPT:-2}"
+else                           PER_PROMPT="${EVAL_PER_PROMPT:-8}"; fi
+EVAL_TIMEOUT="${EVAL_TIMEOUT:-$(( 60 + ${#PROMPT_TEXTS[@]} * PER_PROMPT ))}"
+echo "watchdog: ${EVAL_TIMEOUT}s for ${#PROMPT_TEXTS[@]} prompts (${PER_PROMPT}s each)"
+( sleep "$EVAL_TIMEOUT"; kill -TERM "$QPID" 2>/dev/null ) >/dev/null 2>&1 &
 WATCHDOG=$!
+
+# Wait until the machine is back at an idle prompt, i.e. it has finished
+# answering. The harness used to send every prompt on a fixed 0.7s cadence and
+# then kill QEMU after a 4s drain, which works only while answers are faster
+# than the cadence. Neural inference under emulation is not: the machine fell
+# behind, was killed mid-queue, and the unsent prompts were scored as garbage —
+# a slower model looked like a worse one. Waiting for the answer removes the
+# guess entirely.
+wait_for_idle() {
+	local deadline=$(( $(date +%s) + ${PROMPT_TIMEOUT:-90} ))
+	local last=-1 size stable=0
+	while [ "$(date +%s)" -lt "$deadline" ]; do
+		size=$(wc -c < "$LOG" 2>/dev/null || echo 0)
+		if [ "$size" = "$last" ]; then
+			stable=$((stable + 1))
+			# Idle means the capture ends at a bare prompt with nothing
+			# after it. Output still arriving keeps `size` moving.
+			#
+			# Read into a variable rather than piping into grep: under
+			# `pipefail`, grep -q exits on the first match and tail takes
+			# SIGPIPE, so the pipeline reports 141 and the match reads as
+			# a miss. Every prompt then waited the full timeout, the
+			# watchdog killed QEMU, and writing to the dead fifo killed
+			# the script with SIGPIPE.
+			if [ "$stable" -ge 2 ]; then
+				local tailbytes
+				tailbytes=$(LC_ALL=C tail -c 32 "$LOG" 2>/dev/null || true)
+				case "$tailbytes" in
+					# Back at a bare prompt: answered.
+					*"auton> ") return 0 ;;
+					# A working capability ("install a web server")
+					# parks the kernel on "press any key to stop".
+					# That is also waiting-for-input, and it cannot
+					# reach a prompt until we send the key — waiting
+					# for one here deadlocks until the watchdog fires.
+					*"key to stop)"*) return 0 ;;
+				esac
+			fi
+			# Safety valve: output has stopped for a while in a state we do
+			# not recognise. Waiting the full timeout on every such prompt
+			# is how one unrecognised banner turns into a truncated run.
+			[ "$stable" -ge "${SETTLE_POLLS:-25}" ] && return 0
+		else
+			stable=0
+		fi
+		last="$size"
+		sleep "${POLL_GAP:-0.2}"
+	done
+	return 1
+}
 
 exec 3> "$PIPE"
 printf '\n' >&3                       # absorbs the byte dropped after UART init
 sleep "${BOOT_SETTLE:-3}"
+SLOW=0
 for p in "${PROMPT_TEXTS[@]}"; do
+	# QEMU gone (watchdog fired, or the guest died) means the fifo has no
+	# reader and the next write would kill this script with SIGPIPE. Stop
+	# cleanly instead; the remaining prompts are reported as NOT_ASKED.
+	if ! kill -0 "$QPID" 2>/dev/null; then
+		echo "note: guest exited early; $SLOW waits had timed out" >&2
+		break
+	fi
 	printf '%s\n' "$p" >&3
-	sleep "${SEND_GAP:-0.4}"
+	wait_for_idle || SLOW=$((SLOW + 1))
 	# A prompt that starts a working capability ("install a web server") leaves
 	# the kernel waiting on "press any key to stop", which would otherwise eat
 	# the first byte of the NEXT prompt — its echo then fails to match and a
 	# perfectly good answer scores as an empty reply. This blank line is that
 	# keypress; at an idle prompt it merely re-prompts.
 	printf '\n' >&3
-	sleep "${STOP_GAP:-0.3}"
+	wait_for_idle || SLOW=$((SLOW + 1))
 done
-sleep "${DRAIN_SECS:-4}"
+[ "$SLOW" -eq 0 ] || echo "note: $SLOW waits hit PROMPT_TIMEOUT=${PROMPT_TIMEOUT:-90}s"
+sleep "${DRAIN_SECS:-2}"
 exec 3>&-
 kill "$QPID" 2>/dev/null; wait "$QPID" 2>/dev/null || true
 kill "$WATCHDOG" 2>/dev/null; wait "$WATCHDOG" 2>/dev/null || true
@@ -125,5 +195,6 @@ EVAL_FINGERPRINT="$FINGERPRINT" EVAL_REVIEW="$REVIEW" EVAL_JSON="$JSON_OUT" \
 	"$PY" "$ROOT/scripts/lib/eval_score.py"
 RC=$?
 
-rm -f "$LOG" "$ANSWERS"
+rm -f "$ANSWERS"
+[ -n "${EVAL_KEEP_LOG:-}" ] || rm -f "$LOG"
 exit "$RC"

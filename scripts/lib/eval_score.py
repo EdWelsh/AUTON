@@ -23,6 +23,10 @@ CORRECT = "correct"
 HONEST = "honest_roadmap"
 GARBAGE = "garbage"
 UNGRADED = "ungraded"
+# The prompt never reached the machine — its echo is absent from the serial log.
+# This is a harness failure, not a model failure, and scoring it as GARBAGE
+# silently turns a truncated run into a worse-looking model.
+NOT_ASKED = "not_asked"
 
 PROMPT_MARK = "auton> "
 # The reply the kernel gives when it has not understood; answering an
@@ -34,7 +38,7 @@ def load_prompts(path: Path) -> list[dict]:
     return [json.loads(line) for line in path.read_text().splitlines() if line.strip()]
 
 
-def extract_answers(log: str, prompts: list[dict]) -> dict[str, str]:
+def extract_answers(log: str, prompts: list[dict]) -> dict[str, str | None]:
     """Map prompt id -> the reply block that followed its echo.
 
     Anchored to the prompt echo, and scoped to the block before the next
@@ -42,7 +46,7 @@ def extract_answers(log: str, prompts: list[dict]) -> dict[str, str]:
     help text quote example commands, so a bare search finds the wrong block.
     """
     lines = log.splitlines()
-    answers: dict[str, str] = {}
+    answers: dict[str, str | None] = {}
     pos = 0
     for row in prompts:
         text = row["prompt"]
@@ -52,7 +56,11 @@ def extract_answers(log: str, prompts: list[dict]) -> dict[str, str]:
                 echo_at = i
                 break
         if echo_at < 0:
-            answers[row["id"]] = ""
+            # No echo: the prompt was never delivered. Distinct from an echo
+            # followed by silence, which IS an empty reply and is the model's
+            # fault. Conflating them cost a full run — a 300s watchdog killed
+            # QEMU with 11 prompts unsent and all 11 scored as garbage.
+            answers[row["id"]] = None
             continue
         block: list[str] = []
         for line in lines[echo_at + 1:]:
@@ -64,8 +72,10 @@ def extract_answers(log: str, prompts: list[dict]) -> dict[str, str]:
     return answers
 
 
-def auto_grade(row: dict, answer: str) -> str | None:
+def auto_grade(row: dict, answer: str | None) -> str | None:
     """Grade what can be graded mechanically; None means 'ask a human'."""
+    if answer is None:
+        return NOT_ASKED                    # never delivered — not a verdict
     if not answer:
         return GARBAGE                      # empty reply — rubric rule 1
     expect = row.get("expect")
@@ -105,7 +115,7 @@ def main() -> int:
 
     for row in prompts:
         pid = row["id"]
-        answer = answers.get(pid, "")
+        answer = answers.get(pid, None)
         verdict = auto_grade(row, answer)
         source = "auto"
         if verdict is None:
@@ -146,17 +156,29 @@ def main() -> int:
 
     total = len(results)
     counts = {b: sum(1 for r in results if r["verdict"] == b)
-              for b in (CORRECT, HONEST, GARBAGE, UNGRADED)}
-    graded = total - counts[UNGRADED]
+              for b in (CORRECT, HONEST, GARBAGE, UNGRADED, NOT_ASKED)}
+    # Undelivered prompts are not data. They leave the denominator entirely,
+    # and the run is flagged — a score computed over a truncated run is worse
+    # than no score, because it looks like one.
+    scored = total - counts[UNGRADED] - counts[NOT_ASKED]
+    graded = scored
 
     print()
     for r in results:
         flag = {CORRECT: "CORRECT", HONEST: "HONEST ", GARBAGE: "GARBAGE",
-                UNGRADED: "  ??   "}[r["verdict"]]
+                UNGRADED: "  ??   ", NOT_ASKED: "NOTASKED"}[r["verdict"]]
         print(f"{flag}  {r['id']:<8} {r['prompt'][:52]}")
 
     print()
-    print(f"graded {graded}/{total}"
+    if counts[NOT_ASKED]:
+        first = next(r["id"] for r in results if r["verdict"] == NOT_ASKED)
+        print(f"TRUNCATED RUN: {counts[NOT_ASKED]}/{total} prompts never reached "
+              f"the machine (from {first} onward).")
+        print("  The session ended before they were sent — raise EVAL_TIMEOUT.")
+        print("  These are excluded from the score; the run is NOT comparable "
+              "to a complete one.")
+        print()
+    print(f"graded {graded}/{total - counts[NOT_ASKED]}"
           + (f"  ({counts[UNGRADED]} awaiting review — run with --review)"
              if counts[UNGRADED] else ""))
     if graded:
@@ -166,8 +188,11 @@ def main() -> int:
         print(f"  honest-roadmap {counts[HONEST]:3d}  {pct(counts[HONEST]):5.1f}%")
         print(f"  garbage        {counts[GARBAGE]:3d}  {pct(counts[GARBAGE]):5.1f}%")
         print(f"  SCORE  correct-or-honest {pct(passing):.1f}%  garbage {pct(counts[GARBAGE]):.1f}%")
-        print(f"  BAR    >=70% correct-or-honest and <10% garbage -> "
-              f"{'PASS' if pct(passing) >= 70 and pct(counts[GARBAGE]) < 10 else 'FAIL'}")
+        if counts[NOT_ASKED]:
+            print(f"  BAR    not applied — {counts[NOT_ASKED]} prompts unasked")
+        else:
+            print(f"  BAR    >=70% correct-or-honest and <10% garbage -> "
+                  f"{'PASS' if pct(passing) >= 70 and pct(counts[GARBAGE]) < 10 else 'FAIL'}")
 
     if json_out:
         Path(json_out).parent.mkdir(parents=True, exist_ok=True)
