@@ -15,6 +15,7 @@ from orchestrator.arch_registry import ArchProfile
 from orchestrator.comms.git_workspace import GitWorkspace
 from orchestrator.comms.message_bus import Message, MessageBus
 from orchestrator.llm.client import LLMClient
+from orchestrator.llm.tools import SHELL_ALLOWLIST as _SHELL_ALLOWLIST
 
 logger = logging.getLogger(__name__)
 
@@ -213,7 +214,7 @@ class Agent:
                     return self._read_spec(tool_input["subsystem"])
 
                 case "shell":
-                    return await self._run_shell(
+                    return await self._run_allowlisted(
                         tool_input["command"],
                         tool_input.get("timeout", 120),
                     )
@@ -307,21 +308,35 @@ class Agent:
         if not makefile.exists():
             return "No Makefile found in workspace. Cannot build."
 
-        cmd = ["make", "-C", str(self.workspace.path), target]
-        return await self._run_shell(" ".join(cmd), timeout=120)
+        return await self._run_argv(
+            ["make", "-C", str(self.workspace.path), target], timeout=120
+        )
 
     async def _run_test(self, test_name: str, timeout: int) -> str:
         """Run a kernel test."""
-        return await self._run_shell(
-            f"make -C {self.workspace.path} test-{test_name}",
+        return await self._run_argv(
+            ["make", "-C", str(self.workspace.path), f"test-{test_name}"],
             timeout=timeout,
         )
 
-    async def _run_shell(self, command: str, timeout: int = 120) -> str:
-        """Execute a shell command and return stdout+stderr."""
+    # Commands an agent may run. Defined next to the tool schema so the model is
+    # told exactly what the executor will accept — a description that drifts from
+    # the check spends the agent's turns on refusals it was invited to attempt.
+    # A request outside the set is refused by name, so a genuine need surfaces
+    # loudly instead of being silently unavailable.
+    SHELL_ALLOWLIST = _SHELL_ALLOWLIST
+
+    async def _run_argv(self, argv: list[str], timeout: int = 120) -> str:
+        """Execute a command as an argument vector — no shell, no interpolation.
+
+        `create_subprocess_exec` passes argv straight to the kernel, so a path
+        containing a space, a semicolon or `$(...)` is an argument rather than
+        syntax. Every internal caller uses this; only the `shell` tool goes
+        near a command string, and only through the allowlist above.
+        """
         try:
-            proc = await asyncio.create_subprocess_shell(
-                command,
+            proc = await asyncio.create_subprocess_exec(
+                *argv,
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
                 cwd=str(self.workspace.path),
@@ -337,9 +352,38 @@ class Agent:
             output += f"\n[exit code: {proc.returncode}]"
             return output
         except asyncio.TimeoutError:
-            return f"Command timed out after {timeout}s: {command}"
-        except Exception as e:
-            return f"Shell error: {e}"
+            return f"Command timed out after {timeout}s: {' '.join(argv)}"
+        except OSError as exc:
+            # Covers both "no such program" and "no such workspace directory";
+            # the errno text distinguishes them. Naming only the program would
+            # send an agent hunting for a missing binary when its cwd is gone.
+            return f"ERROR: could not run {argv[0]}: {exc}"
+
+    async def _run_allowlisted(self, command: str, timeout: int = 120) -> str:
+        """Run an agent-supplied command, as argv, if its program is allowed.
+
+        The command arrives as model output. Splitting with shlex and executing
+        the vector means shell metacharacters are inert: `make; rm -rf /` fails
+        as a make target, it does not become two commands.
+        """
+        import shlex
+
+        try:
+            argv = shlex.split(command)
+        except ValueError as exc:
+            return f"ERROR: could not parse command ({exc}): {command!r}"
+        if not argv:
+            return "ERROR: empty command"
+
+        program = argv[0].rsplit("/", 1)[-1]
+        if program not in self.SHELL_ALLOWLIST:
+            return (
+                f"ERROR: {program!r} is not permitted. Allowed: "
+                f"{', '.join(sorted(self.SHELL_ALLOWLIST))}. "
+                f"Prefer the dedicated tools — build_kernel, run_test, "
+                f"git_commit, git_diff — which do not need shell access."
+            )
+        return await self._run_argv(argv, timeout)
 
     def _format_task_prompt(self, task: dict[str, Any]) -> str:
         """Format a task as a user prompt for Claude."""
@@ -407,13 +451,18 @@ class Agent:
     # SLM tool executors
     async def _analyze_dataset(self, dataset_path: str) -> str:
         """Analyze dataset statistics."""
-        cmd = f"python SLM/tools/dataset_builder.py analyze {dataset_path}"
-        return await self._run_shell(cmd)
+        return await self._run_argv(
+            ["python", "SLM/tools/dataset_builder.py", "analyze", dataset_path]
+        )
 
     async def _tokenize_data(self, input_path: str, output_path: str, vocab_size: int) -> str:
         """Tokenize dataset."""
-        cmd = f"python SLM/tools/tokenizer.py --input {input_path} --output {output_path} --vocab-size {vocab_size}"
-        return await self._run_shell(cmd)
+        return await self._run_argv([
+            "python", "SLM/tools/tokenizer.py",
+            "--input", input_path,
+            "--output", output_path,
+            "--vocab-size", str(vocab_size),
+        ])
 
     def _validate_architecture(self, config_path: str) -> str:
         """Validate model config YAML."""
@@ -443,28 +492,45 @@ class Agent:
 
     async def _train_model(self, config_path: str, dataset_path: str, max_steps: int) -> str:
         """Train SLM model."""
-        cmd = f"python SLM/scripts/train.py --config {config_path} --dataset {dataset_path} --max-steps {max_steps}"
-        return await self._run_shell(cmd, timeout=3600)
+        return await self._run_argv([
+            "python", "SLM/scripts/train.py",
+            "--config", config_path,
+            "--dataset", dataset_path,
+            "--max-steps", str(max_steps),
+        ], timeout=3600)
 
     async def _evaluate_model(self, checkpoint_path: str, test_dataset: str) -> str:
         """Evaluate model checkpoint."""
-        cmd = f"python SLM/scripts/evaluate.py --checkpoint {checkpoint_path} --dataset {test_dataset}"
-        return await self._run_shell(cmd, timeout=600)
+        return await self._run_argv([
+            "python", "SLM/scripts/evaluate.py",
+            "--checkpoint", checkpoint_path,
+            "--dataset", test_dataset,
+        ], timeout=600)
 
     async def _quantize_model(self, checkpoint_path: str, output_path: str, bits: int) -> str:
         """Quantize model."""
-        cmd = f"python SLM/scripts/quantize.py --checkpoint {checkpoint_path} --bits {bits} --output {output_path}"
-        return await self._run_shell(cmd, timeout=1800)
+        return await self._run_argv([
+            "python", "SLM/scripts/quantize.py",
+            "--checkpoint", checkpoint_path,
+            "--bits", str(bits),
+            "--output", output_path,
+        ], timeout=1800)
 
     async def _export_gguf(self, model_path: str, output_path: str) -> str:
         """Export to GGUF format."""
-        cmd = f"python SLM/scripts/export_gguf.py --model {model_path} --output {output_path}"
-        return await self._run_shell(cmd, timeout=600)
+        return await self._run_argv([
+            "python", "SLM/scripts/export_gguf.py",
+            "--model", model_path,
+            "--output", output_path,
+        ], timeout=600)
 
     async def _export_onnx(self, model_path: str, output_path: str) -> str:
         """Export to ONNX format."""
-        cmd = f"python SLM/scripts/export_onnx.py --model {model_path} --output {output_path}"
-        return await self._run_shell(cmd, timeout=600)
+        return await self._run_argv([
+            "python", "SLM/scripts/export_onnx.py",
+            "--model", model_path,
+            "--output", output_path,
+        ], timeout=600)
 
     async def _integrate_slm(self, model_path: str, kernel_arch: str) -> str:
         """Integrate SLM into kernel workspace."""

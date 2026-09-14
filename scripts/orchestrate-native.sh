@@ -7,9 +7,13 @@
 # [orchestrator].max_iterations and [llm.cost] in agent/config/auton.toml —
 # keep them tight for a local model.
 #
-# SECURITY: the agents' _run_shell interpolates tool arguments into a shell
-# (base_agent.py). Until that is fixed, run this ONLY against a local model on
-# a goal you wrote yourself — never against untrusted spec text or web content.
+# SECURITY: agent tool arguments are executed as argv, never as a shell string,
+# and the `shell` tool is confined to an allowlist (base_agent.py). Injection
+# through a task title or a test name is closed and held closed by
+# tests/unit/agents/test_base_agent_injection.py. What is NOT bounded is what
+# an allowlisted program can be told to do — `git` and `make` can still reach
+# outside the workspace — so a goal drawn from untrusted text still warrants
+# a sandbox.
 set -uo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"

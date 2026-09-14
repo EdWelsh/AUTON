@@ -188,17 +188,42 @@ TOOL_READ_SPEC = {
     },
 }
 
+# Programs the `shell` tool may run. Single source of truth: base_agent
+# enforces this set, and the tool description below is generated from it, so an
+# agent is never told it may run something the executor will refuse.
+#
+# Decided in plan w0-agent-shell-hardening (Task 2). The tool is NOT removed —
+# every entry here is something an agent legitimately reached for — but it is no
+# longer a shell: the command is split with shlex and executed as argv, so
+# metacharacters are inert. See .claude/PRPs/reports/w0-agent-shell-hardening.md
+SHELL_ALLOWLIST = frozenset({
+    "make", "git", "clang", "gcc", "python", "python3",
+    "ls", "cat", "grep", "find", "qemu-system-x86_64",
+})
+
 TOOL_SHELL = {
     "type": "function",
     "function": {
         "name": "shell",
-        "description": "Execute a shell command in the kernel workspace. Use for build tools, QEMU, etc.",
+        "description": (
+            "Run one program in the kernel workspace. This is NOT a shell: the "
+            "command is split into arguments and executed directly, so pipes, "
+            "redirection, `;`, `&&`, globs and $(...) are passed through as "
+            "literal text rather than interpreted. Run one program per call. "
+            "Permitted programs: " + ", ".join(sorted(SHELL_ALLOWLIST)) + ". "
+            "Prefer the dedicated tools (build_kernel, run_test, git_commit, "
+            "git_diff, search_code, list_files) where one fits."
+        ),
         "parameters": {
             "type": "object",
             "properties": {
                 "command": {
                     "type": "string",
-                    "description": "The shell command to execute.",
+                    "description": (
+                        "Program and arguments, e.g. 'make kernel' or "
+                        "'git log --oneline -5'. Quote arguments containing "
+                        "spaces. Not a shell command line."
+                    ),
                 },
                 "timeout": {
                     "type": "integer",
