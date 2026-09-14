@@ -1,3 +1,11 @@
+---
+subsystem: ipc
+provides: [channels, message-ring, slm-command-channel]
+depends_on: [mm, sched]
+optional: []
+# Blocking send/recv is what pulls in sched.
+---
+
 # IPC (Inter-Process Communication) Specification
 
 ## Overview

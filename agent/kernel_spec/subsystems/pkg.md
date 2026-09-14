@@ -1,3 +1,11 @@
+---
+subsystem: pkg
+provides: [module-asset, package-registry, package-install, dependency-resolve]
+depends_on: [mm]
+optional: [package-registry, package-install, dependency-resolve]
+# `module-asset` — taking a file handed in as a Multiboot2 module — needs only boot and mm. Everything else needs fs and net, which is why they are optional rather than depended on.
+---
+
 # Package Manager Specification
 
 ## Overview

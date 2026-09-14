@@ -1,3 +1,11 @@
+---
+arch: riscv64
+provides: [arch-riscv64]
+depends_on: [arch]
+optional: []
+# Implements the HAL for RISC-V 64.
+---
+
 # RISC-V 64-bit Architecture Specification
 
 ## Overview

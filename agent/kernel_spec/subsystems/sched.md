@@ -1,3 +1,11 @@
+---
+subsystem: sched
+provides: [preemptive, processes, context-switch, sleep-wake, priority-slm]
+depends_on: [mm, arch]
+optional: [priority-slm]
+# A single-purpose ring-0 image needs none of this; Doom excludes it.
+---
+
 # Scheduler Specification
 
 ## Overview

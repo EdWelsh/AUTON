@@ -1,3 +1,11 @@
+---
+subsystem: slm
+provides: [scoped, rule-engine, neural, intent-classify, knowledge-base, conversation-context]
+depends_on: [mm, sys]
+optional: [neural, conversation-context]
+# `scoped` is a manifest-narrowed model. The prose lists sched/ipc/dev/boot; in the shipped ring-0 design the SLM is called directly from the terminal loop. See Task 2.
+---
+
 # SLM Runtime Specification
 
 ## Overview

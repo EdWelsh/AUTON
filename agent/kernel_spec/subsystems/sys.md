@@ -1,3 +1,11 @@
+---
+subsystem: sys
+provides: [terminal, init, klog, uptime, resource-monitor, services]
+depends_on: [mm, drivers]
+optional: [init, services, resource-monitor]
+# `terminal` is the chat REPL over serial — the one capability every image in the PRD needs.
+---
+
 # System Services Specification
 
 ## Overview

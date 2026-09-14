@@ -1,3 +1,11 @@
+---
+subsystem: dev
+provides: [pci, device-registry, driver-binding, acpi, hotplug]
+depends_on: [mm, boot]
+optional: [acpi, hotplug]
+# The prose lists ipc/sched/slm as dependencies, but those are the SLM-driven binding path, not device enumeration. See the Task 2 reconciliation: declared as optional consumers, not dependencies.
+---
+
 # Device Framework Specification
 
 ## Overview

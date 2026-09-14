@@ -1,3 +1,11 @@
+---
+subsystem: drivers
+provides: [serial, timer, keyboard, framebuffer, e1000, virtio-blk, ahci, nvme, input]
+depends_on: [dev, mm, arch]
+optional: [e1000, virtio-blk, ahci, nvme, framebuffer, keyboard]
+# `input` is the keyboard path a framebuffer image needs; `serial` and `timer` are the two every image has.
+---
+
 # Drivers Specification
 
 ## Overview

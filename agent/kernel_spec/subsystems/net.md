@@ -1,3 +1,11 @@
+---
+subsystem: net
+provides: [netif, ethernet, arp, ipv4, icmp, udp, tcp, dhcp-client, dns, http-client, http-server, sockets]
+depends_on: [mm, dev, drivers]
+optional: [tcp, dhcp-client, dns, http-client, http-server]
+# The prose lists sched (blocking) and ipc; both are consumers of the blocking socket path, not of the polled datapath. See Task 2.
+---
+
 # Network Stack Specification
 
 ## Overview

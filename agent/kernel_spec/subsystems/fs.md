@@ -1,3 +1,11 @@
+---
+subsystem: fs
+provides: [vfs, initramfs, ext2, devfs, writable]
+depends_on: [mm, dev]
+optional: [ext2, devfs, writable]
+# `initramfs` is read-only and needs no block driver; `writable` is the capability Doom excludes.
+---
+
 # Filesystem Specification
 
 ## Overview

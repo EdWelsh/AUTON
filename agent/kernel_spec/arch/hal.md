@@ -1,3 +1,11 @@
+---
+arch: hal
+provides: [arch]
+depends_on: []
+optional: []
+# The portable contract every arch implements. `arch` is the capability the concrete ports provide.
+---
+
 # Hardware Abstraction Layer (HAL) Contract
 
 ## Overview

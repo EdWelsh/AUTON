@@ -1,3 +1,11 @@
+---
+subsystem: boot
+provides: [multiboot2, boot-info, module-load, slm-handoff, early-serial]
+depends_on: [arch]
+optional: [module-load]
+# Root subsystem. `arch` is the only thing beneath it.
+---
+
 # Boot Subsystem Specification
 
 ## Overview

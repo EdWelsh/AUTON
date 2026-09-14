@@ -1,3 +1,11 @@
+---
+subsystem: mm
+provides: [allocator, pmm, vmm, slab, slm-pool]
+depends_on: [boot, arch]
+optional: [slm-pool]
+# PMM has no dependency beyond boot's memory map; VMM needs PMM for page tables.
+---
+
 # Memory Management Specification
 
 ## Overview

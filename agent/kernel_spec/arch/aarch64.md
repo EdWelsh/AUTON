@@ -1,3 +1,11 @@
+---
+arch: aarch64
+provides: [arch-aarch64]
+depends_on: [arch]
+optional: []
+# Implements the HAL for AArch64.
+---
+
 # AArch64 (ARM64) Architecture Specification
 
 ## Overview
