@@ -77,3 +77,6 @@ SLM/models/exports/
 # The last hand-written reference is tag kernel-reference-v1; its structure is
 # preserved in agent/kernel_spec/reference/ and its contracts in the spec.
 kernels/
+
+# Fetched vendor documents — downloadable, not redistributable (agent/hardware/README.md)
+.cache/

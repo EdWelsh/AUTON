@@ -1,0 +1,590 @@
+# Hardware vendor document inventory (H1).
+#
+# What documents exist, per vendor: where, under what licence, at what cadence,
+# in what form, and what key their errata are indexed by. This is the input to
+# ingestion (H2/H3) and the thing the PRD's "vendors with an ingestion pipeline"
+# metric is measured against.
+#
+# INVENTORIED IS NOT INGESTED. Every record here says a document exists and is
+# reachable. None says it has been fetched, parsed or normalised. The coverage
+# report keeps the two apart on purpose; conflating them would overstate
+# progress by the entire remaining work.
+#
+# Licensing: most of these are freely downloadable and NOT freely
+# redistributable. See README.md — ingest and derive, never vendor the source.
+#
+# URLs are hints, not identity. They rot; document numbers and titles do not.
+# A record is identified by `id` plus the vendor's own document number.
+
+version: 1
+updated: 2026-09-14
+
+vendors:
+
+  # --- CPU / ISA ----------------------------------------------------------- #
+
+  - vendor: intel
+    category: cpu
+    # The schema was designed against this entry first. Intel publishes four
+    # kinds of document on four different cadences in three different forms;
+    # a schema built for RISC-V's single open spec would break here immediately.
+    identity_keys: [family, model, stepping, microcode_rev]
+    documents:
+      - id: intel-sdm
+        title: Intel 64 and IA-32 Architectures Software Developer's Manual
+        doc_number: "325462"
+        kind: architecture-manual
+        access: public-download
+        redistributable: false
+        form: pdf
+        cadence: quarterly
+        url_hint: https://www.intel.com/sdm
+      - id: intel-spec-update
+        title: Specification Update (per processor family)
+        kind: errata
+        scope: per-family
+        access: public-download
+        redistributable: false
+        form: pdf-tables
+        cadence: monthly
+        notes: >-
+          The canonical errata document. One per family, each an errata table
+          keyed on stepping. This is the hardest parsing problem in the set and
+          the reason H2 is scoped to Intel and AMD first.
+      - id: intel-sa
+        title: Intel Security Advisories (INTEL-SA-*)
+        kind: security-advisory
+        access: public-web
+        redistributable: false
+        form: structured
+        cadence: continuous
+      - id: intel-microcode
+        title: Microcode Revision Guidance
+        kind: microcode-revision
+        access: public-download
+        redistributable: false
+        form: pdf-tables
+        cadence: irregular
+        notes: >-
+          Joins errata to the microcode revision that mitigates them. Without
+          it an erratum cannot be said to apply to a *running* machine, only to
+          a part number.
+
+  - vendor: amd
+    category: cpu
+    identity_keys: [family, model, stepping, microcode_rev]
+    documents:
+      - id: amd-apm
+        title: AMD64 Architecture Programmer's Manual
+        doc_number: "24593"
+        kind: architecture-manual
+        access: public-download
+        redistributable: false
+        form: pdf
+        cadence: irregular
+      - id: amd-ppr
+        title: Processor Programming Reference (PPR) per family
+        kind: register-reference
+        scope: per-family
+        access: public-download
+        redistributable: false
+        form: pdf
+        cadence: per-release
+      - id: amd-revision-guide
+        title: Revision Guide (per family)
+        kind: errata
+        scope: per-family
+        access: public-download
+        redistributable: false
+        form: pdf-tables
+        cadence: irregular
+      - id: amd-sb
+        title: AMD Security Bulletins (AMD-SB-*)
+        kind: security-advisory
+        access: public-web
+        redistributable: false
+        form: structured
+        cadence: continuous
+
+  - vendor: arm
+    category: cpu
+    # Per-core rather than per-family: an erratum applies to a core revision
+    # (r1p2), and the same core appears in many SoCs from many vendors.
+    identity_keys: [implementer, part_num, variant, revision]
+    documents:
+      - id: arm-arm
+        title: Arm Architecture Reference Manual
+        kind: architecture-manual
+        access: public-download
+        redistributable: false
+        form: pdf
+        cadence: annual
+      - id: arm-trm
+        title: Technical Reference Manual (per core)
+        kind: register-reference
+        scope: per-core
+        access: public-download
+        redistributable: false
+        form: pdf
+        cadence: per-release
+      - id: arm-errata
+        title: Software Developer Errata Notice (per core)
+        kind: errata
+        scope: per-core
+        access: public-download
+        redistributable: false
+        form: pdf-tables
+        cadence: irregular
+      - id: arm-sysreg-xml
+        title: Arm System Register XML
+        kind: machine-readable-registers
+        access: public-download
+        redistributable: true
+        licence: Arm EULA (redistribution permitted for the XML release)
+        form: xml
+        cadence: annual
+        notes: >-
+          The only vendor-published machine-readable register description in
+          this inventory. Worth disproportionate attention in H3 — it needs no
+          PDF parsing at all.
+
+  - vendor: riscv-international
+    category: cpu
+    # The ISA is open, but errata are per-implementation: there is no central
+    # RISC-V errata document, because there is no central RISC-V silicon.
+    identity_keys: [mvendorid, marchid, mimpid]
+    documents:
+      - id: riscv-isa-unpriv
+        title: RISC-V Unprivileged ISA Specification
+        kind: architecture-manual
+        access: public-download
+        redistributable: true
+        licence: CC-BY-4.0
+        form: pdf+source
+        cadence: per-ratification
+        notes: Source form (LaTeX/AsciiDoc) is published, so no PDF parsing.
+      - id: riscv-isa-priv
+        title: RISC-V Privileged ISA Specification
+        kind: architecture-manual
+        access: public-download
+        redistributable: true
+        licence: CC-BY-4.0
+        form: pdf+source
+        cadence: per-ratification
+    gaps:
+      - kind: errata
+        reason: >-
+          No central errata document exists. RISC-V International specifies the
+          ISA; defects belong to implementations (SiFive, T-Head, Ventana).
+          Coverage for RISC-V silicon comes from the implementer's record.
+
+  - vendor: ibm-openpower
+    category: cpu
+    identity_keys: [pvr]
+    documents:
+      - id: power-isa
+        title: Power ISA Specification
+        kind: architecture-manual
+        access: public-download
+        redistributable: true
+        licence: OpenPOWER EULA
+        form: pdf
+        cadence: per-version
+    gaps:
+      - kind: errata
+        reason: Per-implementation, published by the silicon vendor, not OpenPOWER.
+
+  - vendor: sifive
+    category: cpu
+    identity_keys: [mvendorid, marchid, mimpid]
+    documents:
+      - id: sifive-core-manual
+        title: Core Complex Manual (per core)
+        kind: register-reference
+        scope: per-core
+        access: public-download
+        redistributable: false
+        form: pdf
+        cadence: per-release
+        notes: Errata appear as a chapter inside the manual, not as a separate document.
+
+  - vendor: loongson
+    category: cpu
+    identity_keys: [prid]
+    documents:
+      - id: loongarch-manual
+        title: LoongArch Reference Manual
+        kind: architecture-manual
+        access: public-download
+        redistributable: false
+        form: pdf
+        cadence: irregular
+    gaps:
+      - kind: errata
+        reason: No public errata document identified.
+
+  # --- GPU ------------------------------------------------------------------ #
+
+  - vendor: intel-gpu
+    category: gpu
+    identity_keys: [device_id, gen]
+    documents:
+      - id: intel-gpu-prm
+        title: Intel Graphics Programmer's Reference Manual (per generation)
+        kind: register-reference
+        scope: per-generation
+        access: public-download
+        redistributable: false
+        form: pdf
+        cadence: per-generation
+        notes: Unusually complete for a GPU vendor.
+
+  - vendor: amd-gpu
+    category: gpu
+    identity_keys: [device_id, asic_family]
+    documents:
+      - id: amd-gpu-isa
+        title: AMD GPU ISA documents (per architecture)
+        kind: architecture-manual
+        access: public-download
+        redistributable: false
+        form: pdf
+        cadence: per-architecture
+      - id: amd-gpu-headers
+        title: Register headers in the open amdgpu driver
+        kind: machine-readable-registers
+        access: public-source
+        redistributable: true
+        licence: MIT
+        form: c-headers
+        cadence: continuous
+        notes: >-
+          Shipped in the Linux driver. Machine-readable and redistributable —
+          the cheapest GPU register source in this inventory.
+
+  - vendor: nvidia
+    category: gpu
+    identity_keys: [device_id, architecture]
+    documents:
+      - id: nvidia-open-headers
+        title: Open GPU kernel module headers
+        kind: machine-readable-registers
+        access: public-source
+        redistributable: true
+        licence: MIT/GPL-2.0 dual
+        form: c-headers
+        cadence: per-driver-release
+    gaps:
+      - kind: register-reference
+        reason: >-
+          Full register specifications are not published. Nouveau documents the
+          hardware by reverse engineering; treat its headers as a third-party
+          reference with weaker provenance than a vendor document.
+
+  # --- SoC ------------------------------------------------------------------ #
+
+  - vendor: ti
+    category: soc
+    identity_keys: [part_number, silicon_revision]
+    documents:
+      - id: ti-trm
+        title: Technical Reference Manual (per SoC)
+        kind: register-reference
+        scope: per-part
+        access: public-download
+        redistributable: false
+        form: pdf
+        cadence: per-part
+      - id: ti-errata
+        title: Silicon Errata (per SoC)
+        kind: errata
+        scope: per-part
+        access: public-download
+        redistributable: false
+        form: pdf-tables
+        cadence: irregular
+
+  - vendor: nxp
+    category: soc
+    identity_keys: [part_number, silicon_revision]
+    documents:
+      - id: nxp-rm
+        title: Reference Manual (per SoC)
+        kind: register-reference
+        scope: per-part
+        access: registration-required
+        redistributable: false
+        form: pdf
+        cadence: per-part
+      - id: nxp-errata
+        title: Chip Errata (per SoC)
+        kind: errata
+        scope: per-part
+        access: registration-required
+        redistributable: false
+        form: pdf-tables
+        cadence: irregular
+
+  - vendor: st
+    category: soc
+    identity_keys: [part_number, revision_code]
+    documents:
+      - id: st-rm
+        title: Reference Manual (per family)
+        kind: register-reference
+        scope: per-family
+        access: public-download
+        redistributable: false
+        form: pdf
+        cadence: per-family
+      - id: st-errata
+        title: Device Errata Sheet
+        kind: errata
+        scope: per-part
+        access: public-download
+        redistributable: false
+        form: pdf
+        cadence: irregular
+
+  - vendor: microchip
+    category: soc
+    identity_keys: [part_number, silicon_revision]
+    documents:
+      - id: microchip-ds
+        title: Device datasheet (per part)
+        kind: register-reference
+        scope: per-part
+        access: public-download
+        redistributable: false
+        form: pdf
+        cadence: per-part
+      - id: microchip-errata
+        title: Silicon Errata and Data Sheet Clarification
+        kind: errata
+        scope: per-part
+        access: public-download
+        redistributable: false
+        form: pdf
+        cadence: irregular
+
+  - vendor: broadcom-rpi
+    category: soc
+    identity_keys: [part_number, revision]
+    documents:
+      - id: bcm-peripherals
+        title: BCM2835/2711/2712 ARM Peripherals
+        kind: register-reference
+        scope: per-part
+        access: public-download
+        redistributable: false
+        form: pdf
+        cadence: irregular
+        notes: >-
+          Partial but real, and the errata are community-maintained corrections
+          to the document rather than a vendor errata sheet.
+    gaps:
+      - kind: errata
+        reason: >-
+          No vendor errata document. Known document errors are tracked in the
+          raspberrypi/documentation repository — third-party provenance.
+
+  - vendor: rockchip
+    category: soc
+    identity_keys: [part_number, revision]
+    documents:
+      - id: rockchip-trm
+        title: Technical Reference Manual (per SoC)
+        kind: register-reference
+        scope: per-part
+        access: public-download
+        redistributable: false
+        form: pdf
+        cadence: irregular
+        notes: Partial; community-maintained mirrors are often more complete than the vendor release.
+    gaps:
+      - kind: errata
+        reason: No public errata document identified.
+
+  - vendor: allwinner
+    category: soc
+    identity_keys: [part_number, revision]
+    documents:
+      - id: allwinner-user-manual
+        title: SoC User Manual (per part)
+        kind: register-reference
+        scope: per-part
+        access: public-download
+        redistributable: false
+        form: pdf
+        cadence: irregular
+        notes: Partial; linux-sunxi's wiki is the practical reference.
+    gaps:
+      - kind: errata
+        reason: No public errata document identified.
+
+  - vendor: qualcomm
+    category: soc
+    identity_keys: [part_number, revision]
+    documents: []
+    gaps:
+      - kind: register-reference
+        reason: >-
+          Largely closed. Some Snapdragon documents are released under NDA to
+          partners. There is no public document set to ingest.
+      - kind: errata
+        reason: Not published.
+
+  - vendor: apple
+    category: soc
+    identity_keys: [part_number, revision]
+    documents: []
+    gaps:
+      - kind: register-reference
+        reason: >-
+          No public silicon specifications of any kind. The Asahi Linux
+          project's reverse-engineering documentation is the de-facto
+          reference, and carries third-party provenance — a conformance finding
+          sourced from it can never be stated with the confidence of one from a
+          vendor document.
+      - kind: errata
+        reason: Not published.
+
+  # --- Buses and standards bodies ------------------------------------------- #
+
+  - vendor: uefi-forum
+    category: standards
+    identity_keys: [spec_version]
+    documents:
+      - id: uefi-spec
+        title: UEFI Specification
+        kind: standard
+        access: public-download
+        redistributable: false
+        form: pdf
+        cadence: per-version
+      - id: acpi-spec
+        title: ACPI Specification
+        kind: standard
+        access: public-download
+        redistributable: false
+        form: pdf
+        cadence: per-version
+
+  - vendor: usb-if
+    category: standards
+    identity_keys: [spec_version, vendor_id, product_id]
+    documents:
+      - id: usb-spec
+        title: USB Specification
+        kind: standard
+        access: public-download
+        redistributable: false
+        form: pdf
+        cadence: per-version
+      - id: usb-ids
+        title: usb.ids device registry
+        kind: device-registry
+        access: public-download
+        redistributable: true
+        licence: GPL-2.0-or-later / BSD-3-Clause
+        form: flat-text
+        cadence: continuous
+
+  - vendor: pci-sig
+    category: standards
+    identity_keys: [spec_version, vendor_id, device_id]
+    documents:
+      - id: pci-base-spec
+        title: PCI Express Base Specification
+        kind: standard
+        access: membership-required
+        redistributable: false
+        form: pdf
+        cadence: per-version
+      - id: pci-ids
+        title: pci.ids device registry
+        kind: device-registry
+        access: public-download
+        redistributable: true
+        licence: GPL-2.0-or-later / BSD-3-Clause
+        form: flat-text
+        cadence: continuous
+        notes: >-
+          The registry is public even though the base spec is not. Both facts
+          belong in the record: AUTON's device identification needs the
+          registry, not the spec.
+
+  - vendor: nvm-express
+    category: standards
+    identity_keys: [spec_version]
+    documents:
+      - id: nvme-spec
+        title: NVM Express Base Specification
+        kind: standard
+        access: public-download
+        redistributable: false
+        form: pdf
+        cadence: per-version
+
+  - vendor: bluetooth-sig
+    category: standards
+    identity_keys: [spec_version]
+    documents:
+      - id: bt-core
+        title: Bluetooth Core Specification
+        kind: standard
+        access: public-download
+        redistributable: false
+        form: pdf
+        cadence: per-version
+
+  - vendor: jedec
+    category: standards
+    identity_keys: [spec_version]
+    documents:
+      - id: jedec-ddr
+        title: DDR/LPDDR standards (JESD79-x, JESD209-x)
+        kind: standard
+        access: registration-required
+        redistributable: false
+        form: pdf
+        cadence: per-version
+        notes: Free registration rather than paid membership, but still gated.
+
+  - vendor: mipi
+    category: standards
+    identity_keys: [spec_version]
+    documents: []
+    gaps:
+      - kind: standard
+        reason: >-
+          Membership required for all specifications. Nothing public to ingest,
+          which matters for display and camera interfaces on every ARM SoC.
+
+  - vendor: sd-association
+    category: standards
+    identity_keys: [spec_version]
+    documents:
+      - id: sd-simplified
+        title: SD Simplified Specifications
+        kind: standard
+        access: public-download
+        redistributable: false
+        form: pdf
+        cadence: per-version
+        notes: >-
+          The simplified specs are a subset of the full standard, sufficient
+          for a host controller driver. The full spec is membership-gated.
+
+  - vendor: ieee-802
+    category: standards
+    identity_keys: [spec_version]
+    documents:
+      - id: ieee-802-get
+        title: IEEE 802 standards via the GET program
+        kind: standard
+        access: public-download-after-embargo
+        redistributable: false
+        form: pdf
+        cadence: per-version
+        notes: Free six months after publication; current revisions are paid.
