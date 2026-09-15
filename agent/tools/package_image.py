@@ -105,6 +105,52 @@ class Package:
         }, indent=2)
 
 
+
+def train_scoped_model(manifest, workdir: Path, steps: int = 3000) -> tuple[Path | None, str]:
+    """Train and export a model scoped to this manifest.
+
+    Returns (path, note). A failure is a note, never an exception: an image
+    without a model is a worse image, not a failed package, and the README says
+    which one it is.
+
+    Measured in `.claude/PRPs/reports/e2e-intent-scoped-corpus.md`: scoping the
+    corpus does not improve answer quality. It is done here for what it does
+    control — image content, and not shipping capability claims the image
+    cannot honour.
+    """
+    workdir.mkdir(parents=True, exist_ok=True)
+    manifest_path = workdir / "manifest.json"
+    manifest_path.write_text(manifest.to_json() + "\n")
+
+    py = str(ROOT / ".venv" / "bin" / "python")
+    if not Path(py).exists():
+        return None, "no virtualenv interpreter; cannot train"
+
+    steps_and_args = [
+        (["SLM/tools/build_corpus.py", "--manifest", str(manifest_path),
+          "--output", str(workdir / "corpus.jsonl")], "build the scoped corpus"),
+        (["SLM/tools/tokenizer.py", "--input", str(workdir / "corpus.jsonl"),
+          "--output", str(workdir / "vocab.json"), "--vocab-size", "1024",
+          "--tokenize-to", str(workdir / "tokens.jsonl")], "tokenize"),
+        (["SLM/scripts/train.py", "--config", "SLM/configs/chat_tiny.yaml",
+          "--dataset", str(workdir / "tokens.jsonl"), "--output", str(workdir),
+          "--max-steps", str(steps), "--seq-len", "64", "--batch-size", "8"], "train"),
+        (["SLM/scripts/export_auton.py", "--checkpoint", str(workdir / "final.pt"),
+          "--vocab", str(workdir / "vocab.json"),
+          "--output", str(workdir / "auton-slm.bin")], "export"),
+    ]
+    for args, what in steps_and_args:
+        r = subprocess.run([py, *args], cwd=ROOT, capture_output=True,
+                           text=True, timeout=3600)
+        if r.returncode != 0:
+            tail = (r.stderr or r.stdout).strip().splitlines()[-2:]
+            return None, f"could not {what}: {' '.join(tail)[:160]}"
+
+    out = workdir / "auton-slm.bin"
+    return (out, f"trained on the scoped corpus, {steps} steps") if out.exists() \
+        else (None, "export produced no model")
+
+
 def _record(out: Path, rel: str, produced_by: str, from_input: str,
             implements: str = "") -> Artifact | None:
     p = out / rel
@@ -115,7 +161,7 @@ def _record(out: Path, rel: str, produced_by: str, from_input: str,
 
 
 def package(sentence: str, out: Path, tree: Path, service: str | None = None,
-            model: Path | None = None) -> Package:
+            model: Path | None = None, train: bool = False) -> Package:
     # Match the intent BEFORE creating anything. A declined sentence used to
     # leave an empty out/spec/ behind, which is the same "nothing invalid
     # reaches disk" rule intent-C enforces — an empty package directory looks
@@ -152,6 +198,34 @@ def package(sentence: str, out: Path, tree: Path, service: str | None = None,
             f"slice of {sentence!r}",
             f"provides {', '.join(provided)}" if provided else
             "included as a transitive dependency"))
+
+    if model is not None:
+        note = ("supplied with --model" if Path(model).exists()
+                else f"--model {model} does not exist")
+    elif train:
+        model, note = train_scoped_model(manifest, out / "model" / "work")
+    else:
+        note = "not requested; pass --train to train one, or --model to supply one"
+    if model and Path(model).exists():
+        (out / "model").mkdir(exist_ok=True)
+        dest_name = Path(model).name
+        shutil.copy2(model, out / "model" / dest_name)
+        shutil.copy2(out / "spec" / "manifest.json", out / "model" / "manifest.json")
+        pkg.artifacts.append(_record(
+            out, f"model/{dest_name}", "export_auton.py", note,
+            "the on-device model this image answers from"))
+        pkg.artifacts.append(_record(
+            out, "model/manifest.json", "intent_manifest.py", "intent",
+            "the manifest this model was scoped to — kept beside it so the two "
+            "cannot be separated"))
+        # The training work directory is large and is not the deliverable.
+        shutil.rmtree(out / "model" / "work", ignore_errors=True)
+    else:
+        pkg.assumptions.append(
+            f"model: none packaged ({note}). The image falls back to the "
+            f"kernel's rule engine, which answers device and system questions "
+            f"but not free-form ones.")
+
 
     # The service spec, if this intent maps to a buildable service.
     service_name = service
@@ -190,17 +264,6 @@ def package(sentence: str, out: Path, tree: Path, service: str | None = None,
 
     if result.leakage_report and Path(result.leakage_report).exists():
         pkg.leakage = json.loads(Path(result.leakage_report).read_text())
-
-    if model and model.exists():
-        (out / "model").mkdir(exist_ok=True)
-        shutil.copy2(model, out / "model" / model.name)
-        pkg.artifacts.append(_record(
-            out, f"model/{model.name}", "export_auton.py",
-            "scoped corpus", "the on-device model this image answers from"))
-    else:
-        pkg.blocked_by = pkg.blocked_by or ""
-        pkg.assumptions.append(
-            "model: none packaged — pass --model to include a scoped model")
 
     (out / "install.sh").write_text(INSTALLER)
     (out / "install.sh").chmod(0o755)
@@ -249,7 +312,9 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--output", required=True)
     ap.add_argument("--tree", default="kernels/x86_64")
     ap.add_argument("--service")
-    ap.add_argument("--model")
+    ap.add_argument("--model", help="use this model instead of training one")
+    ap.add_argument("--train", action="store_true",
+                    help="train a model scoped to this intent (minutes)")
     args = ap.parse_args(argv)
 
     tree = Path(args.tree)
@@ -258,7 +323,8 @@ def main(argv: list[str] | None = None) -> int:
 
     try:
         pkg = package(" ".join(args.sentence), Path(args.output), tree,
-                      args.service, Path(args.model) if args.model else None)
+                      args.service, Path(args.model) if args.model else None,
+                      train=args.train)
     except IntentError as exc:
         print(f"DECLINED: {exc}", file=sys.stderr)
         return 1

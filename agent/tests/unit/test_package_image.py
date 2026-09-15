@@ -169,3 +169,61 @@ class TestACompletePackage:
         assert pkg.leakage
         assert pkg.leakage["leaked_symbols"] == 0
         assert pkg.leakage["conclusive"]
+
+
+class TestTheScopedModel:
+    """Training takes minutes, so the fast checks are on the plumbing and the
+    failure path. The full run is marked slow and exercised separately."""
+
+    def test_without_training_the_absence_is_recorded_not_silent(self, tmp_path):
+        """An image without a model is a worse image, not a failed package —
+        but the README must say which one it is, because the difference is what
+        the image can answer."""
+        pkg = package("I want to play Doom", tmp_path / "out", TREE, train=False)
+
+        assert any("model: none packaged" in a for a in pkg.assumptions)
+        assert "rule engine" in " ".join(pkg.assumptions)
+
+    def test_a_training_failure_is_a_note_not_an_exception(self, tmp_path, monkeypatch):
+        import package_image
+
+        def fail(manifest, workdir, steps=3000):
+            return None, "forced failure"
+
+        monkeypatch.setattr(package_image, "train_scoped_model", fail)
+        pkg = package("I want to play Doom", tmp_path / "out", TREE, train=True)
+
+        assert any("forced failure" in a for a in pkg.assumptions)
+
+    def test_a_supplied_model_is_packaged_with_its_manifest(self, tmp_path):
+        """The manifest sits beside the model so the two cannot be separated —
+        a model whose scope nobody can look up is a model nobody can trust."""
+        fake = tmp_path / "auton-slm.bin"
+        fake.write_bytes(b"\x00" * 64)
+
+        pkg = package("I want to play Doom", tmp_path / "out", TREE, model=fake)
+
+        assert (tmp_path / "out" / "model" / "auton-slm.bin").exists()
+        assert (tmp_path / "out" / "model" / "manifest.json").exists()
+        assert any(a.path == "model/manifest.json" for a in pkg.artifacts)
+
+    @pytest.mark.slow
+    @pytest.mark.skipif(not CAN_BUILD, reason="needs a kernel tree and cross toolchain")
+    def test_a_full_package_trains_and_ships_a_valid_model(self, tmp_path):
+        """AUTON train "<intent>" --output <dir>, end to end. ~2 minutes."""
+        import subprocess
+
+        pkg = package("hand out addresses", tmp_path / "out", TREE,
+                      service="dhcp", train=True)
+
+        assert pkg.complete
+        model = tmp_path / "out" / "model" / "auton-slm.bin"
+        assert model.exists()
+
+        r = subprocess.run(
+            [str(ROOT / ".venv" / "bin" / "python"),
+             str(ROOT / "SLM" / "tools" / "auton_format.py"), "--validate", str(model)],
+            capture_output=True, text=True, timeout=120)
+        assert r.returncode == 0, r.stderr
+        # The training work directory is large and is not the deliverable.
+        assert not (tmp_path / "out" / "model" / "work").exists()
