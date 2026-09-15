@@ -201,6 +201,69 @@ The following are defined in each architecture's spec (`arch/<arch>.md`):
 - Architecture-specific bootloader provides initial environment (GRUB2 for x86, U-Boot/UEFI for ARM, OpenSBI for RISC-V)
 - Boot calls into: `mm` (PMM/VMM init), `sched`, `ipc`, `dev`, `slm`, `drivers`
 
+## Generated Init Sequence (REQUIRED)
+
+`kernel_main` must not carry a fixed call order. Measured on the seed tree: a
+slice excluding `net` fails to link with **10 undefined references** —
+`net_bringup`, `net_ip`, `net_dns`, `net_gw`, `net_is_up`, `slm_init`,
+`slm_process_text`, `slm_backend_name`, `slm_driver_for_pci`, `roles_dispatch`
+(`.claude/PRPs/reports/w2-factory-dependency-audit.md`). Five come from
+`kernel_main` itself and five from the chat loop.
+
+That is why `excludes` cannot currently be honoured: omitting a source does not
+omit its caller.
+
+### Shape
+
+The build emits `kernel/boot/init_sequence.c` from the slice:
+
+```c
+/* GENERATED from the capability slice. Do not edit. */
+#include "init_sequence.h"
+
+static const init_step_t steps[] = {
+    { "serial",  serial_init,   "[DRV] Serial 16550 initialized" },
+    { "idt",     idt_init,      "[BOOT] Interrupts initialized" },
+    { "mm",      pmm_init_boot, NULL },   /* prints its own richer [MM] line */
+    { "dev",     pci_init,      NULL },
+    /* net absent: not in this slice */
+};
+const init_step_t *init_steps = steps;
+const uint32_t     init_step_count = sizeof steps / sizeof steps[0];
+```
+
+`kernel_main` walks the table. It contains no subsystem name.
+
+### Rules
+
+1. **Order is dependency order**, computed from the same `depends_on`
+   front-matter the slice uses. A hand-maintained order would be a second
+   source of truth that drifts.
+2. **A subsystem outside the slice contributes no entry**, so its init symbol is
+   never referenced and the linker never asks for it.
+3. **Optional consumers are not dependencies.** `boot` calling `net_bringup`
+   when a network is present does not make `boot` depend on `net` — see
+   `boot`'s `depends_on: [arch]` front-matter and the reconciliation in
+   `.claude/PRPs/reports/w1-spec-capability-index.md`.
+4. **Cross-subsystem calls from the terminal go through a fact provider.** The
+   chat loop calls `net_ip()` directly today, which is why `terminal` drags in
+   `net`. It must instead read from a table populated by whichever subsystems
+   are present, with absent facts reported as unavailable rather than linking
+   against a missing symbol. This is the same defect the scoped-corpus
+   measurement found from the runtime end
+   (`.claude/PRPs/reports/e2e-intent-scoped-corpus.md`).
+5. **`roles.c`'s capability table is generated too.** It registers
+   `http_server_run` by direct function pointer, so a role whose implementation
+   is outside the slice must be **absent from the table**, not a null entry — a
+   null entry is a crash where an absent one is an honest "I cannot do that".
+
+### Verification
+
+`tests/kernel/run_leakage_test.sh --excludes <caps>` inspects the built image
+with `nm` and attributes symbols by compiling each excluded source. Demonstrated
+in both directions on the seed tree: the full image leaks 68 net symbols, a
+core-only image leaks none.
+
 ## Acceptance Criteria
 
 1. Kernel boots in QEMU for the configured architecture

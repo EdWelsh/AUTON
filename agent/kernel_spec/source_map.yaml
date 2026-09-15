@@ -1,0 +1,84 @@
+# Which source paths implement which capability.
+#
+# The capability index (subsystems/*.md front-matter) says what a subsystem
+# provides. This says where that lives in a kernel tree, which is the last hop
+# between a manifest and a link command.
+#
+# It is data rather than a path convention because the mapping is genuinely not
+# one-to-one: `net` is kernel/net/ AND the e1000 driver; `mm` is one file inside
+# kernel/lib/ in the seed tree; `lib` has no spec at all and is in every image.
+#
+# Paths are globs relative to a kernel tree's root, matched against .c and .S.
+
+version: 1
+
+# Every image contains these regardless of manifest. Justified in
+# .claude/PRPs/reports/w2-factory-dependency-audit.md — the audit measured
+# what is depended on by three or more subsystems.
+# Capabilities the mandatory core provides. Declared so they are not reported
+# as unmapped — a warning that fires on every build teaches a reader to ignore
+# it, and then the real case goes unnoticed.
+core_provides: [arch, boot-info, multiboot2, early-serial, slm-handoff, klog,
+                module-load, serial]
+
+mandatory_core:
+  - kernel/arch/**            # the HAL; no image boots without it
+  - kernel/boot/**            # entry point and Multiboot2 parsing
+  - kernel/lib/kprintf.c      # every subsystem calls it, including arch
+  - kernel/lib/kstr.c
+  - kernel/lib/kmath.c
+  - kernel/lib/string.c
+  # Every image emits [BOOT], [MM] and [DEV] markers before anything else
+  # exists, so the console is core. The audit found `drivers` depended on by
+  # four subsystems for exactly this reason.
+  - kernel/sys/console.c
+  - kernel/drivers/arch/**
+
+capabilities:
+  # --- mm ---
+  allocator:   [kernel/lib/phys.c]      # the seed's bump allocator; a generated
+  pmm:         [kernel/lib/phys.c]      # tree puts these under kernel/mm/
+  vmm:         [kernel/mm/vmm.c]
+  slab:        [kernel/mm/slab.c]
+
+  # --- dev ---
+  pci:             [kernel/dev/pci.c]
+  device-registry: [kernel/dev/**]
+  driver-binding:  [kernel/dev/**]
+
+  # --- drivers ---
+  serial:      [kernel/sys/console.c, kernel/drivers/arch/**]
+  timer:       [kernel/drivers/arch/**]
+  keyboard:    [kernel/drivers/arch/**]
+  input:       [kernel/drivers/arch/**]
+  framebuffer: [kernel/drivers/fb/**]
+  e1000:       [kernel/net/e1000.c]     # a NIC driver, but it lives with the stack
+  virtio-blk:  [kernel/drivers/blk/**]
+
+  # --- net ---
+  netif:       [kernel/net/netif.c, kernel/net/setup.c]
+  ethernet:    [kernel/net/netif.c]
+  arp:         [kernel/net/arp.c]
+  ipv4:        [kernel/net/ipv4.c]
+  icmp:        [kernel/net/ipv4.c]
+  udp:         [kernel/net/ipv4.c]
+  tcp:         [kernel/net/tcp.c]
+  dhcp-client: [kernel/net/dhcp.c]
+  dns:         [kernel/server/dns.c]
+  http-server: [kernel/server/http.c, kernel/server/serve.c]
+  http-client: [kernel/server/http.c]
+  sockets:     [kernel/net/ipv4.c]   # datagram path; tcp.c comes via `tcp`
+
+  # --- slm ---
+  rule-engine:          [kernel/slm/slm.c, kernel/slm/roles.c]
+  intent-classify:      [kernel/slm/slm.c]
+  knowledge-base:       [kernel/slm/slm.c]
+  scoped:               [kernel/slm/slm.c]
+  neural:               [kernel/slm/neural/**]
+  conversation-context: [kernel/slm/chat.c]
+
+  # --- sys ---
+  terminal:         [kernel/slm/chat.c]      # the chat REPL is the terminal
+  klog:             [kernel/lib/kprintf.c]
+  uptime:           [kernel/slm/sysinfo.c]
+  resource-monitor: [kernel/slm/sysinfo.c]
