@@ -1,7 +1,7 @@
 {
-  "generated": "2026-09-15T03:03:11+00:00",
+  "generated": "2026-09-15T11:24:42+00:00",
   "arch": "x86_64",
-  "source_commit": "530f9c5e6e2e7eca16d17cbac226c7b9745fbbd2",
+  "source_commit": "70f3e4929da05c479fc7b9a69ef891c2ced763c4",
   "files": [
     {
       "path": "kernels/x86_64/kernel/arch/x86_64/boot/boot.S",
@@ -39,16 +39,6 @@
       "subsystem": "arch",
       "lines": 59,
       "includes": []
-    },
-    {
-      "path": "kernels/x86_64/kernel/boot/absent.c",
-      "subsystem": "boot",
-      "lines": 82,
-      "includes": [
-        "kernel.h",
-        "net.h",
-        "stdint.h"
-      ]
     },
     {
       "path": "kernels/x86_64/kernel/boot/boot_info.c",
@@ -642,312 +632,6 @@
       "calls": [],
       "file": "kernels/x86_64/kernel/arch/x86_64/idt.c",
       "subsystem": "arch",
-      "kind": "function",
-      "called_by": [
-        "kernel_main"
-      ]
-    },
-    {
-      "name": "dns_server_run",
-      "signature": "void (void)",
-      "line": 17,
-      "static": false,
-      "defined": false,
-      "calls": [],
-      "file": "kernels/x86_64/kernel/boot/absent.c",
-      "subsystem": "boot",
-      "kind": "function",
-      "called_by": []
-    },
-    {
-      "name": "dns_server_run",
-      "signature": "void (void)",
-      "line": 18,
-      "static": false,
-      "defined": true,
-      "calls": [
-        "kprintf"
-      ],
-      "file": "kernels/x86_64/kernel/boot/absent.c",
-      "subsystem": "boot",
-      "kind": "function",
-      "called_by": []
-    },
-    {
-      "name": "http_server_run",
-      "signature": "void (void)",
-      "line": 23,
-      "static": false,
-      "defined": false,
-      "calls": [],
-      "file": "kernels/x86_64/kernel/boot/absent.c",
-      "subsystem": "boot",
-      "kind": "function",
-      "called_by": []
-    },
-    {
-      "name": "http_server_run",
-      "signature": "void (void)",
-      "line": 24,
-      "static": false,
-      "defined": true,
-      "calls": [
-        "kprintf"
-      ],
-      "file": "kernels/x86_64/kernel/boot/absent.c",
-      "subsystem": "boot",
-      "kind": "function",
-      "called_by": []
-    },
-    {
-      "name": "slm_neural_available",
-      "signature": "int (void)",
-      "line": 29,
-      "static": false,
-      "defined": false,
-      "calls": [],
-      "file": "kernels/x86_64/kernel/boot/absent.c",
-      "subsystem": "boot",
-      "kind": "function",
-      "called_by": [
-        "slm_process_text"
-      ]
-    },
-    {
-      "name": "slm_neural_available",
-      "signature": "int (void)",
-      "line": 30,
-      "static": false,
-      "defined": true,
-      "calls": [],
-      "file": "kernels/x86_64/kernel/boot/absent.c",
-      "subsystem": "boot",
-      "kind": "function",
-      "called_by": [
-        "slm_process_text"
-      ]
-    },
-    {
-      "name": "slm_neural_detokenize",
-      "signature": "uint32_t (const uint32_t *, uint32_t, char *, uint32_t)",
-      "line": 35,
-      "static": false,
-      "defined": false,
-      "calls": [],
-      "file": "kernels/x86_64/kernel/boot/absent.c",
-      "subsystem": "boot",
-      "kind": "function",
-      "called_by": [
-        "slm_process_text"
-      ]
-    },
-    {
-      "name": "slm_neural_detokenize",
-      "signature": "uint32_t (const uint32_t *, uint32_t, char *, uint32_t)",
-      "line": 36,
-      "static": false,
-      "defined": true,
-      "calls": [],
-      "file": "kernels/x86_64/kernel/boot/absent.c",
-      "subsystem": "boot",
-      "kind": "function",
-      "called_by": [
-        "slm_process_text"
-      ]
-    },
-    {
-      "name": "slm_neural_error_text",
-      "signature": "const char *(void)",
-      "line": 41,
-      "static": false,
-      "defined": false,
-      "calls": [],
-      "file": "kernels/x86_64/kernel/boot/absent.c",
-      "subsystem": "boot",
-      "kind": "function",
-      "called_by": [
-        "slm_init"
-      ]
-    },
-    {
-      "name": "slm_neural_error_text",
-      "signature": "const char *(void)",
-      "line": 42,
-      "static": false,
-      "defined": true,
-      "calls": [],
-      "file": "kernels/x86_64/kernel/boot/absent.c",
-      "subsystem": "boot",
-      "kind": "function",
-      "called_by": [
-        "slm_init"
-      ]
-    },
-    {
-      "name": "slm_neural_infer",
-      "signature": "uint32_t (const uint32_t *, uint32_t, uint32_t *, uint32_t, const void *)",
-      "line": 47,
-      "static": false,
-      "defined": false,
-      "calls": [],
-      "file": "kernels/x86_64/kernel/boot/absent.c",
-      "subsystem": "boot",
-      "kind": "function",
-      "called_by": [
-        "slm_process_text"
-      ]
-    },
-    {
-      "name": "slm_neural_infer",
-      "signature": "uint32_t (const uint32_t *, uint32_t, uint32_t *, uint32_t, const void *)",
-      "line": 48,
-      "static": false,
-      "defined": true,
-      "calls": [],
-      "file": "kernels/x86_64/kernel/boot/absent.c",
-      "subsystem": "boot",
-      "kind": "function",
-      "called_by": [
-        "slm_process_text"
-      ]
-    },
-    {
-      "name": "slm_neural_load_model",
-      "signature": "int (const void *, uint32_t)",
-      "line": 53,
-      "static": false,
-      "defined": false,
-      "calls": [],
-      "file": "kernels/x86_64/kernel/boot/absent.c",
-      "subsystem": "boot",
-      "kind": "function",
-      "called_by": [
-        "slm_init"
-      ]
-    },
-    {
-      "name": "slm_neural_load_model",
-      "signature": "int (const void *, uint32_t)",
-      "line": 54,
-      "static": false,
-      "defined": true,
-      "calls": [],
-      "file": "kernels/x86_64/kernel/boot/absent.c",
-      "subsystem": "boot",
-      "kind": "function",
-      "called_by": [
-        "slm_init"
-      ]
-    },
-    {
-      "name": "slm_neural_model_info",
-      "signature": "void (char *, uint32_t)",
-      "line": 59,
-      "static": false,
-      "defined": false,
-      "calls": [],
-      "file": "kernels/x86_64/kernel/boot/absent.c",
-      "subsystem": "boot",
-      "kind": "function",
-      "called_by": [
-        "slm_init"
-      ]
-    },
-    {
-      "name": "slm_neural_model_info",
-      "signature": "void (char *, uint32_t)",
-      "line": 60,
-      "static": false,
-      "defined": true,
-      "calls": [],
-      "file": "kernels/x86_64/kernel/boot/absent.c",
-      "subsystem": "boot",
-      "kind": "function",
-      "called_by": [
-        "slm_init"
-      ]
-    },
-    {
-      "name": "slm_neural_tokenize",
-      "signature": "uint32_t (const char *, uint32_t, uint32_t *, uint32_t)",
-      "line": 65,
-      "static": false,
-      "defined": false,
-      "calls": [],
-      "file": "kernels/x86_64/kernel/boot/absent.c",
-      "subsystem": "boot",
-      "kind": "function",
-      "called_by": [
-        "slm_process_text"
-      ]
-    },
-    {
-      "name": "slm_neural_tokenize",
-      "signature": "uint32_t (const char *, uint32_t, uint32_t *, uint32_t)",
-      "line": 66,
-      "static": false,
-      "defined": true,
-      "calls": [],
-      "file": "kernels/x86_64/kernel/boot/absent.c",
-      "subsystem": "boot",
-      "kind": "function",
-      "called_by": [
-        "slm_process_text"
-      ]
-    },
-    {
-      "name": "tcp_input",
-      "signature": "void (ipv4_t, const uint8_t *, uint16_t)",
-      "line": 71,
-      "static": false,
-      "defined": false,
-      "calls": [],
-      "file": "kernels/x86_64/kernel/boot/absent.c",
-      "subsystem": "boot",
-      "kind": "function",
-      "called_by": [
-        "ip_input"
-      ]
-    },
-    {
-      "name": "tcp_input",
-      "signature": "void (ipv4_t, const uint8_t *, uint16_t)",
-      "line": 72,
-      "static": false,
-      "defined": true,
-      "calls": [],
-      "file": "kernels/x86_64/kernel/boot/absent.c",
-      "subsystem": "boot",
-      "kind": "function",
-      "called_by": [
-        "ip_input"
-      ]
-    },
-    {
-      "name": "dhcp_serve",
-      "signature": "void (void)",
-      "line": 77,
-      "static": false,
-      "defined": false,
-      "calls": [],
-      "file": "kernels/x86_64/kernel/boot/absent.c",
-      "subsystem": "boot",
-      "kind": "function",
-      "called_by": [
-        "service_main"
-      ]
-    },
-    {
-      "name": "service_main",
-      "signature": "void (void)",
-      "line": 79,
-      "static": false,
-      "defined": true,
-      "calls": [
-        "dhcp_serve"
-      ],
-      "file": "kernels/x86_64/kernel/boot/absent.c",
-      "subsystem": "boot",
       "kind": "function",
       "called_by": [
         "kernel_main"
@@ -2715,9 +2399,7 @@
       "file": "kernels/x86_64/kernel/services/dhcp/serve.c",
       "subsystem": "services",
       "kind": "function",
-      "called_by": [
-        "service_main"
-      ]
+      "called_by": []
     },
     {
       "name": "dhcp_set_clock",
@@ -5596,16 +5278,15 @@
       "spec": "arch/x86_64.md"
     },
     "boot": {
-      "files": 3,
-      "lines": 260,
-      "symbols": 29,
+      "files": 2,
+      "lines": 178,
+      "symbols": 7,
       "depends_on": [
         "arch",
         "dev",
         "drivers",
         "lib",
         "net",
-        "services",
         "slm"
       ],
       "spec": "subsystems/boot.md"

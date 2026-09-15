@@ -31,6 +31,39 @@ from intent_service import STUB_MARKER  # noqa: E402
 from service_spec import ServiceSpecError, load as load_service  # noqa: E402
 
 SERVICES = ROOT / "agent" / "kernel_spec" / "services"
+TEMPLATES = ROOT / "agent" / "kernel_spec" / "templates"
+
+
+def scaffold(tree: Path, arch: str = "x86_64") -> list[str]:
+    """Lay the build scaffolding into a target tree.
+
+    AUTON contains no kernel — agents write the source. But a tree still needs a
+    Makefile, a linker script and a toolchain fragment before anything can be
+    compiled, and those are identical for every image. Emitting them is the
+    factory's job; authoring them is not an agent's.
+
+    Existing files are left alone, so this is safe to run over a tree an agent
+    has already written into.
+    """
+    src = TEMPLATES / arch
+    if not src.is_dir():
+        raise GateFailure(f"[gate: scaffold] no template for arch {arch!r} in {TEMPLATES}")
+
+    placed: list[str] = []
+    for item in sorted(src.rglob("*")):
+        if not item.is_file():
+            continue
+        rel = item.relative_to(src)
+        # arch/ files belong under the kernel's arch directory; the rest sit at
+        # the tree root.
+        dest = (tree / "kernel" / "arch" / arch / rel.name if rel.parts[0] == "arch"
+                else tree / rel)
+        if dest.exists():
+            continue
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(item, dest)
+        placed.append(str(dest.relative_to(tree)))
+    return placed
 
 # Compiler flags the kernel build needs. Kept here so every step that compiles
 # — the stub generator and make — is handed the same list, which is the defect
@@ -130,6 +163,16 @@ def build(name: str, tree: Path, make_iso: bool = False, cc: str | None = None,
     spec = gate_spec(name)
     result.gates.append("spec: valid, resolves, not a stub")
 
+    placed = scaffold(tree)
+    if placed:
+        result.gates.append(f"scaffold: laid {len(placed)} build file(s)")
+    if not (tree / "kernel").is_dir() or not any((tree / "kernel").rglob("*.c")):
+        raise GateFailure(
+            f"[gate: sources] {tree} has build scaffolding but no kernel source. "
+            f"AUTON contains no kernel — agents write it against "
+            f"kernel_spec/subsystems/. Point --tree at a tree they have written."
+        )
+
     extra = _service_sources(tree, name)
     try:
         included, _, _ = resolve(list(spec.requires), list(spec.excludes), tree)
@@ -211,6 +254,8 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("service")
     ap.add_argument("--tree", default="kernels/x86_64")
     ap.add_argument("--iso", action="store_true")
+    ap.add_argument("--scaffold-only", action="store_true",
+                    help="lay the build files into --tree and stop")
     ap.add_argument("--cc")
     ap.add_argument("--output", help="copy the ISO here")
     args = ap.parse_args(argv)
@@ -218,6 +263,17 @@ def main(argv: list[str] | None = None) -> int:
     tree = Path(args.tree)
     if not tree.is_absolute():
         tree = ROOT / tree
+
+    if args.scaffold_only:
+        try:
+            placed = scaffold(tree)
+        except GateFailure as exc:
+            print(f"REFUSED: {exc}", file=sys.stderr)
+            return 1
+        print(f"scaffolded {tree}: {len(placed)} file(s)")
+        for p in placed:
+            print(f"  {p}")
+        return 0
 
     try:
         r = build(args.service, tree, args.iso, args.cc)

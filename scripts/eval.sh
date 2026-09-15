@@ -48,20 +48,34 @@ done
 [ -f "$PROMPTS" ] || { echo "no such prompt set: $PROMPTS" >&2; exit 2; }
 
 # --- pick the ISO ----------------------------------------------------------- #
+# AUTON contains no kernel — the agents write it (README.md). Say that plainly
+# rather than letting `make` fail with a missing-Makefile error that reads like
+# a broken checkout.
+KTREE="${KERNEL_TREE:-$ROOT/kernels/x86_64}"
+if [ ! -f "$KTREE/Makefile" ]; then
+	echo "no kernel tree at $KTREE — there is nothing to boot." >&2
+	echo "  AUTON does not contain a kernel; agents generate one against" >&2
+	echo "  agent/kernel_spec/. Scaffold and build a tree with:" >&2
+	echo "    agent/tools/build_service.py <service> --tree <dir> --iso" >&2
+	echo "  or restore the retired reference:" >&2
+	echo "    git checkout kernel-reference-v1 -- kernels/" >&2
+	exit 2
+fi
+
 if [ "$MODEL" = "rule" ]; then
-	ISO="$ROOT/kernels/x86_64/build/auton.iso"
+	ISO="$KTREE/build/auton.iso"
 	# Same MEM as the neural path: the neural backend needs >=128M to be
 	# selected, and a differing memory size would make the two baselines
 	# disagree on "how much memory" for reasons unrelated to the model.
 	MEM="${MEM:-256M}"
-	make -C "$ROOT/kernels/x86_64" iso >/dev/null 2>&1 || { echo "build failed" >&2; exit 1; }
+	make -C "$KTREE" iso >/dev/null 2>&1 || { echo "iso build failed in $KTREE" >&2; exit 1; }
 	FINGERPRINT="rule:$(shasum -a 256 "$ROOT/kernels/x86_64/build/kernel.bin" | cut -c1-16)"
 else
 	case "$MODEL" in /*) ;; *) MODEL="$PWD/$MODEL";; esac
 	[ -f "$MODEL" ] || { echo "no such model: $MODEL" >&2; exit 2; }
-	ISO="$ROOT/kernels/x86_64/build/auton-neural.iso"
+	ISO="$KTREE/build/auton-neural.iso"
 	MEM="${MEM:-256M}"
-	make -C "$ROOT/kernels/x86_64" iso-neural MODEL="$MODEL" >/dev/null 2>&1 \
+	make -C "$KTREE" iso-neural MODEL="$MODEL" >/dev/null 2>&1 \
 		|| { echo "neural iso build failed" >&2; exit 1; }
 	FINGERPRINT="neural:$(shasum -a 256 "$MODEL" | cut -c1-16)"
 fi
