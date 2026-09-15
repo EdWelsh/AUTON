@@ -82,6 +82,10 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--tree", required=True)
     ap.add_argument("--excludes", required=True)
     ap.add_argument("--image", default="")
+    ap.add_argument("--report", default="",
+                    help="write the measurement as JSON. The PRD tracks leakage "
+                         "as a number with a target of 0, and a pass/fail cannot "
+                         "be tracked over time.")
     ap.add_argument("--stubs", default="",
                     help="a gen_absent.py stub list; those symbols are reported "
                          "as absence stubs rather than as leaks")
@@ -155,6 +159,27 @@ def main(argv: list[str] | None = None) -> int:
     if stub_hits:
         print(f"  {len(stub_hits)} symbol(s) present as generated absence stubs: "
               f"{', '.join(sorted(stub_hits))}")
+
+    if args.report:
+        import json
+        measurement = {
+            "image": args.image,
+            "excludes": excludes,
+            "capabilities_checked": sorted(caps),
+            "sources_attributed": len(sources) - len(unreadable),
+            "sources_unattributable": len(unreadable),
+            "image_symbols": len(image_syms),
+            "leaked_symbols": sum(len(v) for v in leaked.values()),
+            "leaked_by_source": {k: sorted(v) for k, v in leaked.items()},
+            "absence_stubs": sorted(stub_hits),
+            # Inconclusive is not clean. A run that could not attribute every
+            # source has not checked them, and recording it as 0 would put a
+            # false zero into a series the PRD tracks.
+            "conclusive": not unreadable,
+        }
+        Path(args.report).parent.mkdir(parents=True, exist_ok=True)
+        Path(args.report).write_text(json.dumps(measurement, indent=2) + "\n")
+        print(f"  report -> {args.report}")
 
     if leaked:
         print(f"\nLEAKAGE: {sum(len(v) for v in leaked.values())} symbol(s) from "

@@ -53,10 +53,24 @@ class SourceMap:
         )
 
 
+# Build output is not source. Generated files live under build*/ and compiling
+# them back in is how an artifact from one configuration ends up inside the
+# next one — which already happened once, when a generated stub file left under
+# kernel/ poisoned every later general build.
+BUILD_DIRS = ("build", "build-")
+
+
+def _is_build_output(rel: str) -> bool:
+    head = rel.split("/", 1)[0]
+    return head == "build" or head.startswith("build-")
+
+
 def _tree_sources(tree: Path) -> list[Path]:
-    """Every source in the tree, in the order `find` yields sorted — the list
-    the glob produces, and the thing --all must reproduce."""
-    out = [p for p in tree.rglob("*") if p.suffix in SOURCE_SUFFIXES and p.is_file()]
+    """Every source in the tree, sorted — the list the Makefile's glob produces,
+    and the thing --all must reproduce. Build directories are excluded."""
+    out = [p for p in tree.rglob("*")
+           if p.suffix in SOURCE_SUFFIXES and p.is_file()
+           and not _is_build_output(str(p.relative_to(tree)))]
     return sorted(out)
 
 

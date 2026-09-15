@@ -19,6 +19,7 @@ case "$PY" in /*) ;; *) PY="$ROOT/$PY";; esac
 EXCLUDES=""
 IMAGE=""
 STUBS=""
+REPORT=""
 while [ $# -gt 0 ]; do
 	case "$1" in
 		--excludes)   EXCLUDES="${2:?--excludes needs a value}"; shift 2 ;;
@@ -26,6 +27,8 @@ while [ $# -gt 0 ]; do
 		--image)      IMAGE="${2:?--image needs a value}"; shift 2 ;;
 		--stubs)      STUBS="${2:?--stubs needs a value}"; shift 2 ;;
 		--stubs=*)    STUBS="${1#*=}"; shift ;;
+		--report)     REPORT="${2:?--report needs a value}"; shift 2 ;;
+		--report=*)   REPORT="${1#*=}"; shift ;;
 		*) echo "unknown argument: $1" >&2; exit 2 ;;
 	esac
 done
@@ -53,4 +56,5 @@ exec "$PY" "$ROOT/tests/kernel/leakage_check.py" \
 	--tree "$KERNEL_TREE" \
 	--excludes "$EXCLUDES" \
 	--image "$IMAGE" \
-	--stubs "$STUBS"
+	--stubs "$STUBS" \
+	--report "$REPORT"

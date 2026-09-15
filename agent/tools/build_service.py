@@ -63,6 +63,7 @@ class BuildResult:
     stubs: list[str] = field(default_factory=list)
     kernel_bytes: int = 0
     iso_bytes: int = 0
+    leakage_report: Path | None = None
     gates: list[str] = field(default_factory=list)
 
 
@@ -95,14 +96,24 @@ def gate_spec(name: str) -> "ServiceSpec":   # noqa: F821
     return spec
 
 
-def gate_leakage(tree: Path, excludes: list[str], stubs: Path) -> str:
+def gate_leakage(tree: Path, excludes: list[str], stubs: Path, image: Path,
+                 report: Path | None = None) -> str:
     if not excludes:
-        return "no excludes to check"
+        # excludes is mandatory in every manifest: without it "minimal" is
+        # unfalsifiable, so an empty one is a finding rather than a clean pass.
+        raise GateFailure(
+            "[gate: leakage] the spec declares no excludes. Without them there "
+            "is nothing to verify absent, and 'minimal' is an opinion."
+        )
+    if not image.exists():
+        raise GateFailure(f"[gate: leakage] no image at {image} to inspect")
     script = ROOT / "tests" / "kernel" / "run_leakage_test.sh"
     env = {**os.environ, "KERNEL_TREE": str(tree)}
-    r = subprocess.run(
-        [str(script), "--excludes", ",".join(excludes), "--stubs", str(stubs)],
-        capture_output=True, text=True, env=env, timeout=600)
+    args = [str(script), "--excludes", ",".join(excludes), "--stubs", str(stubs),
+            "--image", str(image)]
+    if report:
+        args += ["--report", str(report)]
+    r = subprocess.run(args, capture_output=True, text=True, env=env, timeout=600)
     if r.returncode == 1:
         raise GateFailure(f"[gate: leakage] excluded capabilities are in the image\n"
                           f"{r.stdout.strip()}")
@@ -129,7 +140,12 @@ def build(name: str, tree: Path, make_iso: bool = False, cc: str | None = None,
     # with different defines than the build is a defect that already happened.
     defines = [f"-D{k}={v}" for k, v in STATIC_NET.items()]
 
-    absent = tree / "kernel" / "boot" / "absent.c"
+    # Generated into build/, not kernel/. The Makefile globs `kernel` for
+    # sources, so a generated file left under it is compiled into every
+    # subsequent build — a service build poisoned the general one with
+    # "multiple definition of slm_neural_available", permanently, until someone
+    # deleted a file they did not know existed.
+    absent = tree / f"build-{name}" / "generated" / "absent.c"
     try:
         text, stubs = generate(tree, list(spec.requires), list(spec.excludes),
                                extra, cc, defines, output=absent, entry=spec.entry)
@@ -152,8 +168,17 @@ def build(name: str, tree: Path, make_iso: bool = False, cc: str | None = None,
 
     cflags = " ".join(KERNEL_CFLAGS + ["-Ikernel/include"] + defines)
     target = ["iso"] if make_iso else []
+    # A per-service build directory, for a reason that already bit once.
+    # CFLAGS is not a prerequisite of any object rule, so make happily reuses
+    # an object compiled with different defines — a service build after a
+    # general one silently linked a setup.c.o that still called dhcp_run,
+    # because the DHCP-client path had been compiled in before the static
+    # define existed. Separate directories mean no object is ever shared
+    # between two configurations, and both stay incremental.
+    build_dir = f"build-{name}"
     r = subprocess.run(
-        ["make", "-C", str(tree), f"CC={cc}", f"CSRC={' '.join(csrc)}",
+        ["make", "-C", str(tree), f"CC={cc}", f"BUILD={build_dir}",
+         f"CSRC={' '.join(csrc)}",
          f"ASRC={' '.join(asrc)}", f"CFLAGS={cflags}",
          f"GRUB_MKRESCUE={os.environ.get('GRUB_MKRESCUE', 'grub-mkrescue')}",
          f"-j{jobs}", *target],
@@ -167,14 +192,17 @@ def build(name: str, tree: Path, make_iso: bool = False, cc: str | None = None,
         raise GateFailure(f"[gate: build] make failed{detail}")
     result.gates.append("build: linked")
 
-    kernel = tree / "build" / "kernel.bin"
+    kernel = tree / build_dir / "kernel.bin"
     if kernel.exists():
         result.kernel_bytes = kernel.stat().st_size
-    iso = tree / "build" / "auton.iso"
+    iso = tree / build_dir / "auton.iso"
     if make_iso and iso.exists():
         result.iso_bytes = iso.stat().st_size
 
-    result.gates.append(f"leakage: {gate_leakage(tree, list(spec.excludes), stub_list)}")
+    report = tree / build_dir / "leakage.json"
+    verdict = gate_leakage(tree, list(spec.excludes), stub_list, kernel, report)
+    result.gates.append(f"leakage: {verdict}")
+    result.leakage_report = report
     return result
 
 
@@ -205,7 +233,7 @@ def main(argv: list[str] | None = None) -> int:
     if args.output and r.iso_bytes:
         dest = Path(args.output)
         dest.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(tree / "build" / "auton.iso", dest)
+        shutil.copy2(tree / f"build-{args.service}" / "auton.iso", dest)
         print(f"  -> {dest}")
     return 0
 
