@@ -277,17 +277,50 @@ def _base_capability(entry: str) -> str:
     return entry.split("(", 1)[0].strip()
 
 
+def _resolve_to_subsystems(tokens: set[str]) -> set[str]:
+    """Map capability names to the subsystems that own them, keeping any token
+    that is already a subsystem. Returns an empty set if the spec index is not
+    importable, so corpus building never hard-depends on the agent package.
+    """
+    try:
+        import sys as _sys
+        _sys.path.insert(0, str(ROOT / "agent" / "tools"))
+        from capability_slice import capability_owner, load_specs
+        owners = capability_owner(load_specs())
+        specs = load_specs()
+    except Exception:
+        return set()
+    out = set()
+    for t in tokens:
+        if t in specs:
+            out.add(t)
+        elif t in owners:
+            out.add(owners[t])
+        else:
+            out.add(t)          # unknown: keep it, and let the caller notice
+    return out
+
+
 class Manifest:
     """A capability manifest. `excludes` is the load-bearing field — without it
     "minimal" cannot be tested, so it is required rather than defaulted."""
 
     def __init__(self, requires: list[str], excludes: list[str], intent: str = ""):
         self.intent = intent
-        self.requires = {_base_capability(e) for e in requires}
-        self.excludes = {_base_capability(e) for e in excludes}
-        overlap = self.requires & self.excludes
+        raw_req = {_base_capability(e) for e in requires}
+        raw_exc = {_base_capability(e) for e in excludes}
+        overlap = raw_req & raw_exc
         if overlap:
             raise ValueError(f"manifest both requires and excludes: {sorted(overlap)}")
+
+        # Corpus records are tagged with subsystem-level capabilities (`net`,
+        # `fs`), while a manifest may name either a subsystem or a fine-grained
+        # capability (`ipv4`, `http-server`). Resolve through the spec index so
+        # one manifest serves both this and the build's source resolution —
+        # they disagreed about granularity until the intent compiler was
+        # round-tripped against the hand-written pair.
+        self.requires = _resolve_to_subsystems(raw_req) or raw_req
+        self.excludes = _resolve_to_subsystems(raw_exc) or raw_exc
 
     @staticmethod
     def load(path: str | Path) -> "Manifest":

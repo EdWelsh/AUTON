@@ -1,8 +1,27 @@
 {
   "intent": "I want to host this repo",
-  "requires": ["boot", "mm(allocator)", "dev(pci)", "drivers(e1000)", "net",
-               "slm(scoped)", "sys(terminal)"],
-  "excludes": ["ipc", "sched(preemptive)", "fs(writable)"],
+  "requires": [
+    "boot",
+    "mm(allocator)",
+    "dev(pci)",
+    "drivers(e1000)",
+    "net",
+    "ipv4",
+    "tcp",
+    "http-server",
+    "dhcp-client",
+    "slm(scoped)",
+    "sys(terminal)"
+  ],
+  "excludes": [
+    "ipc",
+    "sched(preemptive)",
+    "fs(writable)"
+  ],
   "assets": [],
-  "markers": ["[NET] dhcp bound", "[HTTP] listening on 80"]
+  "markers": [
+    "[NET] dhcp bound",
+    "[HTTP] listening on 80"
+  ],
+  "_note": "tcp, http-server and dhcp-client are optional capabilities of net and must be named: requiring `net` wholesale produced an image that could not serve HTTP or take a lease, while these markers claimed both. Found by round-tripping the intent compiler (intent-B)."
 }
