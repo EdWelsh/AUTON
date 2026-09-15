@@ -1,7 +1,7 @@
 {
-  "generated": "2026-09-12T13:02:51+00:00",
+  "generated": "2026-09-15T03:03:11+00:00",
   "arch": "x86_64",
-  "source_commit": "211ce6ccb854d2232d180c89818f16e629624ef4",
+  "source_commit": "530f9c5e6e2e7eca16d17cbac226c7b9745fbbd2",
   "files": [
     {
       "path": "kernels/x86_64/kernel/arch/x86_64/boot/boot.S",
@@ -41,6 +41,16 @@
       "includes": []
     },
     {
+      "path": "kernels/x86_64/kernel/boot/absent.c",
+      "subsystem": "boot",
+      "lines": 82,
+      "includes": [
+        "kernel.h",
+        "net.h",
+        "stdint.h"
+      ]
+    },
+    {
       "path": "kernels/x86_64/kernel/boot/boot_info.c",
       "subsystem": "boot",
       "lines": 81,
@@ -52,7 +62,7 @@
     {
       "path": "kernels/x86_64/kernel/boot/kernel_main.c",
       "subsystem": "boot",
-      "lines": 89,
+      "lines": 97,
       "includes": [
         "boot_info.h",
         "irq.h",
@@ -84,6 +94,14 @@
       ]
     },
     {
+      "path": "kernels/x86_64/kernel/include/arch/serial.h",
+      "subsystem": "include",
+      "lines": 48,
+      "includes": [
+        "stdint.h"
+      ]
+    },
+    {
       "path": "kernels/x86_64/kernel/include/boot_info.h",
       "subsystem": "include",
       "lines": 33,
@@ -96,6 +114,15 @@
       "subsystem": "include",
       "lines": 12,
       "includes": [
+        "stdint.h"
+      ]
+    },
+    {
+      "path": "kernels/x86_64/kernel/include/dhcp.h",
+      "subsystem": "include",
+      "lines": 66,
+      "includes": [
+        "net.h",
         "stdint.h"
       ]
     },
@@ -252,7 +279,7 @@
     {
       "path": "kernels/x86_64/kernel/net/arp.c",
       "subsystem": "net",
-      "lines": 113,
+      "lines": 144,
       "includes": [
         "kernel.h",
         "net.h"
@@ -300,7 +327,7 @@
     {
       "path": "kernels/x86_64/kernel/net/setup.c",
       "subsystem": "net",
-      "lines": 79,
+      "lines": 101,
       "includes": [
         "e1000.h",
         "kernel.h",
@@ -345,6 +372,29 @@
         "kernel.h",
         "net.h",
         "server.h"
+      ]
+    },
+    {
+      "path": "kernels/x86_64/kernel/services/dhcp/serve.c",
+      "subsystem": "services",
+      "lines": 51,
+      "includes": [
+        "dhcp.h",
+        "irq.h",
+        "kernel.h",
+        "net.h",
+        "stdint.h"
+      ]
+    },
+    {
+      "path": "kernels/x86_64/kernel/services/dhcp/server.c",
+      "subsystem": "services",
+      "lines": 350,
+      "includes": [
+        "dhcp.h",
+        "kernel.h",
+        "kstr.h",
+        "stdint.h"
       ]
     },
     {
@@ -544,7 +594,8 @@
       "subsystem": "arch",
       "kind": "function",
       "called_by": [
-        "sysinfo_answer"
+        "sysinfo_answer",
+        "uptime_secs"
       ]
     },
     {
@@ -597,6 +648,312 @@
       ]
     },
     {
+      "name": "dns_server_run",
+      "signature": "void (void)",
+      "line": 17,
+      "static": false,
+      "defined": false,
+      "calls": [],
+      "file": "kernels/x86_64/kernel/boot/absent.c",
+      "subsystem": "boot",
+      "kind": "function",
+      "called_by": []
+    },
+    {
+      "name": "dns_server_run",
+      "signature": "void (void)",
+      "line": 18,
+      "static": false,
+      "defined": true,
+      "calls": [
+        "kprintf"
+      ],
+      "file": "kernels/x86_64/kernel/boot/absent.c",
+      "subsystem": "boot",
+      "kind": "function",
+      "called_by": []
+    },
+    {
+      "name": "http_server_run",
+      "signature": "void (void)",
+      "line": 23,
+      "static": false,
+      "defined": false,
+      "calls": [],
+      "file": "kernels/x86_64/kernel/boot/absent.c",
+      "subsystem": "boot",
+      "kind": "function",
+      "called_by": []
+    },
+    {
+      "name": "http_server_run",
+      "signature": "void (void)",
+      "line": 24,
+      "static": false,
+      "defined": true,
+      "calls": [
+        "kprintf"
+      ],
+      "file": "kernels/x86_64/kernel/boot/absent.c",
+      "subsystem": "boot",
+      "kind": "function",
+      "called_by": []
+    },
+    {
+      "name": "slm_neural_available",
+      "signature": "int (void)",
+      "line": 29,
+      "static": false,
+      "defined": false,
+      "calls": [],
+      "file": "kernels/x86_64/kernel/boot/absent.c",
+      "subsystem": "boot",
+      "kind": "function",
+      "called_by": [
+        "slm_process_text"
+      ]
+    },
+    {
+      "name": "slm_neural_available",
+      "signature": "int (void)",
+      "line": 30,
+      "static": false,
+      "defined": true,
+      "calls": [],
+      "file": "kernels/x86_64/kernel/boot/absent.c",
+      "subsystem": "boot",
+      "kind": "function",
+      "called_by": [
+        "slm_process_text"
+      ]
+    },
+    {
+      "name": "slm_neural_detokenize",
+      "signature": "uint32_t (const uint32_t *, uint32_t, char *, uint32_t)",
+      "line": 35,
+      "static": false,
+      "defined": false,
+      "calls": [],
+      "file": "kernels/x86_64/kernel/boot/absent.c",
+      "subsystem": "boot",
+      "kind": "function",
+      "called_by": [
+        "slm_process_text"
+      ]
+    },
+    {
+      "name": "slm_neural_detokenize",
+      "signature": "uint32_t (const uint32_t *, uint32_t, char *, uint32_t)",
+      "line": 36,
+      "static": false,
+      "defined": true,
+      "calls": [],
+      "file": "kernels/x86_64/kernel/boot/absent.c",
+      "subsystem": "boot",
+      "kind": "function",
+      "called_by": [
+        "slm_process_text"
+      ]
+    },
+    {
+      "name": "slm_neural_error_text",
+      "signature": "const char *(void)",
+      "line": 41,
+      "static": false,
+      "defined": false,
+      "calls": [],
+      "file": "kernels/x86_64/kernel/boot/absent.c",
+      "subsystem": "boot",
+      "kind": "function",
+      "called_by": [
+        "slm_init"
+      ]
+    },
+    {
+      "name": "slm_neural_error_text",
+      "signature": "const char *(void)",
+      "line": 42,
+      "static": false,
+      "defined": true,
+      "calls": [],
+      "file": "kernels/x86_64/kernel/boot/absent.c",
+      "subsystem": "boot",
+      "kind": "function",
+      "called_by": [
+        "slm_init"
+      ]
+    },
+    {
+      "name": "slm_neural_infer",
+      "signature": "uint32_t (const uint32_t *, uint32_t, uint32_t *, uint32_t, const void *)",
+      "line": 47,
+      "static": false,
+      "defined": false,
+      "calls": [],
+      "file": "kernels/x86_64/kernel/boot/absent.c",
+      "subsystem": "boot",
+      "kind": "function",
+      "called_by": [
+        "slm_process_text"
+      ]
+    },
+    {
+      "name": "slm_neural_infer",
+      "signature": "uint32_t (const uint32_t *, uint32_t, uint32_t *, uint32_t, const void *)",
+      "line": 48,
+      "static": false,
+      "defined": true,
+      "calls": [],
+      "file": "kernels/x86_64/kernel/boot/absent.c",
+      "subsystem": "boot",
+      "kind": "function",
+      "called_by": [
+        "slm_process_text"
+      ]
+    },
+    {
+      "name": "slm_neural_load_model",
+      "signature": "int (const void *, uint32_t)",
+      "line": 53,
+      "static": false,
+      "defined": false,
+      "calls": [],
+      "file": "kernels/x86_64/kernel/boot/absent.c",
+      "subsystem": "boot",
+      "kind": "function",
+      "called_by": [
+        "slm_init"
+      ]
+    },
+    {
+      "name": "slm_neural_load_model",
+      "signature": "int (const void *, uint32_t)",
+      "line": 54,
+      "static": false,
+      "defined": true,
+      "calls": [],
+      "file": "kernels/x86_64/kernel/boot/absent.c",
+      "subsystem": "boot",
+      "kind": "function",
+      "called_by": [
+        "slm_init"
+      ]
+    },
+    {
+      "name": "slm_neural_model_info",
+      "signature": "void (char *, uint32_t)",
+      "line": 59,
+      "static": false,
+      "defined": false,
+      "calls": [],
+      "file": "kernels/x86_64/kernel/boot/absent.c",
+      "subsystem": "boot",
+      "kind": "function",
+      "called_by": [
+        "slm_init"
+      ]
+    },
+    {
+      "name": "slm_neural_model_info",
+      "signature": "void (char *, uint32_t)",
+      "line": 60,
+      "static": false,
+      "defined": true,
+      "calls": [],
+      "file": "kernels/x86_64/kernel/boot/absent.c",
+      "subsystem": "boot",
+      "kind": "function",
+      "called_by": [
+        "slm_init"
+      ]
+    },
+    {
+      "name": "slm_neural_tokenize",
+      "signature": "uint32_t (const char *, uint32_t, uint32_t *, uint32_t)",
+      "line": 65,
+      "static": false,
+      "defined": false,
+      "calls": [],
+      "file": "kernels/x86_64/kernel/boot/absent.c",
+      "subsystem": "boot",
+      "kind": "function",
+      "called_by": [
+        "slm_process_text"
+      ]
+    },
+    {
+      "name": "slm_neural_tokenize",
+      "signature": "uint32_t (const char *, uint32_t, uint32_t *, uint32_t)",
+      "line": 66,
+      "static": false,
+      "defined": true,
+      "calls": [],
+      "file": "kernels/x86_64/kernel/boot/absent.c",
+      "subsystem": "boot",
+      "kind": "function",
+      "called_by": [
+        "slm_process_text"
+      ]
+    },
+    {
+      "name": "tcp_input",
+      "signature": "void (ipv4_t, const uint8_t *, uint16_t)",
+      "line": 71,
+      "static": false,
+      "defined": false,
+      "calls": [],
+      "file": "kernels/x86_64/kernel/boot/absent.c",
+      "subsystem": "boot",
+      "kind": "function",
+      "called_by": [
+        "ip_input"
+      ]
+    },
+    {
+      "name": "tcp_input",
+      "signature": "void (ipv4_t, const uint8_t *, uint16_t)",
+      "line": 72,
+      "static": false,
+      "defined": true,
+      "calls": [],
+      "file": "kernels/x86_64/kernel/boot/absent.c",
+      "subsystem": "boot",
+      "kind": "function",
+      "called_by": [
+        "ip_input"
+      ]
+    },
+    {
+      "name": "dhcp_serve",
+      "signature": "void (void)",
+      "line": 77,
+      "static": false,
+      "defined": false,
+      "calls": [],
+      "file": "kernels/x86_64/kernel/boot/absent.c",
+      "subsystem": "boot",
+      "kind": "function",
+      "called_by": [
+        "service_main"
+      ]
+    },
+    {
+      "name": "service_main",
+      "signature": "void (void)",
+      "line": 79,
+      "static": false,
+      "defined": true,
+      "calls": [
+        "dhcp_serve"
+      ],
+      "file": "kernels/x86_64/kernel/boot/absent.c",
+      "subsystem": "boot",
+      "kind": "function",
+      "called_by": [
+        "kernel_main"
+      ]
+    },
+    {
       "name": "copy_cmdline",
       "signature": "void (char *, const char *, uint32_t)",
       "line": 33,
@@ -643,9 +1000,39 @@
       ]
     },
     {
+      "name": "service_main",
+      "signature": "void (void)",
+      "line": 18,
+      "static": false,
+      "defined": false,
+      "calls": [],
+      "file": "kernels/x86_64/kernel/boot/kernel_main.c",
+      "subsystem": "boot",
+      "kind": "function",
+      "called_by": [
+        "kernel_main"
+      ]
+    },
+    {
+      "name": "service_main",
+      "signature": "void (void)",
+      "line": 19,
+      "static": false,
+      "defined": true,
+      "calls": [
+        "slm_chat_loop"
+      ],
+      "file": "kernels/x86_64/kernel/boot/kernel_main.c",
+      "subsystem": "boot",
+      "kind": "function",
+      "called_by": [
+        "kernel_main"
+      ]
+    },
+    {
       "name": "halt_forever",
       "signature": "void (void)",
-      "line": 17,
+      "line": 21,
       "static": true,
       "defined": true,
       "calls": [],
@@ -659,7 +1046,7 @@
     {
       "name": "kernel_main",
       "signature": "void (uint32_t, uint32_t)",
-      "line": 23,
+      "line": 27,
       "static": false,
       "defined": true,
       "calls": [
@@ -672,8 +1059,8 @@
         "net_bringup",
         "pci_scan",
         "serial_init",
+        "service_main",
         "slm_backend_name",
-        "slm_chat_loop",
         "slm_driver_for_pci",
         "slm_init",
         "sysinfo_init"
@@ -1033,7 +1420,9 @@
       "subsystem": "lib",
       "kind": "function",
       "called_by": [
+        "dhcp_handle",
         "dhcp_run",
+        "dhcp_serve",
         "dns_server_run",
         "e1000_debug",
         "exception_handler",
@@ -1213,7 +1602,6 @@
       "kind": "function",
       "called_by": [
         "arp_input",
-        "arp_request",
         "arp_resolve",
         "base_fields",
         "cache_put",
@@ -1291,7 +1679,7 @@
     {
       "name": "cache_put",
       "signature": "void (ipv4_t, const uint8_t *)",
-      "line": 30,
+      "line": 38,
       "static": true,
       "defined": true,
       "calls": [
@@ -1307,17 +1695,13 @@
     {
       "name": "arp_request",
       "signature": "void (ipv4_t)",
-      "line": 50,
+      "line": 65,
       "static": true,
       "defined": true,
       "calls": [
         "eth_send",
-        "htonl",
         "htons",
-        "kmemcpy",
-        "kmemset",
-        "net_ip",
-        "net_mac"
+        "kmemset"
       ],
       "file": "kernels/x86_64/kernel/net/arp.c",
       "subsystem": "net",
@@ -1330,7 +1714,7 @@
     {
       "name": "net_flush_kick",
       "signature": "void (void)",
-      "line": 66,
+      "line": 80,
       "static": false,
       "defined": true,
       "calls": [
@@ -1345,7 +1729,7 @@
     {
       "name": "arp_resolve",
       "signature": "int (ipv4_t, uint8_t *)",
-      "line": 73,
+      "line": 93,
       "static": false,
       "defined": true,
       "calls": [
@@ -1363,7 +1747,7 @@
     {
       "name": "arp_input",
       "signature": "void (const uint8_t *, uint16_t)",
-      "line": 85,
+      "line": 111,
       "static": false,
       "defined": true,
       "calls": [
@@ -1827,7 +2211,7 @@
       "called_by": [
         "answer_ip",
         "arp_input",
-        "arp_request",
+        "build_reply",
         "dns_on_udp",
         "ip_send",
         "net_bringup",
@@ -1894,7 +2278,6 @@
       "kind": "function",
       "called_by": [
         "arp_input",
-        "arp_request",
         "base_fields"
       ]
     },
@@ -1951,6 +2334,7 @@
       "kind": "function",
       "called_by": [
         "dhcp_run",
+        "dhcp_serve",
         "net_bringup",
         "server_serve_loop"
       ]
@@ -1967,6 +2351,7 @@
       "kind": "function",
       "called_by": [
         "dhcp_run",
+        "dhcp_serve",
         "dns_server_run"
       ]
     },
@@ -1988,6 +2373,7 @@
       "subsystem": "net",
       "kind": "function",
       "called_by": [
+        "dhcp_serve",
         "dns_on_udp",
         "send_discover",
         "send_request"
@@ -2278,6 +2664,331 @@
       ]
     },
     {
+      "name": "uptime_secs",
+      "signature": "uint32_t (void)",
+      "line": 13,
+      "static": true,
+      "defined": true,
+      "calls": [
+        "timer_ticks"
+      ],
+      "file": "kernels/x86_64/kernel/services/dhcp/serve.c",
+      "subsystem": "services",
+      "kind": "function",
+      "called_by": [
+        "dhcp_serve"
+      ]
+    },
+    {
+      "name": "on_udp",
+      "signature": "void (ipv4_t, uint16_t, const uint8_t *, uint16_t)",
+      "line": 20,
+      "static": true,
+      "defined": true,
+      "calls": [
+        "dhcp_handle"
+      ],
+      "file": "kernels/x86_64/kernel/services/dhcp/serve.c",
+      "subsystem": "services",
+      "kind": "function",
+      "called_by": [
+        "dhcp_serve"
+      ]
+    },
+    {
+      "name": "dhcp_serve",
+      "signature": "void (void)",
+      "line": 26,
+      "static": false,
+      "defined": true,
+      "calls": [
+        "dhcp_expire",
+        "dhcp_set_clock",
+        "dhcp_set_sender",
+        "kprintf",
+        "net_poll",
+        "on_udp",
+        "udp_bind",
+        "udp_send",
+        "uptime_secs"
+      ],
+      "file": "kernels/x86_64/kernel/services/dhcp/serve.c",
+      "subsystem": "services",
+      "kind": "function",
+      "called_by": [
+        "service_main"
+      ]
+    },
+    {
+      "name": "dhcp_set_clock",
+      "signature": "void (uint32_t (*)(void))",
+      "line": 58,
+      "static": false,
+      "defined": true,
+      "calls": [],
+      "file": "kernels/x86_64/kernel/services/dhcp/server.c",
+      "subsystem": "services",
+      "kind": "function",
+      "called_by": [
+        "dhcp_serve"
+      ]
+    },
+    {
+      "name": "dhcp_set_sender",
+      "signature": "void (void (*)(ipv4_t, uint16_t, uint16_t, const void *, uint16_t))",
+      "line": 59,
+      "static": false,
+      "defined": true,
+      "calls": [],
+      "file": "kernels/x86_64/kernel/services/dhcp/server.c",
+      "subsystem": "services",
+      "kind": "function",
+      "called_by": [
+        "dhcp_serve"
+      ]
+    },
+    {
+      "name": "dhcp_state",
+      "signature": "const dhcp_server_t *(void)",
+      "line": 63,
+      "static": false,
+      "defined": true,
+      "calls": [],
+      "file": "kernels/x86_64/kernel/services/dhcp/server.c",
+      "subsystem": "services",
+      "kind": "function",
+      "called_by": []
+    },
+    {
+      "name": "now",
+      "signature": "uint32_t (void)",
+      "line": 65,
+      "static": true,
+      "defined": true,
+      "calls": [],
+      "file": "kernels/x86_64/kernel/services/dhcp/server.c",
+      "subsystem": "services",
+      "kind": "function",
+      "called_by": [
+        "dhcp_handle"
+      ]
+    },
+    {
+      "name": "be32",
+      "signature": "uint32_t (const uint8_t *)",
+      "line": 67,
+      "static": true,
+      "defined": true,
+      "calls": [],
+      "file": "kernels/x86_64/kernel/services/dhcp/server.c",
+      "subsystem": "services",
+      "kind": "function",
+      "called_by": [
+        "dhcp_handle"
+      ]
+    },
+    {
+      "name": "put32",
+      "signature": "void (uint8_t *, uint32_t)",
+      "line": 73,
+      "static": true,
+      "defined": true,
+      "calls": [],
+      "file": "kernels/x86_64/kernel/services/dhcp/server.c",
+      "subsystem": "services",
+      "kind": "function",
+      "called_by": [
+        "build_reply"
+      ]
+    },
+    {
+      "name": "dhcp_server_init",
+      "signature": "int (const dhcp_server_t *)",
+      "line": 79,
+      "static": false,
+      "defined": true,
+      "calls": [],
+      "file": "kernels/x86_64/kernel/services/dhcp/server.c",
+      "subsystem": "services",
+      "kind": "function",
+      "called_by": []
+    },
+    {
+      "name": "mac_eq",
+      "signature": "int (const uint8_t *, const uint8_t *)",
+      "line": 96,
+      "static": true,
+      "defined": true,
+      "calls": [],
+      "file": "kernels/x86_64/kernel/services/dhcp/server.c",
+      "subsystem": "services",
+      "kind": "function",
+      "called_by": [
+        "lease_for_mac"
+      ]
+    },
+    {
+      "name": "lease_for_mac",
+      "signature": "dhcp_lease_t *(const uint8_t *)",
+      "line": 103,
+      "static": true,
+      "defined": true,
+      "calls": [
+        "mac_eq"
+      ],
+      "file": "kernels/x86_64/kernel/services/dhcp/server.c",
+      "subsystem": "services",
+      "kind": "function",
+      "called_by": [
+        "dhcp_handle"
+      ]
+    },
+    {
+      "name": "lease_free",
+      "signature": "dhcp_lease_t *(void)",
+      "line": 111,
+      "static": true,
+      "defined": true,
+      "calls": [],
+      "file": "kernels/x86_64/kernel/services/dhcp/server.c",
+      "subsystem": "services",
+      "kind": "function",
+      "called_by": [
+        "dhcp_handle"
+      ]
+    },
+    {
+      "name": "lease_for_ip",
+      "signature": "dhcp_lease_t *(ipv4_t)",
+      "line": 119,
+      "static": true,
+      "defined": true,
+      "calls": [],
+      "file": "kernels/x86_64/kernel/services/dhcp/server.c",
+      "subsystem": "services",
+      "kind": "function",
+      "called_by": [
+        "dhcp_handle"
+      ]
+    },
+    {
+      "name": "find_option",
+      "signature": "const uint8_t *(const uint8_t *, uint32_t, uint8_t, uint8_t *)",
+      "line": 134,
+      "static": true,
+      "defined": true,
+      "calls": [],
+      "file": "kernels/x86_64/kernel/services/dhcp/server.c",
+      "subsystem": "services",
+      "kind": "function",
+      "called_by": [
+        "dhcp_handle",
+        "message_type"
+      ]
+    },
+    {
+      "name": "options_well_formed",
+      "signature": "int (const uint8_t *, uint32_t)",
+      "line": 167,
+      "static": true,
+      "defined": true,
+      "calls": [],
+      "file": "kernels/x86_64/kernel/services/dhcp/server.c",
+      "subsystem": "services",
+      "kind": "function",
+      "called_by": [
+        "dhcp_handle"
+      ]
+    },
+    {
+      "name": "message_type",
+      "signature": "uint8_t (const uint8_t *, uint32_t)",
+      "line": 187,
+      "static": true,
+      "defined": true,
+      "calls": [
+        "find_option"
+      ],
+      "file": "kernels/x86_64/kernel/services/dhcp/server.c",
+      "subsystem": "services",
+      "kind": "function",
+      "called_by": [
+        "dhcp_handle"
+      ]
+    },
+    {
+      "name": "build_reply",
+      "signature": "uint16_t (uint8_t *, uint16_t, const uint8_t *, uint8_t, ipv4_t)",
+      "line": 195,
+      "static": true,
+      "defined": true,
+      "calls": [
+        "net_ip",
+        "put32"
+      ],
+      "file": "kernels/x86_64/kernel/services/dhcp/server.c",
+      "subsystem": "services",
+      "kind": "function",
+      "called_by": [
+        "send_reply"
+      ]
+    },
+    {
+      "name": "send_reply",
+      "signature": "void (const uint8_t *, uint8_t, ipv4_t)",
+      "line": 237,
+      "static": true,
+      "defined": true,
+      "calls": [
+        "build_reply"
+      ],
+      "file": "kernels/x86_64/kernel/services/dhcp/server.c",
+      "subsystem": "services",
+      "kind": "function",
+      "called_by": [
+        "dhcp_handle"
+      ]
+    },
+    {
+      "name": "dhcp_expire",
+      "signature": "void (uint32_t)",
+      "line": 247,
+      "static": false,
+      "defined": true,
+      "calls": [],
+      "file": "kernels/x86_64/kernel/services/dhcp/server.c",
+      "subsystem": "services",
+      "kind": "function",
+      "called_by": [
+        "dhcp_serve"
+      ]
+    },
+    {
+      "name": "dhcp_handle",
+      "signature": "int (const uint8_t *, uint32_t)",
+      "line": 260,
+      "static": false,
+      "defined": true,
+      "calls": [
+        "be32",
+        "find_option",
+        "kprintf",
+        "lease_for_ip",
+        "lease_for_mac",
+        "lease_free",
+        "message_type",
+        "now",
+        "options_well_formed",
+        "send_reply"
+      ],
+      "file": "kernels/x86_64/kernel/services/dhcp/server.c",
+      "subsystem": "services",
+      "kind": "function",
+      "called_by": [
+        "on_udp"
+      ]
+    },
+    {
       "name": "print_help",
       "signature": "void (void)",
       "line": 12,
@@ -2312,7 +3023,7 @@
       "subsystem": "slm",
       "kind": "function",
       "called_by": [
-        "kernel_main"
+        "service_main"
       ]
     },
     {
@@ -3291,7 +4002,7 @@
     },
     {
       "name": "arp_pkt",
-      "line": 9,
+      "line": 12,
       "fields": [
         {
           "name": "htype",
@@ -3335,7 +4046,7 @@
     },
     {
       "name": "arp_entry",
-      "line": 21,
+      "line": 24,
       "fields": [
         {
           "name": "ip",
@@ -3986,6 +4697,12 @@
       "value": "0x20"
     },
     {
+      "name": "ARCH_SERIAL_H",
+      "file": "kernels/x86_64/kernel/include/arch/serial.h",
+      "subsystem": "include",
+      "value": "#include <stdint.h>"
+    },
+    {
       "name": "AUTON_BOOT_INFO_H",
       "file": "kernels/x86_64/kernel/include/boot_info.h",
       "subsystem": "include",
@@ -4002,6 +4719,24 @@
       "file": "kernels/x86_64/kernel/include/console.h",
       "subsystem": "include",
       "value": "#include <stdint.h>"
+    },
+    {
+      "name": "AUTON_DHCP_SERVER_H",
+      "file": "kernels/x86_64/kernel/include/dhcp.h",
+      "subsystem": "include",
+      "value": "#include <stdint.h>"
+    },
+    {
+      "name": "DHCP_POOL_MAX",
+      "file": "kernels/x86_64/kernel/include/dhcp.h",
+      "subsystem": "include",
+      "value": "32"
+    },
+    {
+      "name": "DHCP_OFFER_SECS",
+      "file": "kernels/x86_64/kernel/include/dhcp.h",
+      "subsystem": "include",
+      "value": "60     /* an abandoned OFFER returns to the pool */"
     },
     {
       "name": "AUTON_E1000_H",
@@ -4520,6 +5255,198 @@
       "value": "53"
     },
     {
+      "name": "BOOTP_MIN_LEN",
+      "file": "kernels/x86_64/kernel/services/dhcp/server.c",
+      "subsystem": "services",
+      "value": "240      /* through the magic cookie */"
+    },
+    {
+      "name": "OFF_OP",
+      "file": "kernels/x86_64/kernel/services/dhcp/server.c",
+      "subsystem": "services",
+      "value": "0"
+    },
+    {
+      "name": "OFF_HTYPE",
+      "file": "kernels/x86_64/kernel/services/dhcp/server.c",
+      "subsystem": "services",
+      "value": "1"
+    },
+    {
+      "name": "OFF_HLEN",
+      "file": "kernels/x86_64/kernel/services/dhcp/server.c",
+      "subsystem": "services",
+      "value": "2"
+    },
+    {
+      "name": "OFF_XID",
+      "file": "kernels/x86_64/kernel/services/dhcp/server.c",
+      "subsystem": "services",
+      "value": "4"
+    },
+    {
+      "name": "OFF_FLAGS",
+      "file": "kernels/x86_64/kernel/services/dhcp/server.c",
+      "subsystem": "services",
+      "value": "10"
+    },
+    {
+      "name": "OFF_CIADDR",
+      "file": "kernels/x86_64/kernel/services/dhcp/server.c",
+      "subsystem": "services",
+      "value": "12"
+    },
+    {
+      "name": "OFF_YIADDR",
+      "file": "kernels/x86_64/kernel/services/dhcp/server.c",
+      "subsystem": "services",
+      "value": "16"
+    },
+    {
+      "name": "OFF_SIADDR",
+      "file": "kernels/x86_64/kernel/services/dhcp/server.c",
+      "subsystem": "services",
+      "value": "20"
+    },
+    {
+      "name": "OFF_GIADDR",
+      "file": "kernels/x86_64/kernel/services/dhcp/server.c",
+      "subsystem": "services",
+      "value": "24"
+    },
+    {
+      "name": "OFF_CHADDR",
+      "file": "kernels/x86_64/kernel/services/dhcp/server.c",
+      "subsystem": "services",
+      "value": "28"
+    },
+    {
+      "name": "OFF_COOKIE",
+      "file": "kernels/x86_64/kernel/services/dhcp/server.c",
+      "subsystem": "services",
+      "value": "236"
+    },
+    {
+      "name": "OFF_OPTIONS",
+      "file": "kernels/x86_64/kernel/services/dhcp/server.c",
+      "subsystem": "services",
+      "value": "240"
+    },
+    {
+      "name": "BOOTREQUEST",
+      "file": "kernels/x86_64/kernel/services/dhcp/server.c",
+      "subsystem": "services",
+      "value": "1"
+    },
+    {
+      "name": "BOOTREPLY",
+      "file": "kernels/x86_64/kernel/services/dhcp/server.c",
+      "subsystem": "services",
+      "value": "2"
+    },
+    {
+      "name": "MAGIC_COOKIE",
+      "file": "kernels/x86_64/kernel/services/dhcp/server.c",
+      "subsystem": "services",
+      "value": "0x63825363u"
+    },
+    {
+      "name": "DHCPDISCOVER",
+      "file": "kernels/x86_64/kernel/services/dhcp/server.c",
+      "subsystem": "services",
+      "value": "1"
+    },
+    {
+      "name": "DHCPOFFER",
+      "file": "kernels/x86_64/kernel/services/dhcp/server.c",
+      "subsystem": "services",
+      "value": "2"
+    },
+    {
+      "name": "DHCPREQUEST",
+      "file": "kernels/x86_64/kernel/services/dhcp/server.c",
+      "subsystem": "services",
+      "value": "3"
+    },
+    {
+      "name": "DHCPDECLINE",
+      "file": "kernels/x86_64/kernel/services/dhcp/server.c",
+      "subsystem": "services",
+      "value": "4"
+    },
+    {
+      "name": "DHCPACK",
+      "file": "kernels/x86_64/kernel/services/dhcp/server.c",
+      "subsystem": "services",
+      "value": "5"
+    },
+    {
+      "name": "DHCPNAK",
+      "file": "kernels/x86_64/kernel/services/dhcp/server.c",
+      "subsystem": "services",
+      "value": "6"
+    },
+    {
+      "name": "DHCPRELEASE",
+      "file": "kernels/x86_64/kernel/services/dhcp/server.c",
+      "subsystem": "services",
+      "value": "7"
+    },
+    {
+      "name": "OPT_PAD",
+      "file": "kernels/x86_64/kernel/services/dhcp/server.c",
+      "subsystem": "services",
+      "value": "0"
+    },
+    {
+      "name": "OPT_NETMASK",
+      "file": "kernels/x86_64/kernel/services/dhcp/server.c",
+      "subsystem": "services",
+      "value": "1"
+    },
+    {
+      "name": "OPT_ROUTER",
+      "file": "kernels/x86_64/kernel/services/dhcp/server.c",
+      "subsystem": "services",
+      "value": "3"
+    },
+    {
+      "name": "OPT_DNS",
+      "file": "kernels/x86_64/kernel/services/dhcp/server.c",
+      "subsystem": "services",
+      "value": "6"
+    },
+    {
+      "name": "OPT_REQUESTED_IP",
+      "file": "kernels/x86_64/kernel/services/dhcp/server.c",
+      "subsystem": "services",
+      "value": "50"
+    },
+    {
+      "name": "OPT_LEASE_TIME",
+      "file": "kernels/x86_64/kernel/services/dhcp/server.c",
+      "subsystem": "services",
+      "value": "51"
+    },
+    {
+      "name": "OPT_MSG_TYPE",
+      "file": "kernels/x86_64/kernel/services/dhcp/server.c",
+      "subsystem": "services",
+      "value": "53"
+    },
+    {
+      "name": "OPT_SERVER_ID",
+      "file": "kernels/x86_64/kernel/services/dhcp/server.c",
+      "subsystem": "services",
+      "value": "54"
+    },
+    {
+      "name": "OPT_END",
+      "file": "kernels/x86_64/kernel/services/dhcp/server.c",
+      "subsystem": "services",
+      "value": "255"
+    },
+    {
       "name": "LINE_MAX",
       "file": "kernels/x86_64/kernel/slm/chat.c",
       "subsystem": "slm",
@@ -4669,15 +5596,16 @@
       "spec": "arch/x86_64.md"
     },
     "boot": {
-      "files": 2,
-      "lines": 170,
-      "symbols": 5,
+      "files": 3,
+      "lines": 260,
+      "symbols": 29,
       "depends_on": [
         "arch",
         "dev",
         "drivers",
         "lib",
         "net",
+        "services",
         "slm"
       ],
       "spec": "subsystems/boot.md"
@@ -4697,8 +5625,8 @@
       "spec": "subsystems/drivers.md"
     },
     "include": {
-      "files": 15,
-      "lines": 514,
+      "files": 17,
+      "lines": 628,
       "symbols": 0,
       "depends_on": [],
       "spec": ""
@@ -4714,7 +5642,7 @@
     },
     "net": {
       "files": 7,
-      "lines": 990,
+      "lines": 1043,
       "symbols": 50,
       "depends_on": [
         "dev",
@@ -4732,6 +5660,17 @@
         "net"
       ],
       "spec": "subsystems/net.md"
+    },
+    "services": {
+      "files": 2,
+      "lines": 401,
+      "symbols": 21,
+      "depends_on": [
+        "arch",
+        "lib",
+        "net"
+      ],
+      "spec": ""
     },
     "slm": {
       "files": 5,
