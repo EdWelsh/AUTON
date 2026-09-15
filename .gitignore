@@ -80,3 +80,6 @@ kernels/
 
 # Fetched vendor documents — downloadable, not redistributable (agent/hardware/README.md)
 .cache/
+
+# Private silicon findings under embargo (agent/hardware/disclosure/README.md)
+.disclosure/

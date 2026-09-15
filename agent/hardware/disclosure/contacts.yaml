@@ -1,0 +1,53 @@
+# Published security contacts, per vendor.
+#
+# A finding cannot be filed against a vendor nobody knows how to reach, so this
+# is data rather than something to look up in the moment.
+#
+# These are the vendors' own published channels. No credentials, no private
+# addresses — everything here is public record, and it stays that way.
+
+version: 1
+
+vendors:
+  - vendor: intel
+    contact: https://www.intel.com/content/www/us/en/security-center/default.html
+    pgp: published on the security-center page
+    embargo_default_days: 90
+    notes: >-
+      Intel publishes INTEL-SA advisories on a scheduled cadence; a finding
+      accepted for an advisory inherits that schedule rather than the 90-day
+      default.
+
+  - vendor: amd
+    contact: https://www.amd.com/en/resources/product-security.html
+    pgp: published on the product-security page
+    embargo_default_days: 90
+    notes: AMD publishes AMD-SB bulletins.
+
+  - vendor: arm
+    contact: https://developer.arm.com/support/arm-security-updates
+    pgp: published on the security-updates page
+    embargo_default_days: 90
+    notes: >-
+      Arm errata are per core revision, so a finding must name the core, not the
+      SoC — the same key the errata table uses.
+
+  - vendor: riscv-international
+    contact: https://riscv.org/security/
+    embargo_default_days: 90
+    notes: >-
+      RISC-V International specifies the ISA; an implementation defect belongs to
+      the implementer (SiFive, T-Head, Ventana), not to the foundation. Route
+      accordingly, and record which.
+
+  - vendor: qualcomm
+    contact: https://docs.qualcomm.com/product/publicresources/securitybulletin/
+    embargo_default_days: 90
+
+  - vendor: apple
+    contact: https://support.apple.com/en-us/HT201220
+    embargo_default_days: 90
+    notes: >-
+      Apple publishes no silicon specifications, so a divergence cannot be stated
+      against a vendor document. A finding here can only cite third-party
+      documentation, and must say so — see agent/hardware/vendors.yaml.
