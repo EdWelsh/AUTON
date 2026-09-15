@@ -688,6 +688,49 @@ SERIAL_MARKER_SETS: dict[str, tuple[str, ...]] = {
 }
 
 
+def service_marker_patterns(service: str) -> tuple[str, ...]:
+    """The markers a service spec declares, as regex patterns.
+
+    Read from `kernel_spec/services/<service>.md` rather than restated here.
+    A marker set that is written down twice drifts, and the copy the harness
+    reads is the one that stops matching — which presents as a broken image
+    rather than a stale assertion.
+
+    Literal text is escaped: a marker like "[DHCP] OFFER 10.0.2.100" is a
+    string the kernel prints, not a pattern its author wrote.
+    """
+    import re as _re
+    from pathlib import Path as _Path
+
+    spec = (_Path(__file__).resolve().parents[1] / "services" / f"{service}.md")
+    if not spec.exists():
+        raise KeyError(
+            f"no service spec for {service!r} at {spec}; "
+            f"markers come from the spec, not from this file"
+        )
+    text = spec.read_text(encoding="utf-8")
+    if not text.startswith("---"):
+        raise KeyError(f"{spec.name} has no front-matter")
+    block = text.split("---", 2)[1]
+
+    out: list[str] = []
+    in_markers = False
+    for line in block.splitlines():
+        if line.startswith("markers:"):
+            in_markers = True
+            continue
+        if in_markers:
+            stripped = line.strip()
+            if stripped.startswith("- "):
+                out.append(_re.escape(stripped[2:].strip().strip('"').strip("'")))
+                continue
+            if stripped and not stripped.startswith("#"):
+                break
+    if not out:
+        raise KeyError(f"{spec.name} declares no markers")
+    return tuple(out)
+
+
 def marker_patterns(set_name: str) -> tuple[str, ...]:
     """Patterns for a named marker set, in report order."""
     try:
