@@ -1,0 +1,77 @@
+# Two hosts, because one of them can do something the other cannot.
+#
+# The development host is Darwin/arm64. A cross toolchain builds an x86 kernel
+# there, but nothing executes x86 instructions, so `identity_test.c`'s live
+# CPUID cross-check prints SKIP — and H5's last acceptance criterion ("captured
+# identity cross-checks against the host's own view") has never been satisfied
+# anywhere. A Linux x86-64 runner satisfies it for free.
+#
+# Scope is deliberately the cheap subset: unit suites and the spine's
+# self-tests. No training, no torch, no corpus — the kernel loop needs none of
+# them, and a job that takes an hour gets disabled.
+
+name: portability
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  suites:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            label: linux-x86_64
+          - os: macos-14          # arm64
+            label: darwin-arm64
+    runs-on: ${{ matrix.os }}
+    name: ${{ matrix.label }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install python deps
+        run: |
+          python -m venv .venv
+          .venv/bin/pip install -q --upgrade pip
+          .venv/bin/pip install -q pytest pyyaml pdfplumber
+
+      - name: Unit suites
+        run: |
+          cd agent && ../.venv/bin/python -m pytest tests/unit/ -q
+
+      - name: SLM suites
+        run: .venv/bin/python -m pytest SLM/tests/ -q
+
+      # The reason this matrix exists. On linux-x86_64 the live cross-check
+      # runs; on darwin-arm64 it prints SKIP and the folding vectors still
+      # validate the formula. Both are a pass — silence is not.
+      - name: Silicon identity
+        run: tests/kernel/run_identity_test.sh --self-test
+
+      - name: Allocator suite
+        run: tests/kernel/run_mm_test.sh --self-test
+
+      # Proves the live path actually ran rather than skipping, on the one host
+      # where it can. Without this the matrix could be green with both hosts
+      # skipping and nobody noticing.
+      - name: Assert the live CPUID check ran (x86 only)
+        if: matrix.label == 'linux-x86_64'
+        run: |
+          out=$(tests/kernel/run_identity_test.sh --self-test)
+          echo "$out"
+          if echo "$out" | grep -q "SKIP.*live CPUID"; then
+            echo "::error::live CPUID cross-check skipped on an x86 host" >&2
+            exit 1
+          fi
+          echo "$out" | grep -q "live CPU:" || {
+            echo "::error::no live CPU line — the cross-check did not run" >&2
+            exit 1
+          }

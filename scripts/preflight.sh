@@ -94,6 +94,27 @@ fi
 if [ -n "${TIMEOUT_BIN:-}" ]; then pass "timeout ($TIMEOUT_BIN)"
 else pass "timeout (built-in shim; install coreutils for the real one)"; fi
 
+# --- what this host cannot verify ------------------------------------------ #
+# A cross toolchain lets any host BUILD an x86 kernel. It does not let one
+# execute x86 instructions natively, so checks that read the running CPU are
+# unavailable here — and they must say so. tests/kernel/identity_test.c prints
+# SKIP for its live CPUID cross-check, and a SKIP inside a passing suite is
+# easy to read as a pass.
+HOST_ARCH="$(uname -m)"
+case "$HOST_ARCH" in
+	x86_64|amd64)
+		pass "host arch ($HOST_ARCH) — silicon identity can be cross-checked live"
+		;;
+	*)
+		echo "NOTE  host arch ($HOST_ARCH) cannot run x86 CPUID"
+		echo "      -> tests/kernel/run_identity_test.sh verifies the folding formula"
+		echo "         against documented parts, but its live cross-check against"
+		echo "         this machine's own CPU is SKIPPED. Silicon identity is"
+		echo "         unverified against real hardware on this host."
+		echo "         See .claude/PRPs/reports/w2-portability-start.md"
+		;;
+esac
+
 if [ "$fail" -eq 0 ]; then
 	echo "ALL PASS"
 else
