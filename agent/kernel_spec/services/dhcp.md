@@ -1,6 +1,6 @@
 ---
 service: dhcp
-requires: [netif, ethernet, ipv4, udp, allocator, klog, terminal]
+requires: [netif, ethernet, ipv4, udp, allocator, klog, terminal, scoped]
 excludes: [tcp, fs, preemptive, ipc]
 entry: dhcp_serve
 markers:
@@ -154,6 +154,11 @@ uptime, so no wrap handling is specified.
 Split so `dhcp_handle` is reachable from a test without a NIC.
 
 ## Dependencies
+
+`scoped` is required because every AUTON image ships a manifest-scoped model and a chat
+terminal — an image the user cannot ask anything is not what this OS is. It was missing from
+this spec until the intent compiler generated a DHCP spec that included it and the two
+disagreed (`.claude/PRPs/reports/w3-intent-manifest-to-service.md`).
 
 Capabilities, per the front-matter: `netif`, `ethernet`, `ipv4`, `udp` from
 [net](../subsystems/net.md); `allocator` from [mm](../subsystems/mm.md); `klog` and `terminal`

@@ -1,6 +1,6 @@
 ---
 service: fileserver
-requires: [netif, ethernet, ipv4, tcp, http-server, vfs, initramfs, allocator, klog, terminal]
+requires: [netif, ethernet, ipv4, tcp, http-server, vfs, initramfs, allocator, klog, terminal, scoped]
 excludes: [writable, ext2, dhcp-client, preemptive, ipc]
 entry: fileserver_serve
 markers:
