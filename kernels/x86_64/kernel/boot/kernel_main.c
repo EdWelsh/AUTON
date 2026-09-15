@@ -14,6 +14,10 @@
 
 #define PAGE_SIZE 4096u
 
+/* Overridden by a generated definition in a service image. */
+__attribute__((weak)) void service_main(void);
+void service_main(void) { slm_chat_loop(); }
+
 static void halt_forever(void)
 {
 	for (;;)
@@ -82,7 +86,11 @@ void kernel_main(uint32_t mb_info_ptr, uint32_t magic)
 	 * acceptance harness sees it, then hand control to the chat loop. */
 	kprintf("[BOOT] OK\n");
 
-	slm_chat_loop();
+	/* A service image overrides this with its spec's `entry`; the general
+	 * image runs the chat loop. Weak so the general build needs no generated
+	 * file, and a service build simply provides a strong definition — see
+	 * agent/tools/gen_absent.py and subsystems/boot.md. */
+	service_main();
 
 	/* Reached only if the user typed 'quit'. */
 	halt_forever();

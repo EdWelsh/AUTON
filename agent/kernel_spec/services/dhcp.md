@@ -1,6 +1,6 @@
 ---
 service: dhcp
-requires: [netif, ethernet, ipv4, udp, allocator, klog, terminal, scoped]
+requires: [netif, ethernet, ipv4, udp, e1000, allocator, klog, terminal, scoped]
 excludes: [tcp, fs, preemptive, ipc]
 entry: dhcp_serve
 markers:
@@ -154,6 +154,10 @@ uptime, so no wrap handling is specified.
 Split so `dhcp_handle` is reachable from a test without a NIC.
 
 ## Dependencies
+
+`e1000` is required because a DHCP server serves over a network interface, and the image must
+contain a driver for one. The spec omitted it until the image was built and the link failed on
+`e1000_init` — a gap invisible to every check that reads the spec rather than the artifact.
 
 `scoped` is required because every AUTON image ships a manifest-scoped model and a chat
 terminal — an image the user cannot ask anything is not what this OS is. It was missing from

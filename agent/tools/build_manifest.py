@@ -102,9 +102,16 @@ def resolve(
             continue
         wanted_patterns.extend(pats)
 
-    included, excluded = [], []
+    # De-duplicated by path: the mandatory core and a capability can match the
+    # same file, and a source listed twice is a "multiple definition" link
+    # error in a file nobody edited. `all_sources` is already unique, so the
+    # guard is on callers appending extras that the core also matches.
+    included, excluded, seen = [], [], set()
     for p in all_sources:
         rel = str(p.relative_to(tree))
+        if rel in seen:
+            continue
+        seen.add(rel)
         (included if _match(tuple(wanted_patterns), rel) else excluded).append(p)
 
     report = {

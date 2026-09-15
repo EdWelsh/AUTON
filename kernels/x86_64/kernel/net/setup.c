@@ -60,6 +60,27 @@ int net_bringup(const struct pci_device *devs, uint32_t ndev)
 
 	net_init(mac);
 
+	/* A DHCP server cannot DHCP for itself. An image built with a static
+	 * configuration skips the client entirely — services/dhcp.md, Task 1 of
+	 * the F4 plan. NET_STATIC_IP is set by the build from the manifest. */
+#ifdef NET_STATIC_IP
+	net_set_ipcfg(NET_STATIC_IP, NET_STATIC_MASK, NET_STATIC_GW, NET_STATIC_DNS);
+	kprintf("[NET] static IP ");
+	print_ip(net_ip());
+	kprintf("\n");
+	/* Announce ourselves by ARPing the gateway, for the same reason the DHCP
+	 * path does it: ip_send drops on an ARP miss. It matters more here.
+	 * A statically-configured guest that never transmits is invisible to
+	 * QEMU's user-mode NAT, which learns a guest from its outbound traffic —
+	 * so a host port forward to a purely passive server is silently dropped,
+	 * and the service looks broken when it is merely unheard of. */
+	uint8_t gwmac[6];
+	for (int i = 0; i < 300 && !arp_resolve(net_gw(), gwmac); i++) {
+		__asm__ volatile("hlt");
+		net_poll();
+	}
+	return 0;
+#else
 	if (dhcp_run() == 0) {
 		kprintf("[NET] IP ");
 		print_ip(net_ip());
@@ -76,4 +97,5 @@ int net_bringup(const struct pci_device *devs, uint32_t ndev)
 		kprintf("[NET] DHCP: no lease (link up, no address)\n");
 	}
 	return 0;
+#endif
 }

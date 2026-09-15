@@ -22,7 +22,11 @@ sys.path.insert(0, str(ROOT / "agent" / "tools"))
 
 from build_manifest import SourceMap, _match, _tree_sources  # noqa: E402
 
-DEFINED = re.compile(r"^\s*[0-9a-fA-F]*\s*([TtDdBbRr])\s+(\S+)\s*$")
+# Uppercase only: nm lowercases file-local symbols, and a static cannot leak
+# across a link. Attributing them by name produced a false positive — `seg.0`
+# is a static in netif.c that happens to share a name with one in tcp.c, and
+# the check reported tcp as leaking into an image that does not contain it.
+DEFINED = re.compile(r"^\s*[0-9a-fA-F]*\s*([TDBR])\s+(\S+)\s*$")
 
 
 def defined_symbols(nm_output: str) -> set[str]:
@@ -78,6 +82,9 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--tree", required=True)
     ap.add_argument("--excludes", required=True)
     ap.add_argument("--image", default="")
+    ap.add_argument("--stubs", default="",
+                    help="a gen_absent.py stub list; those symbols are reported "
+                         "as absence stubs rather than as leaks")
     args = ap.parse_args(argv)
 
     tree = Path(args.tree)
@@ -113,7 +120,13 @@ def main(argv: list[str] | None = None) -> int:
               f"a clean result from an empty dump.", file=sys.stderr)
         return 2
 
+    stubbed: set[str] = set()
+    if args.stubs and Path(args.stubs).exists():
+        stubbed = {ln.strip() for ln in Path(args.stubs).read_text().splitlines()
+                   if ln.strip()}
+
     leaked: dict[str, set[str]] = {}
+    stub_hits: set[str] = set()
     unreadable: list[Path] = []
     for src in sources:
         owned = symbols_defined_by(src, tree)
@@ -121,6 +134,12 @@ def main(argv: list[str] | None = None) -> int:
             unreadable.append(src)
             continue
         hit = owned & image_syms
+        # A generated absence stub carries the excluded capability's *name* but
+        # none of its behaviour — that is the point of it. Reported separately,
+        # never silently forgiven, because a stub list that drifts from what was
+        # generated would forgive a real leak.
+        stub_hits |= hit & stubbed
+        hit -= stubbed
         if hit:
             leaked[str(src.relative_to(tree))] = hit
 
@@ -132,6 +151,10 @@ def main(argv: list[str] | None = None) -> int:
         # symbols, so its absence was never actually checked.
         print(f"UNCHECKED: {len(unreadable)} source(s) could not be compiled for "
               f"attribution: {', '.join(str(p.name) for p in unreadable[:4])}")
+
+    if stub_hits:
+        print(f"  {len(stub_hits)} symbol(s) present as generated absence stubs: "
+              f"{', '.join(sorted(stub_hits))}")
 
     if leaked:
         print(f"\nLEAKAGE: {sum(len(v) for v in leaked.values())} symbol(s) from "
