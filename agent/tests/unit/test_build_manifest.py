@@ -75,9 +75,30 @@ class TestFullResolutionMatchesTheGlob:
 
         # A source no capability claims would be silently dropped from every
         # scoped image, and nobody would notice until the link failed.
-        unclaimed = sorted(str(p.relative_to(TREE)) for p in excluded)
+        #
+        # kernel/services/ is the exception and not an oversight: the capability
+        # map describes the kernel, and a service is what is being *added* to
+        # it. build_service.py contributes those sources explicitly through
+        # _service_sources(), which is why they are not in the map.
+        unclaimed = sorted(str(p.relative_to(TREE)) for p in excluded
+                           if not str(p.relative_to(TREE)).startswith("kernel/services/"))
         assert not unclaimed, f"no capability claims: {unclaimed}"
-        assert len(included) == len(_tree_sources(TREE))
+
+    def test_service_sources_are_not_claimed_by_the_capability_map(self, source_map):
+        """Stated as its own property rather than buried as an exception above:
+        a service's sources come from the service, not from the kernel's
+        capability index."""
+        from capability_slice import capability_owner, load_specs
+
+        tree_services = TREE / "kernel" / "services"
+        if not tree_services.is_dir():
+            pytest.skip("no services in the tree")
+
+        every = sorted(capability_owner(load_specs()))
+        _, excluded, _ = resolve(every, [], TREE, source_map)
+        names = {str(p.relative_to(TREE)) for p in excluded}
+
+        assert all(n.startswith("kernel/services/") for n in names), sorted(names)
 
     def test_capabilities_this_tree_does_not_implement_are_reported(self, source_map):
         """The seed tree has no ipc, fs or sched. Requiring everything must say
