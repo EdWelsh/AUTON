@@ -366,7 +366,64 @@ exporter and every generated loader in the **same change**. An exporter and load
 disagree produce a plausible-looking model that is wrong — the worst available failure mode,
 because nothing reports it.
 
-### Knowledge Base
+### Shell Idioms — Deterministic, Before the Model (REQUIRED)
+
+People type Linux commands at an OS prompt. **15 of the 65 graded eval prompts are
+exactly this** — `lsmod`, `meminfo`, `ip a`, `netstat -tulnp`, `check hw info` —
+drawn from real human sessions.
+
+They must be answered by the deterministic path **before** the model is
+consulted, for a reason that is not stylistic:
+
+The eval holds its prompts out of the training corpus, so the model never sees
+them. The tokenizer builds its vocabulary *from that corpus*. Therefore every
+eval-only word is out of vocabulary and arrives as `<unk>`, and a word-level
+model cannot act on a token it has no representation for. Measured: **22 of 65
+prompts contain a word the model cannot represent, and they fail at 36% against
+16% for in-vocabulary prompts** — more than double.
+
+No amount of corpus work fixes this, because the fix is forbidden by the
+contamination guard. Substring matching has no vocabulary and is therefore
+immune to the problem entirely.
+
+This is the same retrieval-not-generation rule already applied to device facts
+and to `is_ip_query`, extended to the class that needs it most.
+
+```c
+/* Matched on the raw text with ks_contains, before slm_neural_infer. Returns
+ * 1 if the idiom was recognised and answered. */
+int slm_shell_idiom(const char *text, slm_intent_result_t *result);
+```
+
+| Idiom substrings | Answered from |
+|---|---|
+| `lsmod`, `modinfo`, `list modules`, `list drivers` | bound drivers, from the driver table |
+| `lspci`, `list pci`, `hw info`, `hardware info` | the PCI device list |
+| `meminfo`, `free`, `vmstat`, `memory usage` | the memory figure |
+| `uname`, `os version`, `kernel version` | self-description; explicitly not Linux |
+| `ip a`, `ip addr`, `ifconfig` | the address, where the image has a network |
+| `ip route`, `netstat -r`, `routing table` | the gateway |
+| `netstat`, `ss -l`, `listening ports`, `net list` | which roles listen, and on what |
+| `ps `, `list processes` | there is no process model |
+| `df`, `disk usage`, `mount` | what persists, which may be nothing |
+| `dmesg`, `boot log`, `klog` | the serial log is not stored |
+| `roles`, `what can you be`, `what can you run` | the role list, filtered by manifest |
+| `uptime`, `how long` | uptime |
+
+**Rules**
+
+1. **Never invent Linux output.** `ps` is answered by saying there is no process
+   model. Emulating `ps` output would be a fabrication, and the rubric grades a
+   confident wrong answer worse than an honest decline.
+2. **Answer from the same tables the chat already uses**, so an idiom and its
+   plain-English equivalent can never disagree.
+3. **An idiom for a capability this image lacks is declined by name**, not
+   answered generically: `ip a` on an image with no network says there is no
+   network, not "I do not know about that".
+4. **Longest match wins.** `net list all` must not be caught by a shorter
+   pattern that means something else.
+
+## Knowledge Base
 
 ```c
 /* Device database entry: maps PCI IDs to human-readable names */

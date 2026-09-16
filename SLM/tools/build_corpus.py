@@ -200,6 +200,108 @@ NONSENSE = ["zxqw flibberty gronk", "asdfgh qwerty", "blorp zonk widget",
             "glorp snark boojum", "ssss tttt uuuu", "random gibberish here"]
 
 
+# Named software people ask for by product rather than by role. Measured:
+# "can i run nginx" had "what roles can you run" as its nearest neighbour at
+# 0.29 and was answered with a PCI-id clarification.
+#
+# The honest answer names the role AUTON *can* be, and says plainly that it
+# does not run the binary — there is no process model to run one in. Claiming
+# otherwise would be the capability bluffing the rubric exists to punish.
+SOFTWARE_TO_ROLE = [
+    (["nginx", "apache", "httpd", "caddy", "lighttpd"], "web server",
+     "in-kernel HTTP on port 80"),
+    (["bind", "dnsmasq", "unbound", "coredns"], "DNS server",
+     "answers A queries on port 53"),
+    (["postgres", "postgresql", "mysql", "mariadb", "sqlite", "redis"],
+     "database server", "roadmap: needs persistent storage and a query engine"),
+    (["openssh", "sshd", "dropbear"], "SSH server",
+     "roadmap: needs crypto and a PTY"),
+    (["postfix", "exim", "dovecot", "sendmail"], "email server",
+     "roadmap: needs SMTP/IMAP and mail storage"),
+    (["docker", "podman", "containerd"], "containers",
+     "roadmap: needs an OCI runtime"),
+]
+
+SOFTWARE_Q = [
+    "can i run {s}", "do you support {s}", "is {s} available",
+    "can you run {s}", "i want to run {s}", "install {s}",
+    "does this have {s}", "run {s} on this machine",
+]
+
+# How the network is configured, asked as a whole rather than field by field.
+# The corpus taught `what is my ip` and `what is my gateway` separately and
+# nothing that answered the general question, whose nearest neighbour was
+# "i want a workloads on this box" at 0.27.
+NETCONF_Q = [
+    "how is the network set up", "describe the network configuration",
+    "what is the network config", "tell me about networking here",
+    "how is this machine networked", "summarise the network",
+    "what are my network settings", "network configuration",
+]
+
+# --- shell idioms ----------------------------------------------------------- #
+# People type Linux commands at an OS prompt. 15 of the 65 eval prompts are
+# exactly this — `lsmod`, `meminfo`, `ip a`, `netstat -tulnp` — drawn from real
+# human sessions, and the corpus taught **nothing** about them. The model
+# therefore declined every one, which the rubric grades as garbage because the
+# machine can answer most of them.
+#
+# The answers map an idiom to AUTON's own facts. They do not pretend to be
+# Linux: `ps` is answered by saying there is no process model, because that is
+# true and useful, where emulating `ps` output would be a fabrication.
+#
+# Each entry is (idiom phrasings, answer, capabilities the answer depends on).
+# The eval's own idioms are excluded automatically by the collision filter, so
+# what this teaches is the *class*, and the eval measures generalisation to
+# idioms it has never seen.
+SHELL_IDIOMS = [
+    (["lspci", "list pci devices", "show pci", "pci list", "enumerate pci"],
+     lambda f: f["devices"], {"dev"}),
+    (["modinfo", "list modules", "show loaded modules", "what modules are loaded",
+      "list drivers", "show drivers"],
+     lambda f: f["drivers"], {"drivers"}),
+    (["vmstat", "how much memory is in use", "memory usage", "show memory"],
+     lambda f: f["memory"], {"mm"}),
+    (["uname", "what system is this", "what os is this", "os version"],
+     lambda f: "AUTON, an agent-built operating system. Not Linux: no kernel "
+               "version string and no process model. What else is present "
+               "depends on what this image was built for.", set()),
+    (["ip addr", "ifconfig", "show my address", "what is my address"],
+     lambda f: f["ip"], {"net"}),
+    (["ip route", "show routing table", "what is my default gateway",
+      "print the route table"],
+     lambda f: "Gateway is 10.0.2.2 (dns 10.0.2.3). One route: everything "
+               "non-local goes to the gateway.", {"net"}),
+    (["ss -l", "list listening ports", "what ports are open", "show open ports"],
+     lambda f: "Listening depends on the role. `be a web server` opens port 80; "
+               "`be a DNS server` opens 53. Nothing listens by default.", {"net"}),
+    (["ps aux", "list processes", "show running processes", "what is running"],
+     lambda f: "AUTON has no process model. The kernel runs one thing at a time "
+               "in ring 0, so there is nothing to list.", set()),
+    (["df -h", "show disk usage", "how much disk space", "list mounts"],
+     lambda f: "Nothing is mounted and nothing persists across a reboot in "
+               "this image. Ask about storage if you need it.", set()),
+    (["dmesg", "show the boot log", "kernel log", "print the log"],
+     lambda f: "The boot log is on the serial console — every line prefixed "
+               "[BOOT], [MM], [DEV], [SLM]. It is not stored, so it cannot be "
+               "replayed.", {"sys"}),
+    (["w", "who is logged in", "list users", "show sessions"],
+     lambda f: "AUTON has no users and no login. The serial console is the only "
+               "session.", set()),
+    (["top", "show system load", "what is the load average"],
+     lambda f: f["status"], {"sys"}),
+]
+
+# Roles the machine can be asked to become. The corpus taught the individual
+# roles but never how to *list* them, so "which roles are available" was
+# declined by a machine holding the list.
+ROLE_LIST_Q = [
+    "list the roles", "what roles can you run", "what can this machine become",
+    "show me the roles", "what server roles do you support",
+    "enumerate the roles", "which capabilities do you have",
+    "what can you be", "what are my options",
+]
+
 def _pci_answer(desc: str, drv: str) -> str:
     return f"{desc}. Recommended driver: {drv}."
 
@@ -407,8 +509,17 @@ def _sys_facts(manifest: "Manifest") -> dict[str, str]:
     parts.append("up 12s.")
     shipped = {drv for drv, caps in DRIVER_CAPS.items()
                if caps <= manifest.requires}
+    bound = [f"{drv} for {ident}" for ident in BUS_DEVICES
+             for kv, kd, _, drv in PCI_KB
+             if f"{kv}:{kd}" == ident and drv in shipped]
+    drivers = ("Loaded drivers: " + ", ".join(bound) + ". AUTON binds drivers at "
+               "boot; there is no runtime module loader."
+               if bound else
+               "No drivers are bound in this image beyond the console. AUTON "
+               "binds at boot; there is no runtime module loader.")
     return {**SYS_FACTS,
             "devices": _devices_fact(shipped),
+            "drivers": drivers,
             "status": " ".join(parts)}
 
 
@@ -487,6 +598,54 @@ def build(seed: int = 0, manifest: Manifest | None = None) -> list[dict]:
         caps = {"dev"} | _infer_caps(q)
         add(q, NO_ID_A, "HARDWARE_IDENTIFY", "clarify:no-device-id", caps)
         add(q + "?", NO_ID_A, "HARDWARE_IDENTIFY", "clarify:no-device-id", caps)
+
+    # SYSTEM_MANAGE — shell idioms mapped to this machine's own facts
+    #
+    # The largest single gap the eval measured: 15 of 65 prompts are shell
+    # idioms and the corpus taught none of them, so the model declined all 15.
+    # Answering from `sys_facts` keeps them grounded — no idiom invents a
+    # number the machine does not have.
+    for phrasings, answer_fn, caps in SHELL_IDIOMS:
+        answer = answer_fn(sys_facts)
+        for phrasing in phrasings:
+            add(phrasing, answer, "SYSTEM_MANAGE", f"idiom:{phrasings[0]}", set(caps))
+            add(phrasing + "?", answer, "SYSTEM_MANAGE", f"idiom:{phrasings[0]}", set(caps))
+            add("run " + phrasing, answer, "SYSTEM_MANAGE", f"idiom:{phrasings[0]}", set(caps))
+
+    # APP_INSTALL — software asked for by product name, answered by role
+    for names, role, note in SOFTWARE_TO_ROLE:
+        answer = (f"I do not run {names[0]} — there is no process model to run a "
+                  f"binary in. What I can do is be a {role} ({note}). "
+                  f"Ask for the role by name.")
+        caps = ROLE_CAPS.get(role, set())
+        for name in names:
+            for tmpl in SOFTWARE_Q:
+                add(tmpl.format(s=name), answer, "APP_INSTALL",
+                    f"software:{role}", set(caps))
+
+    # INSTALL_CONFIGURE — the network as a whole, not field by field
+    for q in NETCONF_Q:
+        add(q, sys_facts["ip"] + " " + f"Netmask 255.255.255.0, one NIC "
+            f"(8086:100e, e1000).", "INSTALL_CONFIGURE", "sys:netconf", {"net"})
+        add(q + "?", sys_facts["ip"] + " " + f"Netmask 255.255.255.0, one NIC "
+            f"(8086:100e, e1000).", "INSTALL_CONFIGURE", "sys:netconf", {"net"})
+
+    # APP_INSTALL — listing the roles, which the corpus never taught
+    # Built from the roles this image could actually become. Listing a role
+    # whose capabilities the manifest excludes is a capability claim the image
+    # cannot honour — the same defect as a phantom PCI id, in a different field.
+    working = [r for r, _ in ROLES_WORKING if manifest.admits(ROLE_CAPS.get(r, set()))]
+    roadmap = [r for r, _ in ROLES_ROADMAP if manifest.admits(ROLE_CAPS.get(r, set()))]
+    if working or roadmap:
+        parts = []
+        if working:
+            parts.append(", ".join(working) + " (working)")
+        if roadmap:
+            parts.append(", ".join(roadmap[:4]) + " (roadmap)")
+        role_list = "I can be: " + "; ".join(parts) + ". Ask for one by name."
+        for q in ROLE_LIST_Q:
+            add(q, role_list, "APP_INSTALL", "role:list")
+            add(q + "?", role_list, "APP_INSTALL", "role:list")
 
     # DRIVER_SELECT
     for vendor, dev, desc, drv in PCI_KB:
