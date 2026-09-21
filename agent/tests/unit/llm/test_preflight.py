@@ -138,3 +138,10 @@ class TestLLMClientPreflight:
             preflight=False,
         )
         assert client.model == "ollama/not-a-real-model:v9"
+
+
+def test_ollama_chat_uses_the_ollama_endpoint():
+    # `[llm.endpoints] ollama = ...` must reach ollama_chat/ models too, or they
+    # silently probe and call the default host instead of the configured one.
+    config = ProviderConfig(endpoints={"ollama": "http://gpu-box:11434"})
+    assert config.get_base_url("ollama_chat/gemma4:latest") == "http://gpu-box:11434"

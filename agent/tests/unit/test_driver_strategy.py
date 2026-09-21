@@ -36,6 +36,17 @@ CACHED = identify("8086:100e").outcome is not Outcome.UNAVAILABLE
 needs_registry = pytest.mark.skipif(not CACHED, reason="pci.ids not cached")
 
 
+@pytest.fixture
+def uningested(monkeypatch, tmp_path):
+    """An empty vendor cache. These tests are about the *not ingested* state,
+    and must not depend on what this machine happens to have fetched: V8
+    ingested the VIRTIO specification for real and flipped all of them."""
+    import vendor_ingest
+
+    monkeypatch.setattr(vendor_ingest, "CACHE", tmp_path / "vendor")
+    return tmp_path / "vendor"
+
+
 class TestTheOrderingIsTheSecurityArgument:
     def test_reuse_beats_port_beats_synthesize(self):
         assert ORDER == ("reuse", "port", "synthesize")
@@ -57,7 +68,7 @@ class TestTheOrderingIsTheSecurityArgument:
         assert {o.strategy for o in d.options} == set(ORDER)
 
     @needs_registry
-    def test_the_rationale_names_what_was_beaten(self):
+    def test_the_rationale_names_what_was_beaten(self, uningested):
         d = select("virtio-mmio:1")
         # Nothing is chosen here, but when something is, the rationale explains
         # why the preferred options lost.
@@ -71,7 +82,7 @@ class TestAvailableIsNotPreferred:
         assert "device-registry" not in NORMATIVE_KINDS
         assert "security-advisory" not in NORMATIVE_KINDS
 
-    def test_an_uningested_specification_does_not_make_synthesis_available(self):
+    def test_an_uningested_specification_does_not_make_synthesis_available(self, uningested):
         """Not "does a document exist" but "is it inventoried *and* ingestable".
         A datasheet nobody can fetch is a citation, not a basis."""
         d = select("virtio-mmio:1")
@@ -80,13 +91,24 @@ class TestAvailableIsNotPreferred:
         assert synth.availability is Availability.BLOCKED
         assert not synth.usable
 
-    def test_that_state_is_actionable_and_says_so(self):
+    def test_that_state_is_actionable_and_says_so(self, uningested):
         """"Not inventoried" and "not ingested" are different, and the second
         has a command that fixes it."""
         synth = next(o for o in select("virtio-mmio:1").options
                      if o.strategy == "synthesize")
 
         assert "vendor_fetch.py" in synth.reason
+        assert synth.basis == "oasis-virtio/virtio-spec"
+
+    def test_ingesting_the_specification_makes_synthesis_available(self, uningested):
+        """The other side of the same check, exercised for real in w11 V8."""
+        (uningested / "oasis-virtio").mkdir(parents=True)
+        (uningested / "oasis-virtio" / "virtio-spec").write_bytes(b"%PDF")
+
+        synth = next(o for o in select("virtio-mmio:1").options
+                     if o.strategy == "synthesize")
+
+        assert synth.availability is Availability.AVAILABLE
         assert synth.basis == "oasis-virtio/virtio-spec"
 
     def test_three_availability_states_not_two(self):
@@ -145,13 +167,13 @@ class TestLicencesAreATableNotAJudgement:
 
 
 class TestRefusingRatherThanGuessing:
-    def test_no_defensible_option_refuses(self):
+    def test_no_defensible_option_refuses(self, uningested):
         d = select("virtio-mmio:1")
 
         assert d.refused
         assert d.chosen is None
 
-    def test_the_refusal_names_all_three_options(self):
+    def test_the_refusal_names_all_three_options(self, uningested):
         d = select("virtio-mmio:1")
 
         assert len(d.options) == 3

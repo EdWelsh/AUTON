@@ -94,6 +94,9 @@ class ProviderConfig:
 
     def get_base_url(self, model: str) -> str | None:
         provider = model.split("/")[0] if "/" in model else ""
+        if provider == "ollama_chat" and provider not in self.endpoints:
+            # Same host, different LiteLLM route: `[llm.endpoints] ollama` covers both.
+            return self.endpoints.get("ollama")
         return self.endpoints.get(provider)
 
 

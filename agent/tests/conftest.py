@@ -2,6 +2,21 @@
 
 import pytest
 
+from orchestrator.llm import client as _llm_client
+
+
+@pytest.fixture(autouse=True)
+def _no_real_ollama(monkeypatch):
+    """Keep the model preflight off whatever Ollama this host happens to run.
+
+    Tests build engines with placeholder tags like ``ollama/test-model``. With
+    no endpoint configured the preflight falls back to ``DEFAULT_OLLAMA_URL``,
+    so a developer with Ollama running saw these fail and CI did not. Port 9
+    (discard) refuses, which the preflight treats as "endpoint down" and skips.
+    Tests of the preflight itself pass an explicit stub endpoint.
+    """
+    monkeypatch.setattr(_llm_client, "DEFAULT_OLLAMA_URL", "http://127.0.0.1:9")
+
 
 @pytest.fixture
 def sample_config():
