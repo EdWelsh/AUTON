@@ -1,0 +1,84 @@
+# What each authorship subject consists of, for measure_authorship.py.
+#
+# F6, V8 and H7 each ask one question: what does it cost when an agent writes a
+# thing a human wrote before? That question needs ONE way of counting, applied
+# to the control and the experiment alike. Hand counts done once per phase are
+# not comparable, and three of the recorded control figures turned out not to be
+# (see .claude/PRPs/reports/w11-factory-agent-authored-service-report.md).
+#
+# Every path is relative to a root: the repo for controls, the experiment's
+# workspace for experiments (`--root`). `rev` reads a path from git history
+# instead of the working tree: F4's implementation text is gone (kernels/ was
+# gitignored), and only its structure survives in the graph at one commit.
+#
+# `recorded` is the figure the control's own report published. The harness
+# prints it beside what it measures, and a difference is shown, never hidden.
+
+version: 1
+
+subjects:
+
+  dhcp:
+    kind: service
+    role: "F4 control, human-authored"
+    # F2's commit: the spec as written, before intent-C (+5) and F4's own fix (+4).
+    spec: {path: agent/kernel_spec/services/dhcp.md, rev: 2b1b1f4}
+    implementation:
+      graph: {path: agent/kernel_spec/reference/x86_64/graph.json, rev: 9571384, subsystem: services}
+    tests: [{path: tests/kernel/dhcp_test.c, rev: 530f9c5}]
+    recorded: {spec_lines: 175, implementation_lines: 372, test_lines: 200, test_cases: 24}
+    note: >-
+      implementation_lines recorded as server.c 320 + serve.c 52; dhcp.h 60 is a header
+      and the graph records .c files only, so it is excluded on both sides. The graph at
+      9571384 is the only surviving artifact and says 350 + 51 = 401. test_lines at F4's own
+      commit is 255: the recorded 200 was wrong when written. test_cases matches.
+
+  virtio-net:
+    kind: driver
+    role: "V5 control, human-authored"
+    spec: {path: agent/kernel_spec/subsystems/drivers.md, section: "SLM-Managed Driver: VirtIO Network"}
+    reference_new: [tests/kernel/virtio_reference/virtio_ref.c, tests/kernel/virtio_reference/include/virtio_ref.h]
+    tests: [{path: tests/kernel/virtio_net_test.c}]
+    recorded: {spec_lines: 113, reference_new_lines: 135, test_lines: 160, test_cases: 29, injected_caught: "6/6"}
+    note: >-
+      The reference was extended by V6 afterwards and neither version was ever committed, so
+      V5's 135 cannot be reproduced from any artifact. reference_new here is today's total.
+
+  virtio-blk:
+    kind: driver
+    role: "V6 control, human-authored, reusing V5's reference"
+    spec:
+      path: agent/kernel_spec/subsystems/drivers.md
+      section: "SLM-Managed Driver: VirtIO Block"
+      base_rev: 2c5b7b6       # before w6–w10 were committed: the section was PCI-only; V6 wrote the difference
+    reference_reused: [tests/kernel/virtio_reference/virtio_ref.c, tests/kernel/virtio_reference/include/virtio_ref.h]
+    tests: [{path: tests/kernel/virtio_blk_test.c}]
+    recorded: {spec_lines: 84, reference_new_lines: 24, test_lines: 136, test_cases: 16, injected_caught: "5/5"}
+
+  f00f-idt-remap:
+    kind: mitigation
+    role: "H6 control, human-authored spec; never implemented"
+    spec: {path: agent/kernel_spec/mitigations/f00f-idt-remap.md}
+    recorded: {}
+    note: >-
+      H6 recorded no cost row. It wrote the specification and nothing implements it, so its
+      control is a spec with implementation 0 and verify never run.
+
+  # --- experiments: paths relative to the agent's workspace (--root) -----------
+
+  tftp:
+    kind: service
+    role: "F6 experiment, agent-authored"
+    spec: {path: spec/tftp.md, authored_by: human}
+    implementation:
+      files: [kernel/services/tftp/server.c, kernel/services/tftp/serve.c]
+    tests: [{path: tests/kernel/tftp_test.c}]
+
+  virtio-console:
+    kind: driver
+    role: "V8 experiment, agent-authored"
+    spec: {path: spec/subsystems/drivers.md, section: "SLM-Managed Driver: VirtIO Console"}
+    record: spec/drivers/virtio-console.md
+    reference_reused: [tests/kernel/virtio_reference/virtio_ref.c, tests/kernel/virtio_reference/include/virtio_ref.h]
+    reference_new: [tests/kernel/virtio_console_reference.c]
+    tests: [{path: tests/kernel/virtio_console_test.c}]
