@@ -171,6 +171,16 @@ class Agent:
                     self.workspace.write_file(tool_input["path"], tool_input["content"])
                     return f"Written {len(tool_input['content'])} bytes to {tool_input['path']}"
 
+                case "edit_file":
+                    self.workspace.edit_file(
+                        tool_input["path"], tool_input["old"], tool_input["new"]
+                    )
+                    return (
+                        f"Edited {tool_input['path']}: replaced "
+                        f"{len(tool_input['old'])} bytes with "
+                        f"{len(tool_input['new'])}"
+                    )
+
                 case "search_code":
                     results = self.workspace.search_code(
                         tool_input["pattern"],

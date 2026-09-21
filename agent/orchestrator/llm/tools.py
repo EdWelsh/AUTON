@@ -27,7 +27,13 @@ TOOL_WRITE_FILE = {
     "type": "function",
     "function": {
         "name": "write_file",
-        "description": "Write content to a file in the kernel workspace. Creates parent directories if needed.",
+        "description": (
+            "Create a new file in the kernel workspace, or replace one you have "
+            "already read in full. Writes the WHOLE file. To change part of an "
+            "existing file use edit_file — a write over a file this workspace "
+            "has not read is refused, because replacing something sight-unseen "
+            "discards work nobody looked at."
+        ),
         "parameters": {
             "type": "object",
             "properties": {
@@ -41,6 +47,39 @@ TOOL_WRITE_FILE = {
                 },
             },
             "required": ["path", "content"],
+        },
+    },
+}
+
+TOOL_EDIT_FILE = {
+    "type": "function",
+    "function": {
+        "name": "edit_file",
+        "description": (
+            "Change part of an existing file by replacing an exact substring. "
+            "Prefer this over write_file for any file that already exists: "
+            "write_file replaces the whole file, and replacing a file you have "
+            "only partly read discards the rest of it. The text in `old` must "
+            "appear exactly once — include enough surrounding lines to make it "
+            "unique."
+        ),
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "path": {
+                    "type": "string",
+                    "description": "Relative path from workspace root",
+                },
+                "old": {
+                    "type": "string",
+                    "description": "Exact text to replace; must match once",
+                },
+                "new": {
+                    "type": "string",
+                    "description": "Replacement text",
+                },
+            },
+            "required": ["path", "old", "new"],
         },
     },
 }
@@ -463,6 +502,7 @@ ARCHITECT_TOOLS = [
     TOOL_READ_SPEC,
     TOOL_READ_FILE,
     TOOL_WRITE_FILE,
+    TOOL_EDIT_FILE,
     TOOL_LIST_FILES,
     TOOL_SEARCH_CODE,
 ]
@@ -471,6 +511,7 @@ DEVELOPER_TOOLS = [
     TOOL_READ_SPEC,
     TOOL_READ_FILE,
     TOOL_WRITE_FILE,
+    TOOL_EDIT_FILE,
     TOOL_LIST_FILES,
     TOOL_SEARCH_CODE,
     TOOL_BUILD_KERNEL,
@@ -491,6 +532,7 @@ REVIEWER_TOOLS = [
 TESTER_TOOLS = [
     TOOL_READ_FILE,
     TOOL_WRITE_FILE,
+    TOOL_EDIT_FILE,
     TOOL_LIST_FILES,
     TOOL_SEARCH_CODE,
     TOOL_BUILD_KERNEL,
@@ -503,6 +545,7 @@ TESTER_TOOLS = [
 INTEGRATOR_TOOLS = [
     TOOL_READ_FILE,
     TOOL_WRITE_FILE,
+    TOOL_EDIT_FILE,
     TOOL_LIST_FILES,
     TOOL_SEARCH_CODE,
     TOOL_BUILD_KERNEL,
@@ -517,6 +560,7 @@ INTEGRATOR_TOOLS = [
 DATA_SCIENTIST_TOOLS = [
     TOOL_READ_FILE,
     TOOL_WRITE_FILE,
+    TOOL_EDIT_FILE,
     TOOL_LIST_FILES,
     TOOL_ANALYZE_DATASET,
     TOOL_TOKENIZE_DATA,

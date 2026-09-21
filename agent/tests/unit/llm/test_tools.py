@@ -201,14 +201,16 @@ class TestDeveloperTools:
     def test_contains_expected_tools(self):
         names = _names_in(DEVELOPER_TOOLS)
         expected = {
-            "read_spec", "read_file", "write_file", "list_files",
+            "read_spec", "read_file", "write_file", "edit_file", "list_files",
             "search_code", "build_kernel", "run_test", "git_commit",
             "git_diff", "shell",
         }
         assert expected.issubset(names)
 
     def test_count(self):
-        assert len(DEVELOPER_TOOLS) == 10
+        """Guards against a tool arriving unnoticed — every one of these is
+        capability an agent gains. Update it deliberately when adding one."""
+        assert len(DEVELOPER_TOOLS) == 11
 
 
 class TestReviewerTools:

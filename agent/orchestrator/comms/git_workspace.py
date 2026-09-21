@@ -1,4 +1,12 @@
-"""Git workspace management for agent collaboration."""
+"""Git workspace management for agent collaboration.
+
+Agents write through this class, so it is where writing is constrained. Before
+this, `write_file` joined a caller-supplied path onto the workspace root and
+wrote — which meant an absolute path escaped the workspace entirely, `..`
+traversed out of it, and a whole-file write silently discarded whatever was
+there. The last of those is on record: an architect overwrote `net.h` with a
+placeholder, and that single incident blocked F6, V8 and H7.
+"""
 
 from __future__ import annotations
 
@@ -30,6 +38,12 @@ from git.exc import GitCommandError, InvalidGitRepositoryError, NoSuchPathError
 logger = logging.getLogger(__name__)
 
 
+class WorkspaceError(Exception):
+    """A write the workspace refused. Always names the path and what to do
+    instead — an agent that cannot tell why it was refused retries the same
+    thing."""
+
+
 class GitWorkspace:
     """Manages the shared git repository where agents write kernel code.
 
@@ -42,6 +56,53 @@ class GitWorkspace:
         self.path = workspace_path.resolve()
         self.branch_prefix = branch_prefix
         self._repo: Repo | None = None
+        # Files this workspace has been asked to read. A write over something
+        # nobody looked at is how `net.h` became a placeholder — see
+        # _resolve_for_write.
+        self._seen: set[str] = set()
+
+    def _resolve(self, path: str) -> Path:
+        """Resolve a workspace-relative path, or refuse.
+
+        Two things make this necessary rather than defensive. `Path(root) /
+        "/tmp/x"` is `/tmp/x` — an absolute path does not join, it *replaces*,
+        so the workspace root is silently discarded. And a symlink inside the
+        workspace pointing out of it defeats any check made on the string, so
+        the resolved result is what gets compared.
+        """
+        candidate = Path(path)
+        if candidate.is_absolute():
+            raise WorkspaceError(
+                f"refusing an absolute path {path!r}: workspace paths are "
+                f"relative to {self.path}, and an absolute one would write "
+                f"outside it entirely")
+
+        resolved = (self.path / candidate).resolve()
+        try:
+            resolved.relative_to(self.path)
+        except ValueError:
+            raise WorkspaceError(
+                f"refusing {path!r}: it resolves to {resolved}, outside the "
+                f"workspace at {self.path}") from None
+        return resolved
+
+    def _resolve_for_write(self, path: str) -> Path:
+        """As above, and refuse to discard a file nobody read.
+
+        Not a size heuristic. "The new content is much shorter" would have
+        caught the `net.h` incident and will not catch the next one — the defect
+        is writing over something you did not look at, which is exactly what can
+        be checked. Creating a new file stays free, because a rule that makes
+        every write a read-first ceremony gets worked around.
+        """
+        resolved = self._resolve(path)
+        if resolved.exists() and path not in self._seen:
+            raise WorkspaceError(
+                f"refusing to overwrite {path!r}, which this workspace has not "
+                f"read. Replacing a file sight-unseen is how net.h became a "
+                f"placeholder. read_file({path!r}) first, or use edit_file() to "
+                f"change part of it")
+        return resolved
 
     @property
     def repo(self) -> Repo:
@@ -96,20 +157,56 @@ class GitWorkspace:
 
     def read_file(self, path: str) -> str:
         """Read a file from the workspace."""
-        full_path = self.path / path
+        full_path = self._resolve(path)
         if not full_path.exists():
             raise FileNotFoundError(f"File not found: {path}")
+        self._seen.add(path)
         return full_path.read_text(encoding="utf-8")
 
     def write_file(self, path: str, content: str) -> None:
-        """Write a file to the workspace, creating parent directories."""
-        full_path = self.path / path
+        """Write a file to the workspace, creating parent directories.
+
+        Whole-file replacement. Kept for creating new files — an agent with no
+        way to create one encodes the content somewhere worse — but it refuses
+        to overwrite a file this workspace has not read.
+        """
+        full_path = self._resolve_for_write(path)
         full_path.parent.mkdir(parents=True, exist_ok=True)
         full_path.write_text(content, encoding="utf-8")
+        self._seen.add(path)
+
+    def edit_file(self, path: str, old: str, new: str) -> None:
+        """Replace an exact substring that appears exactly once.
+
+        The primitive whose absence caused the incident. An architect replacing
+        a header wholesale was a legitimate intent expressed with the wrong
+        tool, because the wrong tool was the only one there.
+
+        Exactly once, deliberately: a match count of zero means the agent is
+        working from a stale assumption, and more than one means it does not
+        know which it is changing. Applied blindly, both are silent corruption.
+        """
+        full_path = self._resolve(path)
+        if not full_path.exists():
+            raise FileNotFoundError(f"File not found: {path}")
+
+        content = full_path.read_text(encoding="utf-8")
+        count = content.count(old)
+        if count == 0:
+            raise WorkspaceError(
+                f"edit to {path!r} matched nothing. The text to replace is not "
+                f"in the file — read it again rather than assuming what it says")
+        if count > 1:
+            raise WorkspaceError(
+                f"edit to {path!r} matched {count} times and must match once. "
+                f"Include enough surrounding text to name which one")
+
+        full_path.write_text(content.replace(old, new, 1), encoding="utf-8")
+        self._seen.add(path)
 
     def list_files(self, path: str = ".", recursive: bool = False) -> list[str]:
         """List files in a workspace directory."""
-        full_path = self.path / path
+        full_path = self._resolve(path)
         if not full_path.is_dir():
             return []
         if recursive:
