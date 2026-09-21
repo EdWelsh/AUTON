@@ -261,15 +261,18 @@ def build(name: str, tree: Path, make_iso: bool = False, cc: str | None = None,
     spec = gate_spec(name)
     result.gates.append("spec: valid, resolves, not a stub")
 
-    placed = scaffold(tree)
-    if placed:
-        result.gates.append(f"scaffold: laid {len(placed)} build file(s)")
+    # Sources before scaffolding: a refused build must leave the tree as it
+    # found it. Scaffolding first laid a Makefile into kernels/x86_64 on every
+    # refusal, and that half-tree then made tree-dependent tests stop skipping.
     if not (tree / "kernel").is_dir() or not any((tree / "kernel").rglob("*.c")):
         raise GateFailure(
-            f"[gate: sources] {tree} has build scaffolding but no kernel source. "
+            f"[gate: sources] {tree} has no kernel source. "
             f"AUTON contains no kernel — agents write it against "
             f"kernel_spec/subsystems/. Point --tree at a tree they have written."
         )
+    placed = scaffold(tree)
+    if placed:
+        result.gates.append(f"scaffold: laid {len(placed)} build file(s)")
 
     extra = _service_sources(tree, name)
     try:

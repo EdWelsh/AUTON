@@ -95,6 +95,17 @@ class TestATreeWithoutSource:
         assert "agents write it" in str(exc.value)
         assert "kernel_spec/subsystems" in str(exc.value)
 
+    def test_a_refused_build_leaves_the_tree_as_it_found_it(self, tmp_path):
+        """Scaffolding used to be laid before the sources gate, so every refusal
+        left a Makefile behind. Pointed at the default `kernels/x86_64`, that
+        half-tree made every tree-dependent test in the suite stop skipping."""
+        tree = tmp_path / "kernels" / "x86_64"
+
+        with pytest.raises(GateFailure):
+            build("dhcp", tree)
+
+        assert not tree.exists()
+
 
 class TestTheRepoContainsNoKernel:
     def test_no_kernel_tree_is_tracked(self):
