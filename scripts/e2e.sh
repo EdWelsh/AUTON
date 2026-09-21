@@ -10,6 +10,8 @@
 #   --target DIR       kernel tree to validate (default: kernels/<arch>).
 #                      Point this at agent-generated output.
 #   --keep N           artifact dirs to retain (default 10)
+#   --accel NAME       QEMU accelerator (default: probed; AUTON_ACCEL also works).
+#                      An explicit choice the host lacks is refused, never downgraded.
 #
 # Exits non-zero on the first failing stage. Artifacts are written either way.
 #
@@ -38,8 +40,9 @@ RUNG="3a"
 SKIP_TRAIN=0
 RUN_EVAL=0
 KEEP="${KEEP:-10}"
+ACCEL_REQ=""
 
-usage() { sed -n '2,12p' "$0" | sed 's/^# \{0,1\}//'; }
+usage() { sed -n '2,14p' "$0" | sed 's/^# \{0,1\}//'; }
 
 while [ $# -gt 0 ]; do
 	case "$1" in
@@ -51,6 +54,8 @@ while [ $# -gt 0 ]; do
 		--target=*)   TARGET="${1#*=}"; shift ;;
 		--keep)       KEEP="${2:?--keep needs a value}"; shift 2 ;;
 		--keep=*)     KEEP="${1#*=}"; shift ;;
+		--accel)      ACCEL_REQ="${2:?--accel needs a value}"; shift 2 ;;
+		--accel=*)    ACCEL_REQ="${1#*=}"; shift ;;
 		-h|--help)    usage; exit 0 ;;
 		*) echo "unknown argument: $1" >&2; usage >&2; exit 2 ;;
 	esac
@@ -64,6 +69,9 @@ case "$RUNG" in
 		exit 2 ;;
 	*) echo "unknown rung: $RUNG (expected 3a, 3b or 3c)" >&2; exit 2 ;;
 esac
+
+auton_accel "$ACCEL_REQ" || exit 2
+echo "accelerator: $AUTON_ACCEL ($AUTON_ACCEL_REASON)"
 
 # --- artifacts -------------------------------------------------------------- #
 RUN_ID="$(date -u +%Y-%m-%dT%H-%M-%SZ)"
@@ -187,7 +195,7 @@ s_boot() {
 	# marker instead and stop as soon as it lands — a timeout then means the
 	# boot genuinely did not complete, not that the VM is merely still running.
 	: > "$SERIAL_LOG"
-	"$QEMU" -cdrom "$NEURAL_ISO" -serial stdio -display none -no-reboot \
+	"$QEMU" -accel "$AUTON_ACCEL" -cdrom "$NEURAL_ISO" -serial stdio -display none -no-reboot \
 		-m "${MEM:-256M}" > "$SERIAL_LOG" 2>/dev/null &
 	local qemu_pid=$! booted=0 waited=0
 	local limit="${BOOT_TIMEOUT:-90}"
@@ -251,7 +259,7 @@ s_fallback() {
 	make -C "$TARGET" iso-neural MODEL="$bad" >/dev/null 2>&1 || return 1
 
 	: > "$serial"
-	"$QEMU" -cdrom "$NEURAL_ISO" -serial stdio -display none -no-reboot \
+	"$QEMU" -accel "$AUTON_ACCEL" -cdrom "$NEURAL_ISO" -serial stdio -display none -no-reboot \
 		-m "${MEM:-256M}" > "$serial" 2>/dev/null &
 	local qp=$! waited=0
 	while [ "$waited" -lt "${BOOT_TIMEOUT:-60}" ]; do
@@ -269,7 +277,7 @@ s_fallback() {
 	# No module at all: the rule engine is the intended backend here.
 	make -C "$TARGET" iso >/dev/null 2>&1 || return 1
 	: > "$serial.nomodule"
-	"$QEMU" -cdrom "$TARGET/build/auton.iso" -serial stdio \
+	"$QEMU" -accel "$AUTON_ACCEL" -cdrom "$TARGET/build/auton.iso" -serial stdio \
 		-display none -no-reboot -m "${MEM:-256M}" > "$serial.nomodule" 2>/dev/null &
 	qp=$!; waited=0
 	while [ "$waited" -lt "${BOOT_TIMEOUT:-60}" ]; do

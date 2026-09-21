@@ -75,3 +75,16 @@ jobs:
             echo "::error::no live CPU line — the cross-check did not run" >&2
             exit 1
           }
+
+      # A2: the accelerator probe against a real host, not a synthetic list.
+      # GitHub's x86 Linux runners expose /dev/kvm but not to the runner user
+      # until a udev rule grants it, so this also proves the "listed is not
+      # usable" check reads the device rather than trusting `-accel help`.
+      - name: Accelerator probe selects kvm (x86 Linux only)
+        if: matrix.label == 'linux-x86_64'
+        run: |
+          sudo apt-get update -q && sudo apt-get install -yq qemu-system-x86
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' \
+            | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules && sudo udevadm trigger --name-match=kvm
+          bash -c 'source scripts/lib/toolchain.sh && auton_accel && echo "$AUTON_ACCEL: $AUTON_ACCEL_REASON" && [ "$AUTON_ACCEL" = kvm ]'

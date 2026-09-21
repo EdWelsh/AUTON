@@ -94,6 +94,24 @@ fi
 if [ -n "${TIMEOUT_BIN:-}" ]; then pass "timeout ($TIMEOUT_BIN)"
 else pass "timeout (built-in shim; install coreutils for the real one)"; fi
 
+# --- accelerator ------------------------------------------------------------ #
+# Boot timings are only comparable if the run says what it ran under. TCG is
+# slow, not broken, so it is a NOTE — failing on it would make this Mac unusable.
+accel_err="$(mktemp)"
+if auton_accel 2>"$accel_err"; then
+	case "$AUTON_ACCEL" in
+		tcg)
+			echo "NOTE  accelerator (tcg) — $AUTON_ACCEL_REASON"
+			echo "      -> every boot here is software-emulated; expect roughly 10x a KVM"
+			echo "         host. Timings from this host are one end of B1's ratio, not"
+			echo "         a regression. See docs/HOST-MATRIX.md" ;;
+		*)  pass "accelerator ($AUTON_ACCEL — $AUTON_ACCEL_REASON)" ;;
+	esac
+else
+	bad "accelerator" "$(cat "$accel_err")"
+fi
+rm -f "$accel_err"
+
 # --- what this host cannot verify ------------------------------------------ #
 # A cross toolchain lets any host BUILD an x86 kernel. It does not let one
 # execute x86 instructions natively, so checks that read the running CPU are
