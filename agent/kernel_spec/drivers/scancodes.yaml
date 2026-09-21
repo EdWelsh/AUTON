@@ -1,0 +1,82 @@
+# Scancode set 1 to character, for the PS/2 keyboard path specified in
+# subsystems/drivers.md.
+#
+# A table because which byte means which key is a fact to look up, not logic to
+# write. The alternative is a switch statement spanning 128 cases, which is a
+# fact nobody can review — the same reason pci-classes.yaml and
+# hypervisors.yaml are data.
+#
+# Set 1 only. Sets 2 and 3 exist and are translated by the controller by
+# default; a driver that assumes translation is off reads different bytes, so
+# the set is named rather than implied.
+#
+# A release is the press code with bit 7 set (0x80). That is arithmetic, not a
+# table entry, and it lives in the driver.
+
+version: 1
+set: 1
+
+# Keys that produce a character. Unshifted, then shifted.
+printable:
+  0x02: ["1", "!"]
+  0x03: ["2", "@"]
+  0x04: ["3", "#"]
+  0x05: ["4", "$"]
+  0x06: ["5", "%"]
+  0x07: ["6", "^"]
+  0x08: ["7", "&"]
+  0x09: ["8", "*"]
+  0x0a: ["9", "("]
+  0x0b: ["0", ")"]
+  0x0c: ["-", "_"]
+  0x0d: ["=", "+"]
+  0x10: ["q", "Q"]
+  0x11: ["w", "W"]
+  0x12: ["e", "E"]
+  0x13: ["r", "R"]
+  0x14: ["t", "T"]
+  0x15: ["y", "Y"]
+  0x16: ["u", "U"]
+  0x17: ["i", "I"]
+  0x18: ["o", "O"]
+  0x19: ["p", "P"]
+  0x1a: ["[", "{"]
+  0x1b: ["]", "}"]
+  0x1e: ["a", "A"]
+  0x1f: ["s", "S"]
+  0x20: ["d", "D"]
+  0x21: ["f", "F"]
+  0x22: ["g", "G"]
+  0x23: ["h", "H"]
+  0x24: ["j", "J"]
+  0x25: ["k", "K"]
+  0x26: ["l", "L"]
+  0x27: [";", ":"]
+  0x28: ["'", '"']
+  0x29: ["`", "~"]
+  0x2b: ["\\", "|"]
+  0x2c: ["z", "Z"]
+  0x2d: ["x", "X"]
+  0x2e: ["c", "C"]
+  0x2f: ["v", "V"]
+  0x30: ["b", "B"]
+  0x31: ["n", "N"]
+  0x32: ["m", "M"]
+  0x33: [",", "<"]
+  0x34: [".", ">"]
+  0x35: ["/", "?"]
+  0x39: [" ", " "]
+
+# Keys that do not produce a character. Named so a driver can act on them
+# without a magic number, and so "unmapped" stays distinguishable from "mapped
+# to nothing printable" — the same distinction the source map draws.
+control:
+  0x01: escape
+  0x0e: backspace
+  0x0f: tab
+  0x1c: enter
+  0x1d: ctrl-left
+  0x2a: shift-left
+  0x36: shift-right
+  0x38: alt-left
+  0x3a: caps-lock

@@ -97,6 +97,10 @@ class BuildResult:
     kernel_bytes: int = 0
     iso_bytes: int = 0
     leakage_report: Path | None = None
+    # What each driver's own verification said. Kept as an object rather than a
+    # boolean: `unverified` is a third state and flattening it would lose the
+    # distinction the gate exists for.
+    driver_report: object | None = None
     gates: list[str] = field(default_factory=list)
 
 
@@ -129,6 +133,100 @@ def gate_spec(name: str) -> "ServiceSpec":   # noqa: F821
     return spec
 
 
+# Which capabilities name a concrete device. `nvme` and `ahci` are not here,
+# and that is the honest state: they are PCI class-coded devices, not single
+# ids, and the ingested registry holds device records only. The gate names a
+# device when it can and says the capability's name when it cannot — it does
+# not invent "NVM Express controller" out of a class code nothing ingested.
+CAPABILITY_DEVICES = {
+    "e1000": "8086:100e",
+    "e1000e": "8086:10d3",
+    "virtio-net": "1af4:1000",
+    "virtio-blk": "1af4:1001",
+}
+
+
+def _patterns_for(capability: str) -> tuple[str, ...]:
+    """What the map claims implements this. Named in the refusal so the reader
+    can see the pattern rather than go looking for it."""
+    from build_manifest import SourceMap
+    return tuple(SourceMap.load().capabilities.get(capability, ()))
+
+
+def _owner(capability: str) -> str:
+    """Which subsystem spec claims to provide this. The refusal names it so the
+    reader knows which spec promised something the tree does not deliver."""
+    from capability_slice import load_specs
+    for name, spec in load_specs().items():
+        if capability in spec.provides:
+            return name
+    return "no subsystem"
+
+
+def gate_capabilities(spec, report: dict) -> None:
+    """Refuse a build whose spec requires a capability this tree cannot implement.
+
+    The failure this prevents is specific and was measured: a manifest requiring
+    `nvme` resolves to a closed slice, passes every other gate, and produces an
+    image with no storage driver in it. Nothing was broken — `resolve()` computed
+    `unmapped_capabilities` correctly and put it in a report field that the
+    pipeline never read. So this gate makes existing, correct information
+    load-bearing rather than deriving anything new.
+
+    Consumes the report rather than recomputing it. A second copy of
+    `resolve()`'s rules — `core_provides`, transitive capabilities — would drift
+    from the first, and the two disagreeing is worse than either being wrong.
+    """
+    unmapped = set(report.get("unmapped_capabilities") or [])
+    # Mapped, and nothing behind the mapping. A different problem with a
+    # different fix, so a different message — one needs a mapping added, the
+    # other has one that lies.
+    phantom = set(report.get("phantom_capabilities") or [])
+    # Only what the spec asked for directly. A capability pulled in transitively
+    # is a weaker case: the spec never named it, and refusing the build would
+    # blame the author for a dependency they did not choose.
+    offending = sorted(unmapped & set(spec.requires))
+    offending_phantom = sorted(phantom & set(spec.requires) - unmapped)
+
+    if offending_phantom:
+        lines = []
+        for cap in offending_phantom:
+            pats = ", ".join(_patterns_for(cap))
+            lines.append(f"    {cap}  — ({_owner(cap)})   maps to {pats}, "
+                         f"which matches no source in this tree")
+        raise GateFailure(
+            "[gate: capabilities] the spec requires capabilities whose source "
+            "mapping points at nothing:\n" + "\n".join(lines) +
+            "\n  A glob matching nothing is not an error, so the build would "
+            "succeed and the image would contain no implementation. Remove the "
+            "mapping until the source exists — an absent mapping refuses "
+            "honestly; one that lies does not.")
+
+    if not offending:
+        return
+
+    lines = []
+    for cap in offending:
+        detail = f"{cap}  — ({_owner(cap)})"
+        dev = CAPABILITY_DEVICES.get(cap)
+        if dev:
+            from device_registry import identify
+            ident = identify(dev)
+            # An unidentifiable device is not a reason to allow an
+            # unimplementable build. The gate fires either way; the name is a
+            # courtesy the registry may or may not be able to supply.
+            detail += f" {ident.title} ({dev})" if ident else f" {dev}"
+        lines.append(f"    {detail}   no source mapping")
+
+    raise GateFailure(
+        "[gate: capabilities] the spec requires capabilities this tree cannot "
+        "implement:\n" + "\n".join(lines) +
+        "\n  A slice containing them resolves and builds; the image would simply "
+        "not contain the driver. Add a mapping in source_map.yaml, or remove the "
+        "requirement."
+    )
+
+
 def gate_leakage(tree: Path, excludes: list[str], stubs: Path, image: Path,
                  report: Path | None = None) -> str:
     if not excludes:
@@ -156,7 +254,7 @@ def gate_leakage(tree: Path, excludes: list[str], stubs: Path, image: Path,
 
 
 def build(name: str, tree: Path, make_iso: bool = False, cc: str | None = None,
-          jobs: int = 4) -> BuildResult:
+          jobs: int = 4, target=None, verify_drivers: bool = False) -> BuildResult:
     cc = cc or os.environ.get("CC") or "x86_64-elf-gcc"
     result = BuildResult(service=name)
 
@@ -175,9 +273,29 @@ def build(name: str, tree: Path, make_iso: bool = False, cc: str | None = None,
 
     extra = _service_sources(tree, name)
     try:
-        included, _, _ = resolve(list(spec.requires), list(spec.excludes), tree)
+        included, _, manifest_report = resolve(
+            list(spec.requires), list(spec.excludes), tree)
     except ManifestError as exc:
         raise GateFailure(f"[gate: manifest] {exc}") from exc
+
+    # Before the stub generator: an unimplementable capability would otherwise
+    # be papered over by an absence stub and linked into a working image.
+    gate_capabilities(spec, manifest_report)
+    result.gates.append(
+        f"capabilities: {len(manifest_report['capabilities'])} required, all mapped")
+
+    # Before the stub generator, for the same reason the capabilities gate is:
+    # a driver whose own stated check fails would otherwise be papered over by
+    # an absence stub and linked into an image that builds cleanly.
+    if target is not None:
+        from driver_verify import gate as gate_drivers
+
+        driver_report = gate_drivers(target, slow=verify_drivers)
+        counts = driver_report.counts()
+        result.driver_report = driver_report
+        result.gates.append(
+            f"drivers: {counts['verified']} verified, "
+            f"{counts['unverified']} unverified")
 
     # Derived once, shared by every step below. The stub generator compiling
     # with different defines than the build is a defect that already happened.

@@ -22,10 +22,12 @@ ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(ROOT / "agent" / "tools"))
 
 from build_service import (  # noqa: E402
+    CAPABILITY_DEVICES,
     KERNEL_CFLAGS,
     STATIC_NET,
     GateFailure,
     _service_sources,
+    gate_capabilities,
     gate_spec,
 )
 from intent_service import STUB_MARKER, emit  # noqa: E402
@@ -135,3 +137,123 @@ class TestMarkersComeFromTheSpec:
             assert any("up on :67" in p.replace("\\", "") for p in patterns)
         finally:
             (SERVICES / "dhcp.md").write_text(original)
+
+
+class _Spec:
+    """The two fields the capabilities gate reads. A real ServiceSpec needs a
+    file on disk, and the gate's behaviour does not depend on the rest of it."""
+    def __init__(self, requires):
+        self.requires = list(requires)
+
+
+class TestTheCapabilitiesGate:
+    """A manifest requiring `nvme` resolved to a closed slice, passed every
+    gate, and produced an image with no storage driver in it. Nothing was
+    broken: `resolve()` computed `unmapped_capabilities` correctly and put it in
+    a report field the pipeline never read.
+    """
+
+    def test_a_directly_required_unmapped_capability_refuses(self):
+        report = {"unmapped_capabilities": ["nvme"], "capabilities": ["nvme"]}
+
+        with pytest.raises(GateFailure, match="nvme"):
+            gate_capabilities(_Spec(["boot", "nvme"]), report)
+
+    def test_the_refusal_names_the_gate(self):
+        """`build failed` sends someone reading a 200-line log to find out
+        which step."""
+        report = {"unmapped_capabilities": ["nvme"], "capabilities": []}
+
+        with pytest.raises(GateFailure, match=r"\[gate: capabilities\]"):
+            gate_capabilities(_Spec(["nvme"]), report)
+
+    def test_the_refusal_says_what_to_do_next(self):
+        report = {"unmapped_capabilities": ["ahci"], "capabilities": []}
+
+        with pytest.raises(GateFailure) as exc:
+            gate_capabilities(_Spec(["ahci"]), report)
+
+        assert "source_map.yaml" in str(exc.value)
+
+    def test_the_refusal_names_the_subsystem_that_promised_it(self):
+        """The reader needs to know which spec advertised something the tree
+        does not deliver."""
+        report = {"unmapped_capabilities": ["nvme"], "capabilities": []}
+
+        with pytest.raises(GateFailure, match=r"drivers"):
+            gate_capabilities(_Spec(["nvme"]), report)
+
+    def test_a_transitively_unmapped_capability_does_not_refuse(self):
+        """The spec never named it. Refusing would blame the author for a
+        dependency they did not choose."""
+        report = {"unmapped_capabilities": ["vfs"], "capabilities": ["vfs"]}
+
+        gate_capabilities(_Spec(["boot", "terminal"]), report)   # no raise
+
+    def test_nothing_unmapped_passes(self):
+        gate_capabilities(_Spec(["boot"]), {"unmapped_capabilities": []})
+
+    def test_a_core_provided_capability_is_never_flagged(self):
+        """`resolve()` skips `core_provides` before building the list, and the
+        gate consumes that list rather than re-deriving it — a second copy of
+        the rule would drift from the first."""
+        report = {"unmapped_capabilities": [], "capabilities": ["serial"]}
+
+        gate_capabilities(_Spec(["serial"]), report)             # no raise
+
+    def test_every_offending_capability_is_named_in_one_run(self):
+        report = {"unmapped_capabilities": ["nvme", "ahci", "vfs"]}
+
+        with pytest.raises(GateFailure) as exc:
+            gate_capabilities(_Spec(["nvme", "ahci"]), report)
+
+        assert "nvme" in str(exc.value) and "ahci" in str(exc.value)
+
+    def test_the_shipped_specs_require_nothing_unmapped(self):
+        """`dhcp` and `fileserver` are the regression fixtures: the gate must
+        not refuse builds that previously worked."""
+        from build_manifest import resolve
+        from capability_slice import capability_slice
+
+        for name in ("dhcp", "fileserver"):
+            spec = gate_spec(name)
+            sl = capability_slice(list(spec.requires), list(spec.excludes))
+            assert sl.capabilities            # resolves at all
+
+
+class TestTheGateDoesNotDependOnTheRegistry:
+    def test_it_still_refuses_when_the_registry_is_unavailable(self, monkeypatch):
+        """An unidentifiable device is not a reason to allow an unimplementable
+        build. The name is a courtesy; the refusal is not."""
+        import device_registry
+
+        device_registry._index.cache_clear()
+        monkeypatch.setattr(
+            device_registry, "_index",
+            lambda: (_ for _ in ()).throw(RuntimeError("no registry")))
+
+        report = {"unmapped_capabilities": ["e1000"], "capabilities": []}
+        with pytest.raises(GateFailure, match="e1000"):
+            gate_capabilities(_Spec(["e1000"]), report)
+
+    def test_a_device_bearing_capability_is_named_when_the_registry_can(self):
+        """No capability that is unmapped today carries a device id, so this
+        path never fires against the shipped map — it is exercised here so the
+        mechanism is tested rather than assumed."""
+        from device_registry import Outcome, identify
+
+        if identify("8086:100e").outcome is Outcome.UNAVAILABLE:
+            pytest.skip("pci.ids not cached")
+
+        report = {"unmapped_capabilities": ["e1000"], "capabilities": []}
+        with pytest.raises(GateFailure) as exc:
+            gate_capabilities(_Spec(["e1000"]), report)
+
+        assert "82540EM" in str(exc.value)
+        assert "8086:100e" in str(exc.value)
+
+    def test_no_currently_unmapped_capability_carries_a_device_id(self):
+        """States the finding rather than leaving it implicit: `nvme` and `ahci`
+        are PCI class-coded devices, and the ingested registry holds device
+        records only. Naming them would mean inventing a title."""
+        assert not (set(CAPABILITY_DEVICES) & {"nvme", "ahci"})

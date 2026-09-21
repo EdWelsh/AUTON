@@ -54,6 +54,14 @@ class IntentRule:
     name: str
     phrases: tuple[str, ...]
     requires: tuple[str, ...]
+    # What the image needs *hardware* for. Deliberately not merged into
+    # `requires`: that names capabilities from the subsystem index, and a role
+    # is not one. `net` is a subsystem name, and capability_slice(["boot",
+    # "net"]) resolves to the same six subsystems as capability_slice(["boot",
+    # "udp"]) — so putting a role in `requires` would be an alias for a
+    # capability and would break services/README.md rule 2. The two lists
+    # answer different questions: what the image does, and what it runs on.
+    roles: tuple[str, ...] = ()
     assets: tuple[str, ...] = ()
     markers: tuple[str, ...] = ()
     note: str = ""
@@ -77,21 +85,24 @@ INTENTS: tuple[IntentRule, ...] = (
         name="host-repo",
         phrases=("host this repo", "host a website", "serve this repo",
                  "web server", "serve files over http"),
-        requires=("e1000", "ipv4", "tcp", "http-server", "dhcp-client"),
+        requires=("ipv4", "tcp", "http-server", "dhcp-client"),
+        roles=("network",),
         markers=("[NET] dhcp bound", "[HTTP] listening on 80"),
         note="Needs the network stack and a NIC driver; no writable storage.",
     ),
     IntentRule(
         name="serve-dhcp",
         phrases=("hand out addresses", "dhcp server", "serve dhcp leases"),
-        requires=("e1000", "ipv4", "udp"),
+        requires=("ipv4", "udp"),
+        roles=("network",),
         markers=("[DHCP] listening on :67", "[DHCP] lease bound"),
         note="UDP only; explicitly not TCP.",
     ),
     IntentRule(
         name="serve-files",
         phrases=("file server", "share files", "serve a docroot"),
-        requires=("e1000", "ipv4", "tcp", "http-server", "vfs", "initramfs"),
+        requires=("ipv4", "tcp", "http-server", "vfs", "initramfs"),
+        roles=("network",),
         assets=("docroot.cpio",),
         markers=("[HTTP] docroot mounted from module", "[HTTP] listening on :80"),
         note="Read-only storage from a boot module; no write path.",
@@ -116,6 +127,14 @@ NOTABLE_EXCLUDES = ("net", "fs", "sched", "ipc", "writable", "preemptive", "tcp"
 # build, which is the expensive end.
 DEFAULTS = {
     "input": ("terminal", "serial console; pass --input keyboard for a framebuffer image"),
+    # `e1000` was hardcoded into three intent rules, so every network image was
+    # built for an Intel 82540EM whatever machine it was going to run on —
+    # including a microVM with no PCI bus, where that driver binds to nothing.
+    # It is still the default when no target is stated, because a caller with no
+    # target has said nothing about the machine. The change is that it is now
+    # *recorded as an assumption* rather than invisible in a rule table.
+    "network": ("e1000", "the QEMU PC's NIC; state a target to choose from its "
+                         "devices instead"),
 }
 
 
@@ -128,6 +147,11 @@ class Manifest:
     assets: list[str]
     markers: list[str]
     assumptions: list[str] = field(default_factory=list)
+    # Which target chose each driver, and from which device. A reviewer reading
+    # PROVENANCE.json can then see *why this image has this driver* without
+    # re-deriving it.
+    target: str = ""
+    decisions: list[dict] = field(default_factory=list)
 
     def to_json(self) -> str:
         return json.dumps({
@@ -138,6 +162,8 @@ class Manifest:
             "assets": self.assets,
             "markers": self.markers,
             "assumptions": self.assumptions,
+            "target": self.target,
+            "decisions": self.decisions,
         }, indent=2)
 
 
@@ -192,17 +218,121 @@ def derive_excludes(requires: list[str], specs=None) -> list[str]:
     return out
 
 
-def build(sentence: str, input_device: str | None = None) -> Manifest:
+class TargetMismatch(IntentError):
+    """The machine cannot serve the intent.
+
+    A separate class from IntentError because the sentence is fine — it is the
+    pairing that does not work, and a caller may want to offer a different
+    target rather than a different sentence.
+    """
+
+
+def _drivers_from_target(rule: "IntentRule", target,
+                         known_capabilities: set[str]) -> tuple[list[str], list[str], list[dict]]:
+    """Choose a driver per role from the target's own devices.
+
+    Returns (drivers, assumptions, decisions). A table lookup joined on
+    `Device.role`, never an inference: the same rule H2 set for device facts.
+    """
+    from device_drivers import ROLE_CAPS, driver_for_device
+
+    drivers: list[str] = []
+    assumptions: list[str] = []
+    decisions: list[dict] = []
+
+    for role in rule.roles:
+        candidates = [d for d in target.devices if d.role == role]
+        if not candidates:
+            # Refuse on the role, not on a driver. "No driver for e1000" is a
+            # different and less useful sentence than "this machine has no
+            # network device" — and the second one is the true one.
+            absent = next((a for a in target.absent if a.lower().startswith(role)), "")
+            raise TargetMismatch(
+                f"target {target.target!r} has no device with role {role!r}, "
+                f"which {rule.name!r} needs"
+                + (f" ({absent})" if absent else "")
+                + ". Choose a different target, or an intent this machine can serve")
+
+        undrivable = []
+        for dev in candidates:
+            driver = driver_for_device(dev.id)
+            if driver is None:
+                undrivable.append(dev.id)
+                continue
+            if driver not in known_capabilities:
+                # The machine has the device, something knows which driver it
+                # needs, and no subsystem spec provides that driver. Raised
+                # here rather than at the index check below, because that one
+                # would blame the rule table — and the rule table is innocent:
+                # it no longer names a driver at all.
+                raise TargetMismatch(
+                    f"target {target.target!r} needs {driver!r} for its {role} "
+                    f"device {dev.id}, and no subsystem spec provides it. "
+                    f"`{driver}` is not in the capability index — see "
+                    f"kernel_spec/subsystems/drivers.md `provides`. A driver "
+                    f"record and an implementation are needed first "
+                    f"(auton-driver-development.prd.md, V2 then V5)")
+            if driver not in drivers:
+                drivers.append(driver)
+            decisions.append({
+                "role": role, "device": dev.id, "driver": driver,
+                "device_source": dev.source, "target": target.target,
+            })
+            break
+        else:
+            raise TargetMismatch(
+                f"target {target.target!r} has {role} device(s) "
+                f"{', '.join(undrivable)} that nothing in device_drivers.py can "
+                f"drive. Add a driver record (kernel_spec/drivers/), or choose a "
+                f"target whose {role} device is supported")
+    return drivers, assumptions, decisions
+
+
+def build(sentence: str, input_device: str | None = None, target=None) -> Manifest:
     specs = load_specs()
     rule = match_intent(sentence)
 
     requires = list(BASE_REQUIRES) + [c for c in rule.requires
                                       if c not in BASE_REQUIRES]
     assumptions: list[str] = []
+    decisions: list[dict] = []
+
+    # The driver comes from the machine when one is stated, and from a recorded
+    # default when none is. Before this, it came from the intent rule — which
+    # knows what the image is for and nothing about what it runs on.
+    if rule.roles:
+        if target is not None:
+            chosen, extra, decisions = _drivers_from_target(
+                rule, target, set(specs) | set(capability_owner(specs)))
+            requires += [d for d in chosen if d not in requires]
+            assumptions += extra
+        else:
+            for role in rule.roles:
+                driver, why = DEFAULTS.get(role, (None, None))
+                if driver is None:
+                    raise IntentError(
+                        f"intent {rule.name!r} needs a {role!r} device and no "
+                        f"target was stated; there is no recorded default for "
+                        f"that role")
+                if driver not in requires:
+                    requires.append(driver)
+                assumptions.append(f"{role}: assuming {driver} — {why}")
 
     if "input" not in requires and "framebuffer" not in requires:
         if input_device:
             requires.append(input_device)
+        elif target is not None and any(
+                a.lower().startswith("display") for a in target.absent):
+            # Not a better guess — a fact. The target records that the machine
+            # has no display at all, which settles the question the assumption
+            # existed to paper over. The PRD's metric is facts carrying a
+            # source, not defaults carrying better odds.
+            decisions.append({
+                "role": "input", "device": None, "driver": "terminal",
+                "device_source": "derived",
+                "because": f"{target.target} records no display device",
+                "target": target.target,
+            })
         else:
             default, why = DEFAULTS["input"]
             assumptions.append(f"input: assuming {why}")
@@ -231,6 +361,8 @@ def build(sentence: str, input_device: str | None = None) -> Manifest:
         assets=list(rule.assets),
         markers=list(rule.markers),
         assumptions=assumptions,
+        target=getattr(target, "target", ""),
+        decisions=decisions,
     )
 
 
@@ -238,12 +370,28 @@ def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("sentence", nargs="+")
     ap.add_argument("--output", help="write the manifest here")
+    ap.add_argument("--target", metavar="FILE",
+                    help="a target definition (kernel_spec/targets/*.md); the "
+                         "driver is chosen from its devices instead of assumed")
     ap.add_argument("--input", dest="input_device",
                     help="name the input device instead of accepting the default")
     args = ap.parse_args(argv)
 
+    target = None
+    if args.target:
+        from target_spec import TargetError, load as load_target
+        try:
+            target = load_target(args.target)
+        except TargetError as exc:
+            print(f"INVALID TARGET: {exc}", file=sys.stderr)
+            return 1
+
     try:
-        manifest = build(" ".join(args.sentence), args.input_device)
+        manifest = build(" ".join(args.sentence), args.input_device, target)
+    except TargetMismatch as exc:
+        # Distinct from DECLINED: the sentence is fine, the pairing is not.
+        print(f"MISMATCH: {exc}", file=sys.stderr)
+        return 2
     except IntentError as exc:
         print(f"DECLINED: {exc}", file=sys.stderr)
         return 1
@@ -253,6 +401,9 @@ def main(argv: list[str] | None = None) -> int:
         print(f"wrote {args.output}")
     else:
         print(manifest.to_json())
+    for d in manifest.decisions:
+        why = d.get("because") or f"{d['device']} ({d['device_source']})"
+        print(f"CHOSE: {d['driver']} for {d['role']} — {why}", file=sys.stderr)
     for a in manifest.assumptions:
         print(f"ASSUMED: {a}", file=sys.stderr)
     return 0

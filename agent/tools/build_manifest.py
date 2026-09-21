@@ -107,6 +107,7 @@ def resolve(
 
     wanted_patterns: list[str] = list(source_map.mandatory_core)
     unmapped: list[str] = []
+    mapped_patterns: dict[str, tuple[str, ...]] = {}
     for cap in sl.capabilities:
         if cap in source_map.core_provides:
             continue                    # already covered by mandatory_core
@@ -114,6 +115,7 @@ def resolve(
         if pats is None:
             unmapped.append(cap)
             continue
+        mapped_patterns[cap] = tuple(pats)
         wanted_patterns.extend(pats)
 
     # De-duplicated by path: the mandatory core and a capability can match the
@@ -128,9 +130,26 @@ def resolve(
         seen.add(rel)
         (included if _match(tuple(wanted_patterns), rel) else excluded).append(p)
 
+    # A mapping that points at a directory which has never existed is not
+    # absent: it resolves, matches nothing, and passes every gate. That is the
+    # same defect `unmapped` exists to catch, arriving by the one route the
+    # check above cannot see — measured on a tree with no kernel/drivers/blk/,
+    # where `virtio-blk` reported mapped and had zero files behind it.
+    #
+    # Phantom only when EVERY pattern matches nothing. A capability with two
+    # patterns, one of which matched, is satisfied; reporting it would fire on
+    # every partial map and teach the reader to ignore the warning.
+    rels = tuple(str(p.relative_to(tree)) for p in all_sources)
+    phantom = [cap for cap, pats in mapped_patterns.items()
+               if not any(_match(pats, rel) for rel in rels)]
+
     report = {
         "subsystems": list(sl.subsystems),
         "capabilities": list(sl.capabilities),
+        # Mapped, and nothing behind the mapping. Distinct from unmapped
+        # because the fix differs: one needs a mapping, the other has one that
+        # lies.
+        "phantom_capabilities": sorted(phantom),
         # A capability with no source mapping is reported, never silently
         # dropped: it means the image is missing something the manifest asked
         # for, and the symptom would be a link error in an unrelated file.

@@ -38,6 +38,31 @@ TOKENIZER (after weights):
         score   float32
         length  uint32
         bytes   [length]  (UTF-8, no NUL)
+
+DEVICE TABLE (after the tokenizer; v3 and later):
+    count            uint32   entries; 0 means the section is present and empty
+    revision_len     uint32
+    revision         [revision_len]   which registry revision this came from
+    for each of count entries, sorted ascending by (bus, vendor, device):
+        bus          uint16   0 = PCI, 1 = USB
+        vendor       uint16
+        device       uint16
+        _pad         uint16   keeps the key 8 bytes so a binary search strides
+        name_off     uint32   byte offset into the pool below
+    pool_len         uint32
+    pool             [pool_len]   NUL-separated UTF-8 names
+
+    Binary-searchable where it lies. The kernel maps this file from a boot
+    module and runs it in place, so an entry is a fixed 12 bytes and the names
+    live in one pool rather than inline — a variable-width entry cannot be
+    indexed without walking the whole table.
+
+    The id is two uint16s, not text. `8086:100e` as a string costs nine bytes
+    per entry and turns the search into a strcmp.
+
+    A v2 file has no section and that is legal for v2. It is not legal for v3:
+    the version is an exact match, so a reader always knows whether to expect
+    one. See VERSION below.
 """
 
 from __future__ import annotations
@@ -50,7 +75,17 @@ MAGIC = 0x4E4F5455
 # answer. A v1 model has no such token, so a v2 kernel prompting with <sep>
 # would feed it an id that means something else entirely — a silently wrong
 # model rather than a load error. The kernel rejects any version but its own.
-VERSION = 2
+#
+# v3: a device table follows the tokenizer. A v2 reader handed a v3 file would
+# parse the table's bytes as further tokenizer entries — the same silently-wrong
+# failure the v1->v2 note warns about, which is why the version is an exact
+# match rather than a minimum.
+VERSION = 3
+
+# Bus codes in a device-table key. Two registries are ingested and both are
+# device registries; anything else would need its own code and its own parser.
+BUS_PCI = 0
+BUS_USB = 1
 QUANT_FP32 = 0
 QUANT_INT8 = 1
 
@@ -149,6 +184,8 @@ def write_model_int8(
     header: FlatHeader,
     tensors: list[list[float]],
     vocab: list[tuple[float, bytes]],
+    devices: list["DeviceEntry"] | None = None,
+    device_revision: str = "",
 ) -> int:
     """Write an int8 flat model: per-tensor scale then int8 codes.
 
@@ -187,6 +224,7 @@ def write_model_int8(
         for score, b in vocab:
             f.write(_struct.pack("<fI", score, len(b)))
             f.write(b)
+        f.write(pack_device_table(devices or [], device_revision))
         return f.tell()
 
 
@@ -213,6 +251,8 @@ def write_model(
     header: FlatHeader,
     weights: list,
     vocab: list[tuple[float, bytes]],
+    devices: list["DeviceEntry"] | None = None,
+    device_revision: str = "",
 ) -> int:
     """Write a flat model file. ``weights`` is a flat float iterable already in
     the documented tensor order. Returns the number of bytes written."""
@@ -235,7 +275,126 @@ def write_model(
         for score, b in vocab:
             f.write(struct.pack("<fI", score, len(b)))
             f.write(b)
+        # Always written, even when empty: a reader must be able to tell "this
+        # image knows no devices" from "this file predates the section".
+        f.write(pack_device_table(devices or [], device_revision))
         return f.tell()
+
+
+@dataclass(frozen=True)
+class DeviceEntry:
+    """One device, as it sits in the table. Sorted by (bus, vendor, device)."""
+    bus: int
+    vendor: int
+    device: int
+    name: str
+
+    @property
+    def key(self) -> tuple[int, int, int]:
+        return (self.bus, self.vendor, self.device)
+
+    def ident(self) -> str:
+        return f"{self.vendor:04x}:{self.device:04x}"
+
+
+DEVICE_ENTRY_SIZE = 12          # bus, vendor, device, pad (u16 x4) + name_off (u32)
+
+
+def pack_device_table(entries: list[DeviceEntry], revision: str) -> bytes:
+    """Serialise the device-table section.
+
+    Refuses an unsorted or duplicated table rather than fixing it quietly: a
+    binary search over unsorted keys returns an arbitrary answer, and over
+    duplicates returns an arbitrary one of several. Both are a lookup that
+    looks like it worked.
+    """
+    keys = [e.key for e in entries]
+    if keys != sorted(keys):
+        raise ValueError("device table is not sorted; a binary search over it "
+                         "would return arbitrary answers")
+    dupes = {k for k in keys if keys.count(k) > 1} if len(keys) != len(set(keys)) else set()
+    if dupes:
+        first = sorted(dupes)[0]
+        raise ValueError(
+            f"device table has {len(dupes)} duplicate key(s), first "
+            f"{first[1]:04x}:{first[2]:04x}. A binary search cannot say which "
+            f"one it found — resolve the registries rather than picking")
+
+    rev = revision.encode("utf-8")
+    out = bytearray()
+    out += struct.pack("<II", len(entries), len(rev))
+    out += rev
+
+    pool = bytearray()
+    offsets = []
+    for e in entries:
+        offsets.append(len(pool))
+        pool += e.name.encode("utf-8") + b"\x00"
+
+    for e, off in zip(entries, offsets):
+        out += struct.pack("<4HI", e.bus, e.vendor, e.device, 0, off)
+    out += struct.pack("<I", len(pool))
+    out += pool
+    return bytes(out)
+
+
+def unpack_device_table(data: bytes, offset: int) -> tuple[list[DeviceEntry], str, int]:
+    """Read the section back. Returns (entries, revision, end offset).
+
+    Truncation raises ValueError, not struct.error: `validate()` promises
+    ValueError on any mismatch, and a struct.error escaping through it means a
+    caller catching the documented type misses a corrupt file.
+    """
+    try:
+        return _unpack_device_table(data, offset)
+    except (struct.error, IndexError, UnicodeDecodeError) as exc:
+        raise ValueError(f"device-table section is truncated or corrupt: {exc}") from exc
+
+
+def _unpack_device_table(data: bytes, offset: int) -> tuple[list[DeviceEntry], str, int]:
+    count, rev_len = struct.unpack_from("<II", data, offset)
+    offset += 8
+    revision = data[offset:offset + rev_len].decode("utf-8")
+    offset += rev_len
+
+    raw = []
+    for _ in range(count):
+        bus, vendor, device, _pad, name_off = struct.unpack_from("<4HI", data, offset)
+        offset += DEVICE_ENTRY_SIZE
+        raw.append((bus, vendor, device, name_off))
+
+    (pool_len,) = struct.unpack_from("<I", data, offset)
+    offset += 4
+    pool = data[offset:offset + pool_len]
+    offset += pool_len
+
+    if len(pool) != pool_len:
+        raise ValueError(
+            f"device-table string pool is {len(pool)} bytes, header says {pool_len}")
+
+    entries = []
+    for bus, vendor, device, name_off in raw:
+        end = pool.index(b"\x00", name_off)
+        entries.append(DeviceEntry(bus, vendor, device,
+                                   pool[name_off:end].decode("utf-8")))
+    return entries, revision, offset
+
+
+def lookup(entries: list[DeviceEntry], bus: int, vendor: int,
+           device: int) -> DeviceEntry | None:
+    """Binary search, the way the kernel will.
+
+    Present here so the host and the kernel search the same sorted order — a
+    table the exporter sorts one way and the loader searches another is a
+    lookup that silently returns the wrong device.
+    """
+    import bisect
+
+    keys = [e.key for e in entries]
+    i = bisect.bisect_left(keys, (bus, vendor, device))
+    if i < len(entries) and entries[i].key == (bus, vendor, device):
+        return entries[i]
+    return None
 
 
 def validate(path: str) -> FlatHeader:
@@ -271,6 +430,18 @@ def validate(path: str) -> FlatHeader:
         if length > max_token_len:
             raise ValueError(f"token {i} length {length} exceeds max {max_token_len}")
         offset += length
+    if offset == len(data):
+        raise ValueError(
+            f"no device-table section. Version {VERSION} files carry one after "
+            f"the tokenizer — write an empty table rather than omitting it, so "
+            f"a reader can tell 'no devices' from 'older format'")
+
+    entries, revision, offset = unpack_device_table(data, offset)
+    keys = [e.key for e in entries]
+    if keys != sorted(keys):
+        raise ValueError("device table is not sorted")
+    if len(keys) != len(set(keys)):
+        raise ValueError("device table has duplicate keys")
     if offset != len(data):
         raise ValueError(f"trailing bytes: parsed {offset}, file {len(data)}")
     return header

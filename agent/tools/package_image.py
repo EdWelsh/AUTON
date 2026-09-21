@@ -31,8 +31,13 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from build_service import GateFailure, build as build_image  # noqa: E402
+from target_spec import TargetError, load as load_target  # noqa: E402
 from capability_slice import load_specs  # noqa: E402
-from intent_manifest import IntentError, build as build_manifest  # noqa: E402
+from intent_manifest import (  # noqa: E402
+    IntentError,
+    TargetMismatch,
+    build as build_manifest,
+)
 from intent_service import emit as emit_service  # noqa: E402
 from service_spec import load as load_service  # noqa: E402
 
@@ -95,6 +100,21 @@ class Package:
     blocked_by: str = ""
     artifacts: list[Artifact] = field(default_factory=list)
     spec_sections: list[dict] = field(default_factory=list)
+    # What the image was built to run ON. `spec_sections` says what it is FOR,
+    # and until D1 there was no format for the other half — so a package could
+    # say "this image serves DHCP" and nothing at all about the machine it
+    # expects. An image with no stated target records why, because an absent
+    # field and a deliberate "no machine in particular" are different claims.
+    # What is known about defects in the silicon this image is built for.
+    # Empty when no target was stated: there is no machine to ask about.
+    errata: dict = field(default_factory=dict)
+    # Per-driver verification outcomes, with the three states intact.
+    drivers: dict = field(default_factory=dict)
+    target: dict = field(default_factory=lambda: {
+        "stated": False,
+        "why": "no target was stated; this image was built for no machine in "
+               "particular, and nothing here records what it assumes",
+    })
     assumptions: list[str] = field(default_factory=list)
     leakage: dict = field(default_factory=dict)
 
@@ -160,19 +180,121 @@ def _record(out: Path, rel: str, produced_by: str, from_input: str,
                     sha256=_sha256(p), bytes=p.stat().st_size, implements=implements)
 
 
+def _record_target(path: Path, out: Path) -> dict:
+    """Validate a target definition and reduce it to what provenance needs.
+
+    Validated before anything is copied: the same "nothing invalid reaches
+    disk" rule intent-C enforces. A package carrying a target that does not
+    parse is worse than one carrying none, because the next reader believes it.
+    """
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    from target_spec import validate as validate_target
+
+    report = validate_target(path)          # raises TargetError; the caller lets it
+    t = report.target
+    dest = out / "spec" / "target.md"
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(path, dest)
+    return {
+        "stated": True,
+        "target": t.target,
+        "class": t.klass,
+        "arch": t.arch,
+        "firmware": t.firmware,
+        "silicon": dict(t.silicon),
+        "platform": dict(t.platform),
+        "devices": [{"id": d.id, "role": d.role, "source": d.source}
+                    for d in t.devices],
+        "absent": list(t.absent),
+        "assumptions": list(t.assumptions),
+        "verified": report.ok,
+        "spec_file": "spec/target.md",
+    }
+
+
+def _record_errata(target, capabilities: set[str], out: Path) -> dict:
+    """Join the target's silicon to the errata table and write the result.
+
+    An image is built for a machine; whether that machine has known defects is
+    part of what a reviewer needs, and discovering it after the build is the
+    expensive end.
+    """
+    from errata_join import join
+
+    r = join(target, capabilities)
+    record = {
+        "target": r.target,
+        "examined": r.examined,
+        "summary": r.summary(),
+        "blocking": list(r.blocking),
+    }
+    if r.unknown_because:
+        record["unknown_because"] = r.unknown_because
+    if r.inheritance:
+        record["inheritance"] = r.inheritance
+    if r.report is not None:
+        record["documents"] = list(r.report.documents)
+        # Never merged into a total. `assess_machine` keeps these separate
+        # because an unknown verdict is not a clear one.
+        record["unknown_errata"] = [e for e, _why in r.report.unknown]
+        record["not_applicable"] = r.report.not_applicable
+        if r.report.assessment:
+            record["counts"] = r.report.assessment.counts()
+
+    (out / "spec").mkdir(parents=True, exist_ok=True)
+    (out / "spec" / "errata.json").write_text(
+        json.dumps(record, indent=2) + "\n", encoding="utf-8")
+    return record
+
+
+def _record_drivers(target, out: Path) -> dict:
+    """Run each applicable driver's own verification and write the result.
+
+    The PRD's metric is *"drivers shipped without executable verification: 0"*,
+    and a metric with no artifact behind it is an intention. D8 set the
+    precedent with `spec/errata.json`.
+    """
+    from driver_verify import verify
+
+    report = verify(target)
+    (out / "spec").mkdir(parents=True, exist_ok=True)
+    (out / "spec" / "drivers.json").write_text(
+        report.to_json() + "\n", encoding="utf-8")
+    return json.loads(report.to_json())
+
+
 def package(sentence: str, out: Path, tree: Path, service: str | None = None,
-            model: Path | None = None, train: bool = False) -> Package:
+            model: Path | None = None, train: bool = False,
+            target: Path | None = None) -> Package:
     # Match the intent BEFORE creating anything. A declined sentence used to
     # leave an empty out/spec/ behind, which is the same "nothing invalid
     # reaches disk" rule intent-C enforces — an empty package directory looks
     # like a build that produced nothing rather than one that never started.
-    manifest = build_manifest(sentence)
+    # Loaded before the intent is matched, so the driver decision can be made
+    # from the machine rather than assumed. An invalid target stops everything
+    # here — nothing invalid reaches disk, and nothing is built for a machine
+    # whose definition does not parse.
+    loaded_target = load_target(target) if target is not None else None
+    manifest = build_manifest(sentence, target=loaded_target)
 
     out.mkdir(parents=True, exist_ok=True)
     (out / "spec").mkdir(exist_ok=True)
     pkg = Package(intent=sentence, matched_rule=manifest.matched,
                   created_at=datetime.now(timezone.utc).isoformat(timespec="seconds"),
                   complete=False, assumptions=list(manifest.assumptions))
+
+    if target is not None:
+        pkg.target = _record_target(target, out)
+        # Reported before the build, not after. The PRD asks for applicable
+        # errata to reach a reader while the image is still a decision.
+        pkg.errata = _record_errata(loaded_target, set(manifest.requires), out)
+        # Written whenever a target is stated, not only when a build succeeds.
+        # Which drivers an image needs follows from the machine it is built for,
+        # and an INCOMPLETE package still made that claim.
+        pkg.drivers = _record_drivers(loaded_target, out)
+        pkg.artifacts.append(_record(
+            out, "spec/target.md", "authored", str(target),
+            "the machine this image was built to run on"))
 
     (out / "spec" / "manifest.json").write_text(manifest.to_json() + "\n")
     pkg.artifacts.append(_record(out, "spec/manifest.json", "intent_manifest.py",
@@ -248,7 +370,8 @@ def package(sentence: str, out: Path, tree: Path, service: str | None = None,
                                  "human or agent", "the service this image runs"))
 
     try:
-        result = build_image(service_name, tree, make_iso=True)
+        result = build_image(service_name, tree, make_iso=True,
+                             target=loaded_target)
     except GateFailure as exc:
         pkg.blocked_by = str(exc)
         _finish(out, pkg)
@@ -264,6 +387,7 @@ def package(sentence: str, out: Path, tree: Path, service: str | None = None,
 
     if result.leakage_report and Path(result.leakage_report).exists():
         pkg.leakage = json.loads(Path(result.leakage_report).read_text())
+
 
     (out / "install.sh").write_text(INSTALLER)
     (out / "install.sh").chmod(0o755)
@@ -315,6 +439,9 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--model", help="use this model instead of training one")
     ap.add_argument("--train", action="store_true",
                     help="train a model scoped to this intent (minutes)")
+    ap.add_argument("--target", metavar="FILE",
+                    help="the target definition this image is built for "
+                         "(agent/kernel_spec/targets/*.md)")
     args = ap.parse_args(argv)
 
     tree = Path(args.tree)
@@ -324,9 +451,19 @@ def main(argv: list[str] | None = None) -> int:
     try:
         pkg = package(" ".join(args.sentence), Path(args.output), tree,
                       args.service, Path(args.model) if args.model else None,
-                      train=args.train)
+                      train=args.train,
+                      target=Path(args.target) if args.target else None)
     except IntentError as exc:
         print(f"DECLINED: {exc}", file=sys.stderr)
+        return 1
+    except TargetMismatch as exc:
+        # The sentence is fine and the target is valid; the pairing is not.
+        print(f"MISMATCH: {exc}", file=sys.stderr)
+        return 2
+    except TargetError as exc:
+        # A package carrying a target that does not parse is worse than one
+        # carrying none: the next reader believes it.
+        print(f"INVALID TARGET: {exc}", file=sys.stderr)
         return 1
 
     print(f"{'COMPLETE' if pkg.complete else 'INCOMPLETE'}: {args.output}")

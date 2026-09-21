@@ -1,0 +1,107 @@
+# What each hypervisor and machine type presents to a guest.
+#
+# A microVM's device set is not discovered — it is *decided*. Firecracker with a
+# given machine type has exactly the devices that machine type declares, before
+# anything boots. So a target definition for one should be derived, not probed
+# and not elicited, and this is the table it is derived from.
+#
+# It is data rather than logic for the same reason source_map.yaml is: a
+# hypervisor's device set is a fact to look up. Writing it as code would make
+# each new hypervisor a code change and each correction a diff in a function.
+#
+# EVIDENCE CLASS. These entries are transcribed from hypervisor documentation
+# and source, not ingested from a vendor document under .cache/. That makes them
+# weaker evidence than a pci.ids lookup, and a derived target says so: every
+# fact it emits carries `source: derived`, never `probed`. D4's probe path is
+# the check. A probe that contradicts an entry here is a finding about this
+# file, not about the machine.
+#
+# ABSENCES ARE LOAD-BEARING. Each entry states what is *not* there as explicitly
+# as what is. "No PCI bus" is the fact a driver decision turns on: a kernel that
+# enumerates PCI on a Firecracker guest finds nothing and concludes, wrongly,
+# that the machine has no devices.
+
+version: 1
+
+# Virtio device type numbers, from the VIRTIO 1.2 specification, section 5.
+# Over MMIO there is no PCI vendor:device pair to look up — the guest reads a
+# device type number out of a register — so this is the registry for that
+# transport, and `virtio-mmio:<n>` ids resolve against it.
+virtio_device_types:
+  1:  network
+  2:  block
+  3:  console
+  4:  entropy
+  5:  balloon
+  16: gpu
+  18: input
+  19: vsock
+
+hypervisors:
+
+  firecracker:
+    describes_version: "1.x"
+    reference: "firecracker-microvm/firecracker — docs/device-api.md, src/vmm"
+    machines:
+      default:
+        transport: virtio-mmio
+        firmware: none          # direct kernel boot; no BIOS, no UEFI, no option ROMs
+        console: serial-16550a
+        devices:
+          - id: "virtio-mmio:1"
+            role: network
+          - id: "virtio-mmio:2"
+            role: storage
+        # Present but not a device a driver decision turns on: an i8042
+        # controller is emulated for the sole purpose of catching CTRL+ALT+DEL
+        # as a reset signal. Listing it as input hardware would be a lie.
+        vestigial:
+          - "i8042 — reset signalling only, no keyboard behind it"
+        absent:
+          - "PCI bus — enumeration finds nothing; virtio is on MMIO"
+          - "display — no VGA, no framebuffer, no GPU device of any kind"
+          - "firmware — the kernel is loaded directly, so no firmware tables"
+          - "USB, IDE, floppy, sound"
+
+  cloud-hypervisor:
+    describes_version: "40.x"
+    reference: "cloud-hypervisor/cloud-hypervisor — docs/, virtio-devices/"
+    machines:
+      default:
+        # Deliberately in the table as a contrast: a microVM *with* a PCI bus.
+        # If absence were a property of the class rather than of the entry, this
+        # row could not be written, and the format would be wrong.
+        transport: virtio-pci
+        firmware: none
+        console: virtio-console
+        devices:
+          - id: "1af4:1041"     # modern virtio-pci: 0x1040 + device type
+            role: network
+          - id: "1af4:1042"
+            role: storage
+          - id: "1af4:1043"
+            role: console
+        absent:
+          - "display — no VGA device is attached by default"
+          - "legacy PC devices — no PIIX, no i8042, no PIT"
+
+  qemu-microvm:
+    describes_version: "QEMU 8.x, machine type `microvm`"
+    reference: "qemu — docs/system/i386/microvm.rst"
+    machines:
+      default:
+        transport: virtio-mmio
+        firmware: none          # direct kernel boot; qboot is opt-in
+        console: serial-16550a
+        devices: []             # slots exist; what fills them is per-invocation
+        # Naming this machine type does NOT pin a device set, and that makes it
+        # the exception that matters. D6's rule — "a platform may stand in for an
+        # enumeration" — silently assumed every platform implies its devices.
+        # This one declares MMIO slots and says nothing about what occupies them,
+        # so a target naming it and listing nothing is still blank.
+        pins_devices: false
+        absent:
+          - "PCI bus — off unless `pcie=on` is passed, which is a different machine"
+          - "display, USB, IDE, floppy — `microvm` removes the legacy PC entirely"
+          - "ACPI — off by default on this machine type"
+        note: "declares slots, not occupants"

@@ -26,6 +26,7 @@ from __future__ import annotations
 import re
 import sys
 from dataclasses import dataclass, field
+from functools import lru_cache
 from enum import Enum
 from pathlib import Path
 
@@ -315,12 +316,20 @@ class ErrataTable:
         return [self.applies(identity, r) for r in self.records]
 
 
-def load(pdf_path: Path, vendor: str = "intel", doc_id: str = "intel-spec-update") -> ErrataTable:
+@lru_cache(maxsize=8)
+def _load_cached(pdf_path: Path, vendor: str, doc_id: str) -> "ErrataTable":
     from vendor_ingest import _load_provenance, parse_intel_spec_update
 
     prov, _ = _load_provenance(vendor, doc_id)
     records, _ = parse_intel_spec_update(pdf_path, prov)
     return ErrataTable(records=records, signatures=parse_identification_table(pdf_path))
+
+
+def load(pdf_path: Path, vendor: str = "intel", doc_id: str = "intel-spec-update") -> ErrataTable:
+    """Parsing a spec-update PDF costs seconds, and a join asks about several
+    targets against the same document. Cached by path: a cached PDF does not
+    change under a running process, and `.cache/` is write-once by fetch."""
+    return _load_cached(Path(pdf_path), vendor, doc_id)
 
 
 def main(argv: list[str] | None = None) -> int:

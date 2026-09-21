@@ -1,0 +1,51 @@
+# PCI class codes to target device roles.
+#
+# `lspci -nn` prints a numeric class alongside each device. That class is what
+# says whether a device is a NIC or a disk controller — the vendor:device pair
+# says only which one, and the human-readable name comes from the *host's*
+# pci.ids, which may be a different revision from the ingested one.
+#
+# A table rather than logic for the same reason source_map.yaml and
+# hypervisors.yaml are: which class means "network" is a fact from the PCI
+# specification, not a rule to compute.
+#
+# Base classes carry the weight; `subclasses` below overrides one where a
+# consumer actually needed the precision. That entry exists because the
+# round-trip against the hand-written qemu-pc.md disagreed — it labels
+# 8086:7000 `isa-bridge`, and base class 06 covers every kind of bridge. Added
+# on that evidence rather than in anticipation, which is the rule
+# services/README.md states for adding a field.
+#
+# Source: PCI Code and ID Assignment Specification, base class codes.
+
+version: 1
+
+roles:
+  "01": storage       # Mass storage controller — SCSI, IDE, SATA/AHCI, NVMe
+  "02": network       # Network controller
+  "03": display       # Display controller — VGA, XGA, 3D
+  "04": multimedia
+  "05": memory
+  "06": host-bridge   # Bridge device — host, ISA, PCI-to-PCI
+  "07": communication
+  "08": peripheral    # Base system peripherals — PIC, DMA, timer, RTC
+  "09": input
+  "0a": docking
+  "0b": processor
+  "0c": serial-bus    # USB, FireWire, SMBus
+  "0d": wireless
+  "0e": intelligent-io
+  "0f": satellite
+  "10": encryption
+  "11": signal-processing
+  "12": accelerator
+  "13": instrumentation
+
+# Full four-hex class codes, consulted before the base class. Add an entry only
+# when something downstream distinguishes them.
+subclasses:
+  "0601": isa-bridge
+
+# Roles a driver decision turns on. Everything else is recorded but implies no
+# driver requirement — nothing binds to a host bridge.
+drives: [storage, network, display, input]

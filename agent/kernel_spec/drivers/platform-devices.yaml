@@ -1,0 +1,49 @@
+# Devices that are not on an enumerable bus.
+#
+# The id grammar grew twice, each time because a real driver could not be
+# written without it:
+#
+#   vvvv:dddd            PCI — the original form
+#   virtio-mmio:<type>   V5: a microVM has no PCI bus, so virtio devices are
+#                        found by reading a type number out of a register
+#   platform:<name>      V7: this file. A framebuffer handed over by the boot
+#                        protocol and an i8042 at fixed ISA ports are neither
+#                        enumerated nor registered anywhere, and a record naming
+#                        one had no writable id at all.
+#
+# The pattern each time: a format admitting only one id shape does not merely
+# fail to express the others — it makes the wrong answer the only writable one.
+# `firecracker.md` shipped with PCI ids on a machine with no PCI bus for exactly
+# this reason.
+#
+# Every entry names the document that specifies the device, and that document
+# must be in agent/hardware/vendors.yaml. A platform device whose specification
+# nobody can produce is `status: undrivable`, which drivers/README.md admits as
+# a real answer.
+
+version: 1
+
+devices:
+
+  multiboot2-framebuffer:
+    title: Linear framebuffer handed over by a Multiboot2 loader
+    specified_by: gnu-multiboot/multiboot2-spec
+    section: "§3.6.12 framebuffer info tag"
+    note: >-
+      Not a device so much as a handover. GRUB sets the mode before the kernel
+      runs and passes the address, geometry and pitch; subsystems/boot.md
+      already parses them into boot_info_t. The driver consumes a tag, which is
+      why no display device id appears in its record — it works with whatever
+      hardware the loader configured.
+
+  i8042:
+    title: PS/2 keyboard controller at ports 0x60/0x64
+    specified_by: null
+    section: null
+    note: >-
+      NO INVENTORIED SPECIFICATION. The i8042 is a 1980s controller documented
+      in datasheets and by convention, and vendors.yaml has neither an entry for
+      it nor a plausible publisher to add. `driver_strategy.py` therefore
+      refuses every strategy for it, which is correct rather than inconvenient:
+      the honest record is `status: undrivable` with this as the reason.
+      Recorded here so the refusal has something to point at.

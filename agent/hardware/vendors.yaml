@@ -526,6 +526,66 @@ vendors:
         form: pdf
         cadence: per-version
 
+  # Added by V4's strategy selector, which refused `synthesize` for virtio-net
+  # on the grounds that its cited specification was in no inventory. The record
+  # `kernel_spec/drivers/virtio-net.md` cited "VIRTIO 1.2 §5.1" while nothing
+  # here said the document existed, who published it, or under what terms — a
+  # citation rather than a basis.
+  # Added by V7. The framebuffer driver's basis is a boot protocol, not a device
+  # datasheet: GRUB sets the mode and hands over a linear framebuffer, so the
+  # driver consumes a tag rather than calling VBE. `driver_strategy.py` refused
+  # `synthesize` for the display device because no publisher in this file spoke
+  # for it — correctly, since the publisher is the boot protocol's.
+  - vendor: gnu-multiboot
+    category: standards
+    identity_keys: [spec_version]
+    documents:
+      - id: multiboot2-spec
+        title: Multiboot2 Specification
+        kind: standard
+        access: public-download
+        redistributable: true
+        form: pdf+source
+        cadence: per-version
+        licence: GFDL-1.3-or-later
+        url_hint: gnu.org/software/grub/manual/multiboot2
+        notes: >-
+          The framebuffer tag this project relies on is specified here, and
+          subsystems/boot.md already parses it. Recorded so the framebuffer
+          driver's `specification` cites something inventoried rather than
+          something remembered — the defect V4 found in virtio-net.md.
+
+  - vendor: oasis-virtio
+    category: standards
+    identity_keys: [spec_version, device_type, transport]
+    documents:
+      - id: virtio-spec
+        title: Virtual I/O Device (VIRTIO) Specification
+        kind: standard
+        access: public-download
+        redistributable: false
+        form: pdf
+        cadence: per-version
+        doc_number: "virtio-v1.2"
+        url_hint: docs.oasis-open.org
+        licence: OASIS IPR Policy
+        notes: >-
+          Freely downloadable and normative, which is what makes `synthesize` a
+          defensible strategy for virtio devices at all — the device model is
+          fully described and there is no datasheet to obtain. `redistributable`
+          is false because the OASIS terms have not been read and asserting
+          otherwise would be the kind of licence guess licences.yaml exists to
+          refuse; fetch it into .cache/, never into the tree.
+          The device type numbers in kernel_spec/targets/hypervisors.yaml come
+          from section 5 of this document.
+    gaps:
+      - kind: conformance-suite
+        reason: >-
+          The specification is normative but ships no conformance tests, so a
+          synthesized virtio driver is verified against a hypervisor's
+          implementation rather than against the standard. Same gap
+          CONFORMANCE-HARDWARE.md records for silicon.
+
   - vendor: bluetooth-sig
     category: standards
     identity_keys: [spec_version]

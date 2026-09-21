@@ -201,7 +201,9 @@ typedef enum quant_type {
  * format. One exporter serves every generated kernel. */
 typedef struct flat_header {
     uint32_t magic;         /* 0x4E4F5455 "UTON" */
-    uint32_t version;       /* exact-match; see "Format Versioning" */
+    uint32_t version;       /* exact-match; 3 since the device table. See
+                             * "Format Versioning" — a v2 reader handed a v3
+                             * file parses the table as tokenizer entries. */
     uint32_t dim;
     uint32_t hidden_dim;
     uint32_t n_layers;

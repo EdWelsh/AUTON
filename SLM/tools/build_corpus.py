@@ -25,12 +25,12 @@ from pathlib import Path
 
 # --- ground truth ---------------------------------------------------------- #
 # Mirrors kernels/x86_64/kernel/slm/slm.c:kb_rules.
-PCI_KB = [
-    ("8086", "100e", "Intel 82540EM Gigabit Ethernet (e1000)", "e1000"),
-    ("8086", "10d3", "Intel 82574L Gigabit Ethernet (e1000e)", "e1000e"),
-    ("1af4", "1000", "Virtio network device", "virtio-net"),
-    ("1af4", "1001", "Virtio block device", "virtio-blk"),
-]
+# Moved to agent/tools/device_drivers.py. The factory used to read its device
+# knowledge from this file, so a change made to improve a training set silently
+# changed what got built. The dependency now runs the other way.
+import sys as _sys
+_sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "agent" / "tools"))
+from device_drivers import PCI_DEVICE_DRIVERS as PCI_KB  # noqa: E402
 
 # Every PCI id on the bus AUTON actually boots on, in bus order. Single source
 # of truth: SYS_FACTS["devices"] and UNKNOWN_DEVICES are both derived from it,
@@ -348,10 +348,7 @@ def _eval_prompt_index() -> tuple[set[str], list[set[str]]]:
 
 # Which capability a driver implies, so a NIC record is dropped from an image
 # with no network without anyone maintaining a second list.
-DRIVER_CAPS = {
-    "e1000": {"net"}, "e1000e": {"net"}, "virtio-net": {"net"},
-    "virtio-blk": {"fs"},
-}
+from device_drivers import DRIVER_CAPS  # noqa: E402,F401  (see PCI_KB above)
 
 # Which capability each role needs before it could ever run.
 ROLE_CAPS = {

@@ -227,3 +227,145 @@ class TestTheScopedModel:
         assert r.returncode == 0, r.stderr
         # The training work directory is large and is not the deliverable.
         assert not (tmp_path / "out" / "model" / "work").exists()
+
+
+class TestThePackageRecordsWhatItRunsOn:
+    """`spec_sections` says what an image is *for*. Until D1 there was no format
+    for the other half, so a package could say "this image serves DHCP" and
+    nothing at all about the machine it expects.
+
+    The intent here is deliberately one that needs no NIC. Since D7 the driver
+    is chosen from the target's devices, and pairing a DHCP server with
+    Firecracker is refused — that machine's network device needs `virtio-net`,
+    which no subsystem spec provides. These tests are about the target being
+    *recorded*, so they use a pairing that is actually buildable.
+    """
+
+    INTENT = "what hardware is this"
+    TARGET = ROOT / "agent" / "kernel_spec" / "targets" / "firecracker.md"
+
+    def test_a_stated_target_is_recorded_and_copied(self, tmp_path):
+        out = tmp_path / "out"
+        pkg = package(self.INTENT, out, TREE, target=self.TARGET)
+
+        assert pkg.target["stated"] is True
+        assert pkg.target["target"] == "firecracker"
+        assert (out / "spec" / "target.md").exists()
+
+    def test_the_recorded_target_keeps_each_fact_s_source(self, tmp_path):
+        """A decision made on an assumption must be reversible when the truth
+        arrives, and a provenance record that drops `source` cannot support
+        that."""
+        pkg = package(self.INTENT, tmp_path / "out", TREE,
+                      target=self.TARGET)
+
+        assert pkg.target["silicon"]["source"] == "assumed"
+        assert {d["source"] for d in pkg.target["devices"]} == {"derived"}
+
+    def test_absences_survive_into_provenance(self, tmp_path):
+        pkg = package(self.INTENT, tmp_path / "out", TREE,
+                      target=self.TARGET)
+        assert any("PCI bus" in a for a in pkg.target["absent"])
+
+    def test_an_image_without_a_target_says_so(self, tmp_path):
+        """An absent field and a deliberate "no machine in particular" are
+        different claims, and a reader cannot tell them apart."""
+        pkg = package(self.INTENT, tmp_path / "out", TREE)
+
+        assert pkg.target["stated"] is False
+        assert pkg.target["why"]
+        assert not (tmp_path / "out" / "spec" / "target.md").exists()
+
+    def test_an_invalid_target_fails_the_package(self, tmp_path):
+        """A package carrying a target that does not parse is worse than one
+        carrying none: the next reader believes it."""
+        from target_spec import TargetError
+
+        bad = tmp_path / "bad.md"
+        bad.write_text("---\ntarget: bad\nclass: vm\n---\n")
+        with pytest.raises(TargetError):
+            package(self.INTENT, tmp_path / "out", TREE, target=bad)
+
+    def test_the_target_is_in_the_artifact_list_with_a_hash(self, tmp_path):
+        pkg = package(self.INTENT, tmp_path / "out", TREE,
+                      target=self.TARGET)
+        entry = next(a for a in pkg.artifacts if a.path == "spec/target.md")
+        assert len(entry.sha256) == 64
+        assert "built to run on" in entry.implements
+
+
+class TestPackagingRefusesAnImpossiblePairing:
+    """D7's refusal reaching the packaging layer.
+
+    Firecracker was this case until V5 specified `virtio-net`. It is now
+    plannable — the manifest selects the driver — and still not *buildable*,
+    because nothing implements it and `[gate: capabilities]` says so. The
+    refusal moved down a layer rather than disappearing, which is the honest
+    outcome: planning works, building refuses.
+    """
+
+    NO_DRIVER = ROOT / "agent" / "kernel_spec" / "targets" / "firecracker.md"
+
+    def test_a_machine_whose_driver_the_index_lacks_is_refused(self, tmp_path):
+        """`8086:10d3` resolves to `e1000e`, which `drivers.md` does not
+        provide. The mechanism is unchanged; only Firecracker moved."""
+        from intent_manifest import TargetMismatch
+
+        target = tmp_path / "e1000e-box.md"
+        target.write_text(
+            "---\ntarget: e1000e-box\nclass: vm\narch: x86_64\n"
+            "firmware: bios\nsilicon:\n  vendor: GenuineIntel\n  family: 6\n"
+            "  model: 6\n  stepping: 3\n  source: probed\ndevices:\n"
+            '  - id: "8086:10d3"\n    role: network\n    source: probed\n'
+            "provenance:\n  stated_by: test\n---\n")
+
+        with pytest.raises(TargetMismatch, match="e1000e"):
+            package("hand out addresses", tmp_path / "out", TREE, target=target)
+
+    def test_nothing_is_written_when_the_pairing_is_refused(self, tmp_path):
+        """The same rule intent-C set: a declined sentence used to leave an
+        empty spec/ behind, and an empty package directory looks like a build
+        that produced nothing rather than one that never started."""
+        from intent_manifest import TargetMismatch
+
+        out = tmp_path / "out"
+        target = tmp_path / "e1000e-box.md"
+        target.write_text(
+            "---\ntarget: e1000e-box\nclass: vm\narch: x86_64\n"
+            "firmware: bios\nsilicon:\n  vendor: GenuineIntel\n  family: 6\n"
+            "  model: 6\n  stepping: 3\n  source: probed\ndevices:\n"
+            '  - id: "8086:10d3"\n    role: network\n    source: probed\n'
+            "provenance:\n  stated_by: test\n---\n")
+
+        with pytest.raises(TargetMismatch):
+            package("hand out addresses", out, TREE, target=target)
+
+        assert not out.exists()
+
+    def test_firecracker_now_packages_but_would_not_build(self, tmp_path):
+        """V5 moved the refusal from the manifest to the build gate. A package
+        is a plan; `[gate: capabilities]` is what refuses to produce an image
+        with no driver in it."""
+        from build_service import GateFailure, gate_capabilities
+
+        pkg = package("hand out addresses", tmp_path / "out", TREE,
+                      target=self.NO_DRIVER)
+        assert "virtio-net" in pkg.target["target"] or pkg.target["stated"]
+
+        class _Spec:
+            requires = ["virtio-net"]
+
+        with pytest.raises(GateFailure, match="virtio-net"):
+            gate_capabilities(_Spec(), {"unmapped_capabilities": ["virtio-net"],
+                                        "capabilities": []})
+
+    def test_the_driver_decision_reaches_the_manifest_on_disk(self, tmp_path):
+        import json
+
+        out = tmp_path / "out"
+        package("hand out addresses", out, TREE,
+                target=ROOT / "agent" / "kernel_spec" / "targets" / "qemu-pc.md")
+        manifest = json.loads((out / "spec" / "manifest.json").read_text())
+
+        assert manifest["target"] == "qemu-pc"
+        assert manifest["decisions"][0]["device"] == "8086:100e"

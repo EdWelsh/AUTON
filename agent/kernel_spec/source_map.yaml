@@ -9,6 +9,37 @@
 # kernel/lib/ in the seed tree; `lib` has no spec at all and is in every image.
 #
 # Paths are globs relative to a kernel tree's root, matched against .c and .S.
+#
+# WHAT AN ABSENT MAPPING MEANS, AND WHAT NOW HAPPENS
+#
+# A capability with no entry here means *this tree does not implement it*. Since
+# w6 that is a build failure when a service spec requires it directly:
+# `build_service.py`'s `[gate: capabilities]` refuses rather than building an
+# image that quietly lacks the driver. The information was always correct —
+# `resolve()` has computed `unmapped_capabilities` all along — it was simply
+# reported into a field nothing read. A manifest requiring `nvme` resolved to a
+# closed slice, passed every gate, and produced an image with no storage driver.
+#
+# 27 capabilities across 11 subsystems are unmapped today, and most of that is
+# correct information rather than a defect: this map is per-tree, and the seed
+# tree never implemented `ipc`, `sched`, `fs` or `pkg`. `nvme` and `ahci` are
+# specified in subsystems/drivers.md and were never written.
+#
+# DO NOT "FIX" THEM BY INVENTING MAPPINGS. A path to a directory that does not
+# exist resolves without error, because a glob matching nothing is not an error
+# — so an invented mapping turns a refusal into a silent omission, which is the
+# defect the gate exists to prevent, not its cure.
+#
+# That third state — mapped, with nothing behind the mapping — is now DETECTED.
+# `resolve()` reports `phantom_capabilities` alongside `unmapped_capabilities`,
+# and `[gate: capabilities]` refuses a directly-required one, naming the pattern
+# that matched nothing. A capability is phantom only when *every* one of its
+# patterns matches nothing, so a partial map does not fire it.
+#
+# The rule that follows: when a capability is specified but not implemented,
+# give it a `provides` entry in the subsystem spec and NO entry here. An absent
+# mapping refuses honestly; one that lies does not. `virtio-net` is the worked
+# example — specified in subsystems/drivers.md, deliberately unmapped.
 
 version: 1
 
@@ -51,9 +82,15 @@ capabilities:
   timer:       [kernel/drivers/arch/**]
   keyboard:    [kernel/drivers/arch/**]
   input:       [kernel/drivers/arch/**]
-  framebuffer: [kernel/drivers/fb/**]
+  # framebuffer: specified in subsystems/drivers.md (Multiboot2 handover), not
+  # implemented. It mapped to kernel/drivers/fb/**, a directory that has never
+  # existed. Removed for the reason stated in the header: an absent mapping
+  # refuses honestly, one that lies does not.
   e1000:       [kernel/net/e1000.c]     # a NIC driver, but it lives with the stack
-  virtio-blk:  [kernel/drivers/blk/**]
+  # virtio-blk: specified in subsystems/drivers.md, not implemented. It mapped
+  # to kernel/drivers/blk/**, a directory that has never existed — which passed
+  # every gate until V1a made that detectable. No entry is the truthful state:
+  # an absent mapping refuses honestly, one that lies does not.
 
   # --- net ---
   netif:       [kernel/net/netif.c, kernel/net/setup.c]

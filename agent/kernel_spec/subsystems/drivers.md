@@ -1,8 +1,8 @@
 ---
 subsystem: drivers
-provides: [serial, timer, keyboard, framebuffer, e1000, virtio-blk, ahci, nvme, input]
+provides: [serial, timer, keyboard, framebuffer, e1000, virtio-net, virtio-blk, ahci, nvme, input]
 depends_on: [dev, mm, arch]
-optional: [e1000, virtio-blk, ahci, nvme, framebuffer, keyboard]
+optional: [e1000, virtio-net, virtio-blk, ahci, nvme, framebuffer, keyboard]
 # `input` is the keyboard path a framebuffer image needs; `serial` and `timer` are the two every image has.
 ---
 
@@ -213,6 +213,204 @@ typedef struct virtio_blk_req {
 } __attribute__((packed)) virtio_blk_req_t;
 ```
 
+
+The register block above is the **legacy PCI** interface. Firecracker's disk is `virtio-mmio:2`
+and has no PCI bus at all, so a driver specified only against those offsets cannot reach the
+machine this driver most exists for. The MMIO register map, the device-status order and the
+feature-negotiation discipline are specified once under *VirtIO Network* below and apply
+unchanged here — they are properties of VirtIO, not of the network device.
+
+Normative: **VIRTIO 1.2** §4.1 (PCI transport), §4.2 (MMIO transport), §5.2 (Block Device).
+
+```c
+/* Device id, per transport. VIRTIO 1.2 §5.2.1: the block device is type 2. */
+#define VIRTIO_BLK_DEVICE_TYPE      2
+#define VIRTIO_BLK_PCI_MODERN       0x1042    /* 0x1040 + type */
+/* VIRTIO_DEVICE_BLK (0x1001) above is the transitional id. */
+
+/* The feature subset AUTON negotiates. VIRTIO 1.2 §5.2.3.
+ * VIRTIO_BLK_F_FLUSH is required for any write path that claims durability: a
+ * write the device has acknowledged is not a write that has reached the medium.
+ * Everything else is declined for the reason the network driver declines its
+ * offloads — an unexercised path in ring-0 DMA code. */
+#define VIRTIO_BLK_F_SIZE_MAX       (1ULL << 1)
+#define VIRTIO_BLK_F_SEG_MAX        (1ULL << 2)
+#define VIRTIO_BLK_F_RO             (1ULL << 5)   /* device is read-only */
+#define VIRTIO_BLK_F_BLK_SIZE       (1ULL << 6)
+#define VIRTIO_BLK_F_FLUSH          (1ULL << 9)
+
+/* Request type, the `type` field of virtio_blk_req_t above. §5.2.6. */
+#define VIRTIO_BLK_T_IN             0   /* read from device */
+#define VIRTIO_BLK_T_OUT            1   /* write to device */
+#define VIRTIO_BLK_T_FLUSH          4
+
+/* Status byte, written by the device into the third descriptor. §5.2.6. */
+#define VIRTIO_BLK_S_OK             0
+#define VIRTIO_BLK_S_IOERR          1
+#define VIRTIO_BLK_S_UNSUPP         2
+
+/* Device configuration space, §5.2.4. `capacity` is in 512-byte sectors
+ * regardless of VIRTIO_BLK_F_BLK_SIZE — the logical block size changes how the
+ * device is addressed, never the unit `capacity` is counted in. */
+typedef struct virtio_blk_config {
+    uint64_t capacity;          /* 512-byte sectors */
+    uint32_t size_max;
+    uint32_t seg_max;
+    uint8_t  reserved[20];
+    uint32_t blk_size;          /* valid only with VIRTIO_BLK_F_BLK_SIZE */
+} __attribute__((packed)) virtio_blk_config_t;
+
+/* One queue, index 0. §5.2.2. The network device's two-queue convention does
+ * not apply: a block device multiplexes reads and writes over the same queue,
+ * and each request carries its own direction. */
+#define VIRTIO_BLK_QUEUE            0
+```
+
+**The request is a three-descriptor chain**, VIRTIO 1.2 §5.2.6, and its flags are **not
+uniform** — which is the single thing this specification most exists to prevent:
+
+| # | Contents | Device-writable |
+|---|---|---|
+| 0 | `virtio_blk_req_t` header | **no** |
+| 1 | the data buffer | **only for `VIRTIO_BLK_T_IN`** |
+| 2 | one status byte | **yes, always** |
+
+A chain built with one flag value is wrong in both directions. Uniformly writable lets the device
+overwrite the request header it is meant to read; uniformly read-only gives it nowhere to report
+status, so every request appears to succeed. The first is a memory-corruption primitive and the
+second is silent data loss.
+
+Descriptors 0 and 2 are fixed-size and tiny; only descriptor 1 varies. A flush request has no
+data buffer and is therefore a **two**-descriptor chain, which is the case a driver that assumes
+three will corrupt.
+
+**Initialisation** follows §3.1.1 exactly as the network driver does — reset, `ACKNOWLEDGE`,
+`DRIVER`, negotiate, `FEATURES_OK`, **read the status back**, set up the queue, `DRIVER_OK`. It
+is not restated here.
+
+The driver satisfies the block interface defined under *Driver Interfaces* below — `blk_read`,
+`blk_write`, `blk_get_info` — which already names virtio-blk as one of its three implementations.
+
+**Markers**, asserted by `kernel_spec/drivers/virtio-blk.md`:
+
+```
+[BLK] virtio-blk up
+[BLK] capacity 1048576 sectors
+```
+
+### SLM-Managed Driver: VirtIO Network
+
+The driver every microVM needs. `e1000` is the only network driver this index provided until now,
+which meant the only machines an image could be built for were machines with an Intel 82540EM —
+a Firecracker target was refused outright (`reports/w6-target-capability-join-report.md`).
+
+**Two transports, one device model.** This is the fact the section exists to carry. MMIO discovery
+reads a magic value and a device type from a register; PCI discovery walks a capability list. The
+virtqueues, the descriptor chains and the packet header behind them are identical, and a driver
+specified only for PCI cannot serve the case that motivates it.
+
+The ring structures are specified once, under *VirtIO Block* above (`virtq_desc_t`,
+`virtq_avail_t`, `virtq_used_t`). They are not restated here.
+
+Normative: **VIRTIO 1.2**, §4.1 (PCI transport), §4.2 (MMIO transport), §5.1 (Network Device).
+Inventoried as `oasis-virtio/virtio-spec` in `agent/hardware/vendors.yaml`.
+
+```c
+/* Device id, per transport. VIRTIO 1.2 §5.1.1: the network device is type 1.
+ * Modern virtio-pci ids are 0x1040 + device type (§4.1.2); the transitional id
+ * 0x1000 is also accepted. Over MMIO there is no vendor:device pair at all —
+ * the type is read from a register. */
+#define VIRTIO_NET_DEVICE_TYPE      1
+#define VIRTIO_NET_PCI_MODERN       0x1041
+#define VIRTIO_NET_PCI_TRANSITIONAL 0x1000
+
+/* MMIO transport registers, VIRTIO 1.2 §4.2.2. Offsets from the device base. */
+#define VIRTIO_MMIO_MAGIC_VALUE     0x000   /* must read 0x74726976 ("virt") */
+#define VIRTIO_MMIO_VERSION         0x004   /* 2 for a 1.x device */
+#define VIRTIO_MMIO_DEVICE_ID       0x008   /* 1 = network */
+#define VIRTIO_MMIO_QUEUE_SEL       0x030
+#define VIRTIO_MMIO_QUEUE_NUM_MAX   0x034
+#define VIRTIO_MMIO_QUEUE_NUM       0x038
+#define VIRTIO_MMIO_QUEUE_READY     0x044
+#define VIRTIO_MMIO_QUEUE_NOTIFY    0x050
+#define VIRTIO_MMIO_STATUS          0x070
+#define VIRTIO_MMIO_QUEUE_DESC_LOW  0x080
+#define VIRTIO_MMIO_QUEUE_DRIVER_LOW 0x090
+#define VIRTIO_MMIO_QUEUE_DEVICE_LOW 0x0A0
+
+/* Device status bits, VIRTIO 1.2 §2.1. The order is normative: a driver that
+ * sets DRIVER_OK before FEATURES_OK has negotiated nothing. */
+#define VIRTIO_STATUS_ACKNOWLEDGE   1
+#define VIRTIO_STATUS_DRIVER        2
+#define VIRTIO_STATUS_DRIVER_OK     4
+#define VIRTIO_STATUS_FEATURES_OK   8
+#define VIRTIO_STATUS_FAILED        128
+
+/* The feature subset AUTON negotiates. VIRTIO 1.2 §5.1.3.
+ * VIRTIO_F_VERSION_1 is mandatory for a non-transitional device. Everything
+ * else here is declined deliberately: checksum offload, segmentation offload
+ * and multiqueue each add a path with no test behind it, and an unexercised
+ * path in ring-0 DMA code is the risk this project is trying not to take. */
+#define VIRTIO_NET_F_MAC            (1ULL << 5)   /* device supplies a MAC */
+#define VIRTIO_NET_F_STATUS         (1ULL << 16)  /* link status readable */
+#define VIRTIO_F_VERSION_1          (1ULL << 32)
+
+/* Packet header, VIRTIO 1.2 §5.1.6. Prepended to every buffer in both
+ * directions. With the offload features declined above, every field is zero on
+ * transmit and ignored on receive — but the header is still present and still
+ * occupies its bytes, which is the part a driver gets wrong. */
+typedef struct virtio_net_hdr {
+    uint8_t  flags;
+    uint8_t  gso_type;
+    uint16_t hdr_len;
+    uint16_t gso_size;
+    uint16_t csum_start;
+    uint16_t csum_offset;
+    uint16_t num_buffers;   /* present when VIRTIO_NET_F_MRG_RXBUF or VERSION_1 */
+} __attribute__((packed)) virtio_net_hdr_t;
+
+/* Device configuration space, VIRTIO 1.2 §5.1.4. Readable once
+ * VIRTIO_NET_F_MAC and VIRTIO_NET_F_STATUS are negotiated. */
+typedef struct virtio_net_config {
+    uint8_t  mac[6];
+    uint16_t status;        /* bit 0: VIRTIO_NET_S_LINK_UP */
+    uint16_t max_virtqueue_pairs;
+    uint16_t mtu;
+} __attribute__((packed)) virtio_net_config_t;
+
+/* Queue indices, VIRTIO 1.2 §5.1.2. Queue 0 receives, queue 1 transmits.
+ * Getting this backwards produces a device that accepts packets and never
+ * delivers one, with no error anywhere. */
+#define VIRTIO_NET_QUEUE_RX     0
+#define VIRTIO_NET_QUEUE_TX     1
+```
+
+**Initialisation**, VIRTIO 1.2 §3.1.1, in this order:
+
+1. Reset the device (write 0 to status).
+2. Set `ACKNOWLEDGE`, then `DRIVER`.
+3. Read device features; write back the subset above.
+4. Set `FEATURES_OK`, then **read status back** — a device that cleared it has refused the
+   negotiation, and continuing past that point programs a device that is not in the state the
+   driver believes.
+5. Set up the receive and transmit virtqueues.
+6. Set `DRIVER_OK`.
+
+**The receive path** fills queue 0 with buffers *before* `DRIVER_OK`. A device signalled ready
+with an empty receive queue drops every packet until one arrives, and the symptom is a link that
+is up and a network that does not work.
+
+The driver satisfies the shared network interface defined under *Driver Interfaces* below —
+`net_send`, `net_receive`, `net_receive_nonblock`, `net_get_mac`, `net_link_status` — which
+already names virtio-net as one of its two implementations.
+
+**Markers**, asserted by `kernel_spec/drivers/virtio-net.md`:
+
+```
+[NET] virtio-net up
+[NET] link up, mac 52:54:00:12:34:56
+```
+
 ### SLM-Managed Driver: Network (e1000)
 
 ```c
@@ -414,6 +612,95 @@ void keyboard_handler(void);
 int keyboard_shift_pressed(void);
 int keyboard_ctrl_pressed(void);
 int keyboard_alt_pressed(void);
+```
+
+### SLM-Managed Driver: Framebuffer (Multiboot2)
+
+The VESA section above describes a BIOS interface. **AUTON does not call it.** GRUB sets the mode
+before handover and passes a linear framebuffer in the Multiboot2 information structure, which
+`subsystems/boot.md` already parses into `boot_info_t` — `framebuffer_addr`, `fb_width`,
+`fb_height`, `fb_pitch`, `fb_bpp`. Re-entering real mode to call VBE would be a much larger thing
+and would buy nothing this image needs.
+
+So the basis for this driver is a **boot protocol, not a device datasheet**. That is why
+`driver_strategy.py --device 1234:1111` refuses: no publisher in `vendors.yaml` speaks for QEMU's
+invented vendor id, and none needs to. The document is the Multiboot2 Specification, inventoried
+as `gnu-multiboot/multiboot2-spec`.
+
+Normative: **Multiboot2 Specification**, §3.6.12 (framebuffer info tag).
+
+```c
+/* Everything this driver needs, already parsed. No mode setting, no VBE. */
+typedef struct fb_geometry {
+    volatile uint8_t *base;     /* boot_info_t.framebuffer_addr */
+    uint32_t width;             /* pixels */
+    uint32_t height;            /* pixels */
+    uint32_t pitch;             /* BYTES per scanline — see below */
+    uint8_t  bpp;               /* bits per pixel; 32 is the only case handled */
+} fb_geometry_t;
+```
+
+**`pitch` is not `width * bytes_per_pixel`.** The firmware may pad each scanline to an alignment
+boundary, and it usually does. A driver that computes the row stride instead of reading it writes
+past the end of every scanline — progressively further with each row, so the corruption is
+invisible at the top of the screen and total at the bottom. This is the framebuffer's equivalent
+of the ring-index bug, and it is the case the host test most exists for.
+
+```c
+/* The only address arithmetic in the driver, and the only place pitch is used.
+ * A pixel's byte offset. Multiboot2 §3.6.12. */
+static inline uint32_t fb_offset(const fb_geometry_t *g, uint32_t x, uint32_t y)
+{
+    return y * g->pitch + x * (g->bpp / 8);
+}
+```
+
+Bounds are checked against `width` and `height`, never against `pitch / (bpp/8)` — the padding is
+not addressable and a driver that treats it as usable writes into whatever follows.
+
+**Markers**, asserted by `kernel_spec/drivers/framebuffer.md`:
+
+```
+[FB] mode set 1024x768x32
+[FB] pitch 4096 bytes
+```
+
+### SLM-Managed Driver: PS/2 Keyboard (i8042)
+
+Binds against `keyboard_state` above, which is already shared by every architecture's keyboard
+path.
+
+**Which machines this serves, and which it does not.** The i8042 exists on the QEMU PC and on
+most bare metal. `kernel_spec/targets/firecracker.md` records it as **vestigial** — *"reset
+signalling only, no keyboard behind it"* — so on a microVM this driver would bind to a controller
+that will never report a keypress. A target's device list is what decides; the driver must not be
+selected merely because the chip is present.
+
+There is **no open specification.** The i8042 is a 1980s controller documented in datasheets and
+by convention, and `vendors.yaml` inventories neither. `driver_strategy.py` will refuse
+`synthesize` for it, and that refusal is correct: this is the case
+`kernel_spec/drivers/README.md` admits `status: undrivable` for, and the record says so rather
+than citing a document nobody can produce.
+
+```c
+/* i8042 ports and the status bits that gate them. */
+#define I8042_DATA          0x60
+#define I8042_STATUS        0x64
+#define I8042_STATUS_OBF    0x01    /* output buffer full — data may be read */
+#define I8042_STATUS_IBF    0x02    /* input buffer full — do NOT write */
+
+/* Scancode set 1. A release is the press code with bit 7 set. */
+#define SCANCODE_RELEASE    0x80
+```
+
+The scancode-to-character mapping is a **table**, not logic:
+[`kernel_spec/drivers/scancodes.yaml`](../drivers/scancodes.yaml). Which byte means which key is a
+fact to look up, and a switch statement spanning 128 cases is a fact nobody can review.
+
+**Markers**, asserted by `kernel_spec/drivers/ps2-keyboard.md`:
+
+```
+[INPUT] keyboard ready
 ```
 
 ### SLM-Managed Driver Interfaces

@@ -1,0 +1,111 @@
+# What a licence requires, for the purpose of choosing a driver strategy.
+#
+# NOT LEGAL ADVICE, and deliberately not shaped like it. Each entry records what
+# a licence *requires* — attribution, source disclosure, same-licence derivative
+# works — and does not characterise what is "safe" or "compatible" in the
+# abstract. Where the answer depends on how code is combined, `depends_on_use`
+# is true and the selector refuses rather than deciding.
+#
+# It is data for the same reason source_map.yaml and hypervisors.yaml are: which
+# obligation a licence carries is a fact to look up. It is also the field most
+# likely to be wrong in a way nobody notices until distribution, which is long
+# after anyone can answer it cheaply.
+#
+# `reuse` means linking the driver as it stands. `port` means producing a
+# derivative work. They are different acts and a licence may permit one and not
+# the other under this project's terms.
+
+version: 1
+
+licences:
+
+  MIT:
+    reuse: permitted
+    port: permitted
+    requires: [attribution]
+    depends_on_use: false
+    note: >-
+      Permissive. Attribution must survive into the image's provenance, which
+      PROVENANCE.json already carries.
+
+  BSD-3-Clause:
+    reuse: permitted
+    port: permitted
+    requires: [attribution, no-endorsement]
+    depends_on_use: false
+
+  ISC:
+    reuse: permitted
+    port: permitted
+    requires: [attribution]
+    depends_on_use: false
+
+  Apache-2.0:
+    reuse: permitted
+    port: permitted
+    requires: [attribution, state-changes, patent-grant-terms]
+    depends_on_use: false
+
+  CC-BY-4.0:
+    reuse: not-applicable
+    port: not-applicable
+    requires: [attribution]
+    depends_on_use: false
+    note: >-
+      A documentation licence, not a code licence. It appears here because
+      vendors.yaml uses it for specifications — a CC-BY spec is a basis for
+      `synthesize`, never for reuse or port.
+
+  GPL-2.0-only:
+    reuse: depends-on-use
+    port: depends-on-use
+    requires: [source-disclosure, same-licence-derivative]
+    depends_on_use: true
+    note: >-
+      Whether linking a GPL driver into this image creates a derivative work of
+      the whole, and what that obliges, depends on how it is combined and on
+      what is distributed. That is exactly the question this table refuses to
+      answer. The selector refuses and says a human must decide.
+
+  GPL-2.0-or-later:
+    reuse: depends-on-use
+    port: depends-on-use
+    requires: [source-disclosure, same-licence-derivative]
+    depends_on_use: true
+
+  "GPL-2.0-or-later / BSD-3-Clause":
+    reuse: permitted
+    port: permitted
+    requires: [attribution]
+    depends_on_use: false
+    note: >-
+      Dual-licensed; the BSD arm carries no disclosure obligation, so the
+      permissive terms may be taken. pci.ids is under exactly this.
+
+  "MIT/GPL-2.0 dual":
+    reuse: permitted
+    port: permitted
+    requires: [attribution]
+    depends_on_use: false
+
+  unknown:
+    reuse: unavailable
+    port: unavailable
+    requires: []
+    depends_on_use: false
+    note: >-
+      Not a neutral state. An unrecorded licence makes reuse and port
+      unavailable rather than assumed-fine — a ported driver with an unrecorded
+      licence is a legal defect that surfaces at distribution. Record the
+      licence, or choose another strategy.
+
+  proprietary:
+    reuse: unavailable
+    port: unavailable
+    requires: []
+    depends_on_use: false
+    note: >-
+      Includes vendor EULAs that permit reading a document but not producing
+      derivative works from a driver. A specification under such terms may still
+      support `synthesize` — reading a spec and writing original code is a
+      different act from copying one.
