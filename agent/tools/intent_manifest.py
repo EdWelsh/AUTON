@@ -76,7 +76,10 @@ INTENTS: tuple[IntentRule, ...] = (
     IntentRule(
         name="play-doom",
         phrases=("play doom", "run doom", "doom"),
-        requires=("framebuffer", "input", "module-asset"),
+        # timer: doomgeneric asks the platform for milliseconds (DG_GetTicksMs)
+        # and to sleep (DG_SleepMs). It is in every slice via the core today,
+        # which is incidental — a service names what it calls.
+        requires=("framebuffer", "input", "module-asset", "timer"),
         assets=("doom.wad",),
         markers=("[FB] mode set", "[INPUT] keyboard ready", "[DOOM] frame 1"),
         note="Needs a framebuffer and an input device; no network, no filesystem.",

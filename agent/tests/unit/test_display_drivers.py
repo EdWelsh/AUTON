@@ -102,14 +102,49 @@ class TestTheRecords:
         assert state is Identification.IDENTIFIED
         assert "multiboot2-spec" in detail
 
-    def test_the_keyboard_is_undrivable_and_says_why(self):
-        """The first record in this tree to say so. `drivers/README.md` admits
-        the status because some devices cannot be driven from any open
-        document, and saying so is more useful than an empty record."""
+    def test_the_keyboard_is_accepted_by_a_recorded_decision(self):
+        """w11 intent-G: a person accepted it on convention plus tests. The
+        record says so and keeps the history of why it was undrivable."""
         rec = load(DRIVERS / "ps2-keyboard.md")
 
-        assert rec.status == "undrivable"
+        assert rec.status == "specified"
+        assert "accepted" in rec.body.lower()
         assert "undrivable" in rec.body.lower()
+
+    def test_acceptance_is_not_an_identification(self):
+        """Nothing claims a document exists: the selector's refusal stands and
+        `identify` still answers UNKNOWN. The decision is recorded beside it."""
+        from target_spec import platform_acceptance
+
+        state, _ = identify("platform:i8042")
+        assert state is Identification.UNKNOWN
+        accepted = platform_acceptance("platform:i8042")
+        assert accepted and accepted["evidence"]
+
+    def test_acceptance_admits_specified_and_reports_it(self):
+        report = validate(DRIVERS / "ps2-keyboard.md")
+
+        assert report.accepted == ["platform:i8042"]
+
+    def test_acceptance_never_admits_implemented(self, tmp_path):
+        """`implemented` still needs a mapping and an observed pass; a decision
+        to proceed without a specification is not evidence the driver works."""
+        from driver_spec import DriverError
+
+        text = (DRIVERS / "ps2-keyboard.md").read_text().replace(
+            "status: specified", "status: implemented")
+        (tmp_path / "ps2-keyboard.md").write_text(text)
+        with pytest.raises(DriverError):
+            validate(tmp_path / "ps2-keyboard.md")
+
+    def test_an_unaccepted_platform_device_is_still_refused(self, tmp_path):
+        from driver_spec import DriverError
+
+        text = (DRIVERS / "ps2-keyboard.md").read_text().replace(
+            "platform:i8042", "platform:nosuch-device")
+        (tmp_path / "ps2-keyboard.md").write_text(text)
+        with pytest.raises(DriverError):
+            validate(tmp_path / "ps2-keyboard.md")
 
     def test_it_does_not_cite_a_document_nobody_can_produce(self):
         """Writing `specification: "Intel 8042 datasheet"` would repeat exactly
@@ -118,13 +153,14 @@ class TestTheRecords:
 
         assert "none" in rec.specification.lower()
 
-    def test_an_undrivable_record_may_name_an_unidentifiable_device(self):
-        """Refusing it would leave no way to say a device is undrivable, which
-        is the one thing the status exists for."""
-        state, _ = identify("platform:i8042")
-
-        assert state is Identification.UNKNOWN
-        validate(DRIVERS / "ps2-keyboard.md")      # does not raise
+    def test_an_undrivable_record_may_still_name_an_unidentifiable_device(self, tmp_path):
+        """No record in the tree is undrivable any more, but the status must
+        still admit an unidentifiable device — it is the one thing it is for."""
+        text = (DRIVERS / "ps2-keyboard.md").read_text().replace(
+            "platform:i8042", "platform:nosuch-device").replace(
+            "status: specified", "status: undrivable")
+        (tmp_path / "ps2-keyboard.md").write_text(text)
+        validate(tmp_path / "ps2-keyboard.md")      # does not raise
 
     def test_the_keyboard_record_names_the_machines_it_would_serve(self):
         """Firecracker's i8042 is vestigial — reset signalling with no keyboard
@@ -153,11 +189,14 @@ class TestWhatDoomStillNeeds:
 
         assert "framebuffer" not in SourceMap.load().capabilities
 
-    def test_doom_still_has_no_service_spec(self):
-        """The package's own stated blocker, unchanged by this phase."""
-        services = ROOT / "agent" / "kernel_spec" / "services"
+    def test_doom_has_a_service_spec_and_it_is_not_a_stub(self):
+        """w11 intent-G emitted it through intent-C's handoff and wrote the
+        body; the gate refuses a spec still carrying the stub marker."""
+        from intent_service import STUB_MARKER
 
-        assert not (services / "play-doom.md").exists()
+        spec = ROOT / "agent" / "kernel_spec" / "services" / "play-doom.md"
+        assert spec.exists()
+        assert STUB_MARKER not in spec.read_text()
 
     def test_module_asset_is_still_unmapped(self):
         """The third blocker, and not a driver problem — Doom needs its WAD

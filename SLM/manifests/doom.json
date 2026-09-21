@@ -1,6 +1,6 @@
 {
   "intent": "I want to play Doom",
-  "requires": ["boot", "mm(allocator)", "dev(pci)", "drivers(framebuffer, input)",
+  "requires": ["boot", "mm(allocator)", "dev(pci)", "drivers(framebuffer, input, timer)",
                "slm(scoped)", "sys(terminal)", "pkg(module-asset)"],
   "excludes": ["net", "ipc", "fs(writable)", "sched(preemptive)"],
   "assets": ["doom.wad"],

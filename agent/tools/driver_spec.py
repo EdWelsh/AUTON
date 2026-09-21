@@ -30,6 +30,7 @@ from target_spec import (  # noqa: E402
     Identification,
     _front_matter,
     identify,
+    platform_acceptance,
 )
 
 DRIVERS = ROOT / "agent" / "kernel_spec" / "drivers"
@@ -195,6 +196,7 @@ class Report:
     record: DriverRecord
     unverifiable: list[str] = field(default_factory=list)
     unmapped: list[str] = field(default_factory=list)
+    accepted: list[str] = field(default_factory=list)
 
     @property
     def ok(self) -> bool:
@@ -217,6 +219,13 @@ def check_devices(rec: DriverRecord) -> Report:
             report.unverifiable.append(d)
         else:
             phantom.append(f"{d} — {detail}")
+    if phantom and rec.status == "specified" and all(
+            platform_acceptance(p.split(" — ")[0]) for p in phantom):
+        # A person accepted the device without a specification, and recorded
+        # the evidence in platform-devices.yaml. That admits `specified` —
+        # never `implemented`, which check_status still gates on a mapping.
+        report.accepted = [p.split(" — ")[0] for p in phantom]
+        return report
     if phantom and rec.status == "undrivable":
         # `undrivable` means exactly this: the device is real and nothing
         # specifies it. Refusing the record would leave no way to say so, and
@@ -301,6 +310,9 @@ def main(argv: list[str] | None = None) -> int:
         status = "OK" if r.ok else "UNVERIFIED"
         print(f"{status} {p.name}: {rec.strategy}/{rec.status}, "
               f"{len(rec.devices)} device(s), {len(rec.verification)} check(s)")
+        if r.accepted:
+            print(f"   accepted without a specification: {', '.join(r.accepted)} "
+                  f"— a recorded decision in platform-devices.yaml, not a citation")
         if r.unmapped:
             print(f"   not implemented in this tree: {', '.join(r.unmapped)} "
                   f"(status '{rec.status}' — expected before the driver is written)")

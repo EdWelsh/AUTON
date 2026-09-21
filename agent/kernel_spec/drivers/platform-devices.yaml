@@ -45,5 +45,21 @@ devices:
       in datasheets and by convention, and vendors.yaml has neither an entry for
       it nor a plausible publisher to add. `driver_strategy.py` therefore
       refuses every strategy for it, which is correct rather than inconvenient:
-      the honest record is `status: undrivable` with this as the reason.
-      Recorded here so the refusal has something to point at.
+      the honest record was `status: undrivable` with this as the reason.
+    # A person's decision, not a specification. `specified_by` stays null:
+    # nothing here claims a document exists. What it records is that the
+    # driver was accepted WITHOUT one, on what evidence — so driver_spec can
+    # admit `status: specified` while the selector keeps refusing, which is
+    # the truth: no automatic basis exists, and someone chose to proceed.
+    # Who and when are in git, as for every other field in this tree.
+    # It never admits `implemented`; that still needs a mapping and an
+    # observed pass. Taken in w11 (intent-G, Doom).
+    accepted:
+      basis: >-
+        Convention plus host-proved scancode translation. Ports 0x60/0x64 and
+        set-1 scancodes are the de facto PC interface; the translation table
+        (drivers/scancodes.yaml) is proved on the host, and no normative
+        document is claimed.
+      evidence:
+        - "cmd: tests/kernel/run_display_test.sh"
+        - "file: agent/kernel_spec/drivers/scancodes.yaml"

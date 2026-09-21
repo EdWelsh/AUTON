@@ -257,6 +257,26 @@ def _virtio_types() -> dict[int, str]:
     return {int(k): v for k, v in (data.get("virtio_device_types") or {}).items()}
 
 
+def platform_acceptance(device_id: str) -> dict | None:
+    """A person's recorded acceptance of a platform device with no specification.
+
+    Not an identification: `identify` still answers UNKNOWN for such a device,
+    because no document specifies it. This answers a different question —
+    whether someone decided to proceed anyway, and on what evidence.
+    """
+    platform = PLATFORM_ID.match(device_id.lower())
+    if not platform:
+        return None
+    import yaml
+    table = yaml.safe_load(
+        (TARGETS.parent / "drivers" / "platform-devices.yaml").read_text()
+    ).get("devices") or {}
+    accepted = (table.get(platform.group(1)) or {}).get("accepted")
+    if not accepted or not accepted.get("basis") or not accepted.get("evidence"):
+        return None
+    return accepted
+
+
 def identify(device_id: str) -> tuple[Identification, str]:
     """Look a device up in the registry appropriate to its transport.
 

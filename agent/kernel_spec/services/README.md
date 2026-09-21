@@ -66,6 +66,7 @@ python agent/tools/service_spec.py --resolve  agent/kernel_spec/services/dhcp.md
 |---|---|---|
 | [dhcp.md](dhcp.md) | UDP, stateless request/response, no storage | format example; F4 implements |
 | [fileserver.md](fileserver.md) | TCP, stateful, needs storage | proves the format generalises |
+| [play-doom.md](play-doom.md) | no network, no storage; framebuffer, input, a boot-module asset | emitted by intent-C, body written in w11; engine licence undecided |
 
 The two are structurally different on purpose. A format that expresses only the service it was
 written alongside has not been tested.

@@ -12,6 +12,40 @@ optional: [package-registry, package-install, dependency-resolve]
 
 The package manager provides a simple package format (tar archive with a TOML-like manifest), a local package registry, dependency resolution, and SLM-driven installation. When a user requests "install a web server," the SLM translates this into package search, dependency resolution, fetching, extraction, and configuration steps. The package manager operates partially in-kernel (registry, extraction) and uses the network and filesystem subsystems for fetching and file installation.
 
+## Module assets (`module-asset`)
+
+The one capability in this subsystem that needs neither `fs` nor `net`, which is why it is the
+only one that is not optional. An **asset** is a file the loader handed in as a Multiboot2
+module (Multiboot2 Specification §3.6.6), such as a WAD, a docroot tarball or a lease database.
+A service spec names it in `assets:` and consumes it read-only by name.
+
+```c
+/* The module whose command line is exactly `name`, or NULL. Read-only: the
+ * range is reserved from the PMM by boot (boot.md, Boot-module tags). */
+const boot_module_t *pkg_module_asset(const char *name);
+
+/* Convenience: base pointer and length, 0 when absent. */
+size_t pkg_module_asset_span(const char *name, const uint8_t **base);
+```
+
+- **Matched on the module's command line, exactly.** GRUB's `module2 /boot/doom.wad doom.wad`
+  sets the string to `doom.wad`. The build writes that line from the spec's `assets:` list, so
+  the name in the spec and the name at runtime come from one source. No prefix or
+  case-insensitive match: two assets differing in case are two assets.
+- **Absent is `NULL`, never a substitute.** The consuming service decides what absence means
+  and says so on the console. This layer does not fall back to a default, fetch one, or read
+  one from disk.
+- **Read-only.** A service that needs to mutate an asset copies it into allocator memory. The
+  module range is identity-mapped by boot and must not be written. A lease database that
+  persists across boots is a storage problem, not this one.
+- **Never committed.** Assets are supplied at build time from a path the user gives.
+  `package_image.py` records them by name and never embeds them, because the most-requested
+  one (a commercial Doom WAD) is copyrighted.
+
+Status: **specified, not implemented.** It has no entry in `source_map.yaml`, deliberately. With
+no tree, any mapping would match nothing, and the header of that file explains why a mapping
+that matches nothing is worse than none.
+
 ## Data Structures
 
 ### Package Manifest
