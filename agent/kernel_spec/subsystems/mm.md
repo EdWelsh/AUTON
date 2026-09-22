@@ -276,7 +276,78 @@ void vmm_switch_address_space(uint64_t root_table_phys);
 
 /* Destroy an address space via arch_destroy_address_space(). */
 void vmm_destroy_address_space(uint64_t root_table_phys);
+
+/* Change a mapped page's flags, keeping its frame. Splits a covering 2 MiB
+ * mapping first. Returns 0, or -1 if the page is not mapped. */
+int vmm_protect(uint64_t virt, uint64_t flags);
 ```
+
+The VMM reaches memory, the TLB and the boot tables only through the PMM and the HAL:
+`pmm_alloc_page`/`pmm_free_page`, `phys_to_virt`, `arch_invlpg`, `arch_read_root` (CR3 on
+x86-64), `arch_nx_supported`. Those are exactly the hooks `tests/kernel/vmm_reference/include/
+vmm_host.h` declares, so a generated `vmm.c` is tested against what it will call.
+
+### Boot Handover (REQUIRED)
+
+`vmm_init` **adopts** the page tables the boot code built, read with `arch_read_root()`, and
+allocates nothing to do so. On x86-64 that is `boot.S`'s identity map of the low 4 GiB in
+**2 MiB pages**. Rebuilding a fresh set of tables at init would have to reproduce every mapping
+the boot code made, including the ones the kernel is executing from, and a mistake there is a
+triple fault with no diagnostic.
+
+### Huge-Page Split (REQUIRED)
+
+Any 4 KiB operation (`vmm_map_page`, `vmm_protect`) on an address covered by a 2 MiB mapping
+first **splits** it: allocate one page table; fill its 512 entries with the huge page's frame +
+`i × 4 KiB`, carrying the huge entry's P, RW, US, PCD and XD bits; point the directory entry at
+the table; invalidate the old 2 MiB translation.
+
+| Rule | Why | Failure if broken |
+|---|---|---|
+| Do **not** copy bit 7 into the PTEs | bit 7 is PS in a PDE and **PAT** in a PTE | every split page silently changes memory type |
+| Preserve every neighbour's flags | only the target page's permissions are changing | 511 pages turn read-only; the next write to one faults somewhere unrelated |
+| Invalidate the 2 MiB translation | the TLB may hold the large entry | the old permissions stay in force until an unrelated flush |
+
+### Permission Change (REQUIRED)
+
+`vmm_protect(virt, flags)` replaces the page's flags, keeps its frame, and calls
+`arch_invlpg(virt)`. The first consumer is `mitigations/f00f-idt-remap.md`, which needs the page
+holding IDT entries 0–6 **read-only** while the kernel keeps running from the same 2 MiB region.
+
+### Intermediate Tables and Out-of-Memory (REQUIRED)
+
+Intermediate tables come from `pmm_alloc_page()` and are zeroed before they are linked. If an
+allocation fails partway down a walk, every table allocated **by that call** is unlinked and
+freed before `-1` is returned. A failed map must leave the tree exactly as it found it. A
+half-built path makes later walks follow a pointer to a freed frame.
+
+### TLB Invalidation (REQUIRED)
+
+| Operation | Invalidates |
+|---|---|
+| map over a present page | that page |
+| unmap | that page |
+| protect | that page |
+| split | the 2 MiB region's translation |
+| map into a previously absent entry | nothing (an absent entry is never cached) |
+
+A VMM that forgets the TLB passes every translation test and is wrong on hardware. The host suite
+therefore asserts *which* addresses were invalidated, not just the resulting tables.
+
+### No-Execute
+
+`VMM_FLAG_NO_EXECUTE` sets bit 63 (XD) **only** when `arch_nx_supported()` reports EFER.NXE
+enabled. Without it bit 63 is reserved, and setting it faults every access through that entry. The
+flag is then ignored and the mapping made without it.
+
+### Verification
+
+`tests/kernel/run_vmm_test.sh --self-test` proves the suite against `vmm_reference/` under
+ASan/UBSan. `KERNEL_TREE=<dir> tests/kernel/run_vmm_test.sh` gates a generated `kernel/mm/vmm.c`:
+exit 2 means not generated, exit 1 means generated wrong. Five injected bugs (a forgotten
+invalidation, PS copied as PAT, a split dropping the neighbours' RW, OOM leaking a table,
+translation dropping the page offset) are each caught.
+
 
 ### Slab Allocator (`kernel/include/mm.h`)
 

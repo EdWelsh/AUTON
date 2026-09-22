@@ -69,8 +69,12 @@ capabilities:
   # --- mm ---
   allocator:   [kernel/lib/phys.c]      # the seed's bump allocator; a generated
   pmm:         [kernel/lib/phys.c]      # tree puts these under kernel/mm/
-  vmm:         [kernel/mm/vmm.c]
-  slab:        [kernel/mm/slab.c]
+  # vmm, slab: specified in subsystems/mm.md, not implemented. Both mapped to
+  # files that have never existed in any tree (kernel/mm/vmm.c, slab.c), which
+  # made them phantom: F00F's `requires: [vmm]` resolved against nothing. The
+  # VMM's REQUIRED sections and host suite landed in w12
+  # (tests/kernel/run_vmm_test.sh); a generated tree maps them again once its
+  # vmm.c passes that suite. An absent mapping refuses honestly.
 
   # --- dev ---
   pci:             [kernel/dev/pci.c]
