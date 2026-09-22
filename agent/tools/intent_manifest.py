@@ -88,9 +88,13 @@ INTENTS: tuple[IntentRule, ...] = (
         name="host-repo",
         phrases=("host this repo", "host a website", "serve this repo",
                  "web server", "serve files over http"),
-        requires=("ipv4", "tcp", "http-server", "dhcp-client"),
+        # module-asset: the repository travels in the image as repo.cpio, the
+        # way Doom's WAD does. The alternative, a disk, is the file server's
+        # signal (F8), not this one's — here the probe is a clone.
+        requires=("ipv4", "tcp", "http-server", "dhcp-client", "module-asset"),
         roles=("network",),
-        markers=("[NET] dhcp bound", "[HTTP] listening on 80"),
+        assets=("repo.cpio",),
+        markers=("[NET] dhcp bound", "[HTTP] repo mounted", "[HTTP] listening on :80"),
         note="Needs the network stack and a NIC driver; no writable storage.",
     ),
     IntentRule(

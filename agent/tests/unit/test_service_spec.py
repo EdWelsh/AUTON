@@ -53,7 +53,8 @@ class TestTheShippedSpecs:
     def test_every_service_spec_validates_and_resolves(self):
         specs = load_all()
 
-        assert set(specs) == {"dhcp", "fileserver", "kvstore", "play-doom", "ssh", "tftp"}
+        assert set(specs) == {"dhcp", "fileserver", "host-repo", "kvstore", "play-doom",
+                              "ssh", "tftp"}
         for spec in specs.values():
             spec.resolve()
 

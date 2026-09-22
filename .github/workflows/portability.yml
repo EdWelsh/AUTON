@@ -92,6 +92,14 @@ jobs:
       - name: File server suite (F8, path traversal corpus)
         run: tests/kernel/run_fileserver_test.sh --self-test
 
+      - name: Repo server suite (host-repo)
+        run: tests/kernel/run_host_repo_test.sh --self-test
+
+      # The dumb-HTTP layout, graded by git itself: pack a real bare repo,
+      # serve the files statically, clone it, compare HEAD.
+      - name: Repo server clone (host-repo, real git)
+        run: tests/kernel/run_host_repo_test.sh --clone
+
       # Proves the live path actually ran rather than skipping, on the one host
       # where it can. Without this the matrix could be green with both hosts
       # skipping and nobody noticing.

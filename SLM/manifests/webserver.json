@@ -10,6 +10,7 @@
     "tcp",
     "http-server",
     "dhcp-client",
+    "pkg(module-asset)",
     "slm(scoped)",
     "sys(terminal)"
   ],
@@ -18,10 +19,13 @@
     "sched(preemptive)",
     "fs(writable)"
   ],
-  "assets": [],
+  "assets": [
+    "repo.cpio"
+  ],
   "markers": [
     "[NET] dhcp bound",
-    "[HTTP] listening on 80"
+    "[HTTP] repo mounted",
+    "[HTTP] listening on :80"
   ],
-  "_note": "tcp, http-server and dhcp-client are optional capabilities of net and must be named: requiring `net` wholesale produced an image that could not serve HTTP or take a lease, while these markers claimed both. Found by round-tripping the intent compiler (intent-B)."
+  "_note": "tcp, http-server and dhcp-client are optional capabilities of net and must be named: requiring `net` wholesale produced an image that could not serve HTTP or take a lease, while these markers claimed both. Found by round-tripping the intent compiler (intent-B). w14: the repository travels as repo.cpio (pkg(module-asset)), so the image's probe can be a real `git clone`; the file server moved to the FAT32 volume instead, which is a different PRD signal."
 }
