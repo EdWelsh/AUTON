@@ -1,0 +1,78 @@
+[
+ {
+  "task_id": "tftp-001",
+  "title": "Read Architecture Specification",
+  "subsystem": "architecture",
+  "dependencies": [],
+  "assigned_to": "developer"
+ },
+ {
+  "task_id": "tftp-002",
+  "title": "Read Relevant Subsystem Specifications",
+  "subsystem": "architect",
+  "dependencies": [
+   "tftp-001"
+  ],
+  "assigned_to": "developer"
+ },
+ {
+  "task_id": "tftp-003",
+  "title": "Implement TFTP Header and Core Logic (tftp.h)",
+  "subsystem": "tftp",
+  "dependencies": [
+   "tftp-002"
+  ],
+  "assigned_to": "developer",
+  "produces": [
+   "kernel/include/tftp.h"
+  ]
+ },
+ {
+  "task_id": "tftp-004",
+  "title": "Implement TFTP Server Initialization and Handling (server.c)",
+  "subsystem": "tftp",
+  "dependencies": [
+   "tftp-003"
+  ],
+  "assigned_to": "developer",
+  "produces": [
+   "kernel/services/tftp/server.c"
+  ]
+ },
+ {
+  "task_id": "tftp-005",
+  "title": "Implement TFTP Serving Loop (serve.c)",
+  "subsystem": "tftp",
+  "dependencies": [
+   "tftp-004"
+  ],
+  "assigned_to": "developer",
+  "produces": [
+   "kernel/services/tftp/serve.c"
+  ]
+ },
+ {
+  "task_id": "tftp-006",
+  "title": "Implement Host Test Case (tftp_test.c)",
+  "subsystem": "tftp",
+  "dependencies": [
+   "tftp-005"
+  ],
+  "assigned_to": "developer",
+  "produces": [
+   "tests/kernel/tftp_test.c"
+  ]
+ },
+ {
+  "task_id": "tftp-007",
+  "title": "Implement Test Runner Script (run_tftp_test.sh)",
+  "subsystem": "tftp",
+  "dependencies": [
+   "tftp-006"
+  ],
+  "assigned_to": "developer",
+  "produces": [
+   "tests/kernel/run_tftp_test.sh"
+  ]
+ }
+]

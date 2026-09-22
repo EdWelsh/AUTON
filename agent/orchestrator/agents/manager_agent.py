@@ -24,6 +24,42 @@ def _get_prompt(kwargs):
     return build_manager_prompt(arch)
 
 
+
+def drop_undeliverable(tasks: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Drop tasks that produce nothing, re-pointing their dependents.
+
+    w11: both authorship runs began with "Read Architecture Specification",
+    a task with no deliverable. Its result could only be reviewed as nothing,
+    and every later task depended on it. A dependent of a dropped task inherits
+    that task's own dependencies, transitively, so the chain stays ordered.
+    """
+    dropped = {t["task_id"]: list(t.get("dependencies") or [])
+               for t in tasks if not t.get("produces")}
+    for task_id in dropped:
+        logger.warning("Dropping task %s: it lists no file in `produces`", task_id)
+
+    def resolve(dep: str, seen: frozenset = frozenset()) -> list[str]:
+        if dep not in dropped:
+            return [dep]
+        if dep in seen:
+            return []
+        out: list[str] = []
+        for d in dropped[dep]:
+            out.extend(resolve(d, seen | {dep}))
+        return out
+
+    kept = []
+    for t in tasks:
+        if t["task_id"] in dropped:
+            continue
+        deps: list[str] = []
+        for d in t.get("dependencies") or []:
+            for r in resolve(d):
+                if r not in deps:
+                    deps.append(r)
+        kept.append({**t, "dependencies": deps})
+    return kept
+
 class ManagerAgent(Agent):
     """The Manager decomposes high-level goals into tasks and coordinates agents.
 
@@ -58,10 +94,14 @@ class ManagerAgent(Agent):
 
 ## Instructions
 1. Read the kernel architecture specification (use read_spec with subsystem='architecture')
-2. Read the relevant subsystem specifications
+2. Read the relevant specifications (read_spec also takes services/<name>,
+   drivers/<name>, mitigations/<name>)
 3. Decompose this goal into concrete, ordered tasks with dependencies
 4. Each task should be small enough for a single developer agent to complete
 5. Include acceptance criteria for each task
+6. Reading a specification is part of every task, not a task. Every task must
+   create or change at least one file, listed in `produces`; a task that
+   produces nothing will be dropped.
 
 Return the tasks as a JSON array. Each task must have:
 - task_id: unique identifier (e.g., "boot-001")
@@ -73,6 +113,7 @@ Return the tasks as a JSON array. Each task must have:
 - spec_reference: which spec section to read
 - acceptance_criteria: list of conditions for "done"
 - description: detailed instructions for the agent
+- produces: list of file paths this task creates or changes (at least one)
 
 Return ONLY the JSON array, no other text."""
 
@@ -86,7 +127,7 @@ Return ONLY the JSON array, no other text."""
         )
 
         # Parse tasks from the response
-        tasks = self._parse_tasks(result_messages)
+        tasks = drop_undeliverable(self._parse_tasks(result_messages))
         self.state = AgentState.DONE
 
         # Save task metadata

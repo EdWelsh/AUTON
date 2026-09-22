@@ -32,6 +32,7 @@ class TaskNode:
     dependencies: list[str] = field(default_factory=list)
     data: dict[str, Any] = field(default_factory=dict)
     assigned_agent_id: str | None = None
+    review_rounds: int = 0
 
     @property
     def is_terminal(self) -> bool:
@@ -111,6 +112,27 @@ class TaskGraph:
             for dep_id in self._dependents.get(task_id, set()):
                 if dep_id in self._nodes:
                     self._update_readiness(self._nodes[dep_id])
+
+    def requeue(self, task_id: str, feedback: dict[str, Any]) -> TaskNode:
+        """Return a rejected task to its author with the review attached.
+
+        A rejection used to set BLOCKED, which nothing ever left: one bad review
+        halted a linear chain for the rest of the run (w11 F6 and V8). The
+        feedback travels in `data` because that is what the author's prompt is
+        built from; a retry that cannot see why it was rejected retries blind.
+        """
+        node = self._nodes[task_id]
+        node.review_rounds += 1
+        node.data.setdefault("review_feedback", []).append(feedback)
+        node.state = TaskState.READY
+        return node
+
+    def fail(self, task_id: str, reason: str) -> None:
+        """Terminal failure that says why. `Orchestration failed: unknown` was
+        the only thing either w11 run reported."""
+        node = self._nodes[task_id]
+        node.data["failure_reason"] = reason
+        node.state = TaskState.FAILED
 
     def assign_agent(self, task_id: str, agent_id: str) -> None:
         """Record which agent is working on a task."""

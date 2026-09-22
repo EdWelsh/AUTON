@@ -72,8 +72,13 @@ class DeveloperAgent(Agent):
         )
         metadata.save(self.workspace.path)
 
-        # Execute the task
-        result = await self.execute_task(task)
+        # Execute the task on the branch just created. Only this makes the
+        # result reviewable; see Agent._task_branch.
+        self._task_branch = branch
+        try:
+            result = await self.execute_task(task)
+        finally:
+            self._task_branch = None
 
         # Update metadata with results
         metadata.status = TaskStatus.REVIEW if result.success else TaskStatus.BLOCKED

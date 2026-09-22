@@ -259,6 +259,38 @@ class GitWorkspace:
         logger.info("Committed %s: %s", commit.hexsha[:8], message)
         return commit.hexsha
 
+    # Engine state and build output live inside the workspace but are not work.
+    # `git add -A` would commit .auton/state.json onto an agent's branch.
+    _NOT_WORK = (":(exclude).auton", ":(exclude)build")
+
+    def has_changes(self, branch: str) -> bool:
+        """Whether `branch` carries work: commits ahead of main, or uncommitted
+        changes while it is checked out."""
+        main = self._get_main_branch()
+        if branch == main:
+            return False
+        if self.repo.git.rev_list("--count", f"{main}..{branch}") != "0":
+            return True
+        return self._is_current(branch) and bool(
+            self.repo.git.status("--porcelain", "--", ".", *self._NOT_WORK))
+
+    def commit_pending(self, branch: str, message: str) -> bool:
+        """Commit an agent's uncommitted work on its own branch, excluding
+        engine state. Returns whether anything was committed."""
+        if not self._is_current(branch):
+            return False
+        self.repo.git.add("-A", "--", ".", *self._NOT_WORK)
+        if not self.repo.git.diff("--cached", "--name-only"):
+            return False
+        self.repo.index.commit(message)
+        return True
+
+    def _is_current(self, branch: str) -> bool:
+        try:
+            return self.repo.active_branch.name == branch
+        except TypeError:          # detached HEAD
+            return False
+
     def diff(self, branch: str | None = None) -> str:
         """Get diff of current changes or against a branch."""
         if branch:

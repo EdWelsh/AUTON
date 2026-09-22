@@ -213,13 +213,13 @@ TOOL_READ_SPEC = {
     "type": "function",
     "function": {
         "name": "read_spec",
-        "description": "Read a kernel subsystem specification document.",
+        "description": "Read a kernel specification: a subsystem, a service spec, a driver record, a mitigation, a target, or an architecture.",
         "parameters": {
             "type": "object",
             "properties": {
                 "subsystem": {
                     "type": "string",
-                    "description": "Subsystem name: 'architecture', 'boot', 'mm', 'sched', 'ipc', 'dev', 'slm', 'drivers', 'fs', 'net', 'pkg', 'sys', 'hal', 'arch/x86_64', 'arch/aarch64', 'arch/riscv64'.",
+                    "description": "A subsystem name ('architecture', 'boot', 'mm', 'sched', 'ipc', 'dev', 'slm', 'drivers', 'fs', 'net', 'pkg', 'sys', 'hal'), or <kind>/<name> for services/<name>, drivers/<name>, mitigations/<name>, targets/<name>, arch/<x86_64|aarch64|riscv64>.",
                 },
             },
             "required": ["subsystem"],

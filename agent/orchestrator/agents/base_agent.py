@@ -13,12 +13,18 @@ from typing import Any
 
 from orchestrator.arch_registry import ArchProfile
 from orchestrator.comms.git_workspace import GitWorkspace
-from orchestrator.comms.message_bus import Message, MessageBus
+from orchestrator.comms.message_bus import Message, MessageBus, MessageType
 from orchestrator.llm.client import LLMClient
 from orchestrator.llm.tools import SHELL_ALLOWLIST as _SHELL_ALLOWLIST
 
 logger = logging.getLogger(__name__)
 
+
+
+# Spec kinds an agent may read by `<kind>/<name>`. Before w12 only subsystems
+# and arch were reachable, so no agent could read the service, driver record or
+# mitigation it was asked to implement.
+SPEC_KINDS = ("services", "drivers", "mitigations", "targets", "arch")
 
 class AgentRole(str, Enum):
     MANAGER = "manager"
@@ -92,6 +98,10 @@ class Agent:
         self.arch_profile = arch_profile
         self.state = AgentState.IDLE
         self._conversation: list[dict[str, Any]] = []
+        # The branch this agent created for the current task, if any. Only an
+        # agent that made a branch has a change to review; reporting the
+        # checked-out branch instead sent `main` to review in w11.
+        self._task_branch: str | None = None
 
     async def execute_task(self, task: dict[str, Any]) -> TaskResult:
         """Execute a task using the Claude agentic loop.
@@ -130,7 +140,7 @@ class Agent:
                 agent_id=self.agent_id,
                 summary=summary,
                 artifacts=artifacts,
-                branch=self._current_branch(),
+                branch=self._task_branch,
             )
 
         except Exception as e:
@@ -149,9 +159,15 @@ class Agent:
         return self.message_bus.receive(self.agent_id)
 
     async def send_message(self, to_agent: str, msg_type: Any, payload: dict) -> None:
-        """Send a message to another agent."""
+        """Send a message to another agent.
+
+        `msg_type` may be a MessageType or its string value. The developer
+        passed "review_request" as a string, serialisation called `.value` on
+        it, and every successful developer task crashed at its last line: the
+        developer path had never once completed until w12's end-to-end test.
+        """
         msg = Message(
-            msg_type=msg_type,
+            msg_type=MessageType(msg_type),
             from_agent=self.agent_id,
             to_agent=to_agent,
             payload=payload,
@@ -293,24 +309,31 @@ class Agent:
     def _read_spec(self, subsystem: str) -> str:
         """Read a kernel specification document.
 
-        Supports subsystem names like 'boot', 'mm', 'sched', etc.
-        Also supports 'architecture', 'hal', and arch-specific specs
-        like 'arch/x86_64', 'arch/aarch64', 'arch/riscv64'.
+        `architecture`, `hal`, a subsystem name (`mm`), or `<kind>/<name>` for
+        kind in SPEC_KINDS (`services/dhcp`, `drivers/virtio-net`,
+        `mitigations/f00f-idt-remap`, `arch/x86_64`). Paths are contained to
+        the spec directory.
         """
+        root = Path(self.kernel_spec_path).resolve()
         if subsystem == "architecture":
-            path = self.kernel_spec_path / "architecture.md"
+            path = root / "architecture.md"
         elif subsystem == "hal":
-            path = self.kernel_spec_path / "arch" / "hal.md"
-        elif subsystem.startswith("arch/"):
-            # e.g. "arch/x86_64" -> kernel_spec/arch/x86_64.md
-            arch_name = subsystem.split("/", 1)[1]
-            path = self.kernel_spec_path / "arch" / f"{arch_name}.md"
+            path = root / "arch" / "hal.md"
+        elif "/" in subsystem:
+            kind, _, name = subsystem.partition("/")
+            if kind not in SPEC_KINDS:
+                return (f"Specification kind {kind!r} refused: use one of "
+                        f"{', '.join(SPEC_KINDS)}")
+            path = root / kind / f"{name}.md"
         else:
-            path = self.kernel_spec_path / "subsystems" / f"{subsystem}.md"
+            path = root / "subsystems" / f"{subsystem}.md"
 
-        if not path.exists():
+        resolved = path.resolve()
+        if root not in resolved.parents:
+            return f"Specification path {subsystem!r} refused: outside the spec directory"
+        if not resolved.exists():
             return f"Specification not found: {subsystem}"
-        return path.read_text(encoding="utf-8")
+        return resolved.read_text(encoding="utf-8")
 
     async def _run_build(self, target: str) -> str:
         """Run the kernel build. Delegates to the build system."""
@@ -418,6 +441,16 @@ class Agent:
 
         if context := task.get("context"):
             parts.append(f"\n**Additional Context**:\n{context}")
+
+        if feedback := task.get("review_feedback"):
+            parts.append("\n**Review feedback on your previous attempt** (address every point):")
+            for round_no, review in enumerate(feedback, 1):
+                parts.append(f"- Round {round_no}: {review.get('summary', 'no summary')}")
+                for issue in review.get("issues", []):
+                    where = issue.get("file", "?")
+                    if issue.get("line"):
+                        where += f":{issue['line']}"
+                    parts.append(f"  - {where}: {issue.get('description', '')}")
 
         parts.append(
             "\nExecute this task using the tools available to you. "

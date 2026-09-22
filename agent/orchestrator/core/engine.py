@@ -334,24 +334,15 @@ class OrchestrationEngine:
                         self.scheduler.release_agent(slot.agent.agent_id)
 
                         if isinstance(result, Exception):
-                            logger.error("Agent %s failed: %s", slot.agent.agent_id, result)
-                            self.task_graph.update_state(task_node.task_id, TaskState.FAILED)
+                            logger.error("Agent %s failed: %s", slot.agent.agent_id, result,
+                                         exc_info=result)
+                            self.task_graph.fail(task_node.task_id, f"agent error: {result}")
                             self.state.tasks_failed += 1
-                        elif isinstance(result, TaskResult) and result.success:
-                            self.task_graph.update_state(task_node.task_id, TaskState.REVIEW)
-                            # Trigger review
-                            await self._trigger_review(task_node, result)
                         else:
-                            self.task_graph.update_state(task_node.task_id, TaskState.BLOCKED)
+                            await self._handle_result(task_node, result)
 
                 # Check for approved tasks to merge
-                approved = self.task_graph.get_tasks_by_state(TaskState.APPROVED)
-                if approved:
-                    integrator: IntegratorAgent = self._agents["integrator"]
-                    await integrator.merge_approved()
-                    for task_node in approved:
-                        if task_node.state == TaskState.MERGED:
-                            self.state.tasks_completed += 1
+                self._merge_approved()
 
                 # Small delay to avoid tight loops
                 await asyncio.sleep(1)
@@ -391,10 +382,12 @@ class OrchestrationEngine:
             self.state.phase = "done"
             self.state.save(state_path)
 
+            success = (self.task_graph.is_complete
+                       and final_check.get("success", False) and validation_ok)
             return {
-                "success": self.task_graph.is_complete
-                and final_check.get("success", False)
-                and validation_ok,
+                "success": success,
+                "error": None if success else self._failure_summary(
+                    final_check, build_result, test_result, composition_result),
                 "run_id": run_id,
                 "progress": self.task_graph.progress,
                 "total_cost_usd": self.cost_tracker.total_cost_usd,
@@ -424,8 +417,94 @@ class OrchestrationEngine:
         else:
             return await agent.execute_task(task_node.data)
 
+    def _failure_summary(self, final_check, build_result, test_result,
+                         composition_result) -> str:
+        """Why a run did not succeed, in one line. Both w11 runs printed
+        `Orchestration failed: unknown`, which told nobody anything."""
+        reasons = []
+        for node in self.task_graph.all_tasks:
+            if node.state is TaskState.FAILED:
+                why = node.data.get("failure_reason", "no reason")
+                reasons.append(f"{node.task_id} failed ({why})")
+            elif node.state is not TaskState.MERGED:
+                reasons.append(f"{node.task_id} ended {node.state.value}")
+        if not final_check.get("success", False):
+            reasons.append("integration check failed")
+        if not build_result.success:
+            reasons.append(f"build failed ({len(build_result.errors)} errors)")
+        elif not (test_result and test_result.success):
+            reasons.append("boot/tests failed")
+        if composition_result is not None and not composition_result.success:
+            reasons.append("composition check failed")
+        return "; ".join(reasons) or "no task reached a terminal state"
+
+    async def _handle_result(self, task_node: Any, result: Any) -> None:
+        """Route one finished task: merge, review, or fail, and always say why.
+
+        The w11 runs (F6, V8) ended with `Orchestration failed: unknown` after
+        a task that wrote nothing was sent to review as branch `main`, a local
+        model invented code to reject, and the rejection blocked the chain for
+        good. Each branch below exists for one of those.
+        """
+        task_id = task_node.task_id
+        if not (isinstance(result, TaskResult) and result.success):
+            summary = getattr(result, "summary", "") or "no summary"
+            logger.info("Task %s did not succeed: %s", task_id, summary)
+            self.task_graph.fail(task_id, f"agent reported failure: {summary}")
+            self.state.tasks_failed += 1
+            return
+
+        if not result.branch:
+            # No branch: the agent was not asked to produce a change (a design
+            # or read task). There is nothing to review, and reviewing nothing
+            # is what made the model hallucinate a diff.
+            logger.info("Task %s produced no branch; merged without review", task_id)
+            self.task_graph.update_state(task_id, TaskState.MERGED)
+            return
+
+        if self.workspace.commit_pending(
+                result.branch, f"{task_id}: uncommitted agent output"):
+            logger.info("Committed uncommitted work on %s for %s", result.branch, task_id)
+
+        if not self.workspace.has_changes(result.branch):
+            logger.info("Task %s: branch %s has no changes against main",
+                        task_id, result.branch)
+            self.task_graph.fail(
+                task_id, f"no output: branch {result.branch} is identical to main")
+            self.state.tasks_failed += 1
+            return
+
+        task_node.data["branch"] = result.branch
+        self.task_graph.update_state(task_id, TaskState.REVIEW)
+        await self._trigger_review(task_node, result)
+
+    def _merge_approved(self) -> None:
+        """Merge every approved branch into main, and mark the graph.
+
+        Merging is mechanical, so the engine does it with git rather than asking
+        a model to. Before w12 an LLM integrator "merged" and updated on-disk
+        metadata only; the graph node stayed APPROVED, so no dependent of an
+        approved task ever became ready.
+        """
+        for node in self.task_graph.get_tasks_by_state(TaskState.APPROVED):
+            branch = node.data.get("branch")
+            if branch and self.workspace.merge_branch(branch):
+                self.task_graph.update_state(node.task_id, TaskState.MERGED)
+                self.state.tasks_completed += 1
+                continue
+            # A conflict with main is feedback like any other: the author
+            # rebuilds against the new main, within the same round limit.
+            limit = int(self.config.get("orchestrator", {}).get("max_review_rounds", 3))
+            requeued = self.task_graph.requeue(node.task_id, {
+                "verdict": "request_changes",
+                "summary": f"branch {branch} does not merge cleanly into main; "
+                           f"rebuild your change against the current main"})
+            if requeued.review_rounds >= limit:
+                self.task_graph.fail(node.task_id, f"merge conflict with main ({branch})")
+                self.state.tasks_failed += 1
+
     async def _trigger_review(self, task_node: Any, result: TaskResult) -> None:
-        """Trigger a code review for a completed task."""
+        """Review a task with real changes; a rejection returns to its author."""
         if not result.branch:
             return
 
@@ -442,10 +521,16 @@ class OrchestrationEngine:
 
         if review_result.get("verdict") == "approve":
             self.task_graph.update_state(task_node.task_id, TaskState.APPROVED)
-        else:
-            self.task_graph.update_state(task_node.task_id, TaskState.BLOCKED)
-            # Send feedback to developer for fixes
-            logger.info(
-                "Review requested changes for %s: %s",
-                task_node.task_id, review_result.get("summary"),
-            )
+            return
+
+        limit = int(self.config.get("orchestrator", {}).get("max_review_rounds", 3))
+        node = self.task_graph.requeue(task_node.task_id, review_result)
+        summary = review_result.get("summary", "no summary")
+        logger.info("Review round %d/%d for %s: %s",
+                    node.review_rounds, limit, task_node.task_id, summary)
+        if node.review_rounds >= limit:
+            self.task_graph.fail(
+                task_node.task_id,
+                f"rejected {node.review_rounds} time(s); last review: {summary}")
+            self.state.tasks_failed += 1
+
