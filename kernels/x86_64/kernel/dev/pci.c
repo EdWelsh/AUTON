@@ -1,35 +1,23 @@
-/* PCI bus 0 enumeration through the 0xCF8/0xCFC configuration mechanism. */
+/* PCI bus 0 enumeration. Configuration space access is the HAL's. */
 #include "pci.h"
-#include "../arch/x86_64/io/io.h"
-
-#define PCI_CONFIG_ADDR 0xCF8
-#define PCI_CONFIG_DATA 0xCFC
+#include "hal.h"
 
 #define PCI_CMD         0x04
 #define PCI_BAR0        0x10
 #define PCI_CMD_MEMORY  0x0002
 #define PCI_CMD_MASTER  0x0004
 
-static uint32_t pci_config_addr(uint8_t bus, uint8_t slot, uint8_t func, uint8_t off)
-{
-	return (uint32_t)0x80000000u
-		| ((uint32_t)bus << 16)
-		| ((uint32_t)slot << 11)
-		| ((uint32_t)func << 8)
-		| ((uint32_t)off & 0xFC);
-}
-
+/* Configuration space goes through the HAL: the mechanism is architecture
+ * specific (x86 ports 0xCF8/0xCFC, ECAM elsewhere). */
 uint32_t pci_config_read32(uint8_t bus, uint8_t slot, uint8_t func, uint8_t off)
 {
-	io_write32(PCI_CONFIG_ADDR, pci_config_addr(bus, slot, func, off));
-	return io_read32(PCI_CONFIG_DATA);
+	return arch_pci_config_read32(bus, slot, func, off);
 }
 
 void pci_config_write32(uint8_t bus, uint8_t slot, uint8_t func,
 			uint8_t off, uint32_t val)
 {
-	io_write32(PCI_CONFIG_ADDR, pci_config_addr(bus, slot, func, off));
-	io_write32(PCI_CONFIG_DATA, val);
+	arch_pci_config_write32(bus, slot, func, off, val);
 }
 
 uint64_t pci_bar(const pci_device_t *dev, uint8_t bar)

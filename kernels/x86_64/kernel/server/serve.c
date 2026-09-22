@@ -3,11 +3,12 @@
 #include "server.h"
 #include "net.h"
 #include "kernel.h"
+#include "hal.h"
 
 void server_serve_loop(void)
 {
 	for (;;) {
-		__asm__ volatile("hlt");
+		arch_halt();
 		net_poll();
 		if (serial_rx_ready()) {
 			(void)serial_getc();

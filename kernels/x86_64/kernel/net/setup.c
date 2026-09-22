@@ -1,6 +1,7 @@
 /* Network bring-up: locate the NIC, start the driver, run DHCP. Called once
  * from kernel_main after the PCI scan. */
 #include "net.h"
+#include "hal.h"
 #include "e1000.h"
 #include "pci.h"
 #include "kernel.h"
@@ -76,7 +77,7 @@ int net_bringup(const struct pci_device *devs, uint32_t ndev)
 	 * and the service looks broken when it is merely unheard of. */
 	uint8_t gwmac[6];
 	for (int i = 0; i < 300 && !arp_resolve(net_gw(), gwmac); i++) {
-		__asm__ volatile("hlt");
+		arch_halt();
 		net_poll();
 	}
 	return 0;
@@ -90,7 +91,7 @@ int net_bringup(const struct pci_device *devs, uint32_t ndev)
 		 * ARP miss, and SLIRP may send us a SYN without ARPing first. */
 		uint8_t gwmac[6];
 		for (int i = 0; i < 300 && !arp_resolve(net_gw(), gwmac); i++) {
-			__asm__ volatile("hlt");
+			arch_halt();
 			net_poll();
 		}
 	} else {

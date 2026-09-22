@@ -11,6 +11,7 @@
 #include "net.h"
 #include "irq.h"
 #include "sysinfo.h"
+#include "hal.h"
 
 #define PAGE_SIZE 4096u
 
@@ -20,8 +21,9 @@ void service_main(void) { slm_chat_loop(); }
 
 static void halt_forever(void)
 {
+	arch_disable_interrupts();
 	for (;;)
-		__asm__ volatile("cli; hlt");
+		arch_halt();
 }
 
 void kernel_main(uint32_t mb_info_ptr, uint32_t magic)

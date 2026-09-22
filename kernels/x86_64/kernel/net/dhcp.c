@@ -3,6 +3,7 @@
 #include "net.h"
 #include "e1000.h"
 #include "kernel.h"
+#include "hal.h"
 
 #define DHCP_XID    0x41555401u         /* "AUT\1" */
 #define DHCP_MAGIC  0x63825363u
@@ -150,7 +151,7 @@ int dhcp_run(void)
 			else if (g_state == ST_OFFERED)
 				send_request();
 		}
-		__asm__ volatile("hlt");        /* yield to QEMU until next tick */
+		arch_halt();                    /* yield to QEMU until next tick */
 		net_poll();                     /* drain whatever arrived */
 	}
 	if (g_state != ST_DONE) {
