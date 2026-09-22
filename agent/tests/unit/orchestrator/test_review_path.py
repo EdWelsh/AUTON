@@ -294,3 +294,22 @@ class TestARejectionMustPointAtTheChange:
                              "issues": [{"severity": "critical", "file": "a.c"}]}, ["a.c"])
 
         assert out["verdict"] == "request_changes"
+
+
+class TestWorkStaysOnItsBranch:
+    def test_leaving_an_agent_branch_commits_its_untracked_work_there(self, tmp_path):
+        """Defect nine, from the third live run: an architect's uncommitted
+        header rode `git checkout` onto the developer's branch and was merged
+        with a one-line change."""
+        ws = _repo(tmp_path)
+        ws.create_branch("architect-01", "arch", "architecture")
+        (tmp_path / "arch_defs.h").write_text("#define X 1\n")
+
+        ws.checkout_main()
+        ws.create_branch("dev-01", "x", "1")
+
+        assert not (tmp_path / "arch_defs.h").exists(), "it must not follow onto another branch"
+        shown = subprocess.run(["git", "-C", str(tmp_path), "show", "--name-only", "--format=",
+                                "agent/architect-01/arch-architecture"],
+                               capture_output=True, text=True).stdout.split()
+        assert shown == ["arch_defs.h"], "it stays, committed, on the branch that made it"

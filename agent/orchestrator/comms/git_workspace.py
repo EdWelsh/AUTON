@@ -151,8 +151,22 @@ class GitWorkspace:
         self.repo.git.checkout(branch)
 
     def checkout_main(self) -> None:
-        """Switch back to main branch."""
+        """Switch back to main branch, keeping work on the branch that made it.
+
+        Untracked files survive `git checkout`. On w12's third live run an
+        architect wrote a 255-line header on its design branch without
+        committing it; the checkout carried it onto the developer's branch,
+        and it was merged as part of a one-line change. Uncommitted work on an
+        agent branch is therefore committed there before switching.
+        """
         main = self._get_main_branch()
+        try:
+            current = self.repo.active_branch.name
+        except TypeError:           # detached HEAD
+            current = None
+        if current and current != main:
+            if self.commit_pending(current, f"uncommitted work left on {current}"):
+                logger.info("Committed uncommitted work on %s before leaving it", current)
         self.repo.git.checkout(main)
 
     def read_file(self, path: str) -> str:
