@@ -42,3 +42,18 @@ including after that tree is retired.
   and carry no type information.
 - A graph is not buildable or bootable. It preserves what a working implementation looked
   like; it does not preserve a working implementation.
+
+## Bases
+
+Two tagged trees exist. Neither is in `main`; `kernels/` is gitignored and a test
+(`test_scaffold.py::TestTheRepoContainsNoKernel`) keeps it out of the index.
+
+| Tag | Commit | What it is | Use it for |
+|---|---|---|---|
+| `kernel-reference-v1` | the retired hand-written tree | the source of this directory's graph and training pairs | reading, never as an experiment base |
+| `kernel-base-v2` | `70f3e49` (`5fb2777^`) | v1 + F4's factory hooks: the static-IP branch in `net/setup.c` (+22) and a weak `service_main` in `boot/kernel_main.c` (+10) | **every generation experiment** |
+
+`scripts/kernel-base.sh <dir> [--git] [--rev TAG]` extracts one. The difference matters:
+seeded from v1, a TFTP service is refused at `[gate: link closure] no stub signature for:
+dhcp_run` before any service code is considered; from v2 it is refused only at `undefined:
+tftp_serve`, which is the agent's job. `test_kernel_base.py` pins both.

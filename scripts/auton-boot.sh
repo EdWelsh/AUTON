@@ -19,7 +19,7 @@ KDIR="$ROOT/kernels/$ARCH"
 if [ ! -d "$KDIR/kernel" ]; then
 	echo "no kernel tree at ${KDIR#"$ROOT"/}" >&2
 	echo "AUTON's premise is that the agents write it (README.md). Generate one," >&2
-	echo "or restore the reference: git checkout kernel-reference-v1 -- kernels/" >&2
+	echo "or extract the agreed base: scripts/kernel-base.sh kernels/x86_64" >&2
 	exit 2
 fi
 cd "$KDIR"

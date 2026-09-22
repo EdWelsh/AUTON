@@ -32,6 +32,8 @@ jobs:
     name: ${{ matrix.label }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # the kernel-base tags; see scripts/kernel-base.sh
 
       - uses: actions/setup-python@v5
         with:

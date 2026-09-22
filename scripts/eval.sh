@@ -58,7 +58,7 @@ if [ ! -f "$KTREE/Makefile" ]; then
 	echo "  agent/kernel_spec/. Scaffold and build a tree with:" >&2
 	echo "    agent/tools/build_service.py <service> --tree <dir> --iso" >&2
 	echo "  or restore the retired reference:" >&2
-	echo "    git checkout kernel-reference-v1 -- kernels/" >&2
+	echo "    scripts/kernel-base.sh kernels/x86_64" >&2
 	exit 2
 fi
 
