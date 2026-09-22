@@ -18,6 +18,7 @@ typedef struct boot_module {
 /* Hardware summary handed to the SLM runtime at init. */
 typedef struct hw_summary {
 	uint64_t total_ram_bytes;
+	uint32_t ram_source;       /* the tag that sized RAM: 6 (mmap), 17 (EFI mmap), 4, or 0 */
 	uint32_t pci_device_count;
 	uint32_t module_count;
 	boot_module_t modules[BOOT_MAX_MODULES];
@@ -26,6 +27,10 @@ typedef struct hw_summary {
 /* Parse the raw Multiboot2 info pointer into a hardware summary.
  * 'magic' is the value left in EAX by the bootloader (0x36D76289). */
 hw_summary_t boot_parse(uint32_t mb_info_ptr, uint32_t magic);
+
+/* The same, from a pointer: what boot_parse calls, and what host tests call
+ * (a 64-bit host cannot hand boot_parse a 32-bit address). */
+hw_summary_t boot_parse_info(const void *info, uint32_t magic);
 
 /* True if 'magic' is the Multiboot v1 boot magic. */
 int boot_magic_valid(uint32_t magic);
