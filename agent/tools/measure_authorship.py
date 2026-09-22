@@ -86,7 +86,9 @@ def section(text: str, heading: str) -> str | None:
 
 
 def spec_lines(root: Path, spec: dict) -> int | None:
-    text = read_text(root, spec["path"], spec.get("rev"))
+    # `in_repo`: the spec is read from the repo (read_spec), not from the
+    # experiment's workspace. Since w12 no spec is copied into a workspace.
+    text = read_text(ROOT if spec.get("in_repo") else root, spec["path"], spec.get("rev"))
     if text is None:
         return None
     if "section" not in spec:

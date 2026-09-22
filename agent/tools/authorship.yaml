@@ -69,7 +69,8 @@ subjects:
   tftp:
     kind: service
     role: "F6 experiment, agent-authored"
-    spec: {path: spec/tftp.md, authored_by: human}
+    spec: {path: agent/kernel_spec/services/tftp.md, in_repo: true, authored_by: human}
+    gate_tests: tests/kernel/tftp_test.c   # human, frozen at 0fa2589; not the agent's
     implementation:
       files: [kernel/services/tftp/server.c, kernel/services/tftp/serve.c]
     tests: [{path: tests/kernel/tftp_test.c}]
