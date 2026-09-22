@@ -77,7 +77,10 @@ auton_timeout() {
 	# suppresses that substitution.
 	"$@" <&0 &
 	local cmd_pid=$!
-	( sleep "$secs"; kill -TERM "$cmd_pid" 2>/dev/null ) &
+	# The killer's output goes to /dev/null: killing the subshell does not kill
+	# its `sleep`, and an orphaned sleep holding the caller's stdout keeps a
+	# downstream `| tee` waiting for EOF until the whole timeout elapses.
+	( sleep "$secs"; kill -TERM "$cmd_pid" 2>/dev/null ) >/dev/null 2>&1 &
 	local killer_pid=$!
 
 	local rc=0
