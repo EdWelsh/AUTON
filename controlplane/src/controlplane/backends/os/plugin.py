@@ -14,7 +14,7 @@ from __future__ import annotations
 
 from controlplane.core import Capability, CapabilityResult, CapabilityStatus
 
-from .builder import OSManager, kvm_available
+from .builder import OSManager, docker_available, kvm_available
 from .profiles import OSStatus, all_profiles, profile_for_text
 
 _STATUS_MARK = {
@@ -49,6 +49,9 @@ def _handle(text: str) -> CapabilityResult:
 
     # List running OS containers (must mention "running").
     if _wants(text, "running", "what's running", "list running", "ps"):
+        if not docker_available(mgr.docker):
+            return CapabilityResult.ok(
+                "Docker isn't installed on this host, so no AUTON OS containers are running.")
         names = mgr.running()
         if not names:
             return CapabilityResult.ok("No AUTON OS containers are running. Try 'boot the linux os'.")

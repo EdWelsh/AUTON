@@ -1,0 +1,48 @@
+# The control plane on all three host OSes (windows-linux C1).
+#
+# The host half of the chat OS had only ever run on macOS: the Windows and
+# Linux branches of the desktop launcher were never executed. This matrix runs
+# the whole suite plus a per-surface smoke test on each, so a host-specific
+# assumption fails here rather than on a user's machine.
+#
+# Headless runners have no desktop session, so the desktop smoke asserts on a
+# real process, not on a window. What that leaves unproved is recorded in
+# docs/HOST-MATRIX.md.
+name: controlplane
+
+on:
+  push:
+    paths: ["controlplane/**", ".github/workflows/controlplane.yml"]
+  pull_request:
+    paths: ["controlplane/**", ".github/workflows/controlplane.yml"]
+  workflow_dispatch:
+
+jobs:
+  suite:
+    name: ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-14, ubuntu-latest, windows-latest]
+    defaults:
+      run:
+        working-directory: controlplane
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install
+        run: python -m pip install -e ".[dev,ui]"
+
+      - name: Suite
+        run: python -m pytest -p no:cacheprovider -rs
+
+      # Named separately so a surface failing on one host is visible as that
+      # host's surface, not as one red suite among three.
+      - name: Surface smoke (terminal, ui, desktop runner)
+        run: python -m pytest -p no:cacheprovider -rs tests/test_platform_smoke.py

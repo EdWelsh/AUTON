@@ -179,7 +179,16 @@ class TestBackendHonesty:
         assert not offenders, f"raw tool output surfaced as a refusal: {offenders}"
 
     def test_known_raw_dump_gaps_are_still_gaps(self):
-        """Fails once a tracked gap is fixed, so the exemption cannot outlive it."""
+        """Fails once a tracked gap is fixed, so the exemption cannot outlive it.
+
+        The kubernetes gap needs kubectl present with no reachable cluster. On a
+        host without kubectl, or with a cluster, the backend does not dump, so
+        there is no gap to observe and the check says so rather than passing."""
+        from controlplane.backends.kubernetes.client import cluster_reachable, kubectl_path
+
+        if kubectl_path() is None or cluster_reachable():
+            pytest.skip("the tracked gap reproduces only with kubectl installed and no "
+                        "reachable cluster; this host is not that host")
         caps = {c.name: c for c in Registry(discover_capabilities()).unique_by_name()}
         for name in self.RAW_DUMP_KNOWN_GAPS:
             cap = caps.get(name)
@@ -269,6 +278,8 @@ class TestSurfacesStart:
 
     def test_console_scripts_are_declared(self):
         """The three entry points users are told to run must exist."""
-        pyproject = (REPO_ROOT / "controlplane" / "pyproject.toml").read_text()
+        # The package's own pyproject, wherever the package is checked out (a CI
+        # runner or container copies controlplane/ alone, without the repo).
+        pyproject = (Path(__file__).resolve().parents[1] / "pyproject.toml").read_text()
         for script in ("auton-chat", "auton-ui", "auton-desktop", "auton-do"):
             assert script in pyproject, f"{script} is not declared as a console script"

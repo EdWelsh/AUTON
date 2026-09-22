@@ -158,13 +158,19 @@ class OSManager:
         return StepResult(True, f"{profile.label} is running ({profile.container_name()}){where}")
 
     def stop(self, profile: OSProfile) -> StepResult:
+        if not docker_available(self.docker):
+            return StepResult(False, "Docker CLI not found on PATH, so nothing is running to stop.")
         cp = self._run([self.docker, "rm", "-f", profile.container_name()])
         if cp.returncode != 0:
             return StepResult(False, f"{profile.label} was not running.")
         return StepResult(True, f"Stopped {profile.label} ({profile.container_name()}).")
 
     def running(self) -> list[str]:
-        """Names of currently-running AUTON OS containers."""
+        """Names of currently-running AUTON OS containers. Without a Docker CLI
+        there are none (and asking must not crash: a Linux or Windows host
+        often has no Docker)."""
+        if not docker_available(self.docker):
+            return []
         cp = self._run(
             [self.docker, "ps", "--filter", "name=auton-", "--format", "{{.Names}}\t{{.Ports}}\t{{.Status}}"]
         )

@@ -143,3 +143,22 @@ def test_router_routes_list_running():
     reg = Registry(plugin.get_capabilities())
     res = Router(reg).route("what oses are running")
     assert res.handled  # returns either "none running" or the list, never errors
+
+
+def test_no_docker_cli_means_nothing_running_not_a_crash():
+    """w13 C1, on a Linux host without Docker: `docker ps` raised FileNotFoundError."""
+    from controlplane.backends.os.builder import OSManager
+    from controlplane.backends.os.profiles import all_profiles
+
+    mgr = OSManager(docker="no-such-docker-cli-auton")
+    assert mgr.running() == []
+    r = mgr.stop(all_profiles()[0])
+    assert not r.ok and "Docker CLI not found" in r.message
+
+
+def test_asking_what_is_running_without_docker_says_so(monkeypatch):
+    from controlplane.backends.os import plugin as os_plugin
+
+    monkeypatch.setattr(os_plugin, "docker_available", lambda *_: False)
+    res = Router(Registry(plugin.get_capabilities())).route("what oses are running")
+    assert res.handled and "Docker isn't installed" in res.text

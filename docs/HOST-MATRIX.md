@@ -18,6 +18,25 @@ looks uniformly verified when most of it is untested is worse than no matrix.
 | **Windows (native, MSYS2/MINGW)** | not established | `whpx` → `tcg` | **No.** No Windows host has run any AUTON script |
 | **Windows, WSL2** | as Linux x86_64 | `kvm` if nested virtualisation exposes `/dev/kvm`, else `tcg`. `uname -s` reports `Linux`, so it takes the Linux branch | **No** |
 
+## The control plane per host (C1)
+
+The host half of the chat OS (`controlplane/`). The `controlplane` workflow runs the whole suite
+and a per-surface smoke test (`tests/test_platform_smoke.py`) on all three.
+
+| Host | Suite | Terminal | UI (HTTP) | Desktop | Exercised? |
+|---|---|---|---|---|---|
+| **macOS, Apple Silicon** | 186 passed, 5 skipped | yes | yes | yes, real launch of TextEdit | **Yes** — 2026-09-22, local |
+| **Linux (container on this Mac, arm64)** | 178 passed, 13 skipped | yes | yes | **process only**: no `gtk-launch`/`xdg-open` and no session in a container | **Yes** — 2026-09-22, `python:3.12-slim` under Docker on the M4 Pro |
+| **Linux x86_64 (a real host)** | — | — | — | — | **Wired**: the matrix job covers it; no x86_64 Linux host has run the control plane |
+| **Windows** | — | — | — | — | **No.** No Windows host has run it; the matrix job is wired and needs a push |
+
+What no headless host can prove: that a window actually appeared. The desktop smoke asserts the
+launcher's runner executes a real process (on Windows through `cmd /c`, where `start` is a shell
+builtin). A real desktop check per OS is still owed, and is what the "Exercised?" column means.
+
+Fixed by running it on Linux: `what oses are running` crashed with `FileNotFoundError` on a host
+without a Docker CLI, and two tests assumed the repo layout and a kubectl-without-cluster host.
+
 ## Verifiable per host
 
 | Check | Apple Silicon | x86_64 Linux | Why it differs |

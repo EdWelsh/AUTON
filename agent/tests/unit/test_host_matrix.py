@@ -35,5 +35,10 @@ def test_every_table_with_an_exercised_column_says_how():
 
 
 def test_only_this_hosts_class_claims_yes():
-    yes = [r[0] for r in _rows(MATRIX.read_text()) if any(c.startswith("**Yes**") for c in r)]
-    assert all("Apple" in h or "macOS, Apple" in h for h in yes), yes
+    """A row may claim "Yes" only for the machine this project has: the Mac, or
+    a container running *on* it (which says so in the same cell — a Linux
+    container on Apple Silicon is not evidence about an x86_64 Linux host)."""
+    rows = [r for r in _rows(MATRIX.read_text()) if any(c.startswith("**Yes**") for c in r)]
+    for row in rows:
+        cell = next(c for c in row if c.startswith("**Yes**"))
+        assert "Apple" in row[0] or "on this Mac" in row[0] or "on the M4 Pro" in cell, row
