@@ -188,3 +188,20 @@ class TestAgainstTheRealSpecs:
         assert "ipv4" in s.capabilities
         assert "dhcp-client" not in s.capabilities
         assert "http-server" not in s.capabilities
+
+
+class TestFat32IsSplitFromItsWritePath:
+    """w12 F7: a read-only image must be able to require fat32 and exclude
+    writable, or "read-only file server" is unfalsifiable."""
+
+    def test_fat32_resolves_to_the_fs_subsystem(self):
+        from capability_slice import capability_slice
+
+        sl = capability_slice(["fat32"])
+        assert "fs" in sl.subsystems
+
+    def test_fat32_with_writable_excluded_is_admissible(self):
+        from capability_slice import capability_slice
+
+        sl = capability_slice(["fat32"], excludes=["writable"])
+        assert "fs" in sl.subsystems

@@ -648,3 +648,24 @@ vendors:
         form: pdf
         cadence: per-version
         notes: Free six months after publication; current revisions are paid.
+
+  # w12 (F7 storage): the on-disk format FAT32 is specified against. Microsoft
+  # publishes it freely; redistribution is not granted, so it is inventoried and
+  # cited by section, never committed. mtools (GNU) is the test oracle, not a
+  # citation: the spec is this document.
+  - vendor: microsoft
+    category: standards
+    identity_keys: [spec_version]
+    documents:
+      - id: fatgen103
+        title: "FAT: General Overview of On-Disk Format (v1.03)"
+        kind: standard
+        access: public-download
+        redistributable: false
+        form: pdf
+        cadence: static
+        licence: Microsoft terms of use (no redistribution)
+        url_hint: download.microsoft.com (fatgen103.doc / .pdf)
+        notes: >-
+          The FAT32 section of subsystems/fs.md cites it by section name: FAT Type
+          Determination, FSInfo Sector Structure, FAT Long Directory Entries, ChkSum.

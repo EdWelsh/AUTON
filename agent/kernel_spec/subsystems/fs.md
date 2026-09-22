@@ -1,9 +1,10 @@
 ---
 subsystem: fs
-provides: [vfs, initramfs, ext2, devfs, writable]
+provides: [vfs, initramfs, ext2, devfs, writable, fat32]
 depends_on: [mm, dev]
-optional: [ext2, devfs, writable]
+optional: [ext2, devfs, writable, fat32]
 # `initramfs` is read-only and needs no block driver; `writable` is the capability Doom excludes.
+# `fat32` is the read half of FAT32; its write half is `writable`, so a read-only image links no write path.
 ---
 
 # Filesystem Specification
@@ -408,6 +409,58 @@ typedef struct cpio_header {
 #define CPIO_MAGIC  "070701"
 #define CPIO_TRAILER "TRAILER!!!"
 ```
+
+## FAT32 (`fat32`; write path: `writable`)
+
+The factory's storage unlock (`auton-service-kernel-factory.prd.md` phase 7). FAT32 was chosen
+so a disk an image wrote can be read on the host, and that choice is also how it is tested: the
+host suite reads and writes volumes built by **mtools** and has mtools read back what it wrote.
+The format is Microsoft's *FAT: General Overview of On-Disk Format* v1.03, `fatgen103` in
+`agent/hardware/vendors.yaml`, cited below by section name.
+
+**Split.** The read half (`kernel/fs/fat32.c`) provides `fat32`. The write half
+(`kernel/fs/fat32_write.c`) provides `writable`. An image excluding `writable`, such as the
+read-only file server, links no FAT32 write code, and the leakage gate proves it.
+
+**Interface.** `tests/kernel/fat32_reference/include/fat32.h` is normative: mount, open, read,
+list, and the FAT accessor (read half); mount-rw, unmount, create, mkdir, append, truncate
+(write half); named negative error codes. It sits on the block interface in
+`subsystems/drivers.md` and calls nothing else below it.
+
+### Rules (REQUIRED)
+
+| Rule | fatgen103 | Why | Test |
+|---|---|---|---|
+| The type is decided by **cluster count** (≥ 65525 = FAT32), never by the BPB label | FAT Type Determination | a FAT16 volume labelled "FAT32" is still FAT16 | `a FAT16 volume is refused` |
+| 512-byte sectors only; any other size is refused at mount | BPB | stated scope, not a silent misread | mount |
+| FAT entries are **28 bits**; the top 4 are reserved, ignored on read, preserved on write | FAT32 cluster entries | an unmasked read follows a wrong cluster only when those bits are set, which mtools never does, so it needs its own test | `reserved top 4 bits … are ignored` |
+| EOC is ≥ 0x0FFFFFF8; 0x0FFFFFF7 (bad) or 0 (free) inside a chain is an error | FAT entry values | a chain through a free cluster reads another file's data | `a chain leaving the volume` |
+| A file's chain holds exactly ⌈size/cluster⌉ clusters and does not loop, checked (Brent) **before** reading | — | a step bound stops a hang but not a wrong answer: a loop within the first N clusters returns N clusters of the wrong data | `a looping cluster chain is an error` |
+| A long name belongs to the short entry after it only if the set is complete **and** its checksum matches that short name; otherwise it is an orphan and ignored | FAT Long Directory Entries, ChkSum | an orphaned LFN renames an unrelated file | `a long name whose checksum does not match` |
+| Every FAT write goes to **all** `BPB_NumFATs` copies | FAT | mirrors that disagree are what `fsck` "repairs" by choosing wrongly | `every FAT copy is identical`, `fsck.fat -n` |
+| FSInfo free count and next-free are **hints, never trusted**; a read-write mount marks both unknown (0xFFFFFFFF) | FSInfo Sector Structure | a stale next-free hands out a cluster in use | `FSInfo's lying next-free did not overwrite SEED.TXT` |
+| Allocation is first-fit from cluster 2, and a new cluster is zeroed | — | freed data must not reappear in a new file; a new directory cluster must read as empty | `a fragmented chain` |
+| Mount-rw clears FAT[1]'s clean-shutdown bit (bit 27) in every FAT; unmount sets it | FAT[1] ClnShutBitMask | the next mount knows the volume was not unmounted cleanly | both dirty-bit tests |
+| Created names are 8.3 only, upper-cased; a name not representable is **refused** (`FAT32_ENAME`), never mangled | Directory Structure | a silently mangled name is a file the caller cannot find | `a name that is not 8.3 is refused` |
+| "." and ".."; a directory in the root has ".." = cluster 0 | FAT Directory Structure | `fsck` flags any other value | mkdir, `fsck.fat -n` |
+| Every mutation is written through before the call returns | — | a caller acknowledging data (the KV store's `+OK`, SMTP's `250`) may do so as soon as the call succeeds | two-boot acceptance (w13) |
+
+### Markers (asserted by `scripts/run-storage-acceptance.sh`, w13)
+
+```
+[FS] mounted fat32
+[FS] read SEED.TXT <bytes> bytes
+[FS] wrote AUTON.TXT
+```
+
+### Verification
+
+`tests/kernel/run_fat32_test.sh --self-test` runs the 34 checks above against
+`tests/kernel/fat32_reference/`, then has mtools read back every file written and runs
+`fsck.fat -n` (dosfstools) when present. `KERNEL_TREE=<dir>` gates a generated
+`kernel/fs/fat32.c` (+ `fat32_write.c`): exit 2 means not generated, exit 1 means wrong. Five
+injected bugs are each caught: unmasked entries, a single FAT updated, FSInfo trusted, the LFN
+checksum skipped, and cluster→LBA off by one.
 
 ## Interface (`kernel/include/fs.h`)
 
