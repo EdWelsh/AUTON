@@ -103,6 +103,11 @@ jobs:
       - name: Fault harness state machine (H10)
         run: tests/kernel/run_fault_harness_test.sh --self-test
 
+      # The DTB parser is the first aarch64 code that can be proved, and it
+      # needs no aarch64: the fixtures are real QEMU virt trees.
+      - name: Device tree parser (aarch64)
+        run: tests/kernel/run_dtb_test.sh --self-test
+
       # The conformance harness proper. It builds the oracle everywhere (an
       # oracle that cannot be built is a broken harness), and the native venues
       # run only on x86: the next step asserts they did.

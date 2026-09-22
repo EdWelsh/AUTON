@@ -18,19 +18,43 @@
 # GRUB_MKRESCUE_EFI builds the UEFI ISO (windows-linux B3). Homebrew ships the
 # BIOS and EFI targets as separate formulas, so on macOS it is a second tool;
 # on Linux one grub-mkrescue does both when grub-efi-amd64-bin is installed.
-case "$(uname -s)" in
-	Darwin)
-		: "${CC:=x86_64-elf-gcc}"
-		: "${GRUB_MKRESCUE:=i686-elf-grub-mkrescue}"
-		: "${GRUB_MKRESCUE_EFI:=x86_64-elf-grub-mkrescue}"
+# ARCH selects the target. aarch64 needs no GRUB at all: QEMU's virt machine
+# takes the kernel with -kernel and hands it a device tree, which is why the
+# aarch64 bring-up starts with a DTB parser rather than a bootloader.
+#   brew install aarch64-elf-gcc     (Darwin)
+#   apt install gcc-aarch64-linux-gnu qemu-system-arm    (Debian/Ubuntu)
+: "${ARCH:=x86_64}"
+case "$ARCH" in
+	x86_64)
+		case "$(uname -s)" in
+			Darwin)
+				: "${CC:=x86_64-elf-gcc}"
+				: "${GRUB_MKRESCUE:=i686-elf-grub-mkrescue}"
+				: "${GRUB_MKRESCUE_EFI:=x86_64-elf-grub-mkrescue}"
+				;;
+			*)
+				: "${CC:=gcc}"
+				: "${GRUB_MKRESCUE:=grub-mkrescue}"
+				: "${GRUB_MKRESCUE_EFI:=grub-mkrescue}"
+				;;
+		esac
+		: "${QEMU:=qemu-system-x86_64}"
+		;;
+	aarch64)
+		case "$(uname -s)" in
+			Darwin) : "${CC:=aarch64-elf-gcc}" ;;
+			*)      : "${CC:=aarch64-linux-gnu-gcc}" ;;
+		esac
+		: "${GRUB_MKRESCUE:=}"
+		: "${GRUB_MKRESCUE_EFI:=}"
+		: "${QEMU:=qemu-system-aarch64}"
 		;;
 	*)
-		: "${CC:=gcc}"
-		: "${GRUB_MKRESCUE:=grub-mkrescue}"
-		: "${GRUB_MKRESCUE_EFI:=grub-mkrescue}"
+		echo "unknown ARCH '$ARCH' (x86_64, aarch64)" >&2
+		return 1 2>/dev/null || exit 1
 		;;
 esac
-: "${QEMU:=qemu-system-x86_64}"
+export ARCH
 
 export CC GRUB_MKRESCUE GRUB_MKRESCUE_EFI QEMU
 
