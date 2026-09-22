@@ -63,6 +63,11 @@ uint32_t slm_neural_infer(const uint32_t *input_tokens, uint32_t input_len,
 /* Reset the KV cache (start a fresh context). */
 void slm_neural_reset_cache(void);
 
+/* The device table (model format v3): a registry name for (bus, vendor,
+ * device), bus 0 = PCI, 1 = USB; NULL when absent or no model is loaded.
+ * Retrieval only: the model never generates a device name. */
+const char *slm_neural_device_name(uint16_t bus, uint16_t vendor, uint16_t device);
+
 /* Write a short model-info string ("auton-slm-tiny (10M, int8) 11 MB"). */
 void slm_neural_model_info(char *buf, uint32_t buf_size);
 

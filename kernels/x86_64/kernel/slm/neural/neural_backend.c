@@ -17,8 +17,11 @@
 /* v2: the vocabulary carries <sep> (id 4) dividing a question from its
  * answer. A v1 model has no such token, so prompting one with <sep> would
  * feed it an id meaning something else — silently wrong output rather than
- * a load error. Hence the exact-version check below. */
-#define VERSION    2u
+ * a load error. Hence the exact-version check below.
+ * v3: a device table follows the tokenizer (SLM/tools/auton_format.py). A v2
+ * reader handed a v3 file would parse the table as further tokenizer entries,
+ * the same silently-wrong failure, so the check stays exact. */
+#define VERSION    3u
 #define QUANT_FP32 0u
 #define QUANT_INT8 1u
 
@@ -87,6 +90,13 @@ struct model {
 	/* Tokenizer: id -> string, in a contiguous block. */
 	const char *vocab[MODEL_MAX_VOCAB_CAP];
 	uint8_t     vocab_len[MODEL_MAX_VOCAB_CAP];
+
+	/* Device table (v3): fixed 12-byte entries sorted by (bus, vendor,
+	 * device), names in one pool. Searched in place in the module. */
+	const uint8_t *dev_entries;
+	uint32_t       dev_count;
+	const char    *dev_pool;
+	uint32_t       dev_pool_len;
 
 	/* Runtime scratch (from the DMA arena). */
 	float *x, *xb, *xb2, *hb, *hb2, *q, *att, *logits;
@@ -224,6 +234,33 @@ int slm_neural_load_model(const void *data, uint64_t size, model_format_t fmt)
 		t += len;
 	}
 
+	/* Device table (v3). Untrusted like the rest: every length is checked
+	 * against the end of the module before it is followed. */
+	{
+		uint32_t count, rev_len, pool_len;
+		if (t + 8 > end)
+			return SLM_ERR_TRUNCATED;
+		__builtin_memcpy(&count, t, 4);
+		__builtin_memcpy(&rev_len, t + 4, 4);
+		t += 8;
+		if (rev_len > 256 || t + rev_len > end)
+			return SLM_ERR_TRUNCATED;
+		t += rev_len;
+		if (count > (uint32_t)((end - t) / 12))
+			return SLM_ERR_TRUNCATED;
+		M.dev_entries = t;
+		M.dev_count = count;
+		t += (uint64_t)count * 12;
+		if (t + 4 > end)
+			return SLM_ERR_TRUNCATED;
+		__builtin_memcpy(&pool_len, t, 4);
+		t += 4;
+		if (pool_len > (uint64_t)(end - t))
+			return SLM_ERR_TRUNCATED;
+		M.dev_pool = (const char *)t;
+		M.dev_pool_len = pool_len;
+	}
+
 	/* Allocate runtime buffers. Cap context to bound the KV cache. */
 	M.ctx = M.seq_len < MAX_CTX ? M.seq_len : MAX_CTX;
 	uint32_t nh_hd = M.n_heads * hd;
@@ -242,6 +279,33 @@ int slm_neural_load_model(const void *data, uint64_t size, model_format_t fmt)
 
 	M.pos = 0;
 	M.loaded = 1;
+	return 0;
+}
+
+const char *slm_neural_device_name(uint16_t bus, uint16_t vendor, uint16_t device)
+{
+	if (!M.loaded || !M.dev_count)
+		return 0;
+	uint64_t want = (uint64_t)bus << 32 | (uint64_t)vendor << 16 | device;
+	uint32_t lo = 0, hi = M.dev_count;
+	while (lo < hi) {
+		uint32_t mid = lo + (hi - lo) / 2;
+		const uint8_t *e = M.dev_entries + (uint64_t)mid * 12;
+		uint16_t b, v, d;
+		__builtin_memcpy(&b, e, 2);
+		__builtin_memcpy(&v, e + 2, 2);
+		__builtin_memcpy(&d, e + 4, 2);
+		uint64_t key = (uint64_t)b << 32 | (uint64_t)v << 16 | d;
+		if (key == want) {
+			uint32_t off;
+			__builtin_memcpy(&off, e + 8, 4);
+			return off < M.dev_pool_len ? M.dev_pool + off : 0;
+		}
+		if (key < want)
+			lo = mid + 1;
+		else
+			hi = mid;
+	}
 	return 0;
 }
 
