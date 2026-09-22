@@ -21,6 +21,7 @@ from orchestrator.agents.tester_agent import TesterAgent
 from orchestrator.agents.training_agent import TrainingAgent
 from orchestrator.comms.git_workspace import GitWorkspace
 from orchestrator.comms.message_bus import MessageBus
+from orchestrator.core import syntax_gate
 from orchestrator.core.scheduler import Scheduler
 from orchestrator.core.state import OrchestratorState
 from orchestrator.core.task_graph import TaskGraph, TaskState
@@ -509,26 +510,43 @@ class OrchestrationEngine:
                 self.task_graph.fail(node.task_id, f"merge conflict with main ({branch})")
                 self.state.tasks_failed += 1
 
+    def _syntax_errors(self, branch: str) -> str | None:
+        """The compiler's errors for the C files `branch` changed, or None."""
+        _, changed = self.workspace.branch_diff(branch)
+        self.workspace.checkout(branch)
+        try:
+            return syntax_gate.check(self.workspace.path, changed)
+        finally:
+            self.workspace.checkout_main()
+
     async def _trigger_review(self, task_node: Any, result: TaskResult) -> None:
         """Review a task with real changes; a rejection returns to its author."""
         if not result.branch:
             return
 
-        reviewer_slot = self.scheduler.get_available_agent("reviewer")
-        if reviewer_slot is None:
-            logger.info("No reviewer available, task %s queued for review", task_node.task_id)
-            return
+        # Whether C compiles is not a judgement call: a compiler answers it
+        # before a reviewer model is asked anything (syntax_gate.py).
+        errors = self._syntax_errors(result.branch)
+        if errors is not None:
+            review_result = {"verdict": "request_changes",
+                             "summary": f"the change does not compile:\n{errors}"}
+        else:
+            reviewer_slot = self.scheduler.get_available_agent("reviewer")
+            if reviewer_slot is None:
+                logger.info("No reviewer available, task %s queued for review",
+                            task_node.task_id)
+                return
 
-        reviewer_slot.busy = True
-        brief = f"{task_node.title}\n{task_node.data.get('description', '')}".strip()
-        review_result = await reviewer_slot.agent.review_branch(
-            task_node.task_id, result.branch, brief
-        )
-        reviewer_slot.busy = False
+            reviewer_slot.busy = True
+            brief = f"{task_node.title}\n{task_node.data.get('description', '')}".strip()
+            review_result = await reviewer_slot.agent.review_branch(
+                task_node.task_id, result.branch, brief
+            )
+            reviewer_slot.busy = False
 
-        if review_result.get("verdict") == "approve":
-            self.task_graph.update_state(task_node.task_id, TaskState.APPROVED)
-            return
+            if review_result.get("verdict") == "approve":
+                self.task_graph.update_state(task_node.task_id, TaskState.APPROVED)
+                return
 
         limit = int(self.config.get("orchestrator", {}).get("max_review_rounds", 3))
         node = self.task_graph.requeue(task_node.task_id, review_result)
