@@ -1,0 +1,1911 @@
+# Evidence of OS mitigation per erratum, for agent/tools/sweep.py (H12).
+# Collected by agent/tools/collect_os_evidence.py; `candidate` entries are
+# confirmed or rejected by a person (reviewed: true). Never copied code.
+errata:
+  ADL001:
+    document: intel/intel-spec-update
+    evidence:
+    - checked: '2026-09-22'
+      kind: none-found
+      os: linux
+      queries:
+      - ADL001
+      - X87 FDP Value May be Saved Incorrectly
+    - checked: '2026-09-22'
+      kind: none-found
+      os: freebsd
+      queries:
+      - ADL001
+      - X87 FDP Value May be Saved Incorrectly
+    - kind: not-checked
+      os: windows
+      why: no searchable source; KB articles are not indexed by erratum
+    title: X87 FDP Value May be Saved Incorrectly
+    vendor_status: No Fix
+  ADL002:
+    document: intel/intel-spec-update
+    evidence:
+    - checked: '2026-09-22'
+      kind: none-found
+      os: linux
+      queries:
+      - ADL002
+      - Debug Exceptions May Be Lost or Misreported When MOV SS or POP SS Instruction is Not Followed
+        By a Write to SP
+    - checked: '2026-09-22'
+      kind: none-found
+      os: freebsd
+      queries:
+      - ADL002
+      - Debug Exceptions May Be Lost or Misreported When MOV SS or POP SS Instruction is Not Followed
+        By a Write to SP
+    - kind: not-checked
+      os: windows
+      why: no searchable source; KB articles are not indexed by erratum
+    title: Debug Exceptions May Be Lost or Misreported When MOV SS or POP SS Instruction is Not Followed
+      By a Write to SP
+    vendor_status: No Fix
+  ADL003:
+    document: intel/intel-spec-update
+    evidence:
+    - checked: '2026-09-22'
+      kind: none-found
+      os: linux
+      queries:
+      - ADL003
+      - N/A. Erratum has been removed.
+    - checked: '2026-09-22'
+      kind: none-found
+      os: freebsd
+      queries:
+      - ADL003
+      - N/A. Erratum has been removed.
+    - kind: not-checked
+      os: windows
+      why: no searchable source; KB articles are not indexed by erratum
+    title: N/A. Erratum has been removed.
+    vendor_status: N/A
+  ADL004:
+    document: intel/intel-spec-update
+    evidence:
+    - checked: '2026-09-22'
+      kind: none-found
+      os: linux
+      queries:
+      - ADL004
+      - 'BMI1, BMI2, LZCNT, ADXC, and ADOX Instructions May Not Generate an #UD'
+    - checked: '2026-09-22'
+      kind: none-found
+      os: freebsd
+      queries:
+      - ADL004
+      - 'BMI1, BMI2, LZCNT, ADXC, and ADOX Instructions May Not Generate an #UD'
+    - kind: not-checked
+      os: windows
+      why: no searchable source; KB articles are not indexed by erratum
+    title: 'BMI1, BMI2, LZCNT, ADXC, and ADOX Instructions May Not Generate an #UD'
+    vendor_status: No Fix
+  ADL005:
+    document: intel/intel-spec-update
+    evidence:
+    - checked: '2026-09-22'
+      kind: none-found
+      os: linux
+      queries:
+      - ADL005
+      - Exit Qualification For EPT Violations on Instruction Fetches May Incorrectly Indicate That The
+        Guest-physical Address Was Writeable
+    - checked: '2026-09-22'
+      kind: none-found
+      os: freebsd
+      queries:
+      - ADL005
+      - Exit Qualification For EPT Violations on Instruction Fetches May Incorrectly Indicate That The
+        Guest-physical Address Was Writeable
+    - kind: not-checked
+      os: windows
+      why: no searchable source; KB articles are not indexed by erratum
+    title: Exit Qualification For EPT Violations on Instruction Fetches May Incorrectly Indicate That
+      The Guest-physical Address Was Writeable
+    vendor_status: No Fix
+  ADL006:
+    document: intel/intel-spec-update
+    evidence:
+    - checked: '2026-09-22'
+      kind: none-found
+      os: linux
+      queries:
+      - ADL006
+      - Processor May Generate Spurious Page Faults On Shadow Stack Pages
+    - checked: '2026-09-22'
+      kind: none-found
+      os: freebsd
+      queries:
+      - ADL006
+      - Processor May Generate Spurious Page Faults On Shadow Stack Pages
+    - kind: not-checked
+      os: windows
+      why: no searchable source; KB articles are not indexed by erratum
+    title: Processor May Generate Spurious Page Faults On Shadow Stack Pages
+    vendor_status: No Fix
+  ADL007:
+    document: intel/intel-spec-update
+    evidence:
+    - checked: '2026-09-22'
+      kind: none-found
+      os: linux
+      queries:
+      - ADL007
+      - Processor May Hang if Warm Reset Triggers During BIOS Initialization
+    - checked: '2026-09-22'
+      kind: none-found
+      os: freebsd
+      queries:
+      - ADL007
+      - Processor May Hang if Warm Reset Triggers During BIOS Initialization
+    - kind: not-checked
+      os: windows
+      why: no searchable source; KB articles are not indexed by erratum
+    title: Processor May Hang if Warm Reset Triggers During BIOS Initialization
+    vendor_status: No Fix
+  ADL008:
+    document: intel/intel-spec-update
+    evidence:
+    - checked: '2026-09-22'
+      kind: none-found
+      os: linux
+      queries:
+      - ADL008
+      - System May Hang When Bus-Lock Detection Is Enabled And EPT Resides in Uncacheable Memory
+    - checked: '2026-09-22'
+      kind: none-found
+      os: freebsd
+      queries:
+      - ADL008
+      - System May Hang When Bus-Lock Detection Is Enabled And EPT Resides in Uncacheable Memory
+    - kind: not-checked
+      os: windows
+      why: no searchable source; KB articles are not indexed by erratum
+    title: System May Hang When Bus-Lock Detection Is Enabled And EPT Resides in Uncacheable Memory
+    vendor_status: No Fix
+  ADL009:
+    document: intel/intel-spec-update
+    evidence:
+    - checked: '2026-09-22'
+      kind: none-found
+      os: linux
+      queries:
+      - ADL009
+      - Processor May Generate Malformed TLP
+    - checked: '2026-09-22'
+      kind: none-found
+      os: freebsd
+      queries:
+      - ADL009
+      - Processor May Generate Malformed TLP
+    - kind: not-checked
+      os: windows
+      why: no searchable source; KB articles are not indexed by erratum
+    title: Processor May Generate Malformed TLP
+    vendor_status: No Fix
+  ADL010:
+    document: intel/intel-spec-update
+    evidence:
+    - checked: '2026-09-22'
+      kind: none-found
+      os: linux
+      queries:
+      - ADL010
+      - 'No #GP May be Signaled When Setting MSR_MISC_PWR_MGMT.ENABLE_SDC if MSR_MISC_PWR_MGMT.LOCK is
+        Set'
+    - checked: '2026-09-22'
+      kind: none-found
+      os: freebsd
+      queries:
+      - ADL010
+      - 'No #GP May be Signaled When Setting MSR_MISC_PWR_MGMT.ENABLE_SDC if MSR_MISC_PWR_MGMT.LOCK is
+        Set'
+    - kind: not-checked
+      os: windows
+      why: no searchable source; KB articles are not indexed by erratum
+    title: 'No #GP May be Signaled When Setting MSR_MISC_PWR_MGMT.ENABLE_SDC if MSR_MISC_PWR_MGMT.LOCK
+      is Set'
+    vendor_status: No Fix
+  ADL011:
+    document: intel/intel-spec-update
+    evidence:
+    - checked: '2026-09-22'
+      kind: none-found
+      os: linux
+      queries:
+      - ADL011
+      - N/A. Erratum has been removed.
+    - checked: '2026-09-22'
+      kind: none-found
+      os: freebsd
+      queries:
+      - ADL011
+      - N/A. Erratum has been removed.
+    - kind: not-checked
+      os: windows
+      why: no searchable source; KB articles are not indexed by erratum
+    title: N/A. Erratum has been removed.
+    vendor_status: N/A
+  ADL012:
+    document: intel/intel-spec-update
+    evidence:
+    - checked: '2026-09-22'
+      kind: none-found
+      os: linux
+      queries:
+      - ADL012
+      - Last Branch Records May Not Survive Warm Reset
+    - checked: '2026-09-22'
+      kind: none-found
+      os: freebsd
+      queries:
+      - ADL012
+      - Last Branch Records May Not Survive Warm Reset
+    - kind: not-checked
+      os: windows
+      why: no searchable source; KB articles are not indexed by erratum
+    title: Last Branch Records May Not Survive Warm Reset
+    vendor_status: No Fix
+  ADL013:
+    document: intel/intel-spec-update
+    evidence:
+    - checked: '2026-09-22'
+      kind: none-found
+      os: linux
+      queries:
+      - ADL013
+      - PCIe Link May Fail to Train Upon Exit From L1.2
+    - checked: '2026-09-22'
+      kind: none-found
+      os: freebsd
+      queries:
+      - ADL013
+      - PCIe Link May Fail to Train Upon Exit From L1.2
+    - kind: not-checked
+      os: windows
+      why: no searchable source; KB articles are not indexed by erratum
+    title: PCIe Link May Fail to Train Upon Exit From L1.2
+    vendor_status: No Fix
+  ADL014:
+    document: intel/intel-spec-update
+    evidence:
+    - checked: '2026-09-22'
+      kind: none-found
+      os: linux
+      queries:
+      - ADL014
+      - Incorrectly Formed PCIe Packets May Generate Correctable Errors
+    - checked: '2026-09-22'
+      kind: none-found
+      os: freebsd
+      queries:
+      - ADL014
+      - Incorrectly Formed PCIe Packets May Generate Correctable Errors
+    - kind: not-checked
+      os: windows
+      why: no searchable source; KB articles are not indexed by erratum
+    title: Incorrectly Formed PCIe Packets May Generate Correctable Errors
+    vendor_status: No Fix
+  ADL015:
+    document: intel/intel-spec-update
+    evidence:
+    - checked: '2026-09-22'
+      kind: none-found
+      os: linux
+      queries:
+      - ADL015
+      - '#UD May be Delivered Instead of Other Exceptions'
+    - checked: '2026-09-22'
+      kind: none-found
+      os: freebsd
+      queries:
+      - ADL015
+      - '#UD May be Delivered Instead of Other Exceptions'
+    - kind: not-checked
+      os: windows
+      why: no searchable source; KB articles are not indexed by erratum
+    title: '#UD May be Delivered Instead of Other Exceptions'
+    vendor_status: No Fix
+  ADL016:
+    document: intel/intel-spec-update
+    evidence:
+    - checked: '2026-09-22'
+      kind: none-found
+      os: linux
+      queries:
+      - ADL016
+      - Type-C Host Controller Does Not Support Certain Qword Accesses
+    - checked: '2026-09-22'
+      kind: none-found
+      os: freebsd
+      queries:
+      - ADL016
+      - Type-C Host Controller Does Not Support Certain Qword Accesses
+    - kind: not-checked
+      os: windows
+      why: no searchable source; KB articles are not indexed by erratum
+    title: Type-C Host Controller Does Not Support Certain Qword Accesses
+    vendor_status: N/A
+  ADL017:
+    document: intel/intel-spec-update
+    evidence:
+    - checked: '2026-09-22'
+      kind: none-found
+      os: linux
+      queries:
+      - ADL017
+      - '#GP May be Serviced Before an Instruction Breakpoint'
+    - checked: '2026-09-22'
+      kind: none-found
+      os: freebsd
+      queries:
+      - ADL017
+      - '#GP May be Serviced Before an Instruction Breakpoint'
+    - kind: not-checked
+      os: windows
+      why: no searchable source; KB articles are not indexed by erratum
+    title: '#GP May be Serviced Before an Instruction Breakpoint'
+    vendor_status: No Fix
+  ADL018:
+    document: intel/intel-spec-update
+    evidence:
+    - checked: '2026-09-22'
+      kind: none-found
+      os: linux
+      queries:
+      - ADL018
+      - 'Unexpected #PF Exception Might Be Serviced Before a #GP Exception'
+    - checked: '2026-09-22'
+      kind: none-found
+      os: freebsd
+      queries:
+      - ADL018
+      - 'Unexpected #PF Exception Might Be Serviced Before a #GP Exception'
+    - kind: not-checked
+      os: windows
+      why: no searchable source; KB articles are not indexed by erratum
+    title: 'Unexpected #PF Exception Might Be Serviced Before a #GP Exception'
+    vendor_status: No Fix
+  ADL019:
+    document: intel/intel-spec-update
+    evidence:
+    - checked: '2026-09-22'
+      kind: none-found
+      os: linux
+      queries:
+      - ADL019
+      - 'WRMSR to Reserved Bits of IA32_L3_QOS_Mask_15 May Not Signal a #GP'
+    - checked: '2026-09-22'
+      kind: none-found
+      os: freebsd
+      queries:
+      - ADL019
+      - 'WRMSR to Reserved Bits of IA32_L3_QOS_Mask_15 May Not Signal a #GP'
+    - kind: not-checked
+      os: windows
+      why: no searchable source; KB articles are not indexed by erratum
+    title: 'WRMSR to Reserved Bits of IA32_L3_QOS_Mask_15 May Not Signal a #GP'
+    vendor_status: No Fix
+  ADL020:
+    document: intel/intel-spec-update
+    evidence:
+    - checked: '2026-09-22'
+      kind: none-found
+      os: linux
+      queries:
+      - ADL020
+      - VMX-Preemption Timer May Not Work if Configured With a Value of 1
+    - checked: '2026-09-22'
+      kind: none-found
+      os: freebsd
+      queries:
+      - ADL020
+      - VMX-Preemption Timer May Not Work if Configured With a Value of 1
+    - kind: not-checked
+      os: windows
+      why: no searchable source; KB articles are not indexed by erratum
+    title: VMX-Preemption Timer May Not Work if Configured With a Value of 1
+    vendor_status: No Fix
+  ADL021:
+    document: intel/intel-spec-update
+    evidence:
+    - checked: '2026-09-22'
+      kind: none-found
+      os: linux
+      queries:
+      - ADL021
+      - Setting MISC_FEATURE_CONTROL.DISABLE_THREE_STRIKE_CNT Does Not Prevent The Three-strike Counter
+        From Incrementing
+    - checked: '2026-09-22'
+      kind: none-found
+      os: freebsd
+      queries:
+      - ADL021
+      - Setting MISC_FEATURE_CONTROL.DISABLE_THREE_STRIKE_CNT Does Not Prevent The Three-strike Counter
+        From Incrementing
+    - kind: not-checked
+      os: windows
+      why: no searchable source; KB articles are not indexed by erratum
+    title: Setting MISC_FEATURE_CONTROL.DISABLE_THREE_STRIKE_CNT Does Not Prevent The Three-strike Counter
+      From Incrementing
+    vendor_status: No Fix
+  ADL022:
+    document: intel/intel-spec-update
+    evidence:
+    - checked: '2026-09-22'
+      kind: none-found
+      os: linux
+      queries:
+      - ADL022
+      - N/A. Erratum has been removed.
+    - checked: '2026-09-22'
+      kind: none-found
+      os: freebsd
+      queries:
+      - ADL022
+      - N/A. Erratum has been removed.
+    - kind: not-checked
+      os: windows
+      why: no searchable source; KB articles are not indexed by erratum
+    title: N/A. Erratum has been removed.
+    vendor_status: N/A
+  ADL023:
+    document: intel/intel-spec-update
+    evidence:
+    - checked: '2026-09-22'
+      kind: none-found
+      os: linux
+      queries:
+      - ADL023
+      - Unable to Transmit Modified Compliance Test Pattern at 2.5 GT/S or 5.0 GT/s Link Speeds
+    - checked: '2026-09-22'
+      kind: none-found
+      os: freebsd
+      queries:
+      - ADL023
+      - Unable to Transmit Modified Compliance Test Pattern at 2.5 GT/S or 5.0 GT/s Link Speeds
+    - kind: not-checked
+      os: windows
+      why: no searchable source; KB articles are not indexed by erratum
+    title: Unable to Transmit Modified Compliance Test Pattern at 2.5 GT/S or 5.0 GT/s Link Speeds
+    vendor_status: No Fix
+  ADL024:
+    document: intel/intel-spec-update
+    evidence:
+    - checked: '2026-09-22'
+      kind: none-found
+      os: linux
+      queries:
+      - ADL024
+      - Single Core Configurations May Hang on S3/S4 Resume
+    - checked: '2026-09-22'
+      kind: none-found
+      os: freebsd
+      queries:
+      - ADL024
+      - Single Core Configurations May Hang on S3/S4 Resume
+    - kind: not-checked
+      os: windows
+      why: no searchable source; KB articles are not indexed by erratum
+    title: Single Core Configurations May Hang on S3/S4 Resume
+    vendor_status: Fixed
+  ADL025:
+    document: intel/intel-spec-update
+    evidence:
+    - checked: '2026-09-22'
+      kind: none-found
+      os: linux
+      queries:
+      - ADL025
+      - Single Step on Branches Might be Missed When VMM Enables Notification On VM Exit
+    - checked: '2026-09-22'
+      kind: none-found
+      os: freebsd
+      queries:
+      - ADL025
+      - Single Step on Branches Might be Missed When VMM Enables Notification On VM Exit
+    - kind: not-checked
+      os: windows
+      why: no searchable source; KB articles are not indexed by erratum
+    title: Single Step on Branches Might be Missed When VMM Enables Notification On VM Exit
+    vendor_status: No Fix
+  ADL026:
+    document: intel/intel-spec-update
+    evidence:
+    - checked: '2026-09-22'
+      kind: none-found
+      os: linux
+      queries:
+      - ADL026
+      - Reading The PPERF MSR May Not Return Correct Values
+    - checked: '2026-09-22'
+      kind: none-found
+      os: freebsd
+      queries:
+      - ADL026
+      - Reading The PPERF MSR May Not Return Correct Values
+    - kind: not-checked
+      os: windows
+      why: no searchable source; KB articles are not indexed by erratum
+    title: Reading The PPERF MSR May Not Return Correct Values
+    vendor_status: No Fix
+  ADL027:
+    document: intel/intel-spec-update
+    evidence:
+    - checked: '2026-09-22'
+      kind: none-found
+      os: linux
+      queries:
+      - ADL027
+      - 'Incorrect #CP Error Code on UIRET'
+    - checked: '2026-09-22'
+      kind: none-found
+      os: freebsd
+      queries:
+      - ADL027
+      - 'Incorrect #CP Error Code on UIRET'
+    - kind: not-checked
+      os: windows
+      why: no searchable source; KB articles are not indexed by erratum
+    title: 'Incorrect #CP Error Code on UIRET'
+    vendor_status: No Fix
+  ADL028:
+    document: intel/intel-spec-update
+    evidence:
+    - checked: '2026-09-22'
+      kind: none-found
+      os: linux
+      queries:
+      - ADL028
+      - Processor May Not Wake From TPAUSE/UMWAIT in Limited Situations
+    - checked: '2026-09-22'
+      kind: none-found
+      os: freebsd
+      queries:
+      - ADL028
+      - Processor May Not Wake From TPAUSE/UMWAIT in Limited Situations
+    - kind: not-checked
+      os: windows
+      why: no searchable source; KB articles are not indexed by erratum
+    title: Processor May Not Wake From TPAUSE/UMWAIT in Limited Situations
+    vendor_status: Fixed
+  ADL029:
+    document: intel/intel-spec-update
+    evidence:
+    - checked: '2026-09-22'
+      kind: none-found
+      os: linux
+      queries:
+      - ADL029
+      - Platform May Not Resume From G3/S3/S4/S5
+    - checked: '2026-09-22'
+      kind: none-found
+      os: freebsd
+      queries:
+      - ADL029
+      - Platform May Not Resume From G3/S3/S4/S5
+    - kind: not-checked
+      os: windows
+      why: no searchable source; KB articles are not indexed by erratum
+    title: Platform May Not Resume From G3/S3/S4/S5
+    vendor_status: Fixed
+  ADL030:
+    document: intel/intel-spec-update
+    evidence:
+    - checked: '2026-09-22'
+      kind: none-found
+      os: linux
+      queries:
+      - ADL030
+      - "Intel\xAE Processor Trace PSB+ Packets May Contain Unexpected Packets"
+    - checked: '2026-09-22'
+      kind: none-found
+      os: freebsd
+      queries:
+      - ADL030
+      - "Intel\xAE Processor Trace PSB+ Packets May Contain Unexpected Packets"
+    - kind: not-checked
+      os: windows
+      why: no searchable source; KB articles are not indexed by erratum
+    title: "Intel\xAE Processor Trace PSB+ Packets May Contain Unexpected Packets"
+    vendor_status: No Fix
+  ADL031:
+    document: intel/intel-spec-update
+    evidence:
+    - checked: '2026-09-22'
+      kind: none-found
+      os: linux
+      queries:
+      - ADL031
+      - "Intel\xAE PT Trace May Drop Second Byte of CYC Packet"
+    - checked: '2026-09-22'
+      kind: none-found
+      os: freebsd
+      queries:
+      - ADL031
+      - "Intel\xAE PT Trace May Drop Second Byte of CYC Packet"
+    - kind: not-checked
+      os: windows
+      why: no searchable source; KB articles are not indexed by erratum
+    title: "Intel\xAE PT Trace May Drop Second Byte of CYC Packet"
+    vendor_status: No Fix
+  ADL032:
+    document: intel/intel-spec-update
+    evidence:
+    - checked: '2026-09-22'
+      kind: none-found
+      os: linux
+      queries:
+      - ADL032
+      - VM Entry That Clears TraceEn May Generate a FUP
+    - checked: '2026-09-22'
+      kind: none-found
+      os: freebsd
+      queries:
+      - ADL032
+      - VM Entry That Clears TraceEn May Generate a FUP
+    - kind: not-checked
+      os: windows
+      why: no searchable source; KB articles are not indexed by erratum
+    title: VM Entry That Clears TraceEn May Generate a FUP
+    vendor_status: No Fix
+  ADL033:
+    document: intel/intel-spec-update
+    evidence:
+    - checked: '2026-09-22'
+      kind: none-found
+      os: linux
+      queries:
+      - ADL033
+      - Unsynchronized Cross-Modifying Code Operations Can Cause Unexpected Instruction Execution Results
+    - checked: '2026-09-22'
+      kind: none-found
+      os: freebsd
+      queries:
+      - ADL033
+      - Unsynchronized Cross-Modifying Code Operations Can Cause Unexpected Instruction Execution Results
+    - kind: not-checked
+      os: windows
+      why: no searchable source; KB articles are not indexed by erratum
+    title: Unsynchronized Cross-Modifying Code Operations Can Cause Unexpected Instruction Execution Results
+    vendor_status: No Fix
+  ADL034:
+    document: intel/intel-spec-update
+    evidence:
+    - checked: '2026-09-22'
+      kind: none-found
+      os: linux
+      queries:
+      - ADL034
+      - Processor May Hang When PROCHOT# is Active
+    - checked: '2026-09-22'
+      kind: none-found
+      os: freebsd
+      queries:
+      - ADL034
+      - Processor May Hang When PROCHOT# is Active
+    - kind: not-checked
+      os: windows
+      why: no searchable source; KB articles are not indexed by erratum
+    title: Processor May Hang When PROCHOT# is Active
+    vendor_status: N/A
+  ADL035:
+    document: intel/intel-spec-update
+    evidence:
+    - checked: '2026-09-22'
+      kind: none-found
+      os: linux
+      queries:
+      - ADL035
+      - CPUID Reports Incorrect Number of Ways For The Load DTLB
+    - checked: '2026-09-22'
+      kind: none-found
+      os: freebsd
+      queries:
+      - ADL035
+      - CPUID Reports Incorrect Number of Ways For The Load DTLB
+    - kind: not-checked
+      os: windows
+      why: no searchable source; KB articles are not indexed by erratum
+    title: CPUID Reports Incorrect Number of Ways For The Load DTLB
+    vendor_status: No Fix
+  ADL036:
+    document: intel/intel-spec-update
+    evidence:
+    - checked: '2026-09-22'
+      kind: none-found
+      os: linux
+      queries:
+      - ADL036
+      - 'Unaligned CET-SS Stack Token Does Not Signal #GP'
+    - checked: '2026-09-22'
+      kind: none-found
+      os: freebsd
+      queries:
+      - ADL036
+      - 'Unaligned CET-SS Stack Token Does Not Signal #GP'
+    - kind: not-checked
+      os: windows
+      why: no searchable source; KB articles are not indexed by erratum
+    title: 'Unaligned CET-SS Stack Token Does Not Signal #GP'
+    vendor_status: Fixed
+  ADL037:
+    document: intel/intel-spec-update
+    evidence:
+    - checked: '2026-09-22'
+      kind: none-found
+      os: linux
+      queries:
+      - ADL037
+      - "Intel\xAE PT Trace May Contain Incorrect Data When Configured With Single Range Output Larger\
+        \ Than 4KB"
+    - checked: '2026-09-22'
+      kind: none-found
+      os: freebsd
+      queries:
+      - ADL037
+      - "Intel\xAE PT Trace May Contain Incorrect Data When Configured With Single Range Output Larger\
+        \ Than 4KB"
+    - kind: not-checked
+      os: windows
+      why: no searchable source; KB articles are not indexed by erratum
+    title: "Intel\xAE PT Trace May Contain Incorrect Data When Configured With Single Range Output Larger\
+      \ Than 4KB"
+    vendor_status: No Fix
+  ADL038:
+    document: intel/intel-spec-update
+    evidence:
+    - checked: '2026-09-22'
+      evidence_url: https://github.com/torvalds/linux/blob/f0100363d8c374bd8e9ea7c9ba02744f0b802ca4/tools/perf/pmu-events/arch/x86/alderlake/cache.json
+      kind: rejected
+      os: linux
+      queries:
+      - ADL038
+      - OFFCORE_REQUESTS_OUTSTANDING Performance Monitoring Events May be Inaccurate
+      reviewed_on: '2026-09-22'
+      why: 'tools/perf/pmu-events tags the affected OFFCORE_REQUESTS_OUTSTANDING events with "Errata":
+        "ADL038": perf acknowledges the inaccuracy, the kernel does not work around it'
+    - checked: '2026-09-22'
+      kind: none-found
+      os: freebsd
+      queries:
+      - ADL038
+      - OFFCORE_REQUESTS_OUTSTANDING Performance Monitoring Events May be Inaccurate
+    - kind: not-checked
+      os: windows
+      why: no searchable source; KB articles are not indexed by erratum
+    reviewed: true
+    title: OFFCORE_REQUESTS_OUTSTANDING Performance Monitoring Events May be Inaccurate
+    vendor_status: No Fix
+  ADL039:
+    document: intel/intel-spec-update
+    evidence:
+    - checked: '2026-09-22'
+      kind: none-found
+      os: linux
+      queries:
+      - ADL039
+      - 'On Instructions Longer Than 15 Bytes, #GP Exception is Prioritized and Delivered Over #CP Exception'
+    - checked: '2026-09-22'
+      kind: none-found
+      os: freebsd
+      queries:
+      - ADL039
+      - 'On Instructions Longer Than 15 Bytes, #GP Exception is Prioritized and Delivered Over #CP Exception'
+    - kind: not-checked
+      os: windows
+      why: no searchable source; KB articles are not indexed by erratum
+    title: 'On Instructions Longer Than 15 Bytes, #GP Exception is Prioritized and Delivered Over #CP
+      Exception'
+    vendor_status: No Fix
+  ADL040:
+    document: intel/intel-spec-update
+    evidence:
+    - checked: '2026-09-22'
+      kind: none-found
+      os: linux
+      queries:
+      - ADL040
+      - Mismatch on DR6 Value When Breakpoint Match is on Bitmap Address
+    - checked: '2026-09-22'
+      kind: none-found
+      os: freebsd
+      queries:
+      - ADL040
+      - Mismatch on DR6 Value When Breakpoint Match is on Bitmap Address
+    - kind: not-checked
+      os: windows
+      why: no searchable source; KB articles are not indexed by erratum
+    title: Mismatch on DR6 Value When Breakpoint Match is on Bitmap Address
+    vendor_status: No Fix
+  ADL041:
+    document: intel/intel-spec-update
+    evidence:
+    - checked: '2026-09-22'
+      kind: none-found
+      os: linux
+      queries:
+      - ADL041
+      - Processor Loads PERF_GLOBAL_CTRL MSR Value From SMM Transfer VMCS Upon STI When STM is Configured
+    - checked: '2026-09-22'
+      kind: none-found
+      os: freebsd
+      queries:
+      - ADL041
+      - Processor Loads PERF_GLOBAL_CTRL MSR Value From SMM Transfer VMCS Upon STI When STM is Configured
+    - kind: not-checked
+      os: windows
+      why: no searchable source; KB articles are not indexed by erratum
+    title: Processor Loads PERF_GLOBAL_CTRL MSR Value From SMM Transfer VMCS Upon STI When STM is Configured
+    vendor_status: No Fix
+  ADL042:
+    document: intel/intel-spec-update
+    evidence:
+    - checked: '2026-09-22'
+      kind: none-found
+      os: linux
+      queries:
+      - ADL042
+      - RTM Abort Status May be Incorrect For INT1/INT3 Instructions
+    - checked: '2026-09-22'
+      kind: none-found
+      os: freebsd
+      queries:
+      - ADL042
+      - RTM Abort Status May be Incorrect For INT1/INT3 Instructions
+    - kind: not-checked
+      os: windows
+      why: no searchable source; KB articles are not indexed by erratum
+    title: RTM Abort Status May be Incorrect For INT1/INT3 Instructions
+    vendor_status: No Fix
+  ADL043:
+    document: intel/intel-spec-update
+    evidence:
+    - checked: '2026-09-22'
+      kind: none-found
+      os: linux
+      queries:
+      - ADL043
+      - Incorrect MCACOD For L2 Prefetch MCE
+    - checked: '2026-09-22'
+      kind: none-found
+      os: freebsd
+      queries:
+      - ADL043
+      - Incorrect MCACOD For L2 Prefetch MCE
+    - kind: not-checked
+      os: windows
+      why: no searchable source; KB articles are not indexed by erratum
+    title: Incorrect MCACOD For L2 Prefetch MCE
+    vendor_status: No Fix
+  ADL044:
+    document: intel/intel-spec-update
+    evidence:
+    - checked: '2026-09-22'
+      kind: none-found
+      os: linux
+      queries:
+      - ADL044
+      - Call Instruction Wrapping Around The 32-bit Address Boundary May Return to Incorrect Address
+    - checked: '2026-09-22'
+      kind: none-found
+      os: freebsd
+      queries:
+      - ADL044
+      - Call Instruction Wrapping Around The 32-bit Address Boundary May Return to Incorrect Address
+    - kind: not-checked
+      os: windows
+      why: no searchable source; KB articles are not indexed by erratum
+    title: Call Instruction Wrapping Around The 32-bit Address Boundary May Return to Incorrect Address
+    vendor_status: No Fix
+  ADL045:
+    document: intel/intel-spec-update
+    evidence:
+    - checked: '2026-09-22'
+      kind: none-found
+      os: linux
+      queries:
+      - ADL045
+      - USB 3.2 Gen 1x1 Port Does Not Send 16 Polling LFPS Burst
+    - checked: '2026-09-22'
+      kind: none-found
+      os: freebsd
+      queries:
+      - ADL045
+      - USB 3.2 Gen 1x1 Port Does Not Send 16 Polling LFPS Burst
+    - kind: not-checked
+      os: windows
+      why: no searchable source; KB articles are not indexed by erratum
+    title: USB 3.2 Gen 1x1 Port Does Not Send 16 Polling LFPS Burst
+    vendor_status: No Fix
+  ADL046:
+    document: intel/intel-spec-update
+    evidence:
+    - checked: '2026-09-22'
+      kind: none-found
+      os: linux
+      queries:
+      - ADL046
+      - Crashlog and Telemetry BAR May Not Function Correctly
+    - checked: '2026-09-22'
+      kind: none-found
+      os: freebsd
+      queries:
+      - ADL046
+      - Crashlog and Telemetry BAR May Not Function Correctly
+    - kind: not-checked
+      os: windows
+      why: no searchable source; KB articles are not indexed by erratum
+    title: Crashlog and Telemetry BAR May Not Function Correctly
+    vendor_status: No Fix
+  ADL047:
+    document: intel/intel-spec-update
+    evidence:
+    - checked: '2026-09-22'
+      kind: none-found
+      os: linux
+      queries:
+      - ADL047
+      - LFENCE Instruction May Not Prevent FSFP Forwarding
+    - checked: '2026-09-22'
+      kind: none-found
+      os: freebsd
+      queries:
+      - ADL047
+      - LFENCE Instruction May Not Prevent FSFP Forwarding
+    - kind: not-checked
+      os: windows
+      why: no searchable source; KB articles are not indexed by erratum
+    title: LFENCE Instruction May Not Prevent FSFP Forwarding
+    vendor_status: Fixed
+  ADL048:
+    document: intel/intel-spec-update
+    evidence:
+    - checked: '2026-09-22'
+      kind: none-found
+      os: linux
+      queries:
+      - ADL048
+      - IA32_SPEC_CTL Bits IPRED_DIS_U, IPRED_DIS_S And BHI_DIS_S May Not Function Correctly
+    - checked: '2026-09-22'
+      kind: none-found
+      os: freebsd
+      queries:
+      - ADL048
+      - IA32_SPEC_CTL Bits IPRED_DIS_U, IPRED_DIS_S And BHI_DIS_S May Not Function Correctly
+    - kind: not-checked
+      os: windows
+      why: no searchable source; KB articles are not indexed by erratum
+    title: IA32_SPEC_CTL Bits IPRED_DIS_U, IPRED_DIS_S And BHI_DIS_S May Not Function Correctly
+    vendor_status: Fixed
+  ADL049:
+    document: intel/intel-spec-update
+    evidence:
+    - checked: '2026-09-22'
+      kind: none-found
+      os: linux
+      queries:
+      - ADL049
+      - VM Exit Qualification May Not be Correctly Set on APIC Access While Serving a User Interrupt
+    - checked: '2026-09-22'
+      kind: none-found
+      os: freebsd
+      queries:
+      - ADL049
+      - VM Exit Qualification May Not be Correctly Set on APIC Access While Serving a User Interrupt
+    - kind: not-checked
+      os: windows
+      why: no searchable source; KB articles are not indexed by erratum
+    title: VM Exit Qualification May Not be Correctly Set on APIC Access While Serving a User Interrupt
+    vendor_status: No Fix
+  ADL050:
+    document: intel/intel-spec-update
+    evidence:
+    - checked: '2026-09-22'
+      kind: none-found
+      os: linux
+      queries:
+      - ADL050
+      - Processor Exiting Package C6 or C8 May Hang
+    - checked: '2026-09-22'
+      kind: none-found
+      os: freebsd
+      queries:
+      - ADL050
+      - Processor Exiting Package C6 or C8 May Hang
+    - kind: not-checked
+      os: windows
+      why: no searchable source; KB articles are not indexed by erratum
+    title: Processor Exiting Package C6 or C8 May Hang
+    vendor_status: Fixed
+  ADL051:
+    document: intel/intel-spec-update
+    evidence:
+    - checked: '2026-09-22'
+      kind: none-found
+      os: linux
+      queries:
+      - ADL051
+      - GPU Hang When Async Compute is Enabled
+    - checked: '2026-09-22'
+      kind: none-found
+      os: freebsd
+      queries:
+      - ADL051
+      - GPU Hang When Async Compute is Enabled
+    - kind: not-checked
+      os: windows
+      why: no searchable source; KB articles are not indexed by erratum
+    title: GPU Hang When Async Compute is Enabled
+    vendor_status: No Fix
+  ADL052:
+    document: intel/intel-spec-update
+    evidence:
+    - checked: '2026-09-22'
+      kind: none-found
+      os: linux
+      queries:
+      - ADL052
+      - Unexpected System Hang During Enhanced Intel SpeedStep Transitions
+    - checked: '2026-09-22'
+      kind: none-found
+      os: freebsd
+      queries:
+      - ADL052
+      - Unexpected System Hang During Enhanced Intel SpeedStep Transitions
+    - kind: not-checked
+      os: windows
+      why: no searchable source; KB articles are not indexed by erratum
+    title: Unexpected System Hang During Enhanced Intel SpeedStep Transitions
+    vendor_status: Fixed
+  ADL053:
+    document: intel/intel-spec-update
+    evidence:
+    - checked: '2026-09-22'
+      kind: none-found
+      os: linux
+      queries:
+      - ADL053
+      - Branch Predictor May Produce Incorrect Instruction Pointer
+    - checked: '2026-09-22'
+      kind: none-found
+      os: freebsd
+      queries:
+      - ADL053
+      - Branch Predictor May Produce Incorrect Instruction Pointer
+    - kind: not-checked
+      os: windows
+      why: no searchable source; KB articles are not indexed by erratum
+    title: Branch Predictor May Produce Incorrect Instruction Pointer
+    vendor_status: Fixed
+  ADL054:
+    document: intel/intel-spec-update
+    evidence:
+    - checked: '2026-09-22'
+      kind: none-found
+      os: linux
+      queries:
+      - ADL054
+      - Display Flickering May be Observed When The System is Idle
+    - checked: '2026-09-22'
+      kind: none-found
+      os: freebsd
+      queries:
+      - ADL054
+      - Display Flickering May be Observed When The System is Idle
+    - kind: not-checked
+      os: windows
+      why: no searchable source; KB articles are not indexed by erratum
+    title: Display Flickering May be Observed When The System is Idle
+    vendor_status: Fixed
+  ADL055:
+    document: intel/intel-spec-update
+    evidence:
+    - checked: '2026-09-22'
+      kind: none-found
+      os: linux
+      queries:
+      - ADL055
+      - Processor May Encrypt TME Exclude Range if Mapped to Remap Range
+    - checked: '2026-09-22'
+      kind: none-found
+      os: freebsd
+      queries:
+      - ADL055
+      - Processor May Encrypt TME Exclude Range if Mapped to Remap Range
+    - kind: not-checked
+      os: windows
+      why: no searchable source; KB articles are not indexed by erratum
+    title: Processor May Encrypt TME Exclude Range if Mapped to Remap Range
+    vendor_status: No Fix
+  ADL056:
+    document: intel/intel-spec-update
+    evidence:
+    - checked: '2026-09-22'
+      kind: none-found
+      os: linux
+      queries:
+      - ADL056
+      - Precision Time Measurement (PTM) Interpretation Capability Bit Incorrect Register Offset
+    - checked: '2026-09-22'
+      kind: none-found
+      os: freebsd
+      queries:
+      - ADL056
+      - Precision Time Measurement (PTM) Interpretation Capability Bit Incorrect Register Offset
+    - kind: not-checked
+      os: windows
+      why: no searchable source; KB articles are not indexed by erratum
+    title: Precision Time Measurement (PTM) Interpretation Capability Bit Incorrect Register Offset
+    vendor_status: No Fix
+  ADL057:
+    document: intel/intel-spec-update
+    evidence:
+    - checked: '2026-09-22'
+      kind: none-found
+      os: linux
+      queries:
+      - ADL057
+      - The Time-Stamp Counter May Report an Incorrect Value
+    - checked: '2026-09-22'
+      kind: none-found
+      os: freebsd
+      queries:
+      - ADL057
+      - The Time-Stamp Counter May Report an Incorrect Value
+    - kind: not-checked
+      os: windows
+      why: no searchable source; KB articles are not indexed by erratum
+    title: The Time-Stamp Counter May Report an Incorrect Value
+    vendor_status: Fixed
+  ADL058:
+    document: intel/intel-spec-update
+    evidence:
+    - checked: '2026-09-22'
+      kind: none-found
+      os: linux
+      queries:
+      - ADL058
+      - DDR5 Clock Jitter Out of Spec
+    - checked: '2026-09-22'
+      kind: none-found
+      os: freebsd
+      queries:
+      - ADL058
+      - DDR5 Clock Jitter Out of Spec
+    - kind: not-checked
+      os: windows
+      why: no searchable source; KB articles are not indexed by erratum
+    title: DDR5 Clock Jitter Out of Spec
+    vendor_status: No Fix
+  ADL059:
+    document: intel/intel-spec-update
+    evidence:
+    - checked: '2026-09-22'
+      kind: none-found
+      os: linux
+      queries:
+      - ADL059
+      - IA32_MC2_ADDR And IA32_MC2_MISC MSRs May be Cleared on Warm Reset
+    - checked: '2026-09-22'
+      kind: none-found
+      os: freebsd
+      queries:
+      - ADL059
+      - IA32_MC2_ADDR And IA32_MC2_MISC MSRs May be Cleared on Warm Reset
+    - kind: not-checked
+      os: windows
+      why: no searchable source; KB articles are not indexed by erratum
+    title: IA32_MC2_ADDR And IA32_MC2_MISC MSRs May be Cleared on Warm Reset
+    vendor_status: No Fix
+  ADL060:
+    document: intel/intel-spec-update
+    evidence:
+    - checked: '2026-09-22'
+      kind: none-found
+      os: linux
+      queries:
+      - ADL060
+      - xHCI Force Header Command Incorrect Return Code
+    - checked: '2026-09-22'
+      kind: none-found
+      os: freebsd
+      queries:
+      - ADL060
+      - xHCI Force Header Command Incorrect Return Code
+    - kind: not-checked
+      os: windows
+      why: no searchable source; KB articles are not indexed by erratum
+    title: xHCI Force Header Command Incorrect Return Code
+    vendor_status: No Fix
+  ADL061:
+    document: intel/intel-spec-update
+    evidence:
+    - checked: '2026-09-22'
+      kind: none-found
+      os: linux
+      queries:
+      - ADL061
+      - Machine Check Exception May be Observed During Package C6 Entry
+    - checked: '2026-09-22'
+      kind: none-found
+      os: freebsd
+      queries:
+      - ADL061
+      - Machine Check Exception May be Observed During Package C6 Entry
+    - kind: not-checked
+      os: windows
+      why: no searchable source; KB articles are not indexed by erratum
+    title: Machine Check Exception May be Observed During Package C6 Entry
+    vendor_status: Fixed
+  ADL062:
+    document: intel/intel-spec-update
+    evidence:
+    - checked: '2026-09-22'
+      kind: none-found
+      os: linux
+      queries:
+      - ADL062
+      - USB Type-C Monitor Removal May Result In System Hang
+    - checked: '2026-09-22'
+      kind: none-found
+      os: freebsd
+      queries:
+      - ADL062
+      - USB Type-C Monitor Removal May Result In System Hang
+    - kind: not-checked
+      os: windows
+      why: no searchable source; KB articles are not indexed by erratum
+    title: USB Type-C Monitor Removal May Result In System Hang
+    vendor_status: Fixed
+  ADL063:
+    document: intel/intel-spec-update
+    evidence:
+    - checked: '2026-09-22'
+      kind: none-found
+      os: linux
+      queries:
+      - ADL063
+      - INVLPG May Invalidate Global TLB Entries Only For The Current PCID
+    - checked: '2026-09-22'
+      kind: none-found
+      os: freebsd
+      queries:
+      - ADL063
+      - INVLPG May Invalidate Global TLB Entries Only For The Current PCID
+    - kind: not-checked
+      os: windows
+      why: no searchable source; KB articles are not indexed by erratum
+    title: INVLPG May Invalidate Global TLB Entries Only For The Current PCID
+    vendor_status: Fixed
+  ADL064:
+    document: intel/intel-spec-update
+    evidence:
+    - checked: '2026-09-22'
+      kind: none-found
+      os: linux
+      queries:
+      - ADL064
+      - CPU May Not Load The Most Recent Data
+    - checked: '2026-09-22'
+      kind: none-found
+      os: freebsd
+      queries:
+      - ADL064
+      - CPU May Not Load The Most Recent Data
+    - kind: not-checked
+      os: windows
+      why: no searchable source; KB articles are not indexed by erratum
+    title: CPU May Not Load The Most Recent Data
+    vendor_status: Fixed
+  ADL065:
+    document: intel/intel-spec-update
+    evidence:
+    - checked: '2026-09-22'
+      kind: none-found
+      os: linux
+      queries:
+      - ADL065
+      - Performance Monitoring Event IDQ.MS_UOPS May Undercount
+    - checked: '2026-09-22'
+      kind: none-found
+      os: freebsd
+      queries:
+      - ADL065
+      - Performance Monitoring Event IDQ.MS_UOPS May Undercount
+    - kind: not-checked
+      os: windows
+      why: no searchable source; KB articles are not indexed by erratum
+    title: Performance Monitoring Event IDQ.MS_UOPS May Undercount
+    vendor_status: No Fix
+  ADL066:
+    document: intel/intel-spec-update
+    evidence:
+    - checked: '2026-09-22'
+      kind: none-found
+      os: linux
+      queries:
+      - ADL066
+      - Performance Monitoring Events TOPDOWN.BACKEND_BOUND_SLOTS and IDQ_BUBBLES May be Inaccurate
+    - checked: '2026-09-22'
+      kind: none-found
+      os: freebsd
+      queries:
+      - ADL066
+      - Performance Monitoring Events TOPDOWN.BACKEND_BOUND_SLOTS and IDQ_BUBBLES May be Inaccurate
+    - kind: not-checked
+      os: windows
+      why: no searchable source; KB articles are not indexed by erratum
+    title: Performance Monitoring Events TOPDOWN.BACKEND_BOUND_SLOTS and IDQ_BUBBLES May be Inaccurate
+    vendor_status: No Fix
+  ADL067:
+    document: intel/intel-spec-update
+    evidence:
+    - checked: '2026-09-22'
+      kind: none-found
+      os: linux
+      queries:
+      - ADL067
+      - Type-C Display May be Blank Following S3/S4/S5 Resume
+    - checked: '2026-09-22'
+      kind: none-found
+      os: freebsd
+      queries:
+      - ADL067
+      - Type-C Display May be Blank Following S3/S4/S5 Resume
+    - kind: not-checked
+      os: windows
+      why: no searchable source; KB articles are not indexed by erratum
+    title: Type-C Display May be Blank Following S3/S4/S5 Resume
+    vendor_status: N/A
+  ADL068:
+    document: intel/intel-spec-update
+    evidence:
+    - checked: '2026-09-22'
+      kind: none-found
+      os: linux
+      queries:
+      - ADL068
+      - Performance Monitoring Event Branch Instruction Retired May Not Count CALLs to Next Sequential
+        Instruction
+    - checked: '2026-09-22'
+      kind: none-found
+      os: freebsd
+      queries:
+      - ADL068
+      - Performance Monitoring Event Branch Instruction Retired May Not Count CALLs to Next Sequential
+        Instruction
+    - kind: not-checked
+      os: windows
+      why: no searchable source; KB articles are not indexed by erratum
+    title: Performance Monitoring Event Branch Instruction Retired May Not Count CALLs to Next Sequential
+      Instruction
+    vendor_status: No Fix
+  ADL069:
+    document: intel/intel-spec-update
+    evidence:
+    - checked: '2026-09-22'
+      kind: none-found
+      os: linux
+      queries:
+      - ADL069
+      - Performance Monitoring Event Branch Instruction Retired May Overcount on Certain Types of Branch
+        and Complex Instructions
+    - checked: '2026-09-22'
+      kind: none-found
+      os: freebsd
+      queries:
+      - ADL069
+      - Performance Monitoring Event Branch Instruction Retired May Overcount on Certain Types of Branch
+        and Complex Instructions
+    - kind: not-checked
+      os: windows
+      why: no searchable source; KB articles are not indexed by erratum
+    title: Performance Monitoring Event Branch Instruction Retired May Overcount on Certain Types of Branch
+      and Complex Instructions
+    vendor_status: No Fix
+  ADL070:
+    document: intel/intel-spec-update
+    evidence:
+    - checked: '2026-09-22'
+      kind: none-found
+      os: linux
+      queries:
+      - ADL070
+      - "Unexpected System Behavior When Re-Enabling Intel\xAE HT"
+    - checked: '2026-09-22'
+      kind: none-found
+      os: freebsd
+      queries:
+      - ADL070
+      - "Unexpected System Behavior When Re-Enabling Intel\xAE HT"
+    - kind: not-checked
+      os: windows
+      why: no searchable source; KB articles are not indexed by erratum
+    title: "Unexpected System Behavior When Re-Enabling Intel\xAE HT"
+    vendor_status: No Fix
+  ADL071:
+    document: intel/intel-spec-update
+    evidence:
+    - checked: '2026-09-22'
+      kind: none-found
+      os: linux
+      queries:
+      - ADL071
+      - A Write to The TSC_Deadline MSR May Cause an Unexpected Timer Interrupt
+    - checked: '2026-09-22'
+      kind: none-found
+      os: freebsd
+      queries:
+      - ADL071
+      - A Write to The TSC_Deadline MSR May Cause an Unexpected Timer Interrupt
+    - kind: not-checked
+      os: windows
+      why: no searchable source; KB articles are not indexed by erratum
+    title: A Write to The TSC_Deadline MSR May Cause an Unexpected Timer Interrupt
+    vendor_status: No Fix
+  ADL072:
+    document: intel/intel-spec-update
+    evidence:
+    - checked: '2026-09-22'
+      kind: none-found
+      os: linux
+      queries:
+      - ADL072
+      - Processor Trace May Generate PSB Packets Too Infrequently
+    - checked: '2026-09-22'
+      kind: none-found
+      os: freebsd
+      queries:
+      - ADL072
+      - Processor Trace May Generate PSB Packets Too Infrequently
+    - kind: not-checked
+      os: windows
+      why: no searchable source; KB articles are not indexed by erratum
+    title: Processor Trace May Generate PSB Packets Too Infrequently
+    vendor_status: No Fix
+  ADL073:
+    document: intel/intel-spec-update
+    evidence:
+    - checked: '2026-09-22'
+      kind: none-found
+      os: linux
+      queries:
+      - ADL073
+      - Processor Trace May Not Generate a CYC Packet Before MODE.EXEC Packets
+    - checked: '2026-09-22'
+      kind: none-found
+      os: freebsd
+      queries:
+      - ADL073
+      - Processor Trace May Not Generate a CYC Packet Before MODE.EXEC Packets
+    - kind: not-checked
+      os: windows
+      why: no searchable source; KB articles are not indexed by erratum
+    title: Processor Trace May Not Generate a CYC Packet Before MODE.EXEC Packets
+    vendor_status: No Fix
+  ADL074:
+    document: intel/intel-spec-update
+    evidence:
+    - checked: '2026-09-22'
+      kind: none-found
+      os: linux
+      queries:
+      - ADL074
+      - Disabling The APIC While an Interrupt is Being Delivered May Cause a System Hang
+    - checked: '2026-09-22'
+      kind: none-found
+      os: freebsd
+      queries:
+      - ADL074
+      - Disabling The APIC While an Interrupt is Being Delivered May Cause a System Hang
+    - kind: not-checked
+      os: windows
+      why: no searchable source; KB articles are not indexed by erratum
+    title: Disabling The APIC While an Interrupt is Being Delivered May Cause a System Hang
+    vendor_status: No Fix
+  ADL075:
+    document: intel/intel-spec-update
+    evidence:
+    - checked: '2026-09-22'
+      kind: none-found
+      os: linux
+      queries:
+      - ADL075
+      - Processor May Hang During a Microcode Update
+    - checked: '2026-09-22'
+      kind: none-found
+      os: freebsd
+      queries:
+      - ADL075
+      - Processor May Hang During a Microcode Update
+    - kind: not-checked
+      os: windows
+      why: no searchable source; KB articles are not indexed by erratum
+    title: Processor May Hang During a Microcode Update
+    vendor_status: Fixed
+  ADL076:
+    document: intel/intel-spec-update
+    evidence:
+    - checked: '2026-09-22'
+      kind: none-found
+      os: linux
+      queries:
+      - ADL076
+      - Split Load May Return Incorrect Data
+    - checked: '2026-09-22'
+      kind: none-found
+      os: freebsd
+      queries:
+      - ADL076
+      - Split Load May Return Incorrect Data
+    - kind: not-checked
+      os: windows
+      why: no searchable source; KB articles are not indexed by erratum
+    title: Split Load May Return Incorrect Data
+    vendor_status: Fixed
+  ADL077:
+    document: intel/intel-spec-update
+    evidence:
+    - checked: '2026-09-22'
+      kind: none-found
+      os: linux
+      queries:
+      - ADL077
+      - PCONFIG Error Reporting May be Incorrect
+    - checked: '2026-09-22'
+      kind: none-found
+      os: freebsd
+      queries:
+      - ADL077
+      - PCONFIG Error Reporting May be Incorrect
+    - kind: not-checked
+      os: windows
+      why: no searchable source; KB articles are not indexed by erratum
+    title: PCONFIG Error Reporting May be Incorrect
+    vendor_status: No Fix
+  ADL078:
+    document: intel/intel-spec-update
+    evidence:
+    - checked: '2026-09-22'
+      kind: none-found
+      os: linux
+      queries:
+      - ADL078
+      - xHCI Out of Order ACK Due to LCRD1
+    - checked: '2026-09-22'
+      kind: none-found
+      os: freebsd
+      queries:
+      - ADL078
+      - xHCI Out of Order ACK Due to LCRD1
+    - kind: not-checked
+      os: windows
+      why: no searchable source; KB articles are not indexed by erratum
+    title: xHCI Out of Order ACK Due to LCRD1
+    vendor_status: No Fix
+  ADL079:
+    document: intel/intel-spec-update
+    evidence:
+    - checked: '2026-09-22'
+      kind: none-found
+      os: linux
+      queries:
+      - ADL079
+      - PCIe REFCLK Inactive Prior to PERST#
+    - checked: '2026-09-22'
+      kind: none-found
+      os: freebsd
+      queries:
+      - ADL079
+      - PCIe REFCLK Inactive Prior to PERST#
+    - kind: not-checked
+      os: windows
+      why: no searchable source; KB articles are not indexed by erratum
+    title: PCIe REFCLK Inactive Prior to PERST#
+    vendor_status: No Fix
+  ADL080:
+    document: intel/intel-spec-update
+    evidence:
+    - checked: '2026-09-22'
+      kind: none-found
+      os: linux
+      queries:
+      - ADL080
+      - VM Exit Following MOV to CR8 Instruction May Lead to Unexpected IDT Vectoring-Information
+    - checked: '2026-09-22'
+      kind: none-found
+      os: freebsd
+      queries:
+      - ADL080
+      - VM Exit Following MOV to CR8 Instruction May Lead to Unexpected IDT Vectoring-Information
+    - kind: not-checked
+      os: windows
+      why: no searchable source; KB articles are not indexed by erratum
+    title: VM Exit Following MOV to CR8 Instruction May Lead to Unexpected IDT Vectoring-Information
+    vendor_status: Fixed
+  ADL081:
+    document: intel/intel-spec-update
+    evidence:
+    - checked: '2026-09-22'
+      kind: none-found
+      os: linux
+      queries:
+      - ADL081
+      - Cache Level Wrongly Reported in Machine Check Banks
+    - checked: '2026-09-22'
+      kind: none-found
+      os: freebsd
+      queries:
+      - ADL081
+      - Cache Level Wrongly Reported in Machine Check Banks
+    - kind: not-checked
+      os: windows
+      why: no searchable source; KB articles are not indexed by erratum
+    title: Cache Level Wrongly Reported in Machine Check Banks
+    vendor_status: No Fix
+  ADL082:
+    document: intel/intel-spec-update
+    evidence:
+    - checked: '2026-09-22'
+      kind: none-found
+      os: linux
+      queries:
+      - ADL082
+      - xHCI Controller Hang With Zero-Length Data Packet
+    - checked: '2026-09-22'
+      kind: none-found
+      os: freebsd
+      queries:
+      - ADL082
+      - xHCI Controller Hang With Zero-Length Data Packet
+    - kind: not-checked
+      os: windows
+      why: no searchable source; KB articles are not indexed by erratum
+    title: xHCI Controller Hang With Zero-Length Data Packet
+    vendor_status: No Fix
+  ADL083:
+    document: intel/intel-spec-update
+    evidence:
+    - checked: '2026-09-22'
+      kind: none-found
+      os: linux
+      queries:
+      - ADL083
+      - REP SCASB or REP CMPSB Instructions May Return Incorrect Results
+    - checked: '2026-09-22'
+      kind: none-found
+      os: freebsd
+      queries:
+      - ADL083
+      - REP SCASB or REP CMPSB Instructions May Return Incorrect Results
+    - kind: not-checked
+      os: windows
+      why: no searchable source; KB articles are not indexed by erratum
+    title: REP SCASB or REP CMPSB Instructions May Return Incorrect Results
+    vendor_status: Fixed
+  ADL084:
+    document: intel/intel-spec-update
+    evidence:
+    - checked: '2026-09-22'
+      kind: none-found
+      os: linux
+      queries:
+      - ADL084
+      - USB 3.2 Bulk Transfers After Device Initiated Flow Control
+    - checked: '2026-09-22'
+      kind: none-found
+      os: freebsd
+      queries:
+      - ADL084
+      - USB 3.2 Bulk Transfers After Device Initiated Flow Control
+    - kind: not-checked
+      os: windows
+      why: no searchable source; KB articles are not indexed by erratum
+    title: USB 3.2 Bulk Transfers After Device Initiated Flow Control
+    vendor_status: Fixed
+  ADL085:
+    document: intel/intel-spec-update
+    evidence:
+    - checked: '2026-09-22'
+      kind: none-found
+      os: linux
+      queries:
+      - ADL085
+      - "Intel\xAE PT Incorrect CR3-Filtering"
+    - checked: '2026-09-22'
+      kind: none-found
+      os: freebsd
+      queries:
+      - ADL085
+      - "Intel\xAE PT Incorrect CR3-Filtering"
+    - kind: not-checked
+      os: windows
+      why: no searchable source; KB articles are not indexed by erratum
+    title: "Intel\xAE PT Incorrect CR3-Filtering"
+    vendor_status: No Fix
+  ADL086:
+    document: intel/intel-spec-update
+    evidence:
+    - checked: '2026-09-22'
+      kind: none-found
+      os: linux
+      queries:
+      - ADL086
+      - Incorrect Last Branch From Value in BTS Branch Record During a Task Switch
+    - checked: '2026-09-22'
+      kind: none-found
+      os: freebsd
+      queries:
+      - ADL086
+      - Incorrect Last Branch From Value in BTS Branch Record During a Task Switch
+    - kind: not-checked
+      os: windows
+      why: no searchable source; KB articles are not indexed by erratum
+    title: Incorrect Last Branch From Value in BTS Branch Record During a Task Switch
+    vendor_status: No Fix
+  ADL087:
+    document: intel/intel-spec-update
+    evidence:
+    - checked: '2026-09-22'
+      kind: none-found
+      os: linux
+      queries:
+      - ADL087
+      - Performance Monitoring Event MEMORY_ACTIVITY.STALLS_L2_MISS May Undercount
+    - checked: '2026-09-22'
+      kind: none-found
+      os: freebsd
+      queries:
+      - ADL087
+      - Performance Monitoring Event MEMORY_ACTIVITY.STALLS_L2_MISS May Undercount
+    - kind: not-checked
+      os: windows
+      why: no searchable source; KB articles are not indexed by erratum
+    title: Performance Monitoring Event MEMORY_ACTIVITY.STALLS_L2_MISS May Undercount
+    vendor_status: No Fix
+  ADL088:
+    document: intel/intel-spec-update
+    evidence:
+    - checked: '2026-09-22'
+      kind: none-found
+      os: linux
+      queries:
+      - ADL088
+      - Certain VMCS Fields May be Incorrect During STM to VMX Transitions
+    - checked: '2026-09-22'
+      kind: none-found
+      os: freebsd
+      queries:
+      - ADL088
+      - Certain VMCS Fields May be Incorrect During STM to VMX Transitions
+    - kind: not-checked
+      os: windows
+      why: no searchable source; KB articles are not indexed by erratum
+    title: Certain VMCS Fields May be Incorrect During STM to VMX Transitions
+    vendor_status: No Fix
+  ADL089:
+    document: intel/intel-spec-update
+    evidence:
+    - checked: '2026-09-22'
+      kind: none-found
+      os: linux
+      queries:
+      - ADL089
+      - Performance Monitoring Events CORE_POWER.LICENSE_[0-7] May Report Incorrect Values
+    - checked: '2026-09-22'
+      kind: none-found
+      os: freebsd
+      queries:
+      - ADL089
+      - Performance Monitoring Events CORE_POWER.LICENSE_[0-7] May Report Incorrect Values
+    - kind: not-checked
+      os: windows
+      why: no searchable source; KB articles are not indexed by erratum
+    title: Performance Monitoring Events CORE_POWER.LICENSE_[0-7] May Report Incorrect Values
+    vendor_status: No Fix
+  ADL090:
+    document: intel/intel-spec-update
+    evidence:
+    - checked: '2026-09-22'
+      kind: none-found
+      os: linux
+      queries:
+      - ADL090
+      - "Intel\xAE PT Event Trace Generates CFE and FUP After VMCS/PIP Packets During VM Entry"
+    - checked: '2026-09-22'
+      kind: none-found
+      os: freebsd
+      queries:
+      - ADL090
+      - "Intel\xAE PT Event Trace Generates CFE and FUP After VMCS/PIP Packets During VM Entry"
+    - kind: not-checked
+      os: windows
+      why: no searchable source; KB articles are not indexed by erratum
+    title: "Intel\xAE PT Event Trace Generates CFE and FUP After VMCS/PIP Packets During VM Entry"
+    vendor_status: No Fix
+  ADL091:
+    document: intel/intel-spec-update
+    evidence:
+    - checked: '2026-09-22'
+      kind: none-found
+      os: linux
+      queries:
+      - ADL091
+      - "Intel\xAE PT Event Trace Generates Incorrect IP for FUP Packet During VM Entry"
+    - checked: '2026-09-22'
+      kind: none-found
+      os: freebsd
+      queries:
+      - ADL091
+      - "Intel\xAE PT Event Trace Generates Incorrect IP for FUP Packet During VM Entry"
+    - kind: not-checked
+      os: windows
+      why: no searchable source; KB articles are not indexed by erratum
+    title: "Intel\xAE PT Event Trace Generates Incorrect IP for FUP Packet During VM Entry"
+    vendor_status: No Fix
+  ADL092:
+    document: intel/intel-spec-update
+    evidence:
+    - checked: '2026-09-22'
+      kind: none-found
+      os: linux
+      queries:
+      - ADL092
+      - Execution of IRET in Compatibility Mode May Free Supervisor Shadow Stack Token
+    - checked: '2026-09-22'
+      kind: none-found
+      os: freebsd
+      queries:
+      - ADL092
+      - Execution of IRET in Compatibility Mode May Free Supervisor Shadow Stack Token
+    - kind: not-checked
+      os: windows
+      why: no searchable source; KB articles are not indexed by erratum
+    title: Execution of IRET in Compatibility Mode May Free Supervisor Shadow Stack Token
+    vendor_status: Fixed
+  ADL093:
+    document: intel/intel-spec-update
+    evidence:
+    - checked: '2026-09-22'
+      kind: none-found
+      os: linux
+      queries:
+      - ADL093
+      - MPX_FUSE_OVERRIDE Register May Trigger General Protection Fault
+    - checked: '2026-09-22'
+      kind: none-found
+      os: freebsd
+      queries:
+      - ADL093
+      - MPX_FUSE_OVERRIDE Register May Trigger General Protection Fault
+    - kind: not-checked
+      os: windows
+      why: no searchable source; KB articles are not indexed by erratum
+    title: MPX_FUSE_OVERRIDE Register May Trigger General Protection Fault
+    vendor_status: Fixed
+  ADL094:
+    document: intel/intel-spec-update
+    evidence:
+    - checked: '2026-09-22'
+      kind: none-found
+      os: linux
+      queries:
+      - ADL094
+      - Incorrect VM Exit Reason When MOV SS or POP SS Followed by an x2APIC MSR Access
+    - checked: '2026-09-22'
+      kind: none-found
+      os: freebsd
+      queries:
+      - ADL094
+      - Incorrect VM Exit Reason When MOV SS or POP SS Followed by an x2APIC MSR Access
+    - kind: not-checked
+      os: windows
+      why: no searchable source; KB articles are not indexed by erratum
+    title: Incorrect VM Exit Reason When MOV SS or POP SS Followed by an x2APIC MSR Access
+    vendor_status: No Fix

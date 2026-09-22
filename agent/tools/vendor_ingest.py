@@ -145,6 +145,61 @@ def parse_ids_registry(text: str, prov: Provenance) -> list[Record]:
 ERRATUM_ID = re.compile(r"^([A-Z]{2,4}\d{3})$")
 
 
+DETAIL_LABELS = ("Problem", "Implication", "Workaround", "Status")
+
+
+def _parse_details(page_texts: list[str]) -> dict[str, tuple[str, str]]:
+    """Per erratum: (detail text, workaround text) from the "Errata Details"
+    section, which follows the summary table.
+
+    The section is a two-column table: labels (Problem, Implication,
+    Workaround, Status) on the left, vertically centred on their paragraph, so
+    text extraction interleaves a label into the middle of the paragraph it
+    labels, sometimes fused to a body line ("Workaround only when ..."). The
+    workaround is recovered from that geometry: its paragraph starts at the
+    nearest line above the label that does not close a sentence, and runs to
+    the Status line. Best-effort, and measured (`with_workaround`), not assumed.
+    """
+    start = next((i for i, t in enumerate(page_texts) if "Errata Details" in t), None)
+    if start is None:
+        return {}
+    lines = [ln.strip() for t in page_texts[start:] for ln in t.splitlines() if ln.strip()]
+    blocks: dict[str, list[str]] = {}
+    current = None
+    for ln in lines:
+        m = re.match(r"^([A-Z]{2,4}\d{3})\b", ln)
+        if m and ERRATUM_ID.match(m.group(1)):
+            current = m.group(1)
+            blocks.setdefault(current, [])
+            rest = ln[len(current):].strip()
+            if rest:
+                blocks[current].append(rest)
+            continue
+        if current:
+            blocks[current].append(ln)
+
+    out: dict[str, tuple[str, str]] = {}
+    for key, body in blocks.items():
+        detail = " ".join(w for w in body if w not in DETAIL_LABELS)
+        workaround = ""
+        at = next((i for i, ln in enumerate(body)
+                   if ln == "Workaround" or ln.startswith("Workaround ")), None)
+        end = next((i for i, ln in enumerate(body) if ln.startswith("Status")), len(body))
+        if at is not None and at < end:
+            begin = at
+            while begin > 0 and not body[begin - 1].endswith(".") and \
+                    body[begin - 1] not in DETAIL_LABELS:
+                begin -= 1
+            parts = []
+            for ln in body[begin:end]:
+                if ln == "Workaround":
+                    continue
+                parts.append(ln[len("Workaround "):] if ln.startswith("Workaround ") else ln)
+            workaround = " ".join(parts).strip()
+        out[key] = (detail, workaround)
+    return out
+
+
 def parse_intel_spec_update(path: Path, prov: Provenance) -> tuple[list[Record], dict]:
     """Errata rows from an Intel Specification Update.
 
@@ -160,10 +215,12 @@ def parse_intel_spec_update(path: Path, prov: Provenance) -> tuple[list[Record],
     mentioned: set[str] = set()
     table_row_ids: set[str] = set()
     rows: dict[str, Record] = {}
+    page_texts: list[str] = []
 
     with pdfplumber.open(path) as pdf:
         for page_no, page in enumerate(pdf.pages, start=1):
             text = page.extract_text() or ""
+            page_texts.append(text)
             mentioned.update(ERRATUM_ID.match(t).group(1)
                              for t in re.findall(r"\b[A-Z]{2,4}\d{3}\b", text)
                              if ERRATUM_ID.match(t))
@@ -220,6 +277,12 @@ def parse_intel_spec_update(path: Path, prov: Provenance) -> tuple[list[Record],
                         status=statuses[0] if statuses else None,
                     )
 
+    details = _parse_details(page_texts)
+    for key, (detail, workaround) in details.items():
+        if key in rows:
+            rows[key].detail = detail
+            rows[key].workaround = workaround
+
     records = list(rows.values())
     # A record without applicability cannot be matched to a running machine. It
     # is an erratum belonging to *a vendor*, which is not what anyone asked.
@@ -246,6 +309,10 @@ def parse_intel_spec_update(path: Path, prov: Provenance) -> tuple[list[Record],
         "with_applicability": len(usable),
         "rejected_no_applicability": rejected,
         "not_extracted": unextracted,
+        "with_detail": sum(1 for r in usable if r.detail),
+        "with_workaround": sum(1 for r in usable if r.workaround),
+        "workaround_none_identified": sum(1 for r in usable
+                                          if (r.workaround or "").lower().startswith("none identified")),
         "extraction_rate": (round(100.0 * len(usable) / len(table_row_ids), 1)
                             if table_row_ids else 0.0),
         "mention_rate": (round(100.0 * len(usable) / len(mentioned), 1)
