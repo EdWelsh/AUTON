@@ -1,0 +1,126 @@
+# What AUTON can do, as data rather than as prose in a C table.
+#
+# `kernel/slm/roles.c` used to hand-maintain this, with blockers written as
+# sentences ("needs SMTP/IMAP and mail storage"). Two things went wrong with
+# that: the sentences went stale the moment a service landed, and the table
+# could not express the answer that is now usually true — *this* image does not
+# do it, and a dedicated AUTON image does.
+#
+# Every row's status cites evidence, and `agent/tests/unit/test_catalogue.py`
+# fails if the cited file does not exist or a shipped service spec has no row.
+# A status nobody can check is a rumour, which is this project's rule for
+# hardware facts and applies no less to its own claims.
+#
+# status:
+#   in-image        this image does it, now, with an entry symbol in its slice
+#   dedicated-image a purpose-built AUTON image does it; `build` says how
+#   roadmap         not built. `blocked_by` cites the decision or the plan
+#   host-only       the host control plane does it; the kernel points there
+#
+# `evidence` is a path or a list of them: the SSH row cites both its spec and
+# the crypto gate's decision record, because the decision is why the row exists.
+version: 1
+
+roles:
+  - keyword: [web, http]
+    name: web server
+    status: in-image
+    entry: http_server_run
+    note: in-kernel HTTP on port 80
+    evidence: agent/kernel_spec/subsystems/net.md
+
+  - keyword: [dns]
+    name: DNS server
+    status: in-image
+    entry: dns_server_run
+    note: answers A queries on port 53 with this host's IP
+    evidence: agent/kernel_spec/subsystems/net.md
+
+  - keyword: [file, files, docroot]
+    name: file server
+    status: dedicated-image
+    build: auton build fileserver
+    note: serves a read-only document root from the disk over HTTP
+    evidence: agent/kernel_spec/services/fileserver.md
+
+  - keyword: [repo, git, website]
+    name: repository server
+    status: dedicated-image
+    build: auton build host-repo
+    note: serves a git repository over dumb HTTP, clonable with git
+    evidence: agent/kernel_spec/services/host-repo.md
+
+  - keyword: [email, mail, smtp]
+    name: email server
+    status: dedicated-image
+    build: auton build smtp
+    note: >-
+      receives mail on port 25 and keeps it on disk across a reboot. It does
+      not serve mail back: there is no IMAP or POP3, by scope.
+    evidence: agent/kernel_spec/services/smtp.md
+
+  - keyword: [database, db, kv, redis]
+    name: key-value store
+    status: dedicated-image
+    build: auton build kvstore
+    note: >-
+      speaks a RESP2 subset on port 6379 and survives a reboot. Not SQL: there
+      is no query engine, which is why the old note promising one was wrong.
+    evidence: agent/kernel_spec/services/kvstore.md
+
+  - keyword: [ssh, shell, remote]
+    name: SSH server
+    status: dedicated-image
+    build: auton build ssh
+    note: >-
+      an SSH session whose channel is this chat. The crypto is ported from
+      audited third-party sources, never written here.
+    evidence:
+      - agent/kernel_spec/services/ssh.md
+      - agent/kernel_spec/decisions/ssh-crypto.md
+
+  - keyword: [dhcp, leases]
+    name: DHCP server
+    status: dedicated-image
+    build: auton build dhcp
+    note: hands out addresses on port 67
+    evidence: agent/kernel_spec/services/dhcp.md
+
+  - keyword: [tftp]
+    name: TFTP server
+    status: dedicated-image
+    build: auton build tftp
+    note: serves files over UDP port 69
+    evidence: agent/kernel_spec/services/tftp.md
+
+  - keyword: [doom, game]
+    name: Doom
+    status: roadmap
+    blocked_by: agent/kernel_spec/decisions/doom-engine-licence.md
+    note: >-
+      specified, and blocked on a licence decision about the engine before any
+      image is distributed. Not "coming soon": blocked, on a named question.
+    evidence: agent/kernel_spec/services/play-doom.md
+
+  - keyword: [desktop, gui, app]
+    name: desktop apps
+    status: host-only
+    note: >-
+      the AUTON host control plane launches macOS, Linux and Windows apps from
+      chat. In-kernel this needs a process model and a window system, neither
+      of which exists.
+    evidence: controlplane/src/controlplane/backends/desktop/launcher.py
+
+  - keyword: [docker, container]
+    name: containers
+    status: host-only
+    note: the host control plane runs Docker today; in-kernel needs an OCI runtime
+    evidence: controlplane/src/controlplane/backends/docker/plugin.py
+
+  - keyword: [kubernetes, k8s]
+    name: kubernetes
+    status: host-only
+    note: >-
+      the host control plane drives kubectl today; in-kernel needs a container
+      runtime and a scheduler
+    evidence: controlplane/src/controlplane/backends/kubernetes/plugin.py
