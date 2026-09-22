@@ -82,4 +82,5 @@ subjects:
     record: spec/drivers/virtio-console.md
     reference_reused: [tests/kernel/virtio_reference/virtio_ref.c, tests/kernel/virtio_reference/include/virtio_ref.h]
     reference_new: [tests/kernel/virtio_console_reference.c]
+    gate_tests: tests/kernel/virtio_console_gate_test.c   # human, frozen before the run; not the agent's
     tests: [{path: tests/kernel/virtio_console_test.c}]
