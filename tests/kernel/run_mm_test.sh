@@ -41,6 +41,17 @@ if [ ! -f "$KERNEL_TREE/kernel/include/mm.h" ]; then
 	exit 2
 fi
 
+# The base ships kernel/lib/phys.c, so "some source exists" is always true;
+# the allocator itself is kernel/mm/pmm.c, and without it nothing was generated.
+if [ ! -f "$KERNEL_TREE/kernel/mm/pmm.c" ]; then
+	echo "mm.h is present but kernel/mm/pmm.c is not: the allocator was not generated." >&2
+	exit 2
+fi
+if [ ! -f "$KERNEL_TREE/kernel/include/boot.h" ]; then
+	echo "no kernel/include/boot.h: boot.md's boot_mmap_t, which pmm_init takes, is missing." >&2
+	exit 1
+fi
+
 SOURCES=""
 for candidate in kernel/mm/pmm.c kernel/mm/slab.c kernel/mm/vmm.c kernel/lib/phys.c; do
 	[ -f "$KERNEL_TREE/$candidate" ] && SOURCES="$SOURCES $KERNEL_TREE/$candidate"

@@ -58,7 +58,7 @@ static boot_mmap_t make_map(void)
 	boot_mmap_t m;
 	memset(&m, 0, sizeof m);
 	m.count = 1;
-	m.entries[0].base = 0;
+	m.entries[0].base_addr = 0;
 	m.entries[0].length = MEM_BYTES;
 	m.entries[0].type = 1;              /* usable */
 	return m;

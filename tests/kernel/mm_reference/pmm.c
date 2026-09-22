@@ -35,7 +35,7 @@ void pmm_init(const boot_mmap_t *mmap)
 	uint64_t highest = 0;
 	for (uint32_t i = 0; i < mmap->count; i++) {
 		const boot_mmap_entry_t *e = &mmap->entries[i];
-		uint64_t end = e->base + e->length;
+		uint64_t end = e->base_addr + e->length;
 		if (e->type == 1 && end > highest)
 			highest = end;
 	}
@@ -54,7 +54,7 @@ void pmm_init(const boot_mmap_t *mmap)
 		int usable = 0;
 		for (uint32_t i = 0; i < mmap->count; i++) {
 			const boot_mmap_entry_t *e = &mmap->entries[i];
-			if (e->type == 1 && addr >= e->base && addr < e->base + e->length) {
+			if (e->type == 1 && addr >= e->base_addr && addr < e->base_addr + e->length) {
 				usable = 1;
 				break;
 			}

@@ -18,7 +18,7 @@ Architecture-specific boot details (boot protocol, descriptor tables, mode trans
 
 ### Portable Boot Information
 
-These structures are architecture-independent. The architecture's boot HAL (`arch_parse_memory_map()`, `arch_parse_modules()`) fills them from whatever boot protocol the architecture uses (Multiboot2 on x86, Device Tree on ARM/RISC-V, etc.).
+These structures are architecture-independent and are declared in `kernel/include/boot.h` (the memory manager's gate, `tests/kernel/run_mm_test.sh`, compiles against that header). The architecture's boot HAL (`arch_parse_memory_map()`, `arch_parse_modules()`) fills them from whatever boot protocol the architecture uses (Multiboot2 on x86, Device Tree on ARM/RISC-V, etc.).
 
 ```c
 /* Portable memory map entry (filled by arch_parse_memory_map) */
