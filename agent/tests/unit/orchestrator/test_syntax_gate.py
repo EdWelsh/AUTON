@@ -103,3 +103,20 @@ def test_an_empty_design_is_nothing_to_adopt(tmp_path):
     _, eng, branch = _design(tmp_path, None)
     assert eng._adopt_design(branch) is False
     assert eng._adopt_design(None) is False
+
+
+FIXTURE = Path(__file__).resolve().parents[2] / "fixtures" / "w13_v8_virtio_console_record.md"
+SPEC = Path(__file__).resolve().parents[3] / "kernel_spec"
+
+
+def test_the_v8_record_is_refused(tmp_path):
+    """w13 V8: approved and merged, with no front matter at all."""
+    t = _tree(tmp_path, {"spec/drivers/virtio-console.md": FIXTURE.read_text()})
+    errors = syntax_gate.check(t, ["spec/drivers/virtio-console.md"])
+    assert errors and "front-matter" in errors and "drivers/README.md" in errors
+
+
+def test_every_real_driver_record_passes():
+    changed = [str(p.relative_to(SPEC)) for p in (SPEC / "drivers").glob("*.md")]
+    assert len(changed) >= 5
+    assert syntax_gate.record_errors(SPEC, changed) == []
