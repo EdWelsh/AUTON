@@ -301,7 +301,15 @@ class Agent:
                     )
 
                 case _:
-                    return f"Unknown tool: {tool_name}"
+                    # Say what does exist. On w13's F6 run gemma4 called a tool
+                    # named after a C function in the spec (tftp_server_init)
+                    # eight times in a row; "Unknown tool" alone gave it nothing
+                    # to correct against.
+                    names = ", ".join(sorted(t["function"]["name"] for t in self.tools
+                                             if isinstance(t, dict) and "function" in t))
+                    return (f"Unknown tool: {tool_name}. It is not an action you can take. "
+                            f"Your tools are: {names}. To create a file, call write_file "
+                            f"with its path and full content.")
 
         except Exception as e:
             return f"Error executing {tool_name}: {e}"

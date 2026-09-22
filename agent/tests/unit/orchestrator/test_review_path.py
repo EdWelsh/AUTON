@@ -313,3 +313,19 @@ class TestWorkStaysOnItsBranch:
                                 "agent/architect-01/arch-architecture"],
                                capture_output=True, text=True).stdout.split()
         assert shown == ["arch_defs.h"], "it stays, committed, on the branch that made it"
+
+
+class TestAnUnknownToolNamesTheRealOnes:
+    async def test_the_reply_lists_the_available_tools(self):
+        """w13 F6: gemma4 called `tftp_server_init` (a function from the spec)
+        as a tool eight times; the bare "Unknown tool" gave it nothing to
+        correct against."""
+        from orchestrator.agents.base_agent import Agent
+
+        agent = MagicMock()
+        agent.agent_id = "dev-01"
+        agent.tools = [{"type": "function", "function": {"name": "write_file"}},
+                       {"type": "function", "function": {"name": "read_file"}}]
+        out = await Agent._execute_tool(agent, "tftp_server_init", {})
+
+        assert "read_file, write_file" in out and "write_file" in out.split("To create")[1]

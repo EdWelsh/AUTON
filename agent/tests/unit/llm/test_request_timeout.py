@@ -36,3 +36,11 @@ def test_the_engine_reads_the_timeout_from_config(tmp_path):
     eng = OrchestrationEngine(workspace_path=tmp_path, kernel_spec_path=tmp_path,
                               config={"llm": {"model": "anthropic/x", "request_timeout": 42}})
     assert eng.client.request_timeout == 42.0
+
+
+def test_tool_calls_are_logged_without_file_bodies():
+    from orchestrator.llm.client import _summarise_args, _summarise_result
+
+    line = _summarise_args({"path": "kernel/a.c", "content": "x" * 5000})
+    assert "path='kernel/a.c'" in line and "<5000 chars>" in line and "xxxx" not in line
+    assert _summarise_result("y" * 500).endswith("(500 chars)")

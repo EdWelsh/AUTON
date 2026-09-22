@@ -181,6 +181,24 @@ def preflight_model(model: str, provider_config: ProviderConfig) -> None:
     _preflight_ok.add((base_url, tag))
 
 
+def _summarise_args(args: Any) -> str:
+    """Tool arguments for a log line: paths and sizes, never file bodies."""
+    if not isinstance(args, dict):
+        return repr(args)[:80]
+    parts = []
+    for k, v in args.items():
+        if isinstance(v, str) and (len(v) > 60 or "\n" in v):
+            parts.append(f"{k}=<{len(v)} chars>")
+        else:
+            parts.append(f"{k}={v!r}"[:80])
+    return ", ".join(parts)
+
+
+def _summarise_result(result: Any) -> str:
+    text = str(result).replace("\n", " ")
+    return text if len(text) <= 100 else text[:100] + f"... ({len(str(result))} chars)"
+
+
 class LLMClient:
     """Async LLM client using LiteLLM for multi-provider support."""
 
@@ -325,6 +343,11 @@ class LLMClient:
 
             for tc in response.tool_calls:
                 result = await tool_executor(tc.name, tc.arguments)
+                # One line per call, at INFO, so an archived run can say what an
+                # agent did. w13's F6 run hit 20 turns and wrote nothing, and
+                # the transcript could not say what the 20 calls were.
+                logger.info("[%s] %s(%s) -> %s", agent_id, tc.name,
+                            _summarise_args(tc.arguments), _summarise_result(result))
                 messages.append({
                     "role": "tool",
                     "tool_call_id": tc.id,
