@@ -66,8 +66,10 @@ class TestTheShippedSpecs:
 
     def test_a_service_can_exclude_one_capability_of_a_subsystem_it_needs(self):
         """The reason the index is per-capability. The file server needs `fs`
-        for `vfs` and `initramfs` while excluding `writable` and `ext2` from
-        the same spec — a per-subsystem index could not express that."""
+        for `vfs` and `fat32` while excluding `writable` and `ext2` from the
+        same spec — a per-subsystem index could not express that. `initramfs`
+        rides along because fs.md marks it non-optional, which is the rule:
+        an optional capability nobody asked for is what must not ship."""
         sl = load(SERVICES / "fileserver.md").resolve()
 
         assert "fs" in sl.subsystems
@@ -83,8 +85,11 @@ class TestTheShippedSpecs:
         fs = load(SERVICES / "fileserver.md")
 
         assert "tcp" in fs.requires and "tcp" in dhcp.excludes
-        assert fs.assets and not dhcp.assets
         assert set(dhcp.resolve().subsystems) != set(fs.resolve().subsystems)
+        # The asset dimension moved to play-doom when the file server was
+        # retargeted from a CPIO boot module to the FAT32 volume (w14): its
+        # content is now on the disk image, which is the point of F8.
+        assert load(SERVICES / "play-doom.md").assets and not fs.assets
 
     def test_neither_service_needed_a_field_the_other_lacks(self):
         """Task 1's actual bar: two shapes, no new fields."""

@@ -1,21 +1,29 @@
 ---
 service: fileserver
-requires: [netif, ethernet, ipv4, tcp, http-server, vfs, initramfs, allocator, klog, terminal, scoped]
+requires: [netif, ethernet, ipv4, tcp, http-server, vfs, fat32, virtio-blk, allocator, klog, terminal, scoped]
 excludes: [writable, ext2, dhcp-client, preemptive, ipc]
 entry: fileserver_serve
 markers:
-  - "[HTTP] docroot mounted from module"
+  - "[HTTP] docroot mounted from fat32"
   - "[HTTP] listening on :80"
   - "[HTTP] GET /index.html 200 1024"
-assets: [docroot.cpio]
+assets: []
 ---
 
 # File Server Service Specification
 
 ## Overview
 
-Serves a read-only document root over HTTP/1.1 from a CPIO archive handed in as a Multiboot2
-module. One TCP listener, one connection at a time, no writes.
+Serves a read-only document root over HTTP/1.1 from **the FAT32 volume** on virtio-blk. One
+TCP listener, one connection at a time, no writes.
+
+**Retargeted in w14, and why**: this spec originally served a CPIO archive handed in as a
+Multiboot2 module, because it was written before there was any storage. The factory PRD's F8
+signal is stricter — *"`curl` retrieves a file that was written to the image's disk, not
+compiled in"* — and a boot module is compiled in. With FAT32 and virtio-blk specified (w12,
+w13), adding a file to the site is now an `mcopy` onto the image, not a rebuild.
+
+The security boundary below is unchanged except for its last step, which is noted there.
 
 This spec exists to test the service format against a shape structurally unlike
 [dhcp.md](dhcp.md): connection-oriented rather than datagram, stateful across packets, and
@@ -24,11 +32,12 @@ it had needed one, the format would have been wrong.
 
 Two things it does differ in, both expressed with existing fields:
 
-- `assets: [docroot.cpio]` — the first non-empty asset list. The content served is supplied at
-  build time and never committed, which is also how a Doom WAD will work.
-- `excludes: [writable, ext2]` while `requires: [vfs, initramfs]`. Both come from the same
+- `excludes: [writable, ext2]` while `requires: [vfs, fat32]`. All three come from the same
   subsystem spec. The capability index is per-capability precisely so a service can take the
-  read-only half of `fs` and have the exclusion still mean something.
+  read-only half of `fs` and have the exclusion still mean something: this image can read the
+  volume and cannot write it, and the leakage gate proves no write symbol is linked in.
+- `assets: []` — it needs none. The content is on the disk image the harness builds with
+  `mformat`/`mcopy`, which is the point of the retarget.
 
 ## Data Structures
 
@@ -56,8 +65,9 @@ second client waits in the TCP backlog — acceptable for a document root, and h
 ## Interface (`kernel/include/fileserver.h`)
 
 ```c
-/* Mount the CPIO module read-only at "/". -1 if the module is absent or malformed. */
-int  fileserver_init(const void *module, uint32_t module_len);
+/* Mount the first FAT32 volume read-only at "/". -1 if there is no block
+ * device, no FAT32 volume on it, or no /index.html. */
+int  fileserver_init(void);
 
 /* The single serve loop. Binds TCP :80, never returns. */
 void fileserver_serve(void);
@@ -74,11 +84,15 @@ int  fileserver_resolve(const char *url, char *out, uint32_t out_len);
 
 ### Startup
 
-1. Locate the `docroot.cpio` Multiboot2 module by name. Absent → log and halt; a file server
+1. Mount the first virtio-blk device's FAT32 volume read-only. Absent → log and halt; a file server
    with nothing to serve should not pretend to start.
-2. Parse the CPIO index in place. The archive is not copied — it is already in memory and the
-   service is read-only, which is the same run-in-place argument the SLM model uses.
-3. Log `[HTTP] docroot mounted from module`, then `[HTTP] listening on :80`.
+2. Check `/index.html` exists. A volume with no index is a misconfigured image, and finding
+   that out at the first request is worse than finding it out at boot.
+3. Log `[HTTP] docroot mounted from fat32`, then `[HTTP] listening on :80`.
+
+   Directory entries are read on demand, not indexed at mount: the volume may hold more files
+   than the image has memory for, and a read-only server has no reason to cache a namespace it
+   does not own.
 
 ### Request handling (RFC 9112)
 
@@ -99,8 +113,9 @@ int  fileserver_resolve(const char *url, char *out, uint32_t out_len);
 3. Reject the decoded path if it contains a NUL, a backslash, or any `..` segment — checked
    **after** decoding, on segment boundaries, not by substring.
 4. Reject anything still over 255 bytes.
-5. Look up the result in the CPIO index by exact match. There is no filesystem walk, so there
-   is no symlink to follow — the archive index is the only namespace.
+5. Look up by exact 8.3/LFN match per segment, walking the directory from the volume root.
+   There are no symlinks in FAT32, so the directory walk is the only namespace — nothing can
+   redirect a resolved path outside it.
 
 A path that fails any step returns `-1` and is answered `404`, never `403`: a distinguishable
 error tells a prober which files exist.
@@ -109,7 +124,7 @@ error tells a prober which files exist.
 
 | Case | Behaviour |
 |---|---|
-| Module absent or not CPIO | Log, halt at init |
+| No block device, or no FAT32 volume on it | Log `[HTTP] no volume to serve`, halt at init |
 | Request with no CRLFCRLF before 8 KiB | `431`, close |
 | Path resolving outside the docroot | `404` (never `403`) |
 | Client disconnects mid-body | Reap, reset to `CONN_IDLE` |
@@ -121,14 +136,15 @@ error tells a prober which files exist.
 | Path | Contents |
 |---|---|
 | `kernel/include/fileserver.h` | The interface above |
-| `kernel/services/fileserver/cpio.c` | Archive index and lookup |
+| `kernel/services/fileserver/docroot.c` | Volume mount and per-segment lookup |
 | `kernel/services/fileserver/http.c` | `fileserver_handle`, `fileserver_resolve` |
 | `kernel/services/fileserver/serve.c` | `fileserver_serve` — the loop and nothing else |
 
 ## Dependencies
 
 `netif`, `ethernet`, `ipv4`, `tcp`, `http-server` from [net](../subsystems/net.md); `vfs` and
-`initramfs` from [fs](../subsystems/fs.md); `allocator` from [mm](../subsystems/mm.md); `klog`
+`fat32` from [fs](../subsystems/fs.md); `virtio-blk` from
+[drivers](../subsystems/drivers.md); `allocator` from [mm](../subsystems/mm.md); `klog`
 and `terminal` from [sys](../subsystems/sys.md).
 
 `writable` and `ext2` are excluded though the same subsystem provides them. The image must
