@@ -38,7 +38,10 @@ ACCESS_LEVELS = {
     "membership-required",
 }
 
-CATEGORIES = {"cpu", "gpu", "soc", "standards"}
+# "crypto-source" is a source tree, not a silicon vendor: the F12 gate records
+# the vetted crypto it is allowed to port here, because this is where a source,
+# its licence and its audit evidence live (kernel_spec/decisions/ssh-crypto.md).
+CATEGORIES = {"cpu", "gpu", "soc", "standards", "crypto-source"}
 
 # Paths git tracks. A non-redistributable document must never be fetched into
 # one of these, and this is checked rather than documented.

@@ -109,3 +109,22 @@ licences:
       derivative works from a driver. A specification under such terms may still
       support `synthesize` — reading a spec and writing original code is a
       different act from copying one.
+
+  BSD-2-Clause:
+    reuse: permitted
+    port: permitted
+    requires: [attribution]
+    depends_on_use: false
+    note: >-
+      Permissive, no endorsement clause. Monocypher's first option (F12 crypto
+      gate).
+
+  CC0-1.0:
+    reuse: permitted
+    port: permitted
+    requires: []
+    depends_on_use: false
+    note: >-
+      A public-domain dedication, not a licence with obligations. Monocypher's
+      second option. Attribution is still recorded in PROVENANCE.json because
+      provenance is this project's rule, not the licence's.

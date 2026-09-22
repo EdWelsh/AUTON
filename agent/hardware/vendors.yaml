@@ -729,3 +729,41 @@ vendors:
         notes: >-
           The FAT32 section of subsystems/fs.md cites it by section name: FAT Type
           Determination, FSInfo Sector Structure, FAT Long Directory Entries, ChkSum.
+
+  # Cryptographic sources vetted by the F12 gate
+  # (agent/kernel_spec/decisions/ssh-crypto.md). Not silicon documents: they are
+  # inventoried here because this is where a vetted source and its licence are
+  # recorded, and because the gate's verdict cites them.
+  - vendor: monocypher
+    category: crypto-source
+    identity_keys: [version]
+    documents:
+      - id: monocypher-4.0.2
+        title: Monocypher 4.0.2 (X25519, Ed25519, SHA-512, ChaCha20, Poly1305)
+        kind: source
+        access: public-download
+        redistributable: true
+        licence: BSD-2-Clause OR CC0-1.0
+        form: source-tree
+        audit: >-
+          Cure53, Audit-Report Monocypher Crypto Library 06.2020, of version
+          3.1.1 (https://cure53.de/pentest-report_monocypher.pdf). The version
+          used is later than the audited one; see the decision record.
+        url_hint: https://monocypher.org
+
+  - vendor: bearssl
+    category: crypto-source
+    identity_keys: [version]
+    documents:
+      - id: bearssl-sha2small
+        title: BearSSL hash/sha2small.c + codec/{enc,dec}32be.c (SHA-256)
+        kind: source
+        access: public-download
+        redistributable: true
+        licence: MIT
+        form: source-tree
+        audit: >-
+          No published independent audit. Vetted on deployment instead: the TLS
+          stack of the ESP8266 Arduino Core
+          (https://arduino-esp8266.readthedocs.io/en/latest/esp8266wifi/bearssl-client-secure-class.html).
+        url_hint: https://bearssl.org
