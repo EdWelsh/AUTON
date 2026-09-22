@@ -13,7 +13,7 @@ looks uniformly verified when most of it is untested is worse than no matrix.
 |---|---|---|---|
 | **macOS, Apple Silicon** (arm64) | Homebrew: `x86_64-elf-gcc`, `i686-elf-grub`, `qemu` — `scripts/lib/toolchain.sh` | **`tcg` only.** HVF accelerates guests of the host's own architecture; `qemu-system-x86_64` on arm64 lists nothing else | **Yes** — M4 Pro, QEMU 11.1.1, 2026-09-21 |
 | **macOS, Intel** (x86_64) | Homebrew, as above | `hvf` → `tcg` | **No.** Written from QEMU's documentation |
-| **Linux x86_64** | distro packages, the list in the `linux-e2e` CI job: `gcc clang grub-pc-bin grub-common xorriso qemu-system-x86 mtools` + CPU torch | `kvm` → `tcg`. `kvm` requires `/dev/kvm` readable **and** writable by the user, not just listed by QEMU | **Wired, not yet observed.** The `linux-e2e` job (A1) runs preflight, the e2e spine on `kernel-base-v4` checked against `docs/E2E-EXPECTED.yaml`, and times the same ISO under kvm and tcg (B1). It has not run: this branch has not been pushed |
+| **Linux x86_64** | distro packages, the list in the `linux-e2e` CI job: `gcc clang grub-pc-bin grub-common xorriso qemu-system-x86 mtools` + CPU torch | `kvm` → `tcg`. `kvm` requires `/dev/kvm` readable **and** writable by the user, not just listed by QEMU | **Wired, not yet observed.** The `linux-e2e` job (A1) runs preflight, the e2e spine on `kernel-base-v5` checked against `docs/E2E-EXPECTED.yaml`, and times the same ISO under kvm and tcg (B1). It has not run: this branch has not been pushed |
 | **Linux arm64** | distro cross gcc | `tcg` (same reason as Apple Silicon) | **No** |
 | **Windows (native, MSYS2/MINGW)** | not established | `whpx` → `tcg` | **No.** No Windows host has run any AUTON script |
 | **Windows, WSL2** | as Linux x86_64 | `kvm` if nested virtualisation exposes `/dev/kvm`, else `tcg`. `uname -s` reports `Linux`, so it takes the Linux branch | **No** |
@@ -46,8 +46,8 @@ available**. It never quietly downgrades to TCG, because a run that asked for KV
 
 | Host | Base | Result | Exercised? |
 |---|---|---|---|
-| Apple Silicon, TCG | `kernel-base-v4` | **RED at markers, as expected**: parity, iso and boot pass; 13/14 markers; the `[MM]` line waits on `w13-generate-mm` (`docs/E2E-EXPECTED.yaml`) | **Yes**, 2026-09-22 |
-| Linux x86_64, CI | `kernel-base-v4` | the same expectation, checked by `scripts/e2e-expect.py` | **No**: wired in `linux-e2e`, not yet run |
+| Apple Silicon, TCG | `kernel-base-v5` | **RED at markers, as expected**: parity, iso and boot pass; 13/14 markers; the `[MM]` line waits on `w13-generate-mm` (`docs/E2E-EXPECTED.yaml`) | **Yes**, 2026-09-22 |
+| Linux x86_64, CI | `kernel-base-v5` | the same expectation, checked by `scripts/e2e-expect.py` | **No**: wired in `linux-e2e`, not yet run |
 
 ## Firmware (windows-linux B3)
 
@@ -68,8 +68,8 @@ Secure Boot is not attempted: the image is unsigned.
 | Host | Accelerator | QEMU | ISO | Power-on → `[BOOT] OK` |
 |---|---|---|---|---|
 | Apple M4 Pro, macOS 26.6 | tcg | 11.1.1 | `kernel-reference-v1`, `make iso` (8.4 MB) | **1.37 s, 1.38 s, 1.38 s** (3 runs) |
-| Apple M4 Pro, macOS 26.6 | tcg | 11.1.1 | `kernel-base-v4`, `make iso` | **1.38 s, 1.40 s, 1.39 s**, mean 1.39 s (`scripts/time-boot.sh`, 2026-09-22) |
-| GitHub `ubuntu-latest` | kvm and tcg, same ISO | runner's | `kernel-base-v4` | **not yet run.** The `linux-e2e` job prints the ratio |
+| Apple M4 Pro, macOS 26.6 | tcg | 11.1.1 | `kernel-base-v5`, `make iso` | **1.38 s, 1.40 s, 1.39 s**, mean 1.39 s (`scripts/time-boot.sh`, 2026-09-22) |
+| GitHub `ubuntu-latest` | kvm and tcg, same ISO | runner's | `kernel-base-v5` | **not yet run.** The `linux-e2e` job prints the ratio |
 
 This is **one point on one machine under one accelerator**. It is not B1's 10x metric and must
 not be reported as it. B1 needs the same ISO timed under KVM on an x86 Linux host.

@@ -7,7 +7,7 @@
 #
 # Update this file in the same commit that changes the outcome.
 
-base: kernel-base-v4
+base: kernel-base-v5
 verdict: RED
 failed_stage: markers
 failing_markers:

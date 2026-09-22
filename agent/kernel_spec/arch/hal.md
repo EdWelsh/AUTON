@@ -14,6 +14,13 @@ The HAL is the boundary between portable kernel code and architecture-specific c
 
 Adding a new architecture means implementing this contract. No portable kernel code needs to change.
 
+**Enforced.** `agent/tools/hal_gate.py`, and `[gate: hal]` in `build_service.py`, refuse inline
+assembly, `arch/` headers and port I/O (`io_read*`/`io_write*`) in portable code. Architecture
+territory is `kernel/arch/**` and `kernel/drivers/arch/**` (drivers for devices only one
+architecture has, such as the 16550 UART). Portable code includes `kernel/include/hal.h`.
+Comments and string literals are not scanned. `kernel-base-v5` is the first base that passes;
+v4 had 10 uses at 6 sites.
+
 ## HAL Interface Categories
 
 ### 1. Boot HAL (`kernel/arch/<arch>/boot/`)

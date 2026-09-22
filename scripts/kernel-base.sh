@@ -8,14 +8,14 @@
 # refusal means. w11's F6 was seeded from kernel-reference-v1, which predates
 # F4's static-IP setup.c and weak service_main, and got a [gate: link closure]
 # refusal no agent could have avoided. kernel-base-v2 is that tree plus F4's
-# hooks, v3 adds the model-format-v3 loader, v4 sizes RAM from the memory map; see agent/kernel_spec/reference/README.md "Bases".
+# hooks, v3 adds the model-format-v3 loader, v4 sizes RAM from the memory map, v5 puts portable code behind the HAL; see agent/kernel_spec/reference/README.md "Bases".
 #
 #   --git        initialise <dir> as a git repo on `main` (GitWorkspace needs one)
-#   --rev TAG    another base (default: kernel-base-v4)
+#   --rev TAG    another base (default: kernel-base-v5)
 set -uo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 
-DIR="" GIT=0 REV="kernel-base-v4"
+DIR="" GIT=0 REV="kernel-base-v5"
 while [ $# -gt 0 ]; do
 	case "$1" in
 		--git) GIT=1; shift ;;

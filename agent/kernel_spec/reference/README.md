@@ -53,7 +53,8 @@ Two tagged trees exist. Neither is in `main`; `kernels/` is gitignored and a tes
 | `kernel-reference-v1` | the retired hand-written tree | the source of this directory's graph and training pairs | reading, never as an experiment base |
 | `kernel-base-v2` | `70f3e49` (`5fb2777^`) | v1 + F4's factory hooks: the static-IP branch in `net/setup.c` (+22) and a weak `service_main` in `boot/kernel_main.c` (+10) | the w11 control; superseded by v3 |
 | `kernel-base-v3` | `319e7f2` | v2 + the **model format v3** loader: `VERSION 3`, a bounds-checked device-table parse, `slm_neural_device_name()` | superseded by v4 |
-| `kernel-base-v4` | `388943a` | v3 + RAM sized from the **memory map** (tag 6, then EFI tag 17, then tag 4) and `boot_parse_info()` for host tests. Under UEFI, v3 reported "7 MB RAM" on a 256 MiB guest | **every generation experiment** (the script's default) |
+| `kernel-base-v4` | `388943a` | v3 + RAM sized from the **memory map** (tag 6, then EFI tag 17, then tag 4) and `boot_parse_info()` for host tests. Under UEFI, v3 reported "7 MB RAM" on a 256 MiB guest | superseded by v5 |
+| `kernel-base-v5` | `b0ce7c7` | v4 + **the HAL boundary**: portable code calls `kernel/include/hal.h` (`arch_halt`, `arch_disable_interrupts`, `arch_pci_config_*`), implemented in `kernel/arch/x86_64/hal.c`; `hal_gate.py` finds 10 violations on v4 and none here | **every generation experiment** (the script's default) |
 
 **Why v3 exists.** The exporter has written format v3 since w10, and v2's loader requires v2
 exactly. So the e2e spine failed parity with `LOAD FAIL` on every run, and nobody saw it because
@@ -62,7 +63,7 @@ exactly. So the e2e spine failed parity with `LOAD FAIL` on every run, and nobod
 F3's allocator, which `w13-generate-mm` generates. **A base must load the format the current
 tools emit**, and `test_kernel_base.py` pins the loader's version against `auton_format.VERSION`.
 
-`scripts/kernel-base.sh <dir> [--git] [--rev TAG]` extracts one (default v4). The difference matters:
+`scripts/kernel-base.sh <dir> [--git] [--rev TAG]` extracts one (default v5). The difference matters:
 seeded from v1, a TFTP service is refused at `[gate: link closure] no stub signature for:
 dhcp_run` before any service code is considered; from v2 or v3 it is refused only at
 `undefined: tftp_serve`, which is the agent's job. `test_kernel_base.py` pins both.

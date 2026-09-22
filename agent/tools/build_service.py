@@ -328,6 +328,20 @@ def build(name: str, tree: Path, make_iso: bool = False, cc: str | None = None,
                  | {str(absent.relative_to(tree))})
     csrc = [p for p in rel if p.endswith(".c")]
     asrc = [p for p in rel if p.endswith(".S")]
+
+    # The HAL boundary (arch/hal.md), over exactly what will be compiled plus
+    # the headers portable code can include. A second architecture is only
+    # possible while portable code contains none of the first.
+    from hal_gate import scan as hal_scan
+
+    headers = [str(p.relative_to(tree)) for p in (tree / "kernel" / "include").rglob("*.h")]
+    violations = hal_scan(tree, sorted(set(rel) | set(headers)))
+    if violations:
+        shown = "; ".join(str(v) for v in violations[:5])
+        more = f" (+{len(violations) - 5} more)" if len(violations) > 5 else ""
+        raise GateFailure(f"[gate: hal] {len(violations)} architecture use(s) in portable code: "
+                          f"{shown}{more}")
+    result.gates.append("hal: portable code calls no architecture directly")
     result.sources = csrc + asrc
 
     cflags = " ".join(KERNEL_CFLAGS + ["-Ikernel/include"] + defines)
