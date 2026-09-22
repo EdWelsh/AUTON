@@ -287,8 +287,9 @@ class OrchestrationEngine:
             architect: ArchitectAgent = self._agents["architect"]
             subsystems = sorted(set(t.get("subsystem", "") for t in tasks if t.get("subsystem")))
             for subsystem in subsystems:
-                await architect.design_subsystem(subsystem)
+                design = await architect.design_subsystem(subsystem)
                 self.workspace.checkout_main()
+                self._adopt_design(design.get("branch"))
 
             # Phase 3: Development loop
             self.state.phase = "developing"
@@ -509,6 +510,24 @@ class OrchestrationEngine:
             if requeued.review_rounds >= limit:
                 self.task_graph.fail(node.task_id, f"merge conflict with main ({branch})")
                 self.state.tasks_failed += 1
+
+    def _adopt_design(self, branch: str | None) -> bool:
+        """Merge a design branch into main, so developers build on its headers.
+
+        Before w13 the architect's headers stayed on their arch-* branch: the
+        developers, branching from main, never saw the interfaces they were
+        told to implement. A design that does not compile is not adopted.
+        """
+        if not branch:
+            return False
+        # checkout_main has already committed the architect's pending work.
+        if not self.workspace.has_changes(branch):
+            return False
+        errors = self._syntax_errors(branch)
+        if errors is not None:
+            logger.warning("Design %s not adopted, it does not compile:\n%s", branch, errors)
+            return False
+        return self.workspace.merge_branch(branch)
 
     def _syntax_errors(self, branch: str) -> str | None:
         """The compiler's errors for the C files `branch` changed, or None."""

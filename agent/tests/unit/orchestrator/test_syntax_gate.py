@@ -70,3 +70,36 @@ async def test_the_engine_requeues_without_asking_the_reviewer(tmp_path):
     assert node.state is not TaskState.APPROVED
     assert node.review_rounds == 1
     assert "does not compile" in str(node.data.get("feedback") or node.data)
+
+
+def _design(tmp_path, header: str | None):
+    ws, g = _repo(tmp_path), _chain()
+    branch = ws.create_branch("architect-01", "arch", "mm")
+    if header is not None:
+        (tmp_path / "kernel" / "include").mkdir(parents=True)
+        (tmp_path / "kernel" / "include" / "mm.h").write_text(header)
+    ws.checkout_main()
+    return ws, _engine(ws, g), branch
+
+
+@needs_cc
+def test_a_compiling_design_is_merged_for_the_developers(tmp_path):
+    """w13 storage: the architect's 95-line header never reached main."""
+    ws, eng, branch = _design(tmp_path, "#include <stdint.h>\nvoid pmm_init(void);\n")
+    assert eng._adopt_design(branch) is True
+    assert (tmp_path / "kernel" / "include" / "mm.h").exists()
+    assert ws.repo.active_branch.name == "main"
+
+
+@needs_cc
+def test_a_design_that_does_not_compile_stays_off_main(tmp_path):
+    ws, eng, branch = _design(tmp_path, "ttypedef enum x { A } x_t;\n")
+    assert eng._adopt_design(branch) is False
+    assert not (tmp_path / "kernel" / "include" / "mm.h").exists()
+    assert ws.repo.active_branch.name == "main"
+
+
+def test_an_empty_design_is_nothing_to_adopt(tmp_path):
+    _, eng, branch = _design(tmp_path, None)
+    assert eng._adopt_design(branch) is False
+    assert eng._adopt_design(None) is False
