@@ -2,6 +2,7 @@
 subsystem: fp
 operation: f64_sqrt
 oracle: softfloat
+instructions: [SQRTSD, FSQRT]
 entries:
   - id: fp-sqrt-two
     clause: "IEEE 754-2019 5.4.1 squareRoot; SDM Vol. 2 SQRTSD"

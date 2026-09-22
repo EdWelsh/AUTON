@@ -3,6 +3,9 @@
 subsystem: fp
 operation: f64_div
 oracle: softfloat
+# The instructions these entries exercise, in SDM spelling. An image that
+# executes none of them gets none of these checks (H10c, intent-scoped suites).
+instructions: [DIVSD, FDIV]
 entries:
   - id: fp-div-fdiv-historical
     clause: "Intel SDM Vol. 1 8.3.9 (FDIV); IEEE 754-2019 5.4.1 division"

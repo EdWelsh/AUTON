@@ -11,6 +11,10 @@
  *
  * Line format:  <id> <op> <rounding> <a_bits> [<b_bits>]
  * Output:       one record per line: <id> <result_bits> <exception_flags>
+ *
+ * Single-precision entries (f32_*) carry 32-bit patterns and produce 32-bit
+ * results, printed in eight hex digits, so a single result can never be
+ * mistaken for a double's.
  */
 #include <stdio.h>
 #include <stdint.h>
@@ -56,6 +60,24 @@ int main(int argc, char **argv)
 		softfloat_roundingMode = rounding_of(rmode);
 		softfloat_exceptionFlags = 0;
 		softfloat_detectTininess = softfloat_tininess_afterRounding;   /* x86 */
+
+		if (!strcmp(op, "f32_div") || !strcmp(op, "f32_sqrt")) {
+			float32_t x = {.v = (uint32_t)a_bits}, y, z;
+			if (!strcmp(op, "f32_div")) {
+				if (fscanf(in, " %llx", &b_bits) != 1) {
+					fprintf(stderr, "%s: f32_div needs two operands\n", id);
+					return 2;
+				}
+				y.v = (uint32_t)b_bits;
+				z = f32_div(x, y);
+			} else {
+				z = f32_sqrt(x);
+			}
+			fprintf(out, "%s %08lx %02x\n", id, (unsigned long)z.v,
+			        softfloat_exceptionFlags);
+			n++;
+			continue;
+		}
 
 		if (!strcmp(op, "f64_div")) {
 			if (fscanf(in, " %llx", &b_bits) != 1) {

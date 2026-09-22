@@ -4,24 +4,28 @@ subsystem: fault
 oracle: architecture
 entries:
   - id: ud-ud2
+    instruction: UD2
     clause: "Intel SDM Vol. 2B UD2: 'Generates an invalid opcode exception'"
     class: fault
     guarantee: architectural
     bytes: "0f0b"
     expect: UD
   - id: ud-ud1
+    instruction: UD1
     clause: "Intel SDM Vol. 2B UD1 (0F B9): raises #UD"
     class: fault
     guarantee: architectural
     bytes: "0fb9"
     expect: UD
   - id: ud-ud0
+    instruction: UD0
     clause: "Intel SDM Vol. 2B UD0 (0F FF): raises #UD"
     class: fault
     guarantee: architectural
     bytes: "0fff"
     expect: UD
   - id: ud-lock-on-nop
+    instruction: NOP
     clause: "Intel SDM Vol. 2A 2.1.1: LOCK on an instruction that cannot be locked raises #UD"
     class: fault
     guarantee: architectural
@@ -29,6 +33,7 @@ entries:
     expect: UD
     note: LOCK NOP. The prefix is legal; applying it here is not.
   - id: ud-control-nop
+    instruction: NOP
     clause: "Intel SDM Vol. 2B NOP"
     class: fault
     guarantee: model-specific

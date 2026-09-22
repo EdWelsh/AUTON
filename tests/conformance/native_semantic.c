@@ -49,6 +49,37 @@ static uint64_t run_div(uint64_t a_bits, uint64_t b_bits, uint32_t rc)
 	return out;
 }
 
+static uint32_t run_div_single(uint32_t a_bits, uint32_t b_bits, uint32_t rc)
+{
+	uint32_t saved, set, out;
+	__asm__ __volatile__("stmxcsr %0" : "=m"(saved));
+	set = (saved & ~(3u << 13)) | rc;
+	__asm__ __volatile__("ldmxcsr %0" : : "m"(set));
+	__asm__ __volatile__(
+		"movd %1, %%xmm0\n\t"
+		"movd %2, %%xmm1\n\t"
+		"divss %%xmm1, %%xmm0\n\t"
+		"movd %%xmm0, %0"
+		: "=r"(out) : "r"(a_bits), "r"(b_bits) : "xmm0", "xmm1");
+	__asm__ __volatile__("ldmxcsr %0" : : "m"(saved));
+	return out;
+}
+
+static uint32_t run_sqrt_single(uint32_t a_bits, uint32_t rc)
+{
+	uint32_t saved, set, out;
+	__asm__ __volatile__("stmxcsr %0" : "=m"(saved));
+	set = (saved & ~(3u << 13)) | rc;
+	__asm__ __volatile__("ldmxcsr %0" : : "m"(set));
+	__asm__ __volatile__(
+		"movd %1, %%xmm0\n\t"
+		"sqrtss %%xmm0, %%xmm0\n\t"
+		"movd %%xmm0, %0"
+		: "=r"(out) : "r"(a_bits) : "xmm0");
+	__asm__ __volatile__("ldmxcsr %0" : : "m"(saved));
+	return out;
+}
+
 static uint64_t run_sqrt(uint64_t a_bits, uint32_t rc)
 {
 	uint32_t saved, set;
@@ -84,7 +115,8 @@ int main(int argc, char **argv)
 	int checked = 0, diverged = 0;
 
 	while (fscanf(ops, "%127s %31s %31s %llx", id, op, rmode, &a_bits) == 4) {
-		int two = !strcmp(op, "f64_div");
+		int single = !strncmp(op, "f32", 3);
+		int two = !strcmp(op, "f64_div") || !strcmp(op, "f32_div");
 		if (two && fscanf(ops, " %llx", &b_bits) != 1)
 			return 2;
 		if (fscanf(orc, "%127s %llx %x", oid, &want, &flags) != 3) {
@@ -96,7 +128,12 @@ int main(int argc, char **argv)
 			return 2;
 		}
 		uint32_t rc = mxcsr_rc(rmode);
-		uint64_t got = two ? run_div(a_bits, b_bits, rc) : run_sqrt(a_bits, rc);
+		uint64_t got;
+		if (single)
+			got = two ? run_div_single((uint32_t)a_bits, (uint32_t)b_bits, rc)
+			          : run_sqrt_single((uint32_t)a_bits, rc);
+		else
+			got = two ? run_div(a_bits, b_bits, rc) : run_sqrt(a_bits, rc);
 		checked++;
 		if (got != want) {
 			/* A NaN's payload is 8086-SSE specialised; a quiet NaN where a

@@ -52,6 +52,11 @@ def bits(value) -> int:
     return struct.unpack("<Q", struct.pack("<d", float(value)))[0]
 
 
+def bits32(value) -> int:
+    """The same as binary32, for the single-precision entries."""
+    return struct.unpack("<I", struct.pack("<f", float(value)))[0]
+
+
 @dataclass
 class Entry:
     id: str
@@ -95,10 +100,16 @@ def write_operands(build: Path, directory: Path = CORPUS) -> tuple[int, int]:
         op = doc.get("operation", "")
         for e in entries:
             if e.cls == "semantic":
-                row = [e.id, op, e.raw.get("rounding", "near_even"),
-                       f"{bits(e.raw['a']):016x}"]
+                # An entry may name its own operation; the document's is the
+                # default. Single-precision operands are 32-bit patterns.
+                operation = e.raw.get("operation", op)
+                single = operation.startswith("f32")
+                to_bits = bits32 if single else bits
+                width = 8 if single else 16
+                row = [e.id, operation, e.raw.get("rounding", "near_even"),
+                       f"{to_bits(e.raw['a']):0{width}x}"]
                 if "b" in e.raw:
-                    row.append(f"{bits(e.raw['b']):016x}")
+                    row.append(f"{to_bits(e.raw['b']):0{width}x}")
                 semantic.append(" ".join(row))
             else:
                 faults.append(f"{e.id} {e.raw['bytes']} {e.raw['expect']} {e.guarantee}")

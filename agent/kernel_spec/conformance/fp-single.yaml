@@ -1,0 +1,57 @@
+# Single-precision division and square root.
+#
+# These exist because the selector found them missing: the base kernel executes
+# DIVSS and SQRTSS (the SLM's arithmetic is float), and no entry covered either,
+# so an intent-scoped suite for that image would have contained no FP check at
+# all while the image divided floats on every inference.
+subsystem: fp
+operation: f32
+oracle: softfloat
+instructions: [DIVSS, SQRTSS]
+entries:
+  - id: fp-div-single-one-third
+    clause: "IEEE 754-2019 5.4.1 division; SDM Vol. 2 DIVSS"
+    class: semantic
+    guarantee: architectural
+    operation: f32_div
+    a: 1.0
+    b: 3.0
+    rounding: near_even
+  - id: fp-div-single-subnormal
+    clause: "IEEE 754-2019 7.5 underflow"
+    class: semantic
+    guarantee: architectural
+    operation: f32_div
+    a: 1.4e-45          # the smallest positive single subnormal
+    b: 2.0
+    rounding: near_even
+  - id: fp-div-single-by-zero
+    clause: "IEEE 754-2019 7.3 divideByZero"
+    class: semantic
+    guarantee: architectural
+    operation: f32_div
+    a: 1.0
+    b: 0.0
+    rounding: near_even
+  - id: fp-div-single-toward-zero
+    clause: "IEEE 754-2019 4.3.2 roundTowardZero; SDM Vol. 1 4.8.4 (MXCSR.RC)"
+    class: semantic
+    guarantee: architectural
+    operation: f32_div
+    a: 1.0
+    b: 3.0
+    rounding: minMag
+  - id: fp-sqrt-single-two
+    clause: "IEEE 754-2019 5.4.1 squareRoot; SDM Vol. 2 SQRTSS"
+    class: semantic
+    guarantee: architectural
+    operation: f32_sqrt
+    a: 2.0
+    rounding: near_even
+  - id: fp-sqrt-single-negative
+    clause: "IEEE 754-2019 7.2 invalid operation"
+    class: semantic
+    guarantee: architectural
+    operation: f32_sqrt
+    a: -1.0
+    rounding: near_even
