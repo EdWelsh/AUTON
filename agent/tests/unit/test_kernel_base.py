@@ -31,7 +31,8 @@ def _has_tag(tag: str) -> bool:
 
 
 needs_bases = pytest.mark.skipif(
-    not all(_has_tag(t) for t in ("kernel-base-v3", "kernel-base-v2", "kernel-reference-v1")),
+    not all(_has_tag(t) for t in ("kernel-base-v4", "kernel-base-v3", "kernel-base-v2",
+                                   "kernel-reference-v1")),
     reason="base tags absent (shallow clone): git fetch --tags")
 needs_cc = pytest.mark.skipif(shutil.which(CC) is None, reason=f"{CC} not installed")
 
@@ -70,7 +71,7 @@ def test_v2_differs_from_v1_by_exactly_f4s_hooks():
 @needs_bases
 @needs_cc
 def test_an_empty_service_on_the_default_base_fails_only_for_its_own_entry(tmp_path):
-    tree = _extract(tmp_path, "kernel-base-v3")
+    tree = _extract(tmp_path, "kernel-base-v4")
     with pytest.raises(GateFailure) as exc:
         build("tftp", tree, cc=CC)
     assert "tftp_serve" in str(exc.value)
@@ -92,7 +93,7 @@ def test_no_mapped_capability_is_phantom_against_the_base(tmp_path):
     removed them; this keeps every remaining mapping honest against the base."""
     from build_manifest import SourceMap, resolve
 
-    tree = _extract(tmp_path, "kernel-base-v3")
+    tree = _extract(tmp_path, "kernel-base-v4")
     caps = sorted(SourceMap.load().capabilities)
     _, _, info = resolve(caps, [], tree)
 
@@ -117,11 +118,20 @@ def test_the_base_loads_the_format_the_exporter_writes():
     from auton_format import VERSION
 
     src = subprocess.run(["git", "-C", str(ROOT), "show",
-                          "kernel-base-v3:kernels/x86_64/kernel/slm/neural/neural_backend.c"],
+                          "kernel-base-v4:kernels/x86_64/kernel/slm/neural/neural_backend.c"],
                          capture_output=True, text=True).stdout
     m = re.search(r"#define VERSION\s+(\d+)u", src)
     assert m and int(m.group(1)) == VERSION
 
 
-def test_the_script_defaults_to_v3():
-    assert 'REV="kernel-base-v3"' in SCRIPT.read_text()
+def test_the_script_defaults_to_v4():
+    assert 'REV="kernel-base-v4"' in SCRIPT.read_text()
+
+
+@needs_bases
+def test_v4_differs_from_v3_by_exactly_the_boot_info_parser():
+    out = subprocess.run(["git", "-C", str(ROOT), "diff", "--name-only",
+                          "kernel-base-v3", "kernel-base-v4", "--", "kernels/x86_64"],
+                         capture_output=True, text=True).stdout.split()
+    assert sorted(out) == ["kernels/x86_64/kernel/boot/boot_info.c",
+                           "kernels/x86_64/kernel/include/boot_info.h"]

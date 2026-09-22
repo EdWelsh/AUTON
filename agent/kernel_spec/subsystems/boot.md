@@ -158,6 +158,26 @@ Boot information parsing is architecture-specific and implemented in `kernel/arc
 
 Each architecture's parser fills the portable `boot_info_t` structure via `arch_parse_memory_map()` and `arch_parse_modules()`. The portable kernel never accesses raw boot protocol data directly.
 
+### Memory Sizing Under BIOS and UEFI (REQUIRED)
+
+Total RAM comes from the **memory map**, never from the basic-memory tag alone:
+
+| Order | Multiboot2 tag | Counted as RAM |
+|---|---|---|
+| 1 | 6, memory map (Multiboot2 §3.6.8) | entries of type 1 (available), stride `entry_size` |
+| 2 | 17, EFI memory map (§3.6.18), only when 6 is absent | UEFI types 1, 2, 3, 4, 7 (loader, boot services, conventional: free after ExitBootServices), `NumberOfPages × 4096`, stride `descr_size` |
+| 3 | 4, basic memory (§3.6.2), only when both are absent | `mem_lower + mem_upper` KiB |
+
+Tag 4's `mem_upper` counts only contiguous RAM above 1 MiB **up to the first hole**. Under BIOS
+that is all of RAM; under OVMF the first hole is near 8 MiB. A 256 MiB guest booted under UEFI
+reported "7 MB RAM" until `kernel-base-v4` fixed this. Iterate each map by its own stride, never
+by `sizeof` a struct: firmware makes `descr_size` larger than the 40-byte EFI descriptor. The parser
+records which tag sized RAM.
+
+Verification: `tests/kernel/run_boot_info_test.sh` (BIOS-shaped and UEFI-shaped tag streams,
+the larger EFI stride, reserved/ACPI EFI types excluded, modules parsed around the maps) and an
+e2e boot under OVMF (`scripts/e2e.sh --firmware uefi`).
+
 ### SLM Handoff
 
 After all subsystems are initialized, the boot sequence creates a dedicated SLM kernel thread and sends it the `hw_summary_t`. The SLM thread then:

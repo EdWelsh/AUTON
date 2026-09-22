@@ -74,6 +74,9 @@ jobs:
       - name: FAT32 suite
         run: tests/kernel/run_fat32_test.sh --self-test
 
+      - name: Boot-info suite (BIOS and UEFI tag shapes)
+        run: tests/kernel/run_boot_info_test.sh --self-test
+
       # Proves the live path actually ran rather than skipping, on the one host
       # where it can. Without this the matrix could be green with both hosts
       # skipping and nobody noticing.
@@ -123,8 +126,8 @@ jobs:
       - name: Toolchain (the apt list A1 documents)
         run: |
           sudo apt-get update -q
-          sudo apt-get install -yq gcc clang grub-pc-bin grub-common xorriso \
-            qemu-system-x86 mtools
+          sudo apt-get install -yq gcc clang grub-pc-bin grub-common grub-efi-amd64-bin \
+            xorriso qemu-system-x86 ovmf mtools
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' \
             | sudo tee /etc/udev/rules.d/99-kvm4all.rules
           sudo udevadm control --reload-rules && sudo udevadm trigger --name-match=kvm
@@ -147,6 +150,11 @@ jobs:
 
       - name: Matches docs/E2E-EXPECTED.yaml
         run: .venv/bin/python scripts/e2e-expect.py
+
+      - name: e2e spine under UEFI (B3), same expectation
+        run: |
+          scripts/e2e.sh --target "$RUNNER_TEMP/tree" --skip-train --firmware uefi || true
+          .venv/bin/python scripts/e2e-expect.py
 
       - name: B1 measurement — same ISO, kvm then tcg
         run: |

@@ -12,6 +12,7 @@
 #   --keep N           artifact dirs to retain (default 10)
 #   --accel NAME       QEMU accelerator (default: probed; AUTON_ACCEL also works).
 #                      An explicit choice the host lacks is refused, never downgraded.
+#   --firmware F       bios (default) or uefi (OVMF; the ISO is repacked for UEFI)
 #
 # Exits non-zero on the first failing stage. Artifacts are written either way.
 #
@@ -41,8 +42,9 @@ SKIP_TRAIN=0
 RUN_EVAL=0
 KEEP="${KEEP:-10}"
 ACCEL_REQ=""
+FIRMWARE="${FIRMWARE:-bios}"
 
-usage() { sed -n '2,14p' "$0" | sed 's/^# \{0,1\}//'; }
+usage() { sed -n '2,15p' "$0" | sed 's/^# \{0,1\}//'; }
 
 while [ $# -gt 0 ]; do
 	case "$1" in
@@ -56,6 +58,8 @@ while [ $# -gt 0 ]; do
 		--keep=*)     KEEP="${1#*=}"; shift ;;
 		--accel)      ACCEL_REQ="${2:?--accel needs a value}"; shift 2 ;;
 		--accel=*)    ACCEL_REQ="${1#*=}"; shift ;;
+		--firmware)   FIRMWARE="${2:?--firmware needs bios or uefi}"; shift 2 ;;
+		--firmware=*) FIRMWARE="${1#*=}"; shift ;;
 		-h|--help)    usage; exit 0 ;;
 		*) echo "unknown argument: $1" >&2; usage >&2; exit 2 ;;
 	esac
@@ -72,6 +76,30 @@ esac
 
 auton_accel "$ACCEL_REQ" || exit 2
 echo "accelerator: $AUTON_ACCEL ($AUTON_ACCEL_REASON)"
+
+# Firmware (windows-linux B3). UEFI boots OVMF from pflash and an ISO repacked
+# by scripts/iso-efi.sh; an explicit uefi request without OVMF fails here, not
+# mid-run.
+FW_ARGS=()
+case "$FIRMWARE" in
+	bios) ;;
+	uefi)
+		auton_ovmf || exit 2
+		FW_ARGS=(-machine pc -drive "if=pflash,format=raw,readonly=on,file=$AUTON_OVMF_CODE")
+		echo "firmware: uefi ($AUTON_OVMF_CODE)" ;;
+	*) echo "unknown firmware: $FIRMWARE (expected bios or uefi)" >&2; exit 2 ;;
+esac
+
+# bootable <isodir> <bios-iso>: the ISO to boot for $FIRMWARE.
+bootable() {
+	if [ "$FIRMWARE" = uefi ]; then
+		local out="${2%.iso}-efi.iso"
+		"$ROOT/scripts/iso-efi.sh" "$1" "$out" >/dev/null || return 1
+		echo "$out"
+	else
+		echo "$2"
+	fi
+}
 
 # --- artifacts -------------------------------------------------------------- #
 RUN_ID="$(date -u +%Y-%m-%dT%H-%M-%SZ)"
@@ -195,8 +223,10 @@ s_boot() {
 	# marker instead and stop as soon as it lands — a timeout then means the
 	# boot genuinely did not complete, not that the VM is merely still running.
 	: > "$SERIAL_LOG"
-	"$QEMU" -accel "$AUTON_ACCEL" -cdrom "$NEURAL_ISO" -serial stdio -display none -no-reboot \
-		-m "${MEM:-256M}" > "$SERIAL_LOG" 2>/dev/null &
+	local iso
+	iso="$(bootable "$TARGET/build/isodir-neural" "$NEURAL_ISO")" || return 1
+	"$QEMU" -accel "$AUTON_ACCEL" ${FW_ARGS[@]+"${FW_ARGS[@]}"} -cdrom "$iso" -serial stdio -display none \
+		-no-reboot -m "${MEM:-256M}" > "$SERIAL_LOG" 2>/dev/null &
 	local qemu_pid=$! booted=0 waited=0
 	local limit="${BOOT_TIMEOUT:-90}"
 
@@ -259,8 +289,10 @@ s_fallback() {
 	make -C "$TARGET" iso-neural MODEL="$bad" >/dev/null 2>&1 || return 1
 
 	: > "$serial"
-	"$QEMU" -accel "$AUTON_ACCEL" -cdrom "$NEURAL_ISO" -serial stdio -display none -no-reboot \
-		-m "${MEM:-256M}" > "$serial" 2>/dev/null &
+	local iso
+	iso="$(bootable "$TARGET/build/isodir-neural" "$NEURAL_ISO")" || return 1
+	"$QEMU" -accel "$AUTON_ACCEL" ${FW_ARGS[@]+"${FW_ARGS[@]}"} -cdrom "$iso" -serial stdio -display none \
+		-no-reboot -m "${MEM:-256M}" > "$serial" 2>/dev/null &
 	local qp=$! waited=0
 	while [ "$waited" -lt "${BOOT_TIMEOUT:-60}" ]; do
 		grep -q '\[BOOT\] OK' "$serial" 2>/dev/null && break
@@ -277,7 +309,8 @@ s_fallback() {
 	# No module at all: the rule engine is the intended backend here.
 	make -C "$TARGET" iso >/dev/null 2>&1 || return 1
 	: > "$serial.nomodule"
-	"$QEMU" -accel "$AUTON_ACCEL" -cdrom "$TARGET/build/auton.iso" -serial stdio \
+	iso="$(bootable "$TARGET/build/isodir" "$TARGET/build/auton.iso")" || return 1
+	"$QEMU" -accel "$AUTON_ACCEL" ${FW_ARGS[@]+"${FW_ARGS[@]}"} -cdrom "$iso" -serial stdio \
 		-display none -no-reboot -m "${MEM:-256M}" > "$serial.nomodule" 2>/dev/null &
 	qp=$!; waited=0
 	while [ "$waited" -lt "${BOOT_TIMEOUT:-60}" ]; do

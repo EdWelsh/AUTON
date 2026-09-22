@@ -15,19 +15,44 @@
 # Darwin: Homebrew names. `brew install qemu xorriso x86_64-elf-gcc \
 #   x86_64-elf-binutils i686-elf-grub`
 # Linux/Docker: distro names; CC stays gcc, matching the amd64 image.
+# GRUB_MKRESCUE_EFI builds the UEFI ISO (windows-linux B3). Homebrew ships the
+# BIOS and EFI targets as separate formulas, so on macOS it is a second tool;
+# on Linux one grub-mkrescue does both when grub-efi-amd64-bin is installed.
 case "$(uname -s)" in
 	Darwin)
 		: "${CC:=x86_64-elf-gcc}"
 		: "${GRUB_MKRESCUE:=i686-elf-grub-mkrescue}"
+		: "${GRUB_MKRESCUE_EFI:=x86_64-elf-grub-mkrescue}"
 		;;
 	*)
 		: "${CC:=gcc}"
 		: "${GRUB_MKRESCUE:=grub-mkrescue}"
+		: "${GRUB_MKRESCUE_EFI:=grub-mkrescue}"
 		;;
 esac
 : "${QEMU:=qemu-system-x86_64}"
 
-export CC GRUB_MKRESCUE QEMU
+export CC GRUB_MKRESCUE GRUB_MKRESCUE_EFI QEMU
+
+# auton_ovmf: set AUTON_OVMF_CODE to x86-64 UEFI firmware for QEMU, or fail
+# naming where it looked. An explicit AUTON_OVMF_CODE wins, as CC does.
+auton_ovmf() {
+	if [ -n "${AUTON_OVMF_CODE:-}" ]; then
+		[ -f "$AUTON_OVMF_CODE" ] && { export AUTON_OVMF_CODE; return 0; }
+		echo "AUTON_OVMF_CODE=$AUTON_OVMF_CODE does not exist" >&2
+		return 1
+	fi
+	local c
+	for c in /opt/homebrew/share/qemu/edk2-x86_64-code.fd \
+	         /usr/local/share/qemu/edk2-x86_64-code.fd \
+	         /usr/share/OVMF/OVMF_CODE_4M.fd /usr/share/OVMF/OVMF_CODE.fd \
+	         /usr/share/qemu/OVMF.fd /usr/share/edk2/ovmf/OVMF_CODE.fd; do
+		[ -f "$c" ] && { AUTON_OVMF_CODE="$c"; export AUTON_OVMF_CODE; return 0; }
+	done
+	echo "no x86-64 UEFI firmware found (OVMF). Install it (apt install ovmf; it ships" >&2
+	echo "with Homebrew qemu) or set AUTON_OVMF_CODE=/path/to/OVMF_CODE.fd" >&2
+	return 1
+}
 
 # GNU coreutils `timeout` is absent on stock macOS. Prefer the real binary when
 # present (timeout, or gtimeout from `brew install coreutils`); otherwise fall
