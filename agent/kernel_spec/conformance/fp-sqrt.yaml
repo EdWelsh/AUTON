@@ -1,0 +1,37 @@
+# Square root: correctly rounded in IEEE 754, so every bit is assertable.
+subsystem: fp
+operation: f64_sqrt
+oracle: softfloat
+entries:
+  - id: fp-sqrt-two
+    clause: "IEEE 754-2019 5.4.1 squareRoot; SDM Vol. 2 SQRTSD"
+    class: semantic
+    guarantee: architectural
+    a: 2.0
+    rounding: near_even
+  - id: fp-sqrt-exact-square
+    clause: "IEEE 754-2019 5.4.1"
+    class: semantic
+    guarantee: architectural
+    a: 1024.0
+    rounding: near_even
+    note: "An exact result; a divergence here is not a rounding argument."
+  - id: fp-sqrt-subnormal
+    clause: "IEEE 754-2019 5.4.1, 7.5"
+    class: semantic
+    guarantee: architectural
+    a: 5.0e-324
+    rounding: near_even
+  - id: fp-sqrt-negative
+    clause: "IEEE 754-2019 7.2 invalid operation"
+    class: semantic
+    guarantee: architectural
+    a: -1.0
+    rounding: near_even
+    note: "Invalid; the result is a quiet NaN, not an exception this harness expects to trap."
+  - id: fp-sqrt-negative-zero
+    clause: "IEEE 754-2019 5.4.1, sqrt(-0) is -0"
+    class: semantic
+    guarantee: architectural
+    a: -0.0
+    rounding: near_even

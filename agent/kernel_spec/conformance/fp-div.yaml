@@ -1,0 +1,98 @@
+# Double-precision division. The oracle is SoftFloat; the operands are chosen
+# where division is hard, plus the one pair that made this a famous question.
+subsystem: fp
+operation: f64_div
+oracle: softfloat
+entries:
+  - id: fp-div-fdiv-historical
+    clause: "Intel SDM Vol. 1 8.3.9 (FDIV); IEEE 754-2019 5.4.1 division"
+    class: semantic
+    guarantee: architectural
+    a: 4195835.0
+    b: 3145727.0
+    rounding: near_even
+    note: >-
+      The Pentium FDIV operands (Nicely, 1994). A correct part returns
+      1.3338204491362411; the defective lookup table returned
+      1.3337390689020375. This entry is why the harness exists, and it is
+      checked on every part because a check that only runs on suspect hardware
+      is not a conformance suite.
+  - id: fp-div-one-third
+    clause: "IEEE 754-2019 5.4.1; SDM Vol. 2 DIVSD"
+    class: semantic
+    guarantee: architectural
+    a: 1.0
+    b: 3.0
+    rounding: near_even
+  - id: fp-div-subnormal-quotient
+    clause: "IEEE 754-2019 7.5 (underflow), 5.4.1"
+    class: semantic
+    guarantee: architectural
+    a: 5.0e-324          # the smallest positive subnormal
+    b: 2.0
+    rounding: near_even
+    note: A quotient that underflows to half the smallest subnormal, rounding to even.
+  - id: fp-div-by-subnormal
+    clause: "IEEE 754-2019 5.4.1, 7.4 (overflow)"
+    class: semantic
+    guarantee: architectural
+    a: 1.0
+    b: 5.0e-324
+    rounding: near_even
+  - id: fp-div-tie-to-even
+    clause: "IEEE 754-2019 4.3.1 roundTiesToEven"
+    class: semantic
+    guarantee: architectural
+    a: 1.0
+    b: 49.0
+    rounding: near_even
+  - id: fp-div-toward-zero
+    clause: "IEEE 754-2019 4.3.2 roundTowardZero; SDM Vol. 1 4.8.4 (MXCSR.RC)"
+    class: semantic
+    guarantee: architectural
+    a: 1.0
+    b: 3.0
+    rounding: minMag
+  - id: fp-div-toward-positive
+    clause: "IEEE 754-2019 4.3.2 roundTowardPositive"
+    class: semantic
+    guarantee: architectural
+    a: 1.0
+    b: 3.0
+    rounding: max
+  - id: fp-div-toward-negative
+    clause: "IEEE 754-2019 4.3.2 roundTowardNegative"
+    class: semantic
+    guarantee: architectural
+    a: 1.0
+    b: 3.0
+    rounding: min
+  - id: fp-div-zero-by-zero
+    clause: "IEEE 754-2019 7.2 invalid operation; SDM Vol. 1 4.9.1.1"
+    class: semantic
+    guarantee: architectural
+    a: 0.0
+    b: 0.0
+    rounding: near_even
+    note: "Invalid: the result is a quiet NaN, and the payload is what 8086-SSE specialises."
+  - id: fp-div-finite-by-zero
+    clause: "IEEE 754-2019 7.3 divideByZero"
+    class: semantic
+    guarantee: architectural
+    a: 1.0
+    b: 0.0
+    rounding: near_even
+  - id: fp-div-inf-by-inf
+    clause: "IEEE 754-2019 7.2 invalid operation"
+    class: semantic
+    guarantee: architectural
+    a: inf
+    b: inf
+    rounding: near_even
+  - id: fp-div-max-by-min
+    clause: "IEEE 754-2019 7.4 overflow"
+    class: semantic
+    guarantee: architectural
+    a: 1.7976931348623157e308
+    b: 5.0e-324
+    rounding: near_even

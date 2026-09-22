@@ -767,3 +767,26 @@ vendors:
           stack of the ESP8266 Arduino Core
           (https://arduino-esp8266.readthedocs.io/en/latest/esp8266wifi/bearssl-client-secure-class.html).
         url_hint: https://bearssl.org
+
+  - vendor: berkeley-softfloat
+    category: oracle-source
+    identity_keys: [version]
+    documents:
+      - id: softfloat-3e
+        title: Berkeley SoftFloat 3e (the conformance harness's oracle)
+        kind: source
+        access: public-download
+        redistributable: true
+        licence: BSD-3-Clause
+        form: source-tree
+        audit: >-
+          No third-party audit, and it does not need one to serve here: it is
+          the reference implementation IEEE 754 arithmetic is checked against,
+          by John R. Hauser, and TestFloat exists to test it. What matters for
+          this use is that it contains no C float or double at all (float64_t
+          is a struct wrapping uint64_t), so no host floating point can reach
+          an expected answer.
+        notes: >-
+          Pinned by commit in scripts/fetch-softfloat.sh with its SHA-256
+          checked. Used by tests/conformance/ (hardware-truth H10).
+        url_hint: http://www.jhauser.us/arithmetic/SoftFloat.html
