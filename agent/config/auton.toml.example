@@ -11,9 +11,27 @@
 # [llm.endpoints]. The client preflights this at construction and fails with
 # the available tags, rather than letting a typo surface as an empty
 # completion partway through an agent run.
+#
+# QUALIFY A LOCAL MODEL BEFORE USING IT: `scripts/model-probe.py <model>` runs
+# the four checks local models have actually failed here (calls a tool at all,
+# file content survives the round trip, still works with a 25,000-character
+# spec in the prompt, moves on after a tool result). Measured 2026-09-22:
+#
+#   ollama_chat/qwen3.5:27b   4/4, slowest call 492s
+#   ollama_chat/qwen3.5:9b    4/4, slowest call 285s
+#   ollama/gemma4:latest      3/4 — with a full spec in the prompt it writes
+#                             pmm_init with the wrong parameter type
+#
+# Prefer `ollama_chat/` over `ollama/`: native tool calling, rather than
+# asking the model to write JSON as text (which loses whitespace).
 model = "anthropic/claude-opus-4-6"
 max_tokens = 16384
 temperature = 0.0
+
+# How long one model call may take before the agent gives up. A local 27b with
+# a full subsystem spec in the prompt takes ~500s, so the default 600s is close
+# to the edge; raise it for slow local models.
+# request_timeout = 1800.0
 
 [llm.cost]
 # Budget limits per orchestration run
