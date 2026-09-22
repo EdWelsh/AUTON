@@ -54,7 +54,7 @@ class TestTheShippedSpecs:
         specs = load_all()
 
         assert set(specs) == {"dhcp", "fileserver", "host-repo", "kvstore", "play-doom",
-                              "ssh", "tftp"}
+                              "smtp", "ssh", "tftp"}
         for spec in specs.values():
             spec.resolve()
 

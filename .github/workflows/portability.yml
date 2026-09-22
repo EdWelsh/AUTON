@@ -89,6 +89,9 @@ jobs:
       - name: KV store suite (F9)
         run: tests/kernel/run_kvstore_test.sh --self-test
 
+      - name: SMTP suite (F11)
+        run: tests/kernel/run_smtp_test.sh --self-test
+
       - name: File server suite (F8, path traversal corpus)
         run: tests/kernel/run_fileserver_test.sh --self-test
 
