@@ -86,6 +86,9 @@ jobs:
       - name: SSH wire suite (F12)
         run: tests/kernel/run_ssh_test.sh --self-test
 
+      - name: KV store suite (F9)
+        run: tests/kernel/run_kvstore_test.sh --self-test
+
       # Proves the live path actually ran rather than skipping, on the one host
       # where it can. Without this the matrix could be green with both hosts
       # skipping and nobody noticing.
