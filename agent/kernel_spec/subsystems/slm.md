@@ -454,6 +454,54 @@ Interface: `tests/kernel/errata_lookup_reference/include/errata_lookup.h` is nor
 (a synthetic module, every truncation refused under ASan, the real Intel 682436 module when
 cached). Packages ship `assets/errata.bin` scoped to the target's silicon.
 
+## Role table (REQUIRED)
+
+The chat answers "what can you do" and "be an email server" from a table that is **generated**,
+not hand-written: `agent/tools/gen_roles.py` emits `build-<svc>/generated/roles_table.c` from
+`kernel_spec/catalogue.yaml` during every service build.
+
+A generated tree's `kernel/slm/roles.c` therefore contains the **code and not the data**:
+
+```c
+/* Provided by the generated table; never defined here. */
+extern const capability_t auton_caps[];
+extern const int auton_caps_count;
+```
+
+A tree that declares its own `static const capability_t caps[]` cannot link the generated table
+(duplicate definition), and `build_service.py` says so rather than failing — but then its
+answers are whatever someone last typed into C, which is what this replaces.
+
+### The four statuses, and the exact answer for each
+
+| Status | The answer, verbatim in shape |
+|---|---|
+| `CAP_IN_IMAGE` | run it. The action pointer is set **only** when this image defines the symbol |
+| `CAP_DEDICATED` | `I can't do that in this image. A dedicated AUTON image does: <build command>.` |
+| `CAP_ROADMAP` | `Not built. <what blocks it>` — never "coming soon" |
+| `CAP_HOST_ONLY` | `The AUTON host control plane does that from chat; this kernel does not.` |
+
+Three rules, each of which has already been broken somewhere:
+
+1. **An action pointer is never set for a symbol the image lacks.** The absence stub
+   (`gen_absent.py`) prints `[ABSENT] …` and returns, which to a user is indistinguishable from
+   the service running and doing nothing. A dedicated-image row has `action = 0`.
+2. **The dedicated answer names the build command**, because "a different image does it" without
+   saying which is not an answer.
+3. **A roadmap answer states the blocker**, which the catalogue requires to be a file that git
+   tracks. "Coming soon" is a schedule, and the catalogue holds facts.
+
+### Acceptance
+
+```
+auton> what can you do
+[ROLES] web server: in this image
+[ROLES] email server: a dedicated AUTON image does this: auton build smtp
+[ROLES] Doom: not built: blocked on a licence decision
+auton> be a database
+[ROLES] I can't do that in this image. A dedicated AUTON image does: auton build kvstore.
+```
+
 ## Knowledge Base
 
 ```c

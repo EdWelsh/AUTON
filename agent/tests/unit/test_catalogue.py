@@ -141,3 +141,53 @@ def test_the_database_row_no_longer_promises_a_query_engine():
     kv = rows["key-value store"]
     assert "query engine" not in kv["note"] or "no query engine" in kv["note"]
     assert "Not SQL" in kv["note"]
+
+
+class TestTheBuildWiring:
+    """build_service generates the table only for a tree that expects it."""
+
+    def _tree(self, tmp_path, roles_body: str, sources: dict):
+        (tmp_path / "kernel" / "slm").mkdir(parents=True)
+        (tmp_path / "kernel" / "slm" / "roles.c").write_text(roles_body)
+        for rel, text in sources.items():
+            (tmp_path / rel).parent.mkdir(parents=True, exist_ok=True)
+            (tmp_path / rel).write_text(text)
+        return tmp_path
+
+    def test_a_tree_with_its_own_table_is_left_alone(self, tmp_path):
+        """The base's roles.c declares `static const capability_t caps[]`.
+        Linking a generated table beside it is a duplicate definition, so the
+        build says so instead of failing."""
+        from build_service import _generate_roles
+
+        tree = self._tree(tmp_path, "static const capability_t caps[] = {};\n", {})
+        assert _generate_roles(tree, set(), "dhcp") is None
+
+    def test_a_tree_that_expects_the_table_gets_it(self, tmp_path):
+        from build_service import _generate_roles
+
+        tree = self._tree(tmp_path, "extern const capability_t auton_caps[];\n",
+                          {"kernel/net/http.c": "void http_server_run(void) {}\n"})
+        out = _generate_roles(tree, {"kernel/net/http.c"}, "web")
+        assert out and out.exists()
+        text = out.read_text()
+        assert "http_server_run }" in text, "the image defines it, so it may be called"
+        assert "dns_server_run" not in text, "the image does not define it"
+
+    def test_an_action_is_never_set_for_a_symbol_the_image_lacks(self, tmp_path):
+        """The [ABSENT] stub prints and looks, to a user, exactly like the
+        service answering. That is the failure this rule prevents."""
+        from build_service import _generate_roles
+
+        tree = self._tree(tmp_path, "extern const capability_t auton_caps[];\n",
+                          {"kernel/slm/chat.c": "void slm_chat_loop(void) {}\n"})
+        text = _generate_roles(tree, {"kernel/slm/chat.c"}, "dhcp").read_text()
+        for line in text.splitlines():
+            if "CAP_IN_IMAGE" in line:
+                assert "_run }" not in line
+        assert "void http_server_run(void);" not in text
+
+    def test_a_missing_roles_c_is_not_an_error(self, tmp_path):
+        from build_service import _generate_roles
+
+        assert _generate_roles(tmp_path, set(), "dhcp") is None

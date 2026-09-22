@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import argparse
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -27,6 +28,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from build_manifest import ManifestError, resolve  # noqa: E402
 from gen_absent import GenerateError, generate  # noqa: E402
+from gen_roles import generate as generate_roles, load as load_catalogue  # noqa: E402
 from intent_service import STUB_MARKER  # noqa: E402
 from service_spec import ServiceSpecError, load as load_service  # noqa: E402
 
@@ -253,6 +255,46 @@ def gate_leakage(tree: Path, excludes: list[str], stubs: Path, image: Path,
     return "clean"
 
 
+def _defines_symbol(paths, symbol: str) -> bool:
+    """Whether any compiled source defines `symbol`. A role may carry an action
+    pointer only when this image actually defines it."""
+    pattern = re.compile(rf"^[A-Za-z_][\w \*]*\b{re.escape(symbol)}\s*\(", re.M)
+    for path in paths:
+        if path.suffix != ".c":
+            continue
+        try:
+            if pattern.search(path.read_text(encoding="utf-8", errors="replace")):
+                return True
+        except OSError:
+            continue
+    return False
+
+
+def _generate_roles(tree: Path, included, name: str):
+    """Write build-<svc>/generated/roles_table.c, or None when this tree keeps
+    its own table.
+
+    A tree whose roles.c still declares `static const capability_t caps[]`
+    cannot take a generated table without a duplicate definition, so none is
+    generated for it and the build says so rather than failing. What a
+    generated tree must do instead is in slm.md ("Role table").
+    """
+    roles_src = tree / "kernel" / "slm" / "roles.c"
+    if not roles_src.exists():
+        return None
+    if "auton_caps" not in roles_src.read_text(encoding="utf-8", errors="replace"):
+        return None
+
+    rows = load_catalogue()
+    paths = [q if q.is_absolute() else tree / q for q in (Path(str(i)) for i in included)]
+    in_image = {r["entry"] for r in rows
+                if r["status"] == "in-image" and _defines_symbol(paths, r["entry"])}
+    out = tree / f"build-{name}" / "generated" / "roles_table.c"
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(generate_roles(rows, in_image), encoding="utf-8")
+    return out
+
+
 def build(name: str, tree: Path, make_iso: bool = False, cc: str | None = None,
           jobs: int = 4, target=None, verify_drivers: bool = False) -> BuildResult:
     cc = cc or os.environ.get("CC") or "x86_64-elf-gcc"
@@ -321,6 +363,20 @@ def build(name: str, tree: Path, make_iso: bool = False, cc: str | None = None,
     stub_list.write_text("\n".join(stubs) + "\n", encoding="utf-8")
     result.stubs = stubs
     result.gates.append(f"link closure: {len(stubs)} absence stub(s)")
+
+    # The role table the chat answers from, generated from the catalogue so an
+    # answer cannot drift from what the repo can build. `action` is set only for
+    # symbols THIS image defines: a pointer to an absent symbol resolves to the
+    # absence stub above, which prints [ABSENT] and reads, to a user, exactly
+    # like the service answering.
+    roles_c = _generate_roles(tree, included, name)
+    if roles_c:
+        extra = list(extra) + [str(roles_c.relative_to(tree))]
+        result.gates.append(f"roles: generated from the catalogue "
+                            f"({roles_c.relative_to(tree)})")
+    else:
+        result.gates.append("roles: this tree carries its own table; the catalogue was not "
+                            "linked (slm.md 'Role table')")
 
     # One de-duplicated list. Two steps each appending the same file is how a
     # "multiple definition" error appears in a file nobody edited.
