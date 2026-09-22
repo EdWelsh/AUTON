@@ -18,6 +18,33 @@ looks uniformly verified when most of it is untested is worse than no matrix.
 | **Windows (native, MSYS2/MINGW)** | not established | `whpx` → `tcg` | **No.** No Windows host has run any AUTON script |
 | **Windows, WSL2** | as Linux x86_64 | `kvm` if nested virtualisation exposes `/dev/kvm`, else `tcg`. `uname -s` reports `Linux`, so it takes the Linux branch | **No** |
 
+## aarch64, and the accelerated bench (D2)
+
+aarch64 exists here for one reason: it is the only architecture this Mac can run **accelerated**
+(A2 established that x86 guests are TCG-only on Apple Silicon). Measured on the M4 Pro with
+`tests/kernel/run_aarch64_smoke.sh`, which builds and boots the smallest image that can speak:
+
+| Configuration | Result |
+|---|---|
+| `-accel hvf -cpu host -M virt,gic-version=3` | **boots** |
+| `-accel hvf` with `gic-version=2` | **refused**: "HVF does not support GICv2 emulation" |
+| `-accel tcg -cpu cortex-a72`, GICv2 or GICv3 | boots |
+
+**This changed the specification.** `aarch64.md` described the QEMU virt machine's GICv2, and an
+arch layer that drove only GICv2 would have been TCG-only — giving up the single reason aarch64
+was chosen. The spec now requires GICv3 for the benchable path and says which part differs (the
+CPU interface is `ICC_*_EL1` system registers, not MMIO).
+
+**No timing ratio is published yet, and that is deliberate.** The smoke image prints three lines
+and parks; HVF and TCG both reach `[BOOT] OK` in about 0.03 s, which measures process startup,
+not emulation. A ratio worth quoting needs a workload that does real work — the arch layer and
+the chat loop — so it is owed once those are generated, not estimated now.
+
+| Host | Builds aarch64 | Boots aarch64 | Accelerated | Exercised? |
+|---|---|---|---|---|
+| **macOS, Apple Silicon** (M4 Pro) | yes, `aarch64-elf-gcc` 16.2.0 | yes, flat image + `-kernel` | **yes, HVF with GICv3** | **Yes** — 2026-09-22, smoke image |
+| **Linux x86_64** | `gcc-aarch64-linux-gnu` | TCG only (foreign ISA) | no | **Wired**: the CI job runs the smoke test; unrun |
+
 ## The control plane per host (C1)
 
 The host half of the chat OS (`controlplane/`). The `controlplane` workflow runs the whole suite

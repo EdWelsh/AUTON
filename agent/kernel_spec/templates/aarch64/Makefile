@@ -20,6 +20,9 @@ KERNEL := $(BUILD)/kernel.bin
 OBJCOPY ?= $(patsubst %-gcc,%-objcopy,$(CC))
 
 QEMU ?= qemu-system-aarch64
+# -cpu host is required by HVF; cortex-a72 is the portable TCG default.
+CPU        ?= cortex-a72
+ACCEL_ARGS ?=
 
 CSRC := $(shell find kernel -name '*.c')
 ASRC := $(shell find kernel -name '*.S')
@@ -49,10 +52,12 @@ $(KERNEL): $(ELF)
 iso: $(KERNEL)
 	@echo "aarch64: no ISO is built; QEMU virt boots $(KERNEL) with -kernel"
 
-# gic-version=2 matches arch/aarch64.md; -cpu cortex-a72 is a part QEMU models
-# fully under TCG and accelerates under HVF on Apple Silicon.
+# gic-version=3, not 2: QEMU refuses -accel hvf with GICv2 ("HVF does not
+# support GICv2 emulation"), and aarch64 exists here precisely because it is the
+# architecture this host can run accelerated. ACCEL is left to the caller so a
+# plain `make run` stays portable.
 run: $(KERNEL)
-	$(QEMU) -M virt,gic-version=2 -cpu cortex-a72 -m 256M \
+	$(QEMU) -M virt,gic-version=3 -cpu $(CPU) $(ACCEL_ARGS) -m 256M \
 		-kernel $(KERNEL) -serial stdio -display none -no-reboot
 
 clean:

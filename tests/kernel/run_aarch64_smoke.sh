@@ -42,7 +42,7 @@ command -v "$OBJCOPY" >/dev/null || { echo "no $OBJCOPY" >&2; exit 2; }
 "$OBJCOPY" -O binary "$WORK/smoke.elf" "$WORK/smoke.bin" || exit 1
 
 SERIAL="$WORK/serial.log"
-auton_timeout "${BOOT_TIMEOUT:-30}" "$QEMU" -M virt,gic-version=2 -cpu cortex-a72 \
+auton_timeout "${BOOT_TIMEOUT:-30}" "$QEMU" -M virt,gic-version=3 -cpu cortex-a72 \
 	-m 256M -kernel "$WORK/smoke.bin" -serial "file:$SERIAL" -display none \
 	-no-reboot </dev/null >/dev/null 2>&1 || true
 

@@ -699,6 +699,20 @@ void arch_pci_config_write32(uint8_t bus, uint8_t dev, uint8_t func,
 
 The GICv2 is the interrupt controller on the QEMU `virt` machine. It replaces the x86 8259 PIC and APIC.
 
+> **GICv2 is TCG-only on Apple Silicon, and that costs the accelerated bench.** QEMU refuses
+> `-accel hvf` with `gic-version=2`: *"HVF does not support GICv2 emulation"*. Since the reason
+> aarch64 was chosen is that it is the one architecture this project can run **accelerated**
+> locally (windows-linux A2), an implementation that supports only GICv2 gives up that reason.
+>
+> Measured on an M4 Pro with `tests/kernel/run_aarch64_smoke.sh`: `gic-version=3` boots under
+> both `hvf` and `tcg`; `gic-version=2` boots only under `tcg`.
+>
+> So a generated arch layer must drive **GICv3** to be benchable, and may keep a GICv2 path for
+> TCG and for hardware that has one. The register set below is GICv2's; GICv3's distributor is
+> compatible for the operations used here, and its CPU interface is reached through system
+> registers (`ICC_*_EL1`) rather than MMIO, which is the part that differs and the part a
+> generated implementation must get right.
+
 **Base Addresses (QEMU virt):**
 
 | Component | Base Address | Size |
