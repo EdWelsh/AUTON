@@ -13,6 +13,10 @@
 #   --accel NAME       QEMU accelerator (default: probed; AUTON_ACCEL also works).
 #                      An explicit choice the host lacks is refused, never downgraded.
 #   --firmware F       bios (default) or uefi (OVMF; the ISO is repacked for UEFI)
+#   --arch A           x86_64 (default) or aarch64. aarch64 runs the BOOT spine
+#                      only: build, boot, markers. The model stages are x86-only
+#                      by specification (slm.md), and a spine that pretended
+#                      otherwise would report a pass for stages it never ran.
 #
 # Exits non-zero on the first failing stage. Artifacts are written either way.
 #
@@ -60,6 +64,8 @@ while [ $# -gt 0 ]; do
 		--accel=*)    ACCEL_REQ="${1#*=}"; shift ;;
 		--firmware)   FIRMWARE="${2:?--firmware needs bios or uefi}"; shift 2 ;;
 		--firmware=*) FIRMWARE="${1#*=}"; shift ;;
+		--arch)       ARCH="${2:?--arch needs x86_64 or aarch64}"; shift 2 ;;
+		--arch=*)     ARCH="${1#*=}"; shift ;;
 		-h|--help)    usage; exit 0 ;;
 		*) echo "unknown argument: $1" >&2; usage >&2; exit 2 ;;
 	esac
@@ -73,6 +79,35 @@ case "$RUNG" in
 		exit 2 ;;
 	*) echo "unknown rung: $RUNG (expected 3a, 3b or 3c)" >&2; exit 2 ;;
 esac
+
+# The architecture decides the toolchain, the emulator and which stages exist.
+# toolchain.sh was sourced before the arguments were parsed, so re-resolve with
+# the chosen ARCH — otherwise `--arch aarch64` would quietly use x86 tools.
+case "$ARCH" in
+	x86_64|aarch64) ;;
+	*) echo "unknown arch: $ARCH (expected x86_64 or aarch64)" >&2; exit 2 ;;
+esac
+if [ "$ARCH" != "x86_64" ]; then
+	unset CC QEMU GRUB_MKRESCUE GRUB_MKRESCUE_EFI
+	export ARCH
+	# shellcheck source=lib/toolchain.sh
+	source "$ROOT/scripts/lib/toolchain.sh"
+	TARGET="${TARGET:-$ROOT/kernels/$ARCH}"
+	case "$TARGET" in /*) ;; *) TARGET="$ROOT/$TARGET";; esac
+	echo "arch: $ARCH (CC=$CC, QEMU=$QEMU)"
+	# The tree comes first: asking for a cross compiler to build a tree that
+	# has nothing to compile sends the reader after the wrong problem.
+	if [ ! -d "$TARGET/kernel/arch/aarch64" ]; then
+		echo "no kernel/arch/aarch64 in ${TARGET#"$ROOT"/}: the arch layer is not generated." >&2
+		echo "arch/aarch64.md specifies it; the DTB parser it needs is proved by" >&2
+		echo "tests/kernel/run_dtb_test.sh. Nothing to boot, so nothing is claimed." >&2
+		exit 2
+	fi
+	command -v "$CC" >/dev/null || {
+		echo "no $CC on PATH: brew install aarch64-elf-gcc (Darwin), or" >&2
+		echo "apt install gcc-aarch64-linux-gnu (Debian)" >&2
+		exit 2; }
+fi
 
 auton_accel "$ACCEL_REQ" || exit 2
 echo "accelerator: $AUTON_ACCEL ($AUTON_ACCEL_REASON)"
@@ -215,6 +250,13 @@ s_parity() {
 
 s_iso() {
 	make -C "$TARGET" iso-neural MODEL="$MODEL_BIN"
+}
+
+# aarch64 has no bootloader: QEMU's virt machine takes the ELF with -kernel and
+# hands the kernel a device tree. There is no ISO to build and none is faked.
+s_build_arch() {
+	make -C "$TARGET" CC="$CC" >/dev/null || return 1
+	test -f "$TARGET/build/kernel.bin"
 }
 
 s_boot() {
@@ -383,6 +425,18 @@ else
 fi
 
 RUN_START="$(date +%s)"
+if [ "$ARCH" = "aarch64" ]; then
+	# The boot spine only. The model stages are x86-only by specification
+	# (slm.md: the neural backend's SSE path), and the control-plane stages are
+	# host-side and architecture-independent, so running them here would say
+	# nothing about aarch64. Naming the omission beats a green run that
+	# silently skipped two thirds of itself.
+	echo "aarch64: build -> boot -> markers. The model stages are x86-only (slm.md)."
+	stage build      s_build_arch
+	stage boot       s_boot
+	stage markers    s_markers
+	stage transcript s_transcript
+else
 stage train      s_train
 stage export     s_export
 stage parity     s_parity
@@ -394,6 +448,7 @@ stage cplane     s_controlplane
 stage operator   s_operator
 stage transcript s_transcript
 [ "$RUN_EVAL" -eq 1 ] && stage eval s_eval
+fi
 RUN_SECS=$(( $(date +%s) - RUN_START ))
 
 # --- verdict ---------------------------------------------------------------- #
