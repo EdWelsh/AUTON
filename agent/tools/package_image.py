@@ -280,9 +280,68 @@ def _record_drivers(target, out: Path) -> dict:
     return json.loads(report.to_json())
 
 
+
+# The module-memory budget in boot.md. A repository larger than this cannot be
+# carried as a boot module, and the honest failure is at packaging time with
+# the number stated, never a truncated archive that looks like a repository.
+REPO_ASSET_MAX = 64 * 1024 * 1024
+
+
+class RepoTooLarge(Exception):
+    pass
+
+
+def _write_repo_asset(repo: Path, out: Path, from_input: str) -> "Artifact":
+    """assets/repo.cpio: a bare clone, server-info updated, packed as newc.
+
+    `git update-server-info` is not optional. Without info/refs and
+    objects/info/packs a dumb-HTTP clone cannot enumerate anything and fails
+    with "repository not found" — the image would serve a repository nobody
+    can clone (services/host-repo.md).
+    """
+    import shutil
+    import subprocess
+    import tempfile
+
+    if not (repo / ".git").exists() and not (repo / "HEAD").exists():
+        raise RepoTooLarge(f"{repo} is not a git repository")
+
+    work = Path(tempfile.mkdtemp())
+    try:
+        bare = work / "repo.git"
+        subprocess.run(["git", "clone", "-q", "--bare", str(repo), str(bare)],
+                       check=True, capture_output=True, text=True, timeout=600)
+        subprocess.run(["git", "-C", str(bare), "update-server-info"],
+                       check=True, capture_output=True, text=True, timeout=120)
+        listing = subprocess.run(["find", ".", "-type", "f"], cwd=bare,
+                                 capture_output=True, text=True, check=True)
+        names = "\n".join(n[2:] for n in listing.stdout.split()) + "\n"
+        cpio = subprocess.run(["cpio", "-o", "-H", "newc", "--quiet"], cwd=bare,
+                              input=names.encode(), capture_output=True, timeout=600)
+        if cpio.returncode != 0:
+            raise RepoTooLarge(f"cpio failed: {cpio.stderr.decode()[:200]}")
+        archive = cpio.stdout
+        if len(archive) > REPO_ASSET_MAX:
+            raise RepoTooLarge(
+                f"{repo.name} packs to {len(archive) / 1048576:.1f} MiB, over the "
+                f"{REPO_ASSET_MAX // 1048576} MiB module budget (boot.md). Refusing: a "
+                f"truncated archive would look like a repository and fail at the first "
+                f"fetch.")
+        (out / "assets").mkdir(parents=True, exist_ok=True)
+        (out / "assets" / "repo.cpio").write_bytes(archive)
+    finally:
+        shutil.rmtree(work, ignore_errors=True)
+
+    head = subprocess.run(["git", "-C", str(repo), "rev-parse", "HEAD"],
+                          capture_output=True, text=True).stdout.strip()
+    return _record(out, "assets/repo.cpio", "package_image.py --repo", from_input,
+                   f"bare repository at {head[:12]}, update-server-info applied; "
+                   f"served read-only by services/host-repo.md")
+
+
 def package(sentence: str, out: Path, tree: Path, service: str | None = None,
             model: Path | None = None, train: bool = False,
-            target: Path | None = None) -> Package:
+            target: Path | None = None, repo: Path | None = None) -> Package:
     # Match the intent BEFORE creating anything. A declined sentence used to
     # leave an empty out/spec/ behind, which is the same "nothing invalid
     # reaches disk" rule intent-C enforces — an empty package directory looks
@@ -299,6 +358,11 @@ def package(sentence: str, out: Path, tree: Path, service: str | None = None,
     pkg = Package(intent=sentence, matched_rule=manifest.matched,
                   created_at=datetime.now(timezone.utc).isoformat(timespec="seconds"),
                   complete=False, assumptions=list(manifest.assumptions))
+
+    if repo is not None:
+        # Before anything else expensive: a repository that cannot be carried
+        # should stop the build while it is still only a decision.
+        pkg.artifacts.append(_write_repo_asset(repo, out, str(repo)))
 
     if target is not None:
         pkg.target = _record_target(target, out)
@@ -460,6 +524,9 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--model", help="use this model instead of training one")
     ap.add_argument("--train", action="store_true",
                     help="train a model scoped to this intent (minutes)")
+    ap.add_argument("--repo", metavar="DIR",
+                    help="a git repository to carry as assets/repo.cpio "
+                         "(services/host-repo.md)")
     ap.add_argument("--target", metavar="FILE",
                     help="the target definition this image is built for "
                          "(agent/kernel_spec/targets/*.md)")
@@ -473,7 +540,11 @@ def main(argv: list[str] | None = None) -> int:
         pkg = package(" ".join(args.sentence), Path(args.output), tree,
                       args.service, Path(args.model) if args.model else None,
                       train=args.train,
-                      target=Path(args.target) if args.target else None)
+                      target=Path(args.target) if args.target else None,
+                      repo=Path(args.repo) if args.repo else None)
+    except RepoTooLarge as exc:
+        print(f"REFUSED: {exc}", file=sys.stderr)
+        return 2
     except IntentError as exc:
         print(f"DECLINED: {exc}", file=sys.stderr)
         return 1
