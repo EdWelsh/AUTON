@@ -425,6 +425,35 @@ int slm_shell_idiom(const char *text, slm_intent_result_t *result);
 4. **Longest match wins.** `net list all` must not be caught by a shorter
    pattern that means something else.
 
+## Errata Module (REQUIRED)
+
+"Is this machine safe?" is answered from data the image carries, keyed by its own silicon
+identity (hardware-truth H5, `arch/hal.md` category 8). The data is `errata.bin`, a **second boot
+module** beside the model, not a section of the model file. Errata change on a vendor's
+schedule and models on a training schedule; a separate module is replaced without retraining,
+and the model file's exact-version contract is untouched (the PRD's Open Question 3, decided in
+w13).
+
+- **Format**: `SLM/tools/errata_format.py`, magic `AERR`, version 1, exact match. Keys are
+  `(vendor, family, model, stepping)`, sorted and binary-searched in place. The vendor is part of
+  the key: Intel and AMD family/model spaces overlap.
+- **Verdicts are precomputed on the host** by `agent/tools/errata_table.py`
+  (`build_errata_table.py`). The applicability logic (processor lines; "Plan Fix" is UNKNOWN
+  without a microcode revision) exists once. The kernel looks answers up and never re-derives them.
+- **Untrusted input**: `errata_open` checks every length before following it, and every record's
+  text must be NUL-terminated inside the pool. A module that fails any check is refused whole.
+- **No key means not examined.** The answer is never "safe" for silicon no ingested document
+  covers. Word it as `machine_safety.py` does: *"This machine has not been examined — that is not
+  the same as safe."*
+- **Absent module**, same answer, naming the missing module.
+- **Every answer cites**: erratum id, title, document, page. The chat never states a verdict
+  without the document revision it came from.
+
+Interface: `tests/kernel/errata_lookup_reference/include/errata_lookup.h` is normative
+(`errata_open`, `errata_find`, `errata_get`). Verification: `tests/kernel/run_errata_lookup_test.sh`
+(a synthetic module, every truncation refused under ASan, the real Intel 682436 module when
+cached). Packages ship `assets/errata.bin` scoped to the target's silicon.
+
 ## Knowledge Base
 
 ```c

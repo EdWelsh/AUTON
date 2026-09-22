@@ -247,6 +247,23 @@ def _record_errata(target, capabilities: set[str], out: Path) -> dict:
     return record
 
 
+def _write_errata_module(target, out: Path, from_input: str) -> Artifact | None:
+    """assets/errata.bin scoped to the target's silicon. Empty (and valid) when
+    no ingested document covers it, which the image reports as not examined."""
+    sys.path.insert(0, str(ROOT / "SLM" / "tools"))
+    from build_errata_table import build
+    from errata_format import pack
+    from vendor_ingest import CACHE
+
+    docs, table = build(CACHE, target.silicon)
+    (out / "assets").mkdir(parents=True, exist_ok=True)
+    (out / "assets" / "errata.bin").write_bytes(pack(docs, table))
+    covered = "covered" if table else "not covered by any ingested document"
+    return _record(out, "assets/errata.bin", "SLM/tools/build_errata_table.py", from_input,
+                   f"errata verdicts for the target's silicon ({covered}); "
+                   f"slm.md Errata Module")
+
+
 def _record_drivers(target, out: Path) -> dict:
     """Run each applicable driver's own verification and write the result.
 
@@ -295,6 +312,10 @@ def package(sentence: str, out: Path, tree: Path, service: str | None = None,
         pkg.artifacts.append(_record(
             out, "spec/target.md", "authored", str(target),
             "the machine this image was built to run on"))
+        # H13: the same verdicts, compiled for the running image to look up by
+        # its own silicon identity. A separate module, so errata can be updated
+        # without touching the model (slm.md "Errata Module").
+        pkg.artifacts.append(_write_errata_module(loaded_target, out, str(target)))
 
     (out / "spec" / "manifest.json").write_text(manifest.to_json() + "\n")
     pkg.artifacts.append(_record(out, "spec/manifest.json", "intent_manifest.py",
