@@ -23,6 +23,13 @@ AArch64 differs fundamentally from x86_64. There is no BIOS, no port I/O, no GDT
 On the QEMU `virt` machine, firmware (or QEMU's built-in bootloader with `-kernel`) passes control to the kernel image at its load address with:
 
 - **X0** = physical address of the Device Tree Blob (DTB)
+
+  **This holds only for a flat image.** QEMU's `virt` machine follows the Linux arm64 boot
+  protocol — the one that sets X0 — when `-kernel` is given a raw image. Hand it the ELF and
+  the same kernel starts with **X0 = 0** and cannot find its own memory map or its UART. The
+  build therefore produces `build/kernel.bin` with `objcopy -O binary` and boots that; the ELF
+  is kept only for debugging. Measured, not assumed: `tests/kernel/run_aarch64_smoke.sh` prints
+  `dtb in x0` for the flat image and `NO DTB IN X0` for the ELF.
 - **X1, X2, X3** = reserved (zero)
 - CPU may be in **EL2** (hypervisor) or **EL1** (kernel) depending on firmware
 

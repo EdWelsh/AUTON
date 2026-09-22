@@ -9,7 +9,15 @@ ARCH := aarch64
 include kernel/arch/$(ARCH)/toolchain.mk
 
 BUILD  := build
+ELF    := $(BUILD)/kernel.elf
+# The bootable artefact is a FLAT image, not the ELF, and that is not a
+# preference. QEMU's virt machine follows the Linux arm64 boot protocol —
+# which is what puts the device tree's address in X0, as arch/aarch64.md
+# says — only for a raw image. Booted as an ELF the same kernel starts with
+# X0 = 0 and cannot find its own memory map. Measured, not assumed:
+# tests/kernel/run_aarch64_smoke.sh prints "dtb in x0" for one and not the other.
 KERNEL := $(BUILD)/kernel.bin
+OBJCOPY ?= $(patsubst %-gcc,%-objcopy,$(CC))
 
 QEMU ?= qemu-system-aarch64
 
@@ -27,10 +35,13 @@ $(BUILD)/%.S.o: %.S
 	@mkdir -p $(dir $@)
 	$(CC) $(ASFLAGS) -c $< -o $@
 
-$(KERNEL): $(OBJ) $(LINKER)
+$(ELF): $(OBJ) $(LINKER)
 	@mkdir -p $(dir $@)
 	$(CC) $(LDFLAGS) -o $@ $(OBJ)
-	@echo "built $(KERNEL)"
+
+$(KERNEL): $(ELF)
+	$(OBJCOPY) -O binary $< $@
+	@echo "built $(KERNEL) (flat image; the ELF is $(ELF))"
 
 # `iso` exists so the same harnesses work on both architectures; here it is the
 # kernel itself, because virt needs no image. A target that quietly did nothing

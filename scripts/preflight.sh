@@ -21,6 +21,17 @@ case "$PY" in /*) ;; *) PY="$ROOT/$PY";; esac
 # than the kernel-only loop.
 MIN_FREE_GB="${MIN_FREE_GB:-$([ "${CHECK_E2E:-0}" = "1" ] && echo 10 || echo 5)}"
 BREW_INSTALL="brew install qemu xorriso x86_64-elf-gcc x86_64-elf-binutils i686-elf-grub"
+# The target architecture decides which toolchain is required. aarch64 needs no
+# GRUB and no xorriso at all: QEMU's virt machine takes the ELF with -kernel,
+# so demanding a bootloader there would fail a host that is in fact ready.
+ARCH="${ARCH:-x86_64}"
+case "$ARCH" in
+	aarch64) WANT_TRIPLE="aarch64"
+	         BREW_INSTALL="brew install qemu aarch64-elf-gcc"
+	         NEEDS_BOOTLOADER=0 ;;
+	*)       WANT_TRIPLE="x86_64"
+	         NEEDS_BOOTLOADER=1 ;;
+esac
 
 fail=0
 pass() { echo "PASS  $1"; }
@@ -34,22 +45,28 @@ if have "$CC"; then
 	# and silently fails much later, so check the target triple, not the name.
 	triple="$("$CC" -dumpmachine 2>/dev/null)"
 	case "$triple" in
-		x86_64*) pass "cc ($CC -> $triple)" ;;
+		"$WANT_TRIPLE"*) pass "cc ($CC -> $triple)" ;;
 		*)       bad  "cc ($CC -> ${triple:-unknown})" \
-		              "cannot emit x86-64 ELF; expected an x86_64-* target. $BREW_INSTALL" ;;
+		              "cannot emit $WANT_TRIPLE ELF; expected a $WANT_TRIPLE-* target. $BREW_INSTALL" ;;
 	esac
 else
 	bad "cc ($CC)" "not on PATH. $BREW_INSTALL"
 fi
 
-for tool_var in GRUB_MKRESCUE QEMU; do
+tool_vars=(QEMU)
+[ "$NEEDS_BOOTLOADER" -eq 1 ] && tool_vars=(GRUB_MKRESCUE QEMU)
+for tool_var in "${tool_vars[@]}"; do
 	tool="${!tool_var}"
 	if have "$tool"; then pass "$tool_var ($tool)"
 	else bad "$tool_var ($tool)" "not on PATH. $BREW_INSTALL"; fi
 done
 
-if have xorriso; then pass "xorriso"
-else bad "xorriso" "not on PATH ($GRUB_MKRESCUE needs it). $BREW_INSTALL"; fi
+if [ "$NEEDS_BOOTLOADER" -eq 1 ]; then
+	if have xorriso; then pass "xorriso"
+	else bad "xorriso" "not on PATH ($GRUB_MKRESCUE needs it). $BREW_INSTALL"; fi
+else
+	pass "no bootloader needed ($ARCH boots with -kernel)"
+fi
 
 # --- e2e extras ------------------------------------------------------------ #
 # Only checked when asked (scripts/e2e.sh stage 0). The kernel-only loop needs

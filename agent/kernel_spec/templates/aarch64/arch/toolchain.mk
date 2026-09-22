@@ -22,4 +22,7 @@ ASFLAGS := -ffreestanding -fno-pic -fno-pie
 
 # -Wl,--build-id=none keeps the image byte-identical across builds; QEMU's virt
 # machine loads the ELF directly, so there is no bootloader to strip it.
-LDFLAGS := -nostdlib -no-pie -Wl,--build-id=none -Wl,-T,$(LINKER)
+# --no-warn-rwx-segments: the flat image has one LOAD segment covering text and
+# data, which is what a kernel with no loader wants and what ld warns about.
+LDFLAGS := -nostdlib -no-pie -Wl,--build-id=none -Wl,--no-warn-rwx-segments \
+           -Wl,-T,$(LINKER)

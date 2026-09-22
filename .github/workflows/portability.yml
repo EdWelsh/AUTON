@@ -111,6 +111,16 @@ jobs:
       - name: Device tree parser (aarch64)
         run: tests/kernel/run_dtb_test.sh --self-test
 
+      # Builds and boots the smallest aarch64 image that can speak, proving the
+      # linker script, the flat-image boot protocol and the PL011 address before
+      # anything is generated onto that scaffolding.
+      - name: aarch64 boot scaffolding
+        if: matrix.label == 'linux-x86_64'
+        run: |
+          sudo apt-get install -y gcc-aarch64-linux-gnu qemu-system-arm
+          CC=aarch64-linux-gnu-gcc OBJCOPY=aarch64-linux-gnu-objcopy \
+            tests/kernel/run_aarch64_smoke.sh
+
       # The conformance harness proper. It builds the oracle everywhere (an
       # oracle that cannot be built is a broken harness), and the native venues
       # run only on x86: the next step asserts they did.

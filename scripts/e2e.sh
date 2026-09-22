@@ -97,8 +97,12 @@ if [ "$ARCH" != "x86_64" ]; then
 	echo "arch: $ARCH (CC=$CC, QEMU=$QEMU)"
 	# The tree comes first: asking for a cross compiler to build a tree that
 	# has nothing to compile sends the reader after the wrong problem.
-	if [ ! -d "$TARGET/kernel/arch/aarch64" ]; then
-		echo "no kernel/arch/aarch64 in ${TARGET#"$ROOT"/}: the arch layer is not generated." >&2
+	# A scaffolded tree HAS kernel/arch/aarch64 — the linker script and the
+	# toolchain fragment are placed there — and still has no code. What decides
+	# whether there is anything to boot is a source file.
+	if [ -z "$(find "$TARGET/kernel/arch/aarch64" \( -name '*.c' -o -name '*.S' \) 2>/dev/null | head -1)" ]; then
+		echo "no aarch64 sources in ${TARGET#"$ROOT"/}/kernel/arch/aarch64: the arch layer" >&2
+		echo "is scaffolded but not generated (boot.S, vectors, PL011, GIC, timer, MMU)." >&2
 		echo "arch/aarch64.md specifies it; the DTB parser it needs is proved by" >&2
 		echo "tests/kernel/run_dtb_test.sh. Nothing to boot, so nothing is claimed." >&2
 		exit 2
@@ -145,7 +149,13 @@ WORK="$ROOT/SLM/work"
 STAGE_LOG="$ART/stages.tsv"
 printf 'stage\tname\tstatus\tseconds\n' > "$STAGE_LOG"
 
-TOTAL_STAGES=$([ "$RUN_EVAL" -eq 1 ] && echo 11 || echo 10)
+# The aarch64 spine is build, boot, markers, transcript. Counting the x86
+# stages there would print "[2/10]" for a run that has four.
+if [ "$ARCH" = "aarch64" ]; then
+	TOTAL_STAGES=4
+else
+	TOTAL_STAGES=$([ "$RUN_EVAL" -eq 1 ] && echo 11 || echo 10)
+fi
 STAGE_NO=0
 FAILED_STAGE=""
 declare -a STAGE_NAMES=()
