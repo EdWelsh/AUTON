@@ -33,14 +33,17 @@ while [ $# -gt 0 ]; do
 done
 
 LOG="${ORCH_LOG:-$ROOT/.artifacts/orchestrator/$(date -u +%Y-%m-%dT%H-%M-%SZ).log}"
+# ORCH_CONFIG selects another config (an experiment's workspace and caps) without
+# editing the repo's own.
+CONFIG="${ORCH_CONFIG:-$ROOT/agent/config/auton.toml}"
 mkdir -p "$(dirname "$LOG")"
 
 echo "goal:    $GOAL"
 echo "model:   $("$PY" -c "
-import tomllib; print(tomllib.load(open('$ROOT/agent/config/auton.toml','rb'))['llm']['model'])" 2>/dev/null || echo unknown)"
+import tomllib; print(tomllib.load(open('$CONFIG','rb'))['llm']['model'])" 2>/dev/null || echo unknown)"
 echo "cap:     $("$PY" -c "
 import tomllib
-c=tomllib.load(open('$ROOT/agent/config/auton.toml','rb'))
+c=tomllib.load(open('$CONFIG','rb'))
 print(c.get('orchestrator',{}).get('max_iterations',50), 'iterations')" 2>/dev/null || echo '?')"
 echo "log:     ${LOG#"$ROOT"/}"
 echo
@@ -49,7 +52,7 @@ cd "$ROOT/agent" || exit 1
 # Plain output: the rich console emits ANSI and hyperlink escapes that make the
 # captured log hard to grep for the phase transitions this lane measures.
 TERM=dumb NO_COLOR=1 auton_timeout "$TIMEOUT" "$PY" -m orchestrator.cli \
-	--config config/auton.toml run "$GOAL" 2>&1 | tee "$LOG"
+	--config "$CONFIG" run "$GOAL" 2>&1 | tee "$LOG"
 rc="${PIPESTATUS[0]}"
 
 echo
