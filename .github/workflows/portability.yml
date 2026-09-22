@@ -89,6 +89,9 @@ jobs:
       - name: KV store suite (F9)
         run: tests/kernel/run_kvstore_test.sh --self-test
 
+      - name: File server suite (F8, path traversal corpus)
+        run: tests/kernel/run_fileserver_test.sh --self-test
+
       # Proves the live path actually ran rather than skipping, on the one host
       # where it can. Without this the matrix could be green with both hosts
       # skipping and nobody noticing.
