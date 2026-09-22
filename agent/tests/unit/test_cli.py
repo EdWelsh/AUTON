@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 from click.testing import CliRunner
 
-from orchestrator.cli import cli, _load_config
+from orchestrator.cli import _load_config, cli, has_api_key
 
 
 class TestLoadConfig:
@@ -156,3 +156,29 @@ class TestCliOptions:
         runner = CliRunner()
         result = runner.invoke(cli, ["-c", str(tmp_path / "test.toml"), "--help"])
         assert result.exit_code == 0
+
+
+class TestLocalModelsNeedNoApiKey:
+    """A local Ollama model must start without a key, by either LiteLLM route.
+
+    w14: the loop's first run on a qualified model died at startup with
+    "No API key found for provider 'ollama_chat'" — `ollama` was whitelisted
+    and `ollama_chat`, the route that does native tool calling, was not.
+    """
+
+    @pytest.mark.parametrize("provider", ["ollama", "ollama_chat"])
+    def test_a_local_provider_needs_no_key(self, provider, monkeypatch):
+        monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+        assert has_api_key(provider, {})
+
+    def test_a_cloud_provider_needs_one(self, monkeypatch):
+        monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+        assert not has_api_key("anthropic", {})
+
+    def test_a_configured_key_satisfies_it(self, monkeypatch):
+        monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+        assert has_api_key("anthropic", {"anthropic": "sk-x"})
+
+    def test_an_environment_variable_satisfies_it(self, monkeypatch):
+        monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-x")
+        assert has_api_key("anthropic", {})
