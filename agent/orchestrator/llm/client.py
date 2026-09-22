@@ -100,6 +100,23 @@ class ProviderConfig:
         return self.endpoints.get(provider)
 
 
+class ModelTimeoutError(Exception):
+    """A model call exceeded its request timeout.
+
+    w12's second live run sat 17 minutes on an Ollama connection with nothing in
+    flight at the server: an HTTP read with no timeout never returns. A named
+    failure the engine can report beats a run that never ends.
+    """
+
+
+# Seconds one model call may take. A local 8B model answers a long agent prompt
+# in well under this; a call past it is hung, not thinking.
+DEFAULT_REQUEST_TIMEOUT = 600.0
+# The asyncio backstop fires this long after the provider's own timeout, so
+# the provider's (more informative) error wins when it does fire.
+TIMEOUT_BACKSTOP_MARGIN = 30.0
+
+
 class ModelUnavailableError(Exception):
     """The configured model does not exist on the configured provider."""
 
@@ -174,6 +191,7 @@ class LLMClient:
         provider_config: ProviderConfig | None = None,
         cost_tracker: CostTracker | None = None,
         preflight: bool = True,
+        request_timeout: float = DEFAULT_REQUEST_TIMEOUT,
     ):
         self.model = model
         self.max_tokens = max_tokens
@@ -182,8 +200,21 @@ class LLMClient:
         self._semaphore = asyncio.Semaphore(10)
         self._last_call_time = 0.0
         self._min_interval = 0.1
+        self.request_timeout = request_timeout
         if preflight:
             preflight_model(self.model, self.provider_config)
+
+    async def _complete(self, kwargs: dict[str, Any], agent_id: str) -> Any:
+        """One model call, bounded. LiteLLM's own `timeout` is passed, and
+        asyncio.wait_for backs it up, since not every provider path honours it."""
+        kwargs = {**kwargs, "timeout": self.request_timeout}
+        try:
+            return await asyncio.wait_for(litellm.acompletion(**kwargs),
+                                          timeout=self.request_timeout + TIMEOUT_BACKSTOP_MARGIN)
+        except asyncio.TimeoutError as e:
+            raise ModelTimeoutError(
+                f"{kwargs.get('model')} did not answer {agent_id} within "
+                f"{self.request_timeout:.0f}s") from e
 
     async def send_message(
         self,
@@ -226,16 +257,16 @@ class LLMClient:
                 kwargs["api_base"] = base_url
 
             try:
-                response = await litellm.acompletion(**kwargs)
+                response = await self._complete(kwargs, agent_id)
             except litellm.RateLimitError:
                 logger.warning("Rate limited, retrying in 30s for agent %s", agent_id)
                 await asyncio.sleep(30)
-                response = await litellm.acompletion(**kwargs)
+                response = await self._complete(kwargs, agent_id)
             except (litellm.APIConnectionError, json.JSONDecodeError) as e:
                 if "ollama" in model.lower():
                     logger.warning("Ollama JSON error, retrying with format=json: %s", e)
                     kwargs["format"] = "json"
-                    response = await litellm.acompletion(**kwargs)
+                    response = await self._complete(kwargs, agent_id)
                 else:
                     raise
 

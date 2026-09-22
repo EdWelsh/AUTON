@@ -54,8 +54,10 @@ class ScriptedModel:
             task_id = "k-001" if "k-001" in prompt else "k-002"
             self.reviews[task_id] = self.reviews.get(task_id, 0) + 1
             if task_id == "k-001" and self.reviews[task_id] == 1:
-                return self._say(json.dumps({"verdict": "request_changes",
-                                             "summary": "a should be 2", "issues": []}))
+                return self._say(json.dumps({
+                    "verdict": "request_changes", "summary": "a should be 2",
+                    "issues": [{"severity": "warning", "file": "kernel/lib/a.c",
+                                "line": 1, "description": "a should be 2"}]}))
             return self._say(json.dumps({"verdict": "approve", "summary": "ok", "issues": []}))
         return self._say(json.dumps({"success": True}))
 

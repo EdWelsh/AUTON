@@ -291,6 +291,15 @@ class GitWorkspace:
         except TypeError:          # detached HEAD
             return False
 
+    def branch_diff(self, branch: str) -> tuple[str, list[str]]:
+        """The change `branch` makes against main: (unified diff, changed paths).
+        Three-dot, so it is what the branch added, whatever is checked out."""
+        main = self._get_main_branch()
+        text = self.repo.git.diff(f"{main}...{branch}", "--", ".", *self._NOT_WORK)
+        names = self.repo.git.diff("--name-only", f"{main}...{branch}", "--", ".",
+                                   *self._NOT_WORK).split()
+        return text, names
+
     def diff(self, branch: str | None = None) -> str:
         """Get diff of current changes or against a branch."""
         if branch:

@@ -25,7 +25,12 @@ from orchestrator.core.scheduler import Scheduler
 from orchestrator.core.state import OrchestratorState
 from orchestrator.core.task_graph import TaskGraph, TaskState
 from orchestrator.arch_registry import ArchProfile, get_arch_profile
-from orchestrator.llm.client import CostTracker, LLMClient, ProviderConfig
+from orchestrator.llm.client import (
+    DEFAULT_REQUEST_TIMEOUT,
+    CostTracker,
+    LLMClient,
+    ProviderConfig,
+)
 from orchestrator.validation import (
     BuildValidator,
     CompositionValidator,
@@ -99,6 +104,7 @@ class OrchestrationEngine:
             max_tokens=llm_config.get("max_tokens", 16384),
             provider_config=provider_config,
             cost_tracker=self.cost_tracker,
+            request_timeout=float(llm_config.get("request_timeout", DEFAULT_REQUEST_TIMEOUT)),
         )
         self.workspace = GitWorkspace(
             workspace_path=workspace_path,
@@ -514,8 +520,9 @@ class OrchestrationEngine:
             return
 
         reviewer_slot.busy = True
+        brief = f"{task_node.title}\n{task_node.data.get('description', '')}".strip()
         review_result = await reviewer_slot.agent.review_branch(
-            task_node.task_id, result.branch
+            task_node.task_id, result.branch, brief
         )
         reviewer_slot.busy = False
 

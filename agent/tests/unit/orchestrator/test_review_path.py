@@ -248,3 +248,49 @@ class TestDeveloperMessagesSerialise:
         await Agent.send_message(agent, "reviewer", "review_request", {"task_id": "t"})
 
         assert list((tmp_path / ".auton").rglob("*.json")), "the message was written"
+
+
+class TestARejectionMustPointAtTheChange:
+    """w12's first live run: a correct one-line change rejected three times over
+    a `kmath_add` function that exists nowhere. The reviewer never looked."""
+
+    def test_the_reviewer_is_shown_the_diff(self, tmp_path):
+        from orchestrator.agents.reviewer_agent import ReviewerAgent
+
+        ws = _repo(tmp_path)
+        ws.create_branch("dev-01", "x", "1")
+        (tmp_path / "a.c").write_text("int a; /* documented */\n")
+        ws.commit_pending("agent/dev-01/x-1", "change")
+        seen = {}
+
+        async def capture(task):
+            seen["prompt"] = task["description"]
+            return MagicMock(summary='{"verdict": "approve", "summary": "ok"}')
+
+        reviewer = ReviewerAgent.__new__(ReviewerAgent)
+        reviewer.agent_id, reviewer.workspace = "reviewer-01", ws
+        reviewer.execute_task = capture
+        import asyncio
+        asyncio.run(reviewer.review_branch("t-1", "agent/dev-01/x-1", "document a"))
+
+        assert "+int a; /* documented */" in seen["prompt"]
+        assert "document a" in seen["prompt"]
+
+    def test_a_rejection_citing_no_changed_file_is_discarded(self):
+        from orchestrator.agents.reviewer_agent import ground_review
+
+        out = ground_review({"verdict": "request_changes", "summary": "kmath_add lacks checks",
+                             "issues": [{"severity": "warning", "file": "kernel/lib/kmath.c",
+                                         "description": "kmath_add"}]},
+                            ["kernel/include/kmath.h"])
+
+        assert out["verdict"] == "approve"
+        assert "unfounded" in out["summary"]
+
+    def test_a_grounded_rejection_stands(self):
+        from orchestrator.agents.reviewer_agent import ground_review
+
+        out = ground_review({"verdict": "request_changes", "summary": "s",
+                             "issues": [{"severity": "critical", "file": "a.c"}]}, ["a.c"])
+
+        assert out["verdict"] == "request_changes"

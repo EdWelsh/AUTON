@@ -22,6 +22,32 @@ def _get_prompt(kwargs):
     return build_reviewer_prompt(arch)
 
 
+
+# A review prompt carries the whole diff; past this it is truncated, and says so.
+MAX_DIFF_CHARS = 60_000
+
+
+def ground_review(review: dict[str, Any], changed: list[str]) -> dict[str, Any]:
+    """A rejection must point at the change it rejects.
+
+    `request_changes` whose blocking issues name no changed file is not
+    feedback an author can act on: it is a review of code that is not there.
+    It is downgraded to approve, with the unfounded text kept in the summary so
+    the log still shows what the model said.
+    """
+    if review.get("verdict") != "request_changes":
+        return review
+    blocking = [i for i in review.get("issues", [])
+                if i.get("severity") in ("critical", "warning", None)]
+    grounded = [i for i in blocking if i.get("file") in changed]
+    if grounded:
+        return {**review, "issues": grounded + [
+            i for i in review.get("issues", []) if i not in blocking]}
+    logger.warning("Rejection cites no changed file (changed: %s); treating as approve: %s",
+                   changed, review.get("summary", ""))
+    return {**review, "verdict": "approve",
+            "summary": f"unfounded rejection discarded: {review.get('summary', '')}"}
+
 class ReviewerAgent(Agent):
     """Reviews code diffs from Developer agents.
 
@@ -38,13 +64,23 @@ class ReviewerAgent(Agent):
             **kwargs,
         )
 
-    async def review_branch(self, task_id: str, branch: str) -> dict[str, Any]:
+    async def review_branch(self, task_id: str, branch: str,
+                            task_brief: str = "") -> dict[str, Any]:
         """Review a developer's feature branch.
 
         Returns a structured review with verdict (approve/request_changes),
         summary, and list of issues.
+
+        The diff is put in the prompt rather than left for the model to fetch.
+        On w12's first live run the developer's change was exactly right (one
+        comment line) and the reviewer, which never called git_diff, rejected
+        it three times over a `kmath_add` function that exists nowhere.
         """
         logger.info("[%s] Reviewing branch %s for task %s", self.agent_id, branch, task_id)
+        diff_text, changed = self.workspace.branch_diff(branch)
+        if len(diff_text) > MAX_DIFF_CHARS:
+            diff_text = (diff_text[:MAX_DIFF_CHARS]
+                         + f"\n[... diff truncated at {MAX_DIFF_CHARS} characters ...]")
 
         task = {
             "task_id": f"review-{task_id}",
@@ -52,10 +88,20 @@ class ReviewerAgent(Agent):
             "subsystem": "review",
             "description": f"""Review the code changes on branch '{branch}' for task '{task_id}'.
 
+## What the task asked for
+{task_brief or "(no description given)"}
+
+## The complete change (git diff main...{branch})
+Files changed: {", ".join(changed) or "(none)"}
+
+```diff
+{diff_text}
+```
+
 ## Instructions
-1. Use git_diff to see the changes on this branch (diff against main)
-2. Read the full files that were changed
-3. Read the subsystem specification for context
+1. Review ONLY the change above. Do not describe code that is not in it.
+2. Read the full changed files if you need their context
+3. Read the relevant specification for context
 4. Check for:
    - **Correctness**: Does the code do what the spec says?
    - **Memory safety**: No leaks, use-after-free, double-free, buffer overflows
@@ -81,12 +127,13 @@ Return your review as a JSON object:
 }}
 ```
 
-Only block with "request_changes" for critical or warning issues.
+Only block with "request_changes" for critical or warning issues, and every
+such issue must name a file from "Files changed" above.
 Approve with nits if issues are minor.""",
         }
 
         result = await self.execute_task(task)
-        review = self._parse_review(result.summary)
+        review = ground_review(self._parse_review(result.summary), changed)
 
         # Update task metadata
         try:
