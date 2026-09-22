@@ -51,6 +51,66 @@ vendors:
           The canonical errata document. One per family, each an errata table
           keyed on stepping. This is the hardest parsing problem in the set and
           the reason H2 is scoped to Intel and AMD first.
+      - id: intel-spec-update-6
+        title: 6th Gen Core Specification Update
+        kind: errata
+        scope: per-family
+        access: public-download
+        redistributable: false
+        form: pdf-tables
+        cadence: monthly
+        notes: >-
+          H9 lineage member (agent/hardware/lineage.yaml). Doc number 332689 is a hint; verify it on the PDF's cover.
+      - id: intel-spec-update-7
+        title: 7th Gen Core Specification Update
+        kind: errata
+        scope: per-family
+        access: public-download
+        redistributable: false
+        form: pdf-tables
+        cadence: monthly
+        notes: >-
+          H9 lineage member (agent/hardware/lineage.yaml). Doc number 334663 is a hint; verify it on the PDF's cover.
+      - id: intel-spec-update-8
+        title: 8th/9th Gen Core Specification Update
+        kind: errata
+        scope: per-family
+        access: public-download
+        redistributable: false
+        form: pdf-tables
+        cadence: monthly
+        notes: >-
+          H9 lineage member (agent/hardware/lineage.yaml). Doc number 337346 is a hint; verify it on the PDF's cover.
+      - id: intel-spec-update-10
+        title: 10th Gen Core Specification Update
+        kind: errata
+        scope: per-family
+        access: public-download
+        redistributable: false
+        form: pdf-tables
+        cadence: monthly
+        notes: >-
+          H9 lineage member (agent/hardware/lineage.yaml). Doc number 615213 is a hint; verify it on the PDF's cover.
+      - id: intel-spec-update-11
+        title: 11th Gen Core Specification Update
+        kind: errata
+        scope: per-family
+        access: public-download
+        redistributable: false
+        form: pdf-tables
+        cadence: monthly
+        notes: >-
+          H9 lineage member (agent/hardware/lineage.yaml). Doc number not yet identified.
+      - id: intel-spec-update-13
+        title: 13th/14th Gen Core Specification Update
+        kind: errata
+        scope: per-family
+        access: public-download
+        redistributable: false
+        form: pdf-tables
+        cadence: monthly
+        notes: >-
+          H9 lineage member (agent/hardware/lineage.yaml). Doc number 740518 is a hint; verify it on the PDF's cover.
       - id: intel-sa
         title: Intel Security Advisories (INTEL-SA-*)
         kind: security-advisory

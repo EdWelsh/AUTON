@@ -1,0 +1,17 @@
+# The documents H9's lineage is built from: one Intel client specification
+# update per Core generation, each ingested by a person with
+# `vendor_fetch.py --vendor intel --id <id> --from-file <pdf>` (Intel's CDN
+# refuses scripted downloads). A listed document that is not ingested is
+# skipped and named; lineage.py refuses below two.
+#
+# doc_number is a HINT from the plan, not a citation: verify it against the
+# downloaded PDF's own cover before ingesting (the phantom-citation defect).
+documents:
+  - {vendor: intel, id: intel-spec-update-6,  generation: 6,  doc_number_hint: "332689"}
+  - {vendor: intel, id: intel-spec-update-7,  generation: 7,  doc_number_hint: "334663"}
+  - {vendor: intel, id: intel-spec-update-8,  generation: 8,  doc_number_hint: "337346"}
+  - {vendor: intel, id: intel-spec-update-10, generation: 10, doc_number_hint: "615213"}
+  - {vendor: intel, id: intel-spec-update-11, generation: 11}
+  # Ingested (w2): Alder Lake, 682436, 94 errata.
+  - {vendor: intel, id: intel-spec-update,    generation: 12, doc_number: "682436"}
+  - {vendor: intel, id: intel-spec-update-13, generation: 13, doc_number_hint: "740518"}

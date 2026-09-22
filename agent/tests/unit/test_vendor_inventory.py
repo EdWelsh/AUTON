@@ -150,7 +150,7 @@ class TestTheLicensingRefusal:
     def test_an_untracked_cache_is_allowed(self):
         plan = fetch_plan("intel", ".cache/vendor")
 
-        assert len(plan) == 4
+        assert len(plan) == 10       # 4 kinds, plus 6 H9 lineage spec updates
         assert all(p["into"].startswith(".cache/vendor/intel") for p in plan)
 
     def test_a_traversal_out_of_the_cache_is_still_caught(self):

@@ -1,0 +1,32 @@
+# Erratum classes (hardware-truth H9). An erratum's class is the first rule
+# whose keywords appear in its normalised title (then its detail). `overrides`
+# pin a class by "<document>/<erratum id>" where the keywords get one wrong; a
+# person writes those, with a reason.
+#
+# The class, not the erratum, is what lineage predicts: an erratum id never
+# recurs, but "performance counters are inaccurate" recurs every generation.
+classes:
+  - name: performance-monitoring
+    keywords: [performance monitoring, pmu, pebs, counter, overcount, undercount, offcore, topdown, event]
+  - name: debug-trace
+    keywords: [processor trace, intel pt, lbr, last branch, bts, breakpoint, dr6, dr7, single step, cyc packet, psb]
+  - name: virtualisation
+    keywords: [vmx, vm exit, vm entry, vmcs, ept, vmm, preemption timer, virtual]
+  - name: exceptions-and-faults
+    keywords: ['#gp', '#ud', '#pf', '#cp', '#db', '#mc', exception, fault, prioritized, delivered]
+  - name: machine-check
+    keywords: [machine check, mca, mcacod, mce, error code, crashlog]
+  - name: power-and-reset
+    keywords: [c-state, c6, c7, p-state, pkg, warm reset, reset, sleep, s3, s0ix, power, thermal, pperf, hwp]
+  - name: interrupts-and-timers
+    keywords: [apic, x2apic, interrupt, tsc, deadline, timer, uipi, user interrupt, uiret]
+  - name: memory-and-ordering
+    keywords: [cache, tlb, dtlb, memory ordering, cross-modifying, self-modifying, store, load, ddr, dram]
+  - name: io-pcie-usb
+    keywords: [pcie, pci, tlp, ltssm, refclk, perst, xhci, usb, thunderbolt, ptm, lfps]
+  - name: instruction-behaviour
+    keywords: [instruction, cpuid, msr, wrmsr, rdmsr, x87, fdp, bmi, lzcnt, adox, adcx, avx, sse, rtm, tsx, pconfig]
+  - name: graphics-display
+    keywords: [gpu, graphics, display, edp, hdmi, media]
+default: other
+overrides: {}
