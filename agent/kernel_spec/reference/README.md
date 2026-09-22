@@ -51,9 +51,17 @@ Two tagged trees exist. Neither is in `main`; `kernels/` is gitignored and a tes
 | Tag | Commit | What it is | Use it for |
 |---|---|---|---|
 | `kernel-reference-v1` | the retired hand-written tree | the source of this directory's graph and training pairs | reading, never as an experiment base |
-| `kernel-base-v2` | `70f3e49` (`5fb2777^`) | v1 + F4's factory hooks: the static-IP branch in `net/setup.c` (+22) and a weak `service_main` in `boot/kernel_main.c` (+10) | **every generation experiment** |
+| `kernel-base-v2` | `70f3e49` (`5fb2777^`) | v1 + F4's factory hooks: the static-IP branch in `net/setup.c` (+22) and a weak `service_main` in `boot/kernel_main.c` (+10) | the w11 control; superseded by v3 |
+| `kernel-base-v3` | `319e7f2` | v2 + the **model format v3** loader: `VERSION 3`, a bounds-checked device-table parse, `slm_neural_device_name()` | **every generation experiment** (the script's default) |
 
-`scripts/kernel-base.sh <dir> [--git] [--rev TAG]` extracts one. The difference matters:
+**Why v3 exists.** The exporter has written format v3 since w10, and v2's loader requires v2
+exactly. So the e2e spine failed parity with `LOAD FAIL` on every run, and nobody saw it because
+`kernels/` had been deleted and e2e had no tree to run. On v3 the spine passes parity, boot and
+13 of 14 markers. The remaining one, `[MM] PMM initialized: … total, … reserved, … free`, is
+F3's allocator, which `w13-generate-mm` generates. **A base must load the format the current
+tools emit**, and `test_kernel_base.py` pins the loader's version against `auton_format.VERSION`.
+
+`scripts/kernel-base.sh <dir> [--git] [--rev TAG]` extracts one (default v3). The difference matters:
 seeded from v1, a TFTP service is refused at `[gate: link closure] no stub signature for:
-dhcp_run` before any service code is considered; from v2 it is refused only at `undefined:
-tftp_serve`, which is the agent's job. `test_kernel_base.py` pins both.
+dhcp_run` before any service code is considered; from v2 or v3 it is refused only at
+`undefined: tftp_serve`, which is the agent's job. `test_kernel_base.py` pins both.
