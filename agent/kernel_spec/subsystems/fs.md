@@ -453,6 +453,10 @@ list, and the FAT accessor (read half); mount-rw, unmount, create, mkdir, append
 [FS] wrote AUTON.TXT
 ```
 
+The harness seeds the root with `SEED.TXT` and checks its size in the second marker. The kernel
+creates `/AUTON.TXT` holding exactly the 16 bytes `written by AUTON` (no newline), then the host
+reads it back with `mtype` and runs `fsck.fat -n` on the image.
+
 ### Verification
 
 `tests/kernel/run_fat32_test.sh --self-test` runs the 34 checks above against
