@@ -103,3 +103,67 @@ jobs:
             | sudo tee /etc/udev/rules.d/99-kvm4all.rules
           sudo udevadm control --reload-rules && sudo udevadm trigger --name-match=kvm
           bash -c 'source scripts/lib/toolchain.sh && auton_accel && echo "$AUTON_ACCEL: $AUTON_ACCEL_REASON" && [ "$AUTON_ACCEL" = kvm ]'
+
+  # windows-linux A1: the e2e spine on a Linux host, and B1's measurement (the
+  # same ISO under KVM and under TCG on one runner). The run must match
+  # docs/E2E-EXPECTED.yaml exactly: red only where that file says, with the
+  # plan that clears it. Proxmox confirms B1 later (w15-portability-proxmox).
+  linux-e2e:
+    runs-on: ubuntu-latest
+    name: linux-e2e (A1, B1 measurement)
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # the kernel-base tags
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Toolchain (the apt list A1 documents)
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -yq gcc clang grub-pc-bin grub-common xorriso \
+            qemu-system-x86 mtools
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' \
+            | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules && sudo udevadm trigger --name-match=kvm
+
+      - name: Python + CPU torch (rung 3a trains in CI; parity needs torch)
+        run: |
+          python -m venv .venv
+          .venv/bin/pip install -q --upgrade pip
+          .venv/bin/pip install -q --index-url https://download.pytorch.org/whl/cpu torch
+          .venv/bin/pip install -q numpy pyyaml pytest
+
+      - name: Kernel base
+        run: scripts/kernel-base.sh "$RUNNER_TEMP/tree"
+
+      - name: Preflight
+        run: CHECK_E2E=1 scripts/preflight.sh
+
+      - name: e2e spine (rung 3a)
+        run: scripts/e2e.sh --target "$RUNNER_TEMP/tree" || true
+
+      - name: Matches docs/E2E-EXPECTED.yaml
+        run: .venv/bin/python scripts/e2e-expect.py
+
+      - name: B1 measurement — same ISO, kvm then tcg
+        run: |
+          make -C "$RUNNER_TEMP/tree" iso
+          scripts/time-boot.sh "$RUNNER_TEMP/tree/build/auton.iso" 3 --accel kvm | tee kvm.txt
+          scripts/time-boot.sh "$RUNNER_TEMP/tree/build/auton.iso" 3 --accel tcg | tee tcg.txt
+          python3 -c "
+          import re
+          k=float(re.search(r'mean: ([\d.]+)',open('kvm.txt').read()).group(1))
+          t=float(re.search(r'mean: ([\d.]+)',open('tcg.txt').read()).group(1))
+          print(f'B1 ratio on this runner: tcg/kvm = {t/k:.1f}x (kvm {k}s, tcg {t}s)')"
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: linux-e2e
+          path: |
+            .artifacts/e2e
+            kvm.txt
+            tcg.txt

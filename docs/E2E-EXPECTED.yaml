@@ -1,0 +1,20 @@
+# What the e2e spine is expected to do on the current default kernel base.
+#
+# A red run is only acceptable where this file says so, with the plan that
+# clears it. scripts/e2e-expect.py compares a run's artifacts to this file, so
+# CI fails on any *new* failure and also on a stale expectation (a marker
+# listed here that now passes must be removed, or the file lies).
+#
+# Update this file in the same commit that changes the outcome.
+
+base: kernel-base-v3
+verdict: RED
+failed_stage: markers
+failing_markers:
+  - pattern: '\[MM\] PMM initialized: \d+ pages total, \d+ reserved, \d+ free'
+    why: >-
+      F3 specified the bitmap PMM and this exact line (subsystems/mm.md
+      "Reporting"); the base still runs the seed's bump allocator and prints
+      "[MM] PMM initialized: N pages free". The marker is right and the base
+      is behind it.
+    cleared_by: w13-generate-mm
