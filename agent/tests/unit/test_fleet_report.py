@@ -117,3 +117,16 @@ def test_the_endpoint_question_is_written_down():
     text = (ROOT / "agent" / "kernel_spec" / "decisions" / "fleet-endpoint.md").read_text()
     for required in ("retention", "jurisdiction", "abuse"):
         assert required in text.lower(), f"the decision record does not mention {required}"
+
+
+def test_the_consent_flow_is_specified_with_a_default_of_no():
+    """The spec is the contract an image is graded against; if it does not say
+    the default is no, an implementation defaulting to yes would pass review."""
+    spec = (ROOT / "agent" / "kernel_spec" / "subsystems" / "slm.md").read_text()
+    section = spec.split("## Sharing a conformance report")[1].split("\n## ")[0]
+    assert "[y/N]" in section, "the prompt must show which answer is the default"
+    assert "default is no" in section.lower()
+    assert "shown before the question is answered" in section
+    assert "[CONF] not shared" in section
+    for forbidden in ("hostname", "serial number", "user"):
+        assert forbidden in section, f"the spec should name {forbidden} as excluded"

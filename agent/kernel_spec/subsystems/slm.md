@@ -454,6 +454,50 @@ Interface: `tests/kernel/errata_lookup_reference/include/errata_lookup.h` is nor
 (a synthetic module, every truncation refused under ASan, the real Intel 682436 module when
 cached). Packages ship `assets/errata.bin` scoped to the target's silicon.
 
+## Sharing a conformance report (REQUIRED)
+
+An image that ran its conformance suite (H10c) holds a result. Contributing results is how
+fleet-scale defects could ever be found — roughly one machine in a thousand — and it is also
+the only thing in AUTON that would move data off a user's machine. So the flow is fixed here,
+and `agent/tools/fleet_report.py` is built to match it.
+
+### The dialogue
+
+```
+[CONF] 0 divergences across 8 clause-cited checks
+[CONF] share? Sending helps find defective silicon at fleet scale.
+[CONF] This is exactly what would be sent:
+[CONF]   {"schema":1,"silicon":"6:151:2","vendor":"GenuineIntel","virtualised":0,
+[CONF]    "suite":"<rev>","checked":8,"divergences":[],"not_assertable":[]}
+[CONF] Nothing else leaves this machine. [y/N]
+auton> (no answer, or anything but y)
+[CONF] not shared
+```
+
+Five rules, none of them optional:
+
+1. **The default is no.** A timeout, an empty line, or any answer that is not `y` means not
+   shared. Consent is given, never assumed from silence.
+2. **The report is shown before the question is answered**, in full, not summarised. "Anonymous
+   telemetry" is a description; the bytes are the fact.
+3. **The report is the allowlist's output** — eight fields about the silicon and the check.
+   There is no field for a hostname, an address, a serial number or a user, and
+   `fleet_report.py` refuses one by name if a later change adds it.
+4. **A refusal is silent and final for that boot.** No second prompt, no "are you sure", and
+   nothing recorded about having asked.
+5. **Nothing is sent by the kernel today.** There is no endpoint (see
+   `kernel_spec/decisions/fleet-endpoint.md`), so on a yes the image writes the report to its
+   own volume and says where. An image that claimed to send somewhere would be claiming a
+   recipient that does not exist.
+
+### Markers
+
+```
+[CONF] share? (report shown)
+[CONF] not shared
+[CONF] saved /CONF/report.json
+```
+
 ## Role table (REQUIRED)
 
 The chat answers "what can you do" and "be an email server" from a table that is **generated**,
