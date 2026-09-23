@@ -8,6 +8,19 @@ Inspired by [NVIDIA VibeTensor](https://github.com/NVlabs/vibetensor) — where 
 
 **We don't write the kernel. The agents do.**
 
+An agent has now done it: on 2026-09-22 a local model wrote a 430-line TFTP server that passes
+**all 31 checks** of a host suite written by a person, frozen before the run, and absent from
+the model's workspace. What it took was not a bigger model but a loop that refuses what it
+should — non-compiling C never reaches a reviewer — and a suite that was honest about being
+wrong when it was. [The report](.claude/PRPs/reports/w14-f6-qwen-report.md) includes the two
+defects in our own harness that nearly buried the result.
+
+| Where to look | What it holds |
+|---|---|
+| [`docs/OPEN-WORK.md`](docs/OPEN-WORK.md) | everything unfinished, its blocker, and the next step |
+| [`docs/GENERATION-QUEUE.md`](docs/GENERATION-QUEUE.md) | each generation run, its command, and the gate that decides it |
+| [`docs/HOST-MATRIX.md`](docs/HOST-MATRIX.md) | what each host can build, boot and verify — and what it cannot |
+
 ## Architecture
 
 ### Orchestration Flow
