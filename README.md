@@ -1,405 +1,172 @@
 # AUTON
 
-**Autonomous agent orchestration system that builds an SLM-driven operating system kernel from scratch.**
+**An agent swarm that writes an operating system kernel — and a set of gates that decide whether it worked.**
 
-AUTON uses LLM agents to collaboratively write, review, test, and integrate a custom kernel with an embedded **Small Language Model (SLM)** at its core. The SLM serves as the OS's central intelligence — handling hardware discovery, driver configuration, OS installation, application management, and ongoing system administration. Supports **multiple architectures** (x86_64, AArch64, RISC-V 64) through a Hardware Abstraction Layer (HAL).
+AUTON uses LLM agents to write, review, test and integrate a kernel with a
+**Small Language Model (SLM)** embedded in it. The SLM is meant to be the OS's
+interface: you configure the machine by asking, not by running shell commands.
 
-Inspired by [NVIDIA VibeTensor](https://github.com/NVlabs/vibetensor) — where LLM agents generated ~195K lines of system software without human code review. Supports any LLM provider via [LiteLLM](https://github.com/BerriAI/litellm): Anthropic, OpenAI, Ollama, Google Gemini, OpenRouter, Azure, and more.
+Inspired by [NVIDIA VibeTensor](https://github.com/NVlabs/vibetensor), where LLM
+agents generated ~195K lines of system software without human code review. Any
+provider works via [LiteLLM](https://github.com/BerriAI/litellm) — Anthropic,
+OpenAI, Ollama, Gemini, OpenRouter, Azure.
 
 **We don't write the kernel. The agents do.**
 
-An agent has now done it: on 2026-09-22 a local model wrote a 430-line TFTP server that passes
-**all 31 checks** of a host suite written by a person, frozen before the run, and absent from
-the model's workspace. What it took was not a bigger model but a loop that refuses what it
-should — non-compiling C never reaches a reviewer — and a suite that was honest about being
-wrong when it was. [The report](.claude/PRPs/reports/w14-f6-qwen-report.md) includes the two
-defects in our own harness that nearly buried the result.
+## Status
+
+Honest version, as of 2026-09-23.
+
+**What has been proved.** On 2026-09-22 a local model (`qwen3.5:27b`) wrote a
+430-line TFTP server that passes **all 31 checks** of a host suite written by a
+person, frozen before the run, and never present in the model's workspace.
+[The report](.claude/PRPs/reports/w14-f6-qwen-report.md) includes the two defects
+in our own harness that nearly buried the result. What made the difference was
+not a bigger model but a loop that refuses what it should — non-compiling C never
+reaches a reviewer — and a suite honest enough to be wrong out loud.
+
+**What has not.** The memory manager run on 2026-09-23 hit its five-hour timeout
+having closed one task of six. Its gates returned `1` (generated wrong) and `2`
+(not generated), and
+[the report](.claude/PRPs/reports/w15-mm-qwen-report.md) says why.
+
+| | |
+|---|---|
+| Services generated and passing their gate | **1 of 7** (TFTP). 8 services are specified; `dhcp` already ships in the base, leaving 7 for the swarm |
+| Host gate suites | **22**, of which **10** are scored by injected bugs |
+| Architectures with a full end-to-end spine | **1** (x86_64); aarch64 boots; riscv64 is specified only |
+| CI | 2 workflows, 5 matrix legs — [see below](#continuous-integration) |
+
+There is no finished kernel, and this README will not imply otherwise. What
+exists is everything that *judges* a kernel: specifications, gates, oracles,
+acceptance harnesses, and an orchestration loop. What remains is running the
+swarm — tracked in [`docs/OPEN-WORK.md`](docs/OPEN-WORK.md) and the single open
+PRD, [`auton-completion.prd.md`](.claude/PRPs/prds/auton-completion.prd.md).
+
+### Why there is no kernel here
+
+`kernels/` is deliberately absent from this repository — it is generated output,
+and it is in `.gitignore`. The premise of the project is that agents write the
+kernel, so a kernel checked in alongside them would make every gate meaningless.
+
+What *is* here are **base trees**: tagged starting points an experiment can be
+seeded from, so that a gate refusal means something. `kernel-base-v5` is the
+current default.
+
+```bash
+# Materialise a kernel tree to build, boot or point a gate at
+scripts/kernel-base.sh /tmp/tree          # or --rev kernel-base-v4
+```
 
 | Where to look | What it holds |
 |---|---|
+| [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | how the orchestrator, agents and validation layers fit together |
 | [`docs/OPEN-WORK.md`](docs/OPEN-WORK.md) | everything unfinished, its blocker, and the next step |
-| [`auton-completion.prd.md`](.claude/PRPs/prds/auton-completion.prd.md) | the one open PRD: every remaining phase with the gate that decides it. The five it consolidates are in `prds/completed/` |
+| [`auton-completion.prd.md`](.claude/PRPs/prds/auton-completion.prd.md) | the one open PRD: every remaining phase with the gate that decides it |
 | [`docs/GENERATION-QUEUE.md`](docs/GENERATION-QUEUE.md) | each generation run, its command, and the gate that decides it |
 | [`docs/HOST-MATRIX.md`](docs/HOST-MATRIX.md) | what each host can build, boot and verify — and what it cannot |
+| [`agent/kernel_spec/`](agent/kernel_spec/) | the kernel specification the agents are held to |
 
-## Architecture
+## Quick start
 
-### Orchestration Flow
+Everything below is run from a fresh clone. Pick the path that matches what you
+want to do.
 
-```
-┌─────────────────────────────────────────────────────┐
-│                  Orchestration Engine                │
-│         (VibeTensor-style iterative loop)            │
-│                                                     │
-│   specify goals → decompose → agents generate diffs │
-│   → validate (build + test) → accept/reject → loop  │
-└──────────────┬──────────────────────────┬───────────┘
-               │                          │
-    ┌──────────▼──────────┐    ┌──────────▼──────────┐
-    │   Kernel Agents     │    │    SLM Agents       │
-    │                     │    │                     │
-    │  Manager (1x)       │    │  Data Scientist (1x)│
-    │  Architect (1x)     │    │  Model Arch (1x)    │
-    │  Developer (4x)     │    │  Training (4x)      │
-    │  Reviewer (1x)      │    │  Evaluation (1x)    │
-    │  Tester (1x)        │    │  Quantization (1x)  │
-    │  Integrator (1x)    │    │  Export (1x)        │
-    └──────────┬──────────┘    └──────────┬──────────┘
-               │                          │
-    ┌──────────▼──────────┐    ┌──────────▼──────────┐
-    │   Git Workspace     │    │   Git Workspace     │
-    │  (kernels/{arch})   │    │     (SLM/)          │
-    │                     │    │                     │
-    │  Agents collaborate │    │  Agents collaborate │
-    │  via branches +     │    │  via branches +     │
-    │  structured diffs   │    │  structured diffs   │
-    └──────────┬──────────┘    └──────────┬──────────┘
-               │                          │
-               └──────────┬───────────────┘
-                          │
-               ┌──────────▼──────────┐
-               │   Validation Layer   │
-               │                      │
-               │  Build Validator     │
-               │  Test Validator      │
-               │  Composition Check   │
-               │  (Frankenstein Fx)   │
-               └──────────────────────┘
-```
+### I want to see the kernel boot
 
-### Complete System Architecture
-
-```
-┌────────────────────────────────────────────────────────────────────┐
-│                         AUTON System                               │
-├────────────────────────────────────────────────────────────────────┤
-│                                                                    │
-│  ┌──────────────────────────────────────────────────────────┐     │
-│  │              Kernel Development Workflow                  │     │
-│  │                                                           │     │
-│  │  Manager → Architect → Developers (4x parallel)          │     │
-│  │     ↓          ↓            ↓                             │     │
-│  │  Reviewer → Tester → Integrator                          │     │
-│  │     ↓          ↓            ↓                             │     │
-│  │  [Build Validator] [Test Validator] [Composition Check]  │     │
-│  │                      ↓                                    │     │
-│  │              kernels/{arch}/kernel.bin                   │     │
-│  └──────────────────────────────────────────────────────────┘     │
-│                                                                    │
-│  ┌──────────────────────────────────────────────────────────┐     │
-│  │              SLM Training Workflow                        │     │
-│  │                                                           │     │
-│  │  Data Scientist → Model Architect                        │     │
-│  │        ↓               ↓                                  │     │
-│  │  [Dataset Prep]  [Architecture Design]                   │     │
-│  │        ↓               ↓                                  │     │
-│  │  Training Agents (4x parallel) → Evaluation Agent        │     │
-│  │        ↓                              ↓                   │     │
-│  │  Quantization Agent → Export Agent                       │     │
-│  │        ↓                   ↓                              │     │
-│  │    [INT4/INT8]      [GGUF/ONNX]                          │     │
-│  │        └───────────────┬───────────┘                     │     │
-│  │                        ↓                                  │     │
-│  │              SLM/models/auton-slm                        │     │
-│  └──────────────────────────────────────────────────────────┘     │
-│                                                                    │
-│  ┌──────────────────────────────────────────────────────────┐     │
-│  │              Integration & Deployment                     │     │
-│  │                                                           │     │
-│  │  kernel.bin + auton-slm.gguf                             │     │
-│  │         ↓                                                 │     │
-│  │  [SLM Integration Agent]                                 │     │
-│  │         ↓                                                 │     │
-│  │  Bootable SLM-Driven Kernel                              │     │
-│  │         ↓                                                 │     │
-│  │  [QEMU Validation] → Serial Output Analysis              │     │
-│  │         ↓                                                 │     │
-│  │  ✓ Boot  ✓ Hardware Discovery  ✓ Driver Loading         │     │
-│  │         ↓                                                 │     │
-│  │  [Release Builder] → ISO/IMG/QCOW2 Generation            │     │
-│  │         ↓                                                 │     │
-│  │  GitHub Release (auton-{arch}-{version}.iso)             │     │
-│  └──────────────────────────────────────────────────────────┘     │
-│                                                                    │
-│  ┌──────────────────────────────────────────────────────────┐     │
-│  │              Test Coverage & Validation                   │     │
-│  │                                                           │     │
-│  │  Unit Tests (36 files)                                   │     │
-│  │    ├─ Agents (11)      ├─ LLM (4)                        │     │
-│  │    ├─ Orchestrator (4) ├─ Validation (3)                 │     │
-│  │    └─ Comms (3)        └─ Other (11)                     │     │
-│  │                                                           │     │
-│  │  Integration Tests (4 files)                             │     │
-│  │    ├─ Kernel Workflow  ├─ SLM Workflow                   │     │
-│  │    └─ Dual Workflow    └─ Agent Collaboration            │     │
-│  │                                                           │     │
-│  │  Rust Tests (9 files)                                    │     │
-│  │    ├─ Diff Validator (2)  ├─ Kernel Builder (3)          │     │
-│  │    └─ Test Runner (3)                                    │     │
-│  │                                                           │     │
-│  │  SLM Tests (9 files)                                     │     │
-│  │    ├─ Dataset/Tokenizer  ├─ Train/Evaluate               │     │
-│  │    └─ Quantize/Export                                    │     │
-│  │                                                           │     │
-│  │  Acceptance Tests (kernel_spec/tests/)                   │     │
-│  │    └─ Full QEMU validation per architecture              │     │
-│  └──────────────────────────────────────────────────────────┘     │
-│                                                                    │
-│  ┌──────────────────────────────────────────────────────────┐     │
-│  │              Multi-Architecture Support                   │     │
-│  │                                                           │     │
-│  │  ┌──────────┐  ┌──────────┐  ┌──────────┐               │     │
-│  │  │  x86_64  │  │ AArch64  │  │ RISC-V   │               │     │
-│  │  │          │  │          │  │          │               │     │
-│  │  │Multiboot2│  │ DTB/UEFI │  │ OpenSBI  │               │     │
-│  │  │   NASM   │  │  GNU AS  │  │  GNU AS  │               │     │
-│  │  │   ACPI   │  │   DTB    │  │   DTB    │               │     │
-│  │  └────┬─────┘  └────┬─────┘  └────┬─────┘               │     │
-│  │       └─────────────┴─────────────┘                      │     │
-│  │                     │                                     │     │
-│  │          Hardware Abstraction Layer (HAL)                │     │
-│  │                     │                                     │     │
-│  │       ┌─────────────┴─────────────┐                      │     │
-│  │       │   Portable Kernel Core    │                      │     │
-│  │       │  (Memory, Sched, IPC, FS) │                      │     │
-│  │       └───────────────────────────┘                      │     │
-│  └──────────────────────────────────────────────────────────┘     │
-└────────────────────────────────────────────────────────────────────┘
-```
-
-## Agents
-
-### Kernel Development Agents
-
-| Agent | Role | Count |
-|-------|------|-------|
-| **Manager** | Decomposes goals into tasks, tracks dependencies, detects blocked paths | 1 |
-| **Architect** | Designs subsystem interfaces, writes header files, resolves conflicts | 1 |
-| **Developer** | Writes kernel C/ASM code, builds, tests, commits on feature branches | 4 parallel |
-| **Reviewer** | Reviews diffs for correctness, memory safety, spec compliance | 1 |
-| **Tester** | Writes tests, runs QEMU validation, detects composition failures | 1 |
-| **Integrator** | Merges approved branches, runs full integration checks | 1 |
-
-### SLM Training Agents
-
-| Agent | Role | Count |
-|-------|------|-------|
-| **Data Scientist** | Prepares and analyzes training datasets, tokenization | 1 |
-| **Model Architect** | Designs SLM architecture, estimates FLOPs, validates configs | 1 |
-| **Training Agent** | Trains SLM models with distributed training support | 4 parallel |
-| **Evaluation Agent** | Evaluates model checkpoints, tracks metrics | 1 |
-| **Quantization Agent** | Quantizes models to INT4/INT8 for deployment | 1 |
-| **Export Agent** | Exports models to GGUF/ONNX formats | 1 |
-
-Agents communicate through **git branches and file-based messaging** — no message broker needed. The VibeTensor insight: treat agents as black boxes, validate only through builds and tests.
-
-## SLM Training Data
-
-The SLM is trained on OS-specific tasks to understand hardware, drivers, and system administration. Training datasets follow a structured format:
-
-### Dataset Structure
-
-```json
-{
-  "text": "Initialize PCI device at bus 0 device 3 function 0",
-  "intent": "HARDWARE_IDENTIFY",
-  "context": {
-    "device_type": "network",
-    "vendor_id": "0x8086",
-    "device_id": "0x100e"
-  }
-}
-```
-
-### Intent Categories
-
-- **HARDWARE_IDENTIFY** — Device detection, PCI enumeration, hardware probing
-  - Examples: "Detect network card", "Scan PCI bus", "Identify storage controller"
-- **DRIVER_SELECT** — Driver matching, module loading, driver configuration
-  - Examples: "Load e1000 driver for Intel NIC", "Select AHCI driver for SATA"
-- **INSTALL_CONFIGURE** — System setup, filesystem creation, network configuration
-  - Examples: "Create ext2 filesystem", "Configure DHCP client", "Mount root partition"
-- **APP_INSTALL** — Package installation, dependency resolution, service setup
-  - Examples: "Install web server", "Resolve package dependencies", "Configure systemd service"
-- **SYSTEM_MANAGE** — Runtime administration, resource monitoring, updates
-  - Examples: "Check memory usage", "Update kernel modules", "Monitor disk space"
-- **TROUBLESHOOT** — Error diagnosis, log analysis, recovery procedures
-  - Examples: "Diagnose boot failure", "Analyze kernel panic", "Recover from disk error"
-
-### Dataset Sources
-
-- **Kernel Documentation** — Linux kernel docs, driver specifications, hardware manuals
-- **System Logs** — Boot logs, dmesg output, hardware detection sequences
-- **Command Traces** — Shell commands for hardware setup, driver loading, system configuration
-- **Hardware Databases** — PCI ID databases, device compatibility lists, driver mappings
-- **Troubleshooting Guides** — Common issues, error messages, recovery procedures
-
-### Data Preparation Pipeline
+No host toolchain required; the image carries the cross toolchain, GRUB and QEMU.
 
 ```bash
-# 1. Collect raw data
-python SLM/tools/dataset_builder.py collect \
-  --sources kernel_docs,pci_ids,boot_logs \
-  --output SLM/datasets/raw/
-
-# 2. Tokenize and process
-python SLM/tools/tokenizer.py \
-  --input SLM/datasets/raw/ \
-  --output SLM/datasets/processed/ \
-  --vocab-size 32000
-
-# 3. Create train/validation splits
-python SLM/tools/dataset_builder.py split \
-  --input SLM/datasets/processed/ \
-  --train-ratio 0.9 \
-  --output SLM/datasets/
+git clone https://github.com/EdWelsh/AUTON.git
+cd AUTON
+scripts/kernel-base.sh kernels/x86_64     # the tree docker compose expects
+docker compose run os                     # build + boot to the auton> prompt
+docker compose run acceptance             # boot + verify the serial markers
 ```
 
-### Example Training Samples
+The ISO is pinned to `linux/amd64` (GRUB PC/BIOS + x86 QEMU); on Apple Silicon
+it runs emulated, which is slow but works.
 
-```json
-[
-  {
-    "text": "Detected Intel 82540EM Gigabit Ethernet Controller",
-    "intent": "HARDWARE_IDENTIFY",
-    "next_action": "Load e1000 network driver"
-  },
-  {
-    "text": "Load e1000 driver for network interface",
-    "intent": "DRIVER_SELECT",
-    "driver": "e1000",
-    "device_class": "network"
-  },
-  {
-    "text": "Configure network interface with DHCP",
-    "intent": "INSTALL_CONFIGURE",
-    "protocol": "dhcp",
-    "interface": "eth0"
-  }
-]
-```
+### I want to build and boot natively (macOS or Linux)
 
-## Kernel Target
-
-The agents build a custom **SLM-driven kernel from scratch** — Linux-inspired architecture with a custom API, portable across multiple architectures via a HAL. The embedded SLM drives the entire OS lifecycle:
-
-1. **Boot** → SLM initializes
-2. **Hardware Discovery** → SLM probes and identifies devices
-3. **Driver Configuration** → SLM determines and loads needed drivers
-4. **Installation** → SLM sets up filesystems, network, base system
-5. **Application Setup** → SLM installs/configures apps based on device purpose
-6. **Runtime Management** → SLM stays resident for ongoing admin, updates, troubleshooting
-
-### Supported Architectures
-
-| Architecture | Boot Protocol | Assembler | Firmware | Core Drivers |
-|-------------|---------------|-----------|----------|-------------|
-| **x86_64** | Multiboot2 | NASM | ACPI | 16550A UART, VGA, PIT, PS/2 |
-| **AArch64** | DTB/UEFI | GNU AS | Device Tree | PL011 UART, GICv2, ARM Timer |
-| **RISC-V 64** | OpenSBI + DTB | GNU AS | Device Tree | ns16550 UART, PLIC, CLINT |
-
-Set the target architecture in `config/auton.toml`:
-```toml
-[kernel]
-arch = "aarch64"  # x86_64, aarch64, or riscv64
-```
-
-### Subsystems
-
-- **Boot** — Architecture-specific boot protocol via HAL, hardware handoff to SLM
-- **Memory Management** — Bitmap PMM, multi-level paging VMM via MMU HAL, slab allocator, SLM memory pool
-- **Scheduler** — Preemptive round-robin with priority classes (KERNEL > SLM > SYSTEM > USER)
-- **IPC** — Structured message passing, ring buffers, SLM command channel
-- **Device Framework** — PCI enumeration, firmware parsing (ACPI or Device Tree), uniform driver interface, SLM-driven loading
-- **SLM Runtime** — Pluggable architecture with two backends:
-  - *Rule Engine* (default) — keyword matching, pattern rules, decision trees (works on any hardware)
-  - *Neural Backend* (optional) — loads real models (GGUF/ONNX), CPU inference with INT4/INT8 quantization
-- **Drivers** — Arch-specific core drivers (serial, console, timer, input) + portable SLM-managed drivers (storage, network, display, USB)
-- **Filesystem** — VFS layer, initramfs, ext2, devfs, procfs
-- **Network Stack** — Ethernet, ARP, IPv4, TCP/UDP, DHCP, DNS, HTTP
-- **Package Manager** — tar+manifest format, dependency resolution, SLM-driven installation
-- **System Services** — SLM-driven init system, logging, resource monitoring
-
-## Tech Stack
-
-- **Python** — Agent orchestration framework
-- **Rust** — Build tooling, diff validation, QEMU test runner
-- **LiteLLM** — Multi-provider LLM abstraction (Anthropic, OpenAI, Ollama, Gemini, OpenRouter, Azure)
-- **Git** — Agent collaboration and version control
-- **QEMU** — Kernel testing and validation
-- **PyTorch** — Neural SLM backend (training, quantization, ONNX/GGUF export)
-- **Pytest** — Comprehensive unit and integration testing
-
-## Quick Start (Docker)
-
-The fastest way to build and boot the kernel — no host toolchain required (the
-image carries the cross toolchain, GRUB, and QEMU):
+Faster than Docker on Apple Silicon, because it avoids emulating x86 inside an
+emulated `linux/amd64` container.
 
 ```bash
-# Build the seed kernel and boot it in QEMU (serial console)
-docker compose run os
-
-# Boot + verify the acceptance serial markers
-docker compose run acceptance
-
-# Orchestrator unit tests + Rust tools + (torch-free) SLM tests
-docker compose run test
-
-# Full SLM neural pipeline tests (pulls in PyTorch; heavier image)
-docker compose run slm
-```
-
-`docker compose run os` builds a Multiboot2 GRUB rescue ISO from the seed kernel
-and boots it via `qemu-system-x86_64 -cdrom ... -serial stdio`, printing the
-full boot sequence through `[SLM] Ready` and `[BOOT] OK`. The image is pinned to
-`linux/amd64` (GRUB PC/BIOS + x86 QEMU); on Apple Silicon it runs emulated.
-
-> The seed kernel lives in `kernels/x86_64/` and is the buildable scaffold the
-> agents extend. The neural on-device SLM chat is layered on top of this
-> foundation (see the plans under `.claude/PRPs/plans/`).
-
-## Quick Start (native macOS — no Docker)
-
-On macOS the whole build-and-boot loop runs on the host, which avoids the
-double emulation of running x86 QEMU inside an emulated `linux/amd64` container:
-
-```bash
-# One-time: the cross toolchain, ISO tooling, and QEMU
+# macOS, one time
 brew install qemu xorriso x86_64-elf-gcc x86_64-elf-binutils i686-elf-grub
+# Linux, one time
+# sudo apt install build-essential grub-pc-bin xorriso qemu-system-x86
 
-# Check the host is ready (tools + free disk) before anything long runs
-scripts/preflight.sh
-
-# Build the ISO and boot to the auton> prompt
-scripts/auton-boot-native.sh
-
-# Boot + verify the acceptance serial markers, natively
-scripts/run-acceptance.sh
-
-# Boot with the on-device neural model as a Multiboot2 module
-MODEL=$PWD/SLM/work/auton-slm.bin scripts/auton-boot-native.sh
+git clone https://github.com/EdWelsh/AUTON.git
+cd AUTON
+scripts/preflight.sh                      # tools present, enough free disk
+scripts/kernel-base.sh kernels/x86_64
+scripts/auton-boot-native.sh              # build the ISO and boot to auton>
+scripts/run-acceptance.sh                 # boot + verify the markers
 ```
 
-`scripts/lib/toolchain.sh` resolves the per-platform tool names — on macOS
-`x86_64-elf-gcc` and `i686-elf-grub-mkrescue`, on Linux `gcc` and
-`grub-mkrescue` — so the same scripts and Makefile work on both. Any `CC`,
-`GRUB_MKRESCUE`, or `QEMU` you set yourself is respected.
+> **`run-acceptance.sh` exits non-zero today, and that is correct.** 13 markers
+> pass; one fails:
+>
+> ```
+> FAIL  \[MM\] PMM initialized: \d+ pages total, \d+ reserved, \d+ free
+> ```
+>
+> `mm.md` specifies a bitmap PMM and that exact line; the base still runs the
+> seed's bump allocator. The marker is right and the base is behind it. This is
+> recorded in [`docs/E2E-EXPECTED.yaml`](docs/E2E-EXPECTED.yaml), which CI
+> checks — so a *new* failure is caught, and a stale expectation is too. You
+> have not broken anything.
 
-`scripts/preflight.sh` fails loudly when a tool is missing or free disk is
-below `MIN_FREE_GB` (default 5). The disk floor is deliberate: a full volume has
-previously corrupted Docker layers mid-build.
+`scripts/lib/toolchain.sh` resolves per-platform tool names, so the same scripts
+and Makefile work on both. Any `CC`, `GRUB_MKRESCUE` or `QEMU` you set is
+respected. `scripts/preflight.sh` fails loudly when a tool is missing or free
+disk is under `MIN_FREE_GB` (default 5) — a full volume has corrupted Docker
+layers mid-build before.
 
-> Docker is still the fallback, and is still required for the control plane's
-> OS-image backend (`controlplane/backends/os/`). Native covers the kernel loop
-> only. On Linux the same scripts work with `apt install build-essential
-> grub-pc-bin xorriso qemu-system-x86`.
+### I want to run the agent swarm
+
+```bash
+git clone https://github.com/EdWelsh/AUTON.git
+cd AUTON/agent
+pip install -e .                          # Python >= 3.11
+
+cp config/auton.toml.example config/auton.toml
+export ANTHROPIC_API_KEY="sk-ant-..."     # or OPENAI_API_KEY, or none for Ollama
+
+auton run "Build a bootable kernel with SLM rule engine that detects hardware via PCI scan"
+```
+
+`auton` has four commands: `run`, `status`, `tasks`, `agents`.
+
+> **Before spending a run on a local model, qualify it.**
+> `scripts/model-probe.py` puts a model through four checks — tool calling,
+> file fidelity, a 25k-character prompt, and a second turn. Four earlier runs on
+> an unqualified model produced zero working lines. Qualifying first is what
+> changed that.
+
+### I want to run the tests
+
+```bash
+pytest agent/tests/unit/                          # orchestrator unit tests
+pytest agent/tests/integration/                   # multi-component workflows
+PYTHONPATH=SLM pytest SLM/tests/                  # SLM pipeline
+cd controlplane && pytest                         # host control plane
+cd agent/tools && cargo test                      # Rust build tooling
+
+tests/kernel/run_mm_test.sh --self-test           # a host gate, against its reference
+```
+
+Torch-dependent SLM tests skip when torch is absent, and say so rather than
+vanishing. Tests that need a live model skip when it is unreachable **or too
+busy to answer** — see [`controlplane/tests/ollama_probe.py`](controlplane/tests/ollama_probe.py).
 
 ## The OS is the chat — no terminal
 
 AUTON boots straight into an `auton>` prompt over the serial console. You
-configure the machine it runs on by *asking*, not by running shell commands.
-Networking comes up at boot (DHCP over an in-kernel IPv4 stack), and the chat
-can turn the box into a server role:
+configure the machine by *asking*. Networking comes up at boot (DHCP over an
+in-kernel IPv4 stack), and the chat can turn the box into a server role:
 
 ```text
 auton> what is my ip
@@ -418,167 +185,170 @@ Configuring this machine as a web server (in-kernel HTTP on port 80)...
 [HTTP] listening on :80
 ```
 
-System queries answered from live kernel state: `what is my ip`, `hostname`
-(and `set hostname web1`), `memory`, `devices`, `uptime`, `status`. Working
-roles run on the in-kernel TCP/IP stack; roadmap roles report what they still
-need. Everything is a chat sentence — there is no shell.
+Queries are answered from live kernel state: `what is my ip`, `hostname` (and
+`set hostname web1`), `memory`, `devices`, `uptime`, `status`. Roles marked
+*ready* run on the in-kernel TCP/IP stack; *roadmap* roles report what they
+still need instead of pretending. There is no shell.
 
-Try it with host networking and a forwarded port:
+Try it with a forwarded port:
 
 ```bash
-# Boot with a SLIRP-backed NIC and forward host :8080 -> guest :80
-docker compose run --rm os bash -lc \
-  'cd kernels/x86_64 && make CC=gcc iso && \
-   qemu-system-x86_64 -cdrom build/auton.iso -serial stdio -display none \
-     -no-reboot -m 128M -nic user,model=e1000,hostfwd=tcp::8080-:80'
-# then in the prompt: be a web server   (fetch http://localhost:8080)
+scripts/kernel-base.sh kernels/x86_64
+
+# Resolve the cross toolchain for this host. A bare `make` picks the host cc,
+# which on macOS is arm64 clang and rejects the x86 flags outright.
+source scripts/lib/toolchain.sh
+
+make -C kernels/x86_64 CC="$CC" GRUB_MKRESCUE="$GRUB_MKRESCUE" iso
+"$QEMU" -cdrom kernels/x86_64/build/auton.iso -serial stdio -display none \
+    -no-reboot -m 128M -nic user,model=e1000,hostfwd=tcp::8080-:80
+# then at the prompt: be a web server     (fetch http://localhost:8080)
 ```
 
-`docker compose run acceptance` also verifies this automatically: alongside the
-boot markers it runs `net_dhcp_ip` (a real DHCP lease) and `http_get` (a real
-HTTP 200 from the in-kernel web server). Set `SKIP_NET=1` to skip the network
-checks in environments without user-mode networking.
+`scripts/run-acceptance.sh` verifies this automatically: alongside the boot
+markers it runs `net_dhcp_ip` (a real DHCP lease) and `http_get` (a real HTTP
+200 from the in-kernel web server). `SKIP_NET=1` skips the network checks where
+user-mode networking is unavailable.
 
 ### On-device model (optional)
 
-With a trained model bundled as a boot module and ≥128 MB RAM, the chat answers
-with a transformer running **on the machine itself** (falling back to the rule
-engine otherwise):
+With a trained model bundled as a boot module and >= 128 MB RAM, the chat can
+answer with a transformer running on the machine itself, falling back to the
+rule engine otherwise:
 
 ```bash
-# Train + export a tiny model on the host (see SLM/scripts), then:
-make -C kernels/x86_64 run-neural MODEL=/path/to/auton-slm.bin   # boots with -m 256M
+source scripts/lib/toolchain.sh
+make -C kernels/x86_64 CC="$CC" GRUB_MKRESCUE="$GRUB_MKRESCUE" \
+     run-neural MODEL=/path/to/auton-slm.bin        # boots with -m 256M
 # boot shows: [SLM] Loaded model ... / [SLM] Backend: neural
 ```
 
-## Setup (orchestrator)
+> The end-to-end spine that trains, exports and checks this model against the
+> in-kernel forward pass currently **fails at its parity stage** on every
+> platform tested. See [`docs/OPEN-WORK.md`](docs/OPEN-WORK.md).
 
-```bash
-# Clone
-git clone https://github.com/EdWelsh/AUTON.git
-cd AUTON/agent
+## How it works
 
-# Install
-pip install -e .
+1. **Manager** reads the kernel specs and decomposes the goal into a dependency-ordered task graph
+2. **Architect** designs subsystem interfaces as C header files
+3. **Developers** (in parallel) implement on feature branches: write → build → fix → test → commit
+4. **Reviewer** checks each branch for correctness, memory safety and composition risk
+5. **Tester** validates in QEMU — boots the kernel, parses serial output
+6. **Integrator** merges approved branches and runs the full suite
+7. **Composition Validator** detects the "Frankenstein effect" — subsystems that pass alone and fail together
+8. Loop until the tasks complete or the budget is spent
 
-# Configure — copy the example and add your API key(s)
-cp config/auton.toml.example config/auton.toml
-# Edit config/auton.toml with your keys, or use environment variables:
-export ANTHROPIC_API_KEY="sk-ant-..."   # for Anthropic models
-# export OPENAI_API_KEY="sk-..."        # for OpenAI models
-# No key needed for Ollama (local)
+A syntax gate sits in front of step 4: code that does not compile never reaches
+a reviewer. It exists because a model reviewer once approved a header with seven
+syntax errors in it.
 
-# Run
-auton run "Build a bootable kernel with SLM rule engine that detects hardware via PCI scan"
-```
+See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for the agent roster, the
+full system diagram and the architecture-support matrix.
 
-### Model Configuration
+## How a generation run is judged
 
-Models use `provider/model` format. Mix providers per agent role for cost optimization:
+Every run is decided by gates **written before it starts** and frozen. This is
+the part of the project that makes a result mean something.
 
-```toml
-[llm]
-model = "anthropic/claude-opus-4-6"    # default for all agents
+- **Pre-register, then run once.** The gate, the prompt and the model are
+  recorded before the run; the transcript is archived to `.artifacts/authorship/`.
+- **Exit codes carry meaning.** `2` = not generated, `1` = generated wrong,
+  `0` = pass. A suite that did not run has found nothing, and must never read as
+  a pass.
+- **Suites are scored by injected bugs.** Known defects are injected into a
+  known-good implementation; every one must be caught, or the suite has a gap.
+  10 of the 22 host suites are scored this way.
+- **Report either way.** Failed runs get a report with the same care as
+  successful ones — see the
+  [memory-manager report](.claude/PRPs/reports/w15-mm-qwen-report.md).
 
-[llm.api_keys]
-anthropic = "sk-ant-..."
-openai = "sk-..."
+The gates live in [`tests/kernel/`](tests/kernel/) and run on the host, against
+the specification, without the kernel needing to boot.
 
-[agents.models]
-developer = "anthropic/claude-sonnet-4-5-20250929"  # cheaper for code gen
-reviewer = "openai/gpt-4o"                          # use a different provider
-# tester = "ollama/llama3.1"                        # free, local
-```
+## Key concepts
+
+### SLM-driven OS
+The kernel embeds a Small Language Model as its interface. The SLM is
+**pluggable**: a rule-based engine runs on minimal hardware, and systems with
+enough resources can load a real neural model.
+
+### The Frankenstein effect
+From VibeTensor: *"Locally correct subsystems interact to yield globally
+suboptimal performance."* The Composition Validator compares unit results
+against integration results to catch it.
+
+### Agents as black boxes
+The orchestrator does not care how an agent solved a problem — only whether the
+result builds and passes. Validation through tools, not human review.
+
+## Tech stack
+
+- **Python** (>= 3.11) — agent orchestration
+- **Rust** — build tooling, diff validation, QEMU test runner
+- **LiteLLM** — multi-provider LLM abstraction
+- **Git** — how agents collaborate; there is no message broker
+- **QEMU** — kernel testing and validation
+- **PyTorch** — neural SLM backend (training, quantization, ONNX/GGUF export)
+- **C / NASM / GNU AS** — the kernel the agents write
+
+## Continuous integration
+
+Two workflows, five matrix legs, all in [`.github/workflows/`](.github/workflows/):
+
+| Workflow | Legs | What it covers |
+|---|---|---|
+| `controlplane` | ubuntu, macOS, Windows | the host control plane on all three hosts |
+| `portability` | linux-x86_64, darwin-arm64, linux-e2e | unit suites, host gates, and the e2e spine |
+
+The `portability` matrix exists because the hosts differ in what they can
+prove: a Linux x86-64 runner executes the live CPUID cross-check that an arm64
+Mac can only SKIP.
+
+CI first ran on 2026-09-23 and was red, which was the point of running it. It
+found four missing dependencies, four tests that passed only on a machine with
+a warmed cache, a Windows process launcher that ate backslashes, a liveness
+check that terminated the process it inspected, and a memory leak in a test
+oracle that only LeakSanitizer on Linux can see. Not all of those are fixed —
+[`docs/OPEN-WORK.md`](docs/OPEN-WORK.md) tracks what is left.
 
 ## Releases
 
-Build a versioned, bootable GRUB rescue ISO of the seed kernel:
-
 ```bash
-# Produces dist/auton-x86_64-v0.1.0.iso (runs inside the Docker toolchain)
 docker compose run --rm os bash scripts/build-iso.sh x86_64 v0.1.0
-
-# Boot a built ISO directly:
 qemu-system-x86_64 -cdrom dist/auton-x86_64-v0.1.0.iso -serial stdio -display none
 ```
 
-The ISO boots through the full sequence to `[SLM] Ready` / `[BOOT] OK`, the same
-markers `docker compose run acceptance` verifies.
+**Shipped:** x86_64 bootable ISO via `scripts/build-iso.sh`.
 
-**Shipped today:** x86_64 bootable ISO (`scripts/build-iso.sh`).
+**Not shipped:** raw `.img`/QCOW2 images, aarch64 and riscv64 seed kernels,
+automated release publishing. The build system is parameterised by `ARCH`, but
+only x86_64 is brought to "boots and passes acceptance".
 
-**Roadmap (not yet shipped):** raw `.img`/QCOW2 disk images, AArch64/RISC-V seed
-kernels, automated GitHub release publishing, and a neural (GGUF/ONNX) in-kernel
-SLM. The build system and Docker image are parameterized by `ARCH`, but only
-x86_64 is currently brought to "boots + passes acceptance".
+## Contributing
 
-## Testing
+Please read [CONTRIBUTING.md](CONTRIBUTING.md) first — this project has an
+unusual rule that matters more than style: **a test must be able to fail.**
+Bug reports and specification issues are as welcome as code.
 
-AUTON includes a comprehensive test suite:
-
-```bash
-# Run unit tests
-pytest agent/tests/unit/ -v
-
-# Run with coverage
-pytest agent/tests/unit/ --cov=orchestrator --cov-report=html
-
-# Run integration tests
-pytest agent/tests/integration/ -v
-
-# Run Rust tool tests
-cd agent/tools && cargo test
-
-# Run SLM pipeline tests (neural train/export tests auto-skip without torch;
-# install SLM/requirements.txt to run the full pipeline)
-PYTHONPATH=SLM pytest SLM/tests/ -v
-```
-
-### Test Structure
-- **Unit Tests** (`agent/tests/unit/`) — Fast, isolated tests with mocks (36 test files)
-- **Integration Tests** (`agent/tests/integration/`) — Multi-component workflow tests
-- **Acceptance Tests** (`agent/kernel_spec/tests/`) — Full kernel validation in QEMU
-- **Rust Tests** (`agent/tools/*/tests/` + per-crate `src/lib.rs`) — build tool validation
-- **SLM Tests** (`SLM/tests/`) — tools + neural train/eval/quantize/export pipeline (torch tests skip when torch is absent)
-
-## How It Works
-
-1. **Manager** reads kernel specs and decomposes the goal into a dependency-ordered task graph
-2. **Architect** designs subsystem interfaces as C header files
-3. **Developers** (in parallel) implement code on feature branches, iterating: write → build → fix → test → commit
-4. **Reviewer** checks each branch for correctness, memory safety, and composition risks
-5. **Tester** validates in QEMU — boots the kernel, parses serial output for test results
-6. **Integrator** merges approved branches, runs full integration suite
-7. **Composition Validator** detects the "Frankenstein effect" — subsystems that pass in isolation but fail when combined
-8. Loop until all tasks complete or budget exhausted
-
-## Key Concepts
-
-### SLM-Driven OS
-The kernel embeds a Small Language Model as its central intelligence. The SLM is **pluggable**: a lightweight rule-based engine runs on minimal hardware (IoT, embedded), while systems with sufficient resources can load a real neural language model for richer understanding. Everything flows through the SLM — from first boot to ongoing system management.
-
-### The Frankenstein Effect
-From NVIDIA VibeTensor: *"Locally correct subsystems interact to yield globally suboptimal performance."* AUTON's Composition Validator specifically detects this by comparing unit test results against integration test results.
-
-### Agents as Black Boxes
-The orchestrator doesn't care how agents solve problems — only whether the result builds and passes tests. This is the VibeTensor methodology: validation through tools, not human review.
-
-### SLM Intent System
-All SLM interactions go through an intent classifier: `HARDWARE_IDENTIFY`, `DRIVER_SELECT`, `INSTALL_CONFIGURE`, `APP_INSTALL`, `SYSTEM_MANAGE`, `TROUBLESHOOT`. This allows the SLM to understand what the system needs at any point and dispatch the right kernel operations.
+By participating you agree to the [Code of Conduct](CODE_OF_CONDUCT.md). To
+report a vulnerability, see [SECURITY.md](SECURITY.md).
 
 ## License
 
-**Source Available** — Free for personal, educational, and non-production use. Production and enterprise use requires a [commercial license or public attribution](LICENSE.md).
+**Source Available** — free for personal, educational, academic and
+non-production use. Production and enterprise use requires a commercial licence
+or public attribution. See [LICENSE.md](LICENSE.md) for the terms; this is not
+an OSI-approved open-source licence.
 
 ## References
 
 - [NVIDIA VibeTensor](https://github.com/NVlabs/vibetensor) — AI-generated deep learning runtime
 - [VibeTensor Paper](https://arxiv.org/abs/2601.16238) — *"System Software for Deep Learning, Fully Generated by AI Agents"*
 - [AIOS](https://github.com/agiresearch/AIOS) — LLM Agent Operating System
-- [LiteLLM](https://github.com/BerriAI/litellm) — Unified LLM API for 100+ providers
-
+- [LiteLLM](https://github.com/BerriAI/litellm) — unified LLM API for 100+ providers
 
 ## Inspirations from our greatest of grand parents
+
 The more I study, the more insatiable do I feel my genius for it to be
 
 That brain of mine is something more than merely mortal; as time will show

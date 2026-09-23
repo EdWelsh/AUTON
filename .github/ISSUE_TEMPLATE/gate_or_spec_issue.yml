@@ -1,0 +1,66 @@
+name: Gate or specification issue
+description: A test that cannot fail, a gate that refuses wrongly, or a spec that is unclear or unsafe
+labels: ["gate", "specification"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        This is the most valuable kind of report this project receives.
+
+        Most of this repository is apparatus for judging generated code, and
+        apparatus with a blind spot is worse than none — a suite that cannot
+        fail reports success forever. Two gates have already been found
+        unpassable for reasons unrelated to the code they judge, and both hid
+        real results.
+
+  - type: dropdown
+    id: kind
+    attributes:
+      label: What kind of problem
+      options:
+        - A test or gate that cannot fail (passes against a broken implementation)
+        - A gate that refuses something correct
+        - A gate that demands something outside the scope of what it verifies
+        - A gate whose exit code does not match its meaning (2 = not generated, 1 = wrong, 0 = pass)
+        - A specification that is ambiguous, contradictory, or unsafe
+        - A test that only passes on certain machines
+    validations:
+      required: true
+
+  - type: input
+    id: where
+    attributes:
+      label: Which gate or specification
+      placeholder: tests/kernel/run_mm_test.sh, or agent/kernel_spec/subsystems/mm.md
+    validations:
+      required: true
+
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence
+      description: >
+        For a gate that cannot fail, the strongest evidence is an injected bug:
+        break the implementation on purpose, show the gate still passing. For a
+        gate that refuses wrongly, show the refusal and why the input was
+        correct. For a spec problem, quote the passage and say what two readings
+        it allows.
+      render: shell
+    validations:
+      required: true
+
+  - type: textarea
+    id: consequence
+    attributes:
+      label: What this lets through, or wrongly stops
+      description: >
+        What would pass that should not, or fail that should not. This is what
+        decides how urgent it is.
+    validations:
+      required: true
+
+  - type: textarea
+    id: suggestion
+    attributes:
+      label: Suggested fix
+      description: Optional. Skip it if the diagnosis is the contribution.

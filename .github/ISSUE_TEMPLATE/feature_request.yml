@@ -1,0 +1,51 @@
+name: Feature or capability request
+description: Something AUTON should be able to do and cannot
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please check [`docs/OPEN-WORK.md`](https://github.com/EdWelsh/AUTON/blob/main/docs/OPEN-WORK.md)
+        and the open PRD
+        ([`auton-completion.prd.md`](https://github.com/EdWelsh/AUTON/blob/main/.claude/PRPs/prds/auton-completion.prd.md))
+        first — several large gaps are deliberate and already recorded, notably
+        **TLS**, **IMAP** and **a wifi driver**. A request for one of those is
+        still welcome; it just becomes a "prioritise this" rather than a "this
+        was overlooked".
+
+        Note the project's premise: the kernel is written by agents, not by
+        hand. A request is usually best framed as *a specification and a gate
+        that would judge it*, rather than an implementation.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What you are trying to do
+      description: The goal, not the solution. What are you unable to accomplish today?
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What you think should exist
+    validations:
+      required: true
+
+  - type: textarea
+    id: gate
+    attributes:
+      label: How would anyone know it worked?
+      description: >
+        The question this project asks of everything. What external check would
+        decide it — a real client, a probe outside the image, a conformance
+        oracle? "The log says it started" proves a log line. `git clone`
+        succeeding proves a repository server.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives you considered
+      description: Optional.

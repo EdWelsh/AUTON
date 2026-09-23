@@ -1,0 +1,100 @@
+name: Bug report
+description: Something behaves differently from how it is documented or specified
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for filing. Two things worth checking first, because they catch
+        most reports:
+
+        - [`docs/OPEN-WORK.md`](https://github.com/EdWelsh/AUTON/blob/main/docs/OPEN-WORK.md)
+          lists what is already known to be unfinished.
+        - `scripts/run-acceptance.sh` **exits non-zero on purpose** right now:
+          one specified marker (`[MM] PMM initialized: ... pages total ...`) is
+          not yet generated. That is recorded in `docs/E2E-EXPECTED.yaml` and is
+          not a bug.
+
+        For anything security-related, do not file here — see
+        [SECURITY.md](https://github.com/EdWelsh/AUTON/blob/main/SECURITY.md).
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What you observed, as plainly as possible.
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected, and what said so
+      description: >
+        Point at the thing that set the expectation — a line in a spec under
+        `agent/kernel_spec/`, a README instruction, a gate's documented exit
+        code. "It should work" is hard to act on; "boot.md says boot_mmap_t
+        lives in kernel/include/boot.h" is easy.
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: How to reproduce
+      description: >
+        The exact commands. If it involves a kernel tree, say which base
+        (`scripts/kernel-base.sh` defaults to `kernel-base-v5`) — which base a
+        run was seeded from decides what a gate refusal means.
+      placeholder: |
+        git clone https://github.com/EdWelsh/AUTON.git && cd AUTON
+        scripts/kernel-base.sh kernels/x86_64
+        scripts/run-acceptance.sh
+      render: shell
+    validations:
+      required: true
+
+  - type: textarea
+    id: output
+    attributes:
+      label: Relevant output
+      description: >
+        Error text, serial log, or the gate's exit code. Gate exit codes carry
+        meaning here — 2 is "not generated", 1 is "generated wrong", 0 is pass —
+        so please include the code, not just the message.
+      render: shell
+
+  - type: input
+    id: platform
+    attributes:
+      label: Host
+      description: OS, architecture, and how you are running it.
+      placeholder: macOS 15.6 arm64, native (no Docker)
+    validations:
+      required: true
+
+  - type: textarea
+    id: versions
+    attributes:
+      label: Versions
+      description: Output of the tools involved, where relevant.
+      placeholder: |
+        git rev-parse --short HEAD
+        python --version
+        qemu-system-x86_64 --version
+        clang --version
+      render: shell
+
+  - type: checkboxes
+    id: clean-clone
+    attributes:
+      label: Does it reproduce on a clean clone?
+      description: >
+        Several bugs in this project have been "passes only on the machine that
+        wrote it" — a gitignored cache, a local config, a generated tree. If you
+        can, try `git clone --no-local . /tmp/clean` and run it there. Not
+        required, but it saves a round trip.
+      options:
+        - label: I tried a clean clone and it still reproduces
+        - label: I tried a clean clone and it does NOT reproduce
+        - label: I have not tried

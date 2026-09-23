@@ -1,0 +1,11 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Security vulnerability
+    url: https://github.com/EdWelsh/AUTON/security
+    about: Do not open a public issue. Report privately via the Security tab — see SECURITY.md.
+  - name: What is already known to be unfinished
+    url: https://github.com/EdWelsh/AUTON/blob/main/docs/OPEN-WORK.md
+    about: Every unfinished thing, its blocker and the next step. Please check here before filing.
+  - name: What each host can and cannot verify
+    url: https://github.com/EdWelsh/AUTON/blob/main/docs/HOST-MATRIX.md
+    about: Many "it does not work on my machine" cases are a documented host limitation.
