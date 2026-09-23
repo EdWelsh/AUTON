@@ -20,6 +20,7 @@ else
 fi
 # The stubs stand in for the kernel's net.h and kernel.h (kprintf is captured);
 # tftp.h is the tree's own.
-"$CC" "${FLAGS[@]}" -I"$HERE/tftp_stub/include" -I"$INC" "$HERE/tftp_test.c" "$SRC" -o "$OUT" || {
+"$CC" "${FLAGS[@]}" -I"$HERE/tftp_stub/include" -I"$INC" "$HERE/tftp_test.c" \
+	"$HERE/tftp_stub/libk.c" "$SRC" -o "$OUT" || {
 	echo "compile failed: the server does not match tftp.md's interface" >&2; exit 1; }
 exec "$OUT"
