@@ -29,6 +29,16 @@ void smtp_reset(smtp_store_t *s, const char *d, int existing_highest)
     oversize = 0;
     snprintf(domain, sizeof domain, "%s", d ? d : "auton.local");
     if (s) {
+        /* Free what a previous run stored before dropping the count that
+         * records it. Setting count = 0 without this leaks every message body
+         * ever accepted — LeakSanitizer caught it on Linux, where ASan runs
+         * LSan by default; on Darwin LSan is unsupported, so the whole suite
+         * was green here while leaking 73 bytes a run in CI. */
+        for (int i = 0; i < s->count; i++) {
+            free(s->body[i]);
+            s->body[i] = NULL;
+            s->len[i] = 0;
+        }
         s->count = 0;
         s->flushes = 0;
         s->writable = 1;

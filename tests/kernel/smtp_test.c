@@ -203,6 +203,13 @@ int main(void)
 	ok("an unwritable volume refuses rather than claiming 250",
 	   code(".") == 452 && store.count == 0, NULL);
 
+	/* Release what the last case stored. The reference holds message bodies
+	 * for the life of the process, and smtp_reset is what drops them, so
+	 * without this the final store survives to exit. LeakSanitizer reports
+	 * that, and it runs under ASan on Linux but not on Darwin — which is why
+	 * this suite was green on every machine here and red in CI. */
+	smtp_reset(&store, NULL, 0);
+
 	printf("\n%s (%d failure%s)\n", fails ? "FAIL" : "PASS", fails, fails == 1 ? "" : "s");
 	return fails ? 1 : 0;
 }
