@@ -132,6 +132,20 @@ int main(void)
 	ack(CLIENT, 3000, tid, 1);
 	ok("a duplicate ACK 1 sends nothing (Sorcerer's Apprentice)", r.len == 0, NULL);
 
+	/* An ACK for a block that was never sent: tftp.md's ACK rule 4, "any other
+	 * block number -> ignore".
+	 *
+	 * This case was missing until w14, and its absence was found the way gaps
+	 * are meant to be: by injecting the bug into an AGENT's implementation and
+	 * watching the suite pass anyway. Accepting an out-of-range ACK advances
+	 * the transfer to a block the client never asked for, which loses data
+	 * silently. */
+	ack(CLIENT, 3000, tid, 99);
+	ok("an ACK for a block never sent is ignored", r.len == 0,
+	   "accepting it advances past blocks the client never received");
+	ack(CLIENT, 3000, tid, 0);
+	ok("an ACK 0 mid-transfer is ignored too", r.len == 0, NULL);
+
 	/* --- criterion 5: a stray TID gets ERROR 5; the transfer lives ----------- */
 	ack(STRAY, 4444, tid, 2);
 	ok("a datagram from another TID gets ERROR 5",
