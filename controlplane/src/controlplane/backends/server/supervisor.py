@@ -20,7 +20,7 @@ import signal
 import subprocess
 import time
 from dataclasses import dataclass, field, replace
-from pathlib import Path
+from pathlib import Path, PureWindowsPath
 from typing import Literal
 
 Action = Literal["start", "stop", "list", "unknown"]
@@ -191,6 +191,37 @@ def _is_bare_web_request(original: str, residual: str) -> bool:
 # ---------------------------------------------------------------------------
 
 
+def _launch_target(command: str) -> str | list[str]:
+    """What to hand Popen: an argv list on POSIX, the raw string on Windows.
+
+    shlex is POSIX-only by design — it treats a backslash as an escape, so
+    ``C:\\Python\\python.exe`` comes back as ``C:Pythonpython.exe`` and the launch
+    fails with "cannot find the file specified". posix=False is not the fix
+    either: it keeps the quotes inside the tokens.
+
+    Windows needs no split at all. CreateProcess parses a command line itself,
+    and Popen rejoins any list we give it, so splitting here can only lose a
+    path that was already correct.
+    """
+    if os.name == "nt":
+        return command
+    return shlex.split(command)
+
+
+def _executable_of(command: str) -> str:
+    """The bare program name in ``command``, for auto-naming a server.
+
+    Uses the platform's own idea of a path separator, so a backslash is a
+    separator on Windows rather than something shlex strips.
+    """
+    if os.name == "nt":
+        first = command.split()
+        return PureWindowsPath(first[0]).name if first else ""
+    argv = shlex.split(command)
+    return Path(argv[0]).name if argv else ""
+
+
+
 class Supervisor:
     """Launch, track, and stop real host processes with a persisted table."""
 
@@ -261,9 +292,8 @@ class Supervisor:
         if name in self._records:
             raise ValueError(f"a server named {name!r} is already running")
 
-        argv = shlex.split(command)
         proc = subprocess.Popen(  # noqa: S603 - user-directed process launch
-            argv,
+            _launch_target(command),
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
             start_new_session=True,
@@ -331,10 +361,7 @@ class Supervisor:
                 pass
 
     def _auto_name(self, command: str) -> str:
-        base = "server"
-        argv = shlex.split(command)
-        if argv:
-            base = Path(argv[0]).name or "server"
+        base = _executable_of(command) or "server"
         candidate = base
         i = 1
         while candidate in self._records:

@@ -27,6 +27,13 @@ build/
 *.img
 dist/
 
+# ... except the SSH golden vectors. openssh_client_hello.bin is a recording of
+# a real OpenSSH client's first bytes; make_fixtures.py derives the other two
+# from it and cannot regenerate it. The blanket *.bin above meant the F12 gate
+# could only ever run on the one machine that captured it — CI exited 2, "not
+# generated", for a suite that is generated and correct. 1.9KB, and irreplaceable.
+!tests/kernel/ssh_fixtures/*.bin
+
 # Python
 __pycache__/
 *.py[cod]

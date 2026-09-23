@@ -181,3 +181,63 @@ def test_handler_start_list_stop_round_trip(tmp_path, monkeypatch):
         assert stop_res.error is None
     finally:
         sup.stop_all()
+
+
+class TestCommandSplittingIsPlatformCorrect:
+    """A Windows path must survive being turned into something launchable.
+
+    shlex is POSIX-only: a backslash is an escape, so C:\\Python\\python.exe
+    becomes C:Pythonpython.exe and Popen reports "cannot find the file
+    specified". Six tests failed this way on the Windows CI leg, and none of
+    them could fail here, because on POSIX shlex is right.
+
+    So the platform is the parameter. os.name is monkeypatched rather than the
+    test being skipped off Windows: skipping would mean the only machine that
+    can catch this is the one where it is already broken.
+    """
+
+    WIN_CMD = r'C:\Python\python.exe -c "import time; time.sleep(30)"'
+
+    def test_posix_gets_an_argv_list(self, monkeypatch):
+        from controlplane.backends.server import supervisor
+
+        monkeypatch.setattr(supervisor.os, "name", "posix")
+        assert supervisor._launch_target("/usr/bin/python3 -c pass") == [
+            "/usr/bin/python3", "-c", "pass",
+        ]
+
+    def test_windows_gets_the_string_unsplit(self, monkeypatch):
+        from controlplane.backends.server import supervisor
+
+        monkeypatch.setattr(supervisor.os, "name", "nt")
+        # Unsplit, so every backslash is still there for CreateProcess.
+        assert supervisor._launch_target(self.WIN_CMD) == self.WIN_CMD
+
+    def test_a_windows_path_is_never_stripped_of_its_separators(self, monkeypatch):
+        from controlplane.backends.server import supervisor
+
+        monkeypatch.setattr(supervisor.os, "name", "nt")
+        target = supervisor._launch_target(self.WIN_CMD)
+        assert "C:\\Python\\python.exe" in target, (
+            "the backslashes were eaten; this is the WinError 2 the Windows CI "
+            "leg reported on six process-supervision tests"
+        )
+
+    def test_auto_name_uses_the_windows_separator(self, monkeypatch):
+        from controlplane.backends.server import supervisor
+
+        monkeypatch.setattr(supervisor.os, "name", "nt")
+        assert supervisor._executable_of(self.WIN_CMD) == "python.exe"
+
+    def test_auto_name_uses_the_posix_separator(self, monkeypatch):
+        from controlplane.backends.server import supervisor
+
+        monkeypatch.setattr(supervisor.os, "name", "posix")
+        assert supervisor._executable_of("/usr/local/bin/uvicorn app:api") == "uvicorn"
+
+    def test_an_empty_command_names_nothing_rather_than_raising(self, monkeypatch):
+        from controlplane.backends.server import supervisor
+
+        for platform in ("nt", "posix"):
+            monkeypatch.setattr(supervisor.os, "name", platform)
+            assert supervisor._executable_of("   ") == ""
