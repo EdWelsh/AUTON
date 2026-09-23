@@ -62,7 +62,7 @@ Three kinds of phase, distinguished because they fail differently: **R** runs th
 
 | # | Phase | Gate that decides it | Depends on |
 |---|---|---|---|
-| R1 | Memory manager (was F3, B2) | `run_mm_test.sh`, `run_vmm_test.sh`, the exact `[MM]` boot line | — |
+| R1 | Memory manager (was F3, B2) | `run_mm_test.sh`, `run_vmm_test.sh`, the exact `[MM]` boot line | — · **run 1 cut off at the 5h timeout: mm exit 1, vmm exit 2** ([report](../reports/w15-mm-qwen-report.md)) |
 | R2 | Storage: virtio-blk + FAT32 (was F7) | `run_virtio_blk_test.sh`, `run_fat32_test.sh`, `run-storage-acceptance.sh` | R1 |
 | R3 | File server (was F8) | `run_fileserver_test.sh`, then `--service fileserver`: curl retrieves bytes `mcopy` put on the disk | R2 |
 | R4 | KV store (was F9) | `run_kvstore_test.sh`, then `--service kvstore`: redis-cli values survive a reboot | R2 |
@@ -109,7 +109,9 @@ its own.
 2. **How many turns is enough?** 20 ended a run mid-task with working code; 60 is a guess with
    one data point behind it.
 3. **Is the faster model enough?** `qwen3.5:9b` also qualifies 4/4 and is roughly twice as fast.
-   Nobody has run it on a full task.
+   Nobody has run it on a full task. R1 makes this the most interesting open question rather than
+   the least: 27b closed one task of six in five hours, so throughput is the binding constraint on
+   this machine, not capability.
 4. **What does the architect's scope creep cost?** It rewrote a 709-line unrelated header on a
    TFTP goal. It compiled, so it merged. That is a gate working and a prompt failing.
 

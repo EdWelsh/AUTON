@@ -170,7 +170,14 @@ class TestTheRefusalIsNarrow:
         r = join(target_file(), {"boot", "allocator"})
 
         if not r.examined:
-            pytest.skip("no errata documents cached")
+            pytest.skip("no verdict could be reached for this target")
+        # `examined` says a verdict was reachable, not that there was anything
+        # to reach it from. The errata corpus lives under a gitignored cache, so
+        # on a fresh clone every count is zero and this asserted 0 > 0 — the
+        # guard and its own skip reason disagreed, and CI was the first checkout
+        # to notice.
+        if not any(r.report.assessment.counts().values()):
+            pytest.skip("no errata documents cached, so there is nothing to apply")
         assert r.report.assessment.counts()["applicable"] > 0
         assert r.blocking == []
 

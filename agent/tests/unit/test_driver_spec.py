@@ -99,10 +99,20 @@ class TestTheShippedRecords:
         network driver, so a Firecracker target cannot be built for at all."""
         assert load(DRIVERS / "virtio-net.md").status == "specified"
 
-    def test_the_unimplemented_record_is_reported_not_refused(self):
+    def test_the_unimplemented_record_is_reported_not_refused(self, monkeypatch):
         """A record for a driver that does not exist yet is the point of having
         records. Refusing it would make the format unusable for planning."""
-        r = validate(DRIVERS / "virtio-net.md")
+        # Pin identification: .cache/vendor/ is gitignored, so on a fresh clone
+        # every device id is UNAVAILABLE and r.ok is False for a reason that has
+        # nothing to do with what this test asserts. The subject here is that an
+        # unmapped capability is *reported*, not refused.
+        import driver_spec
+
+        monkeypatch.setattr(
+            driver_spec, "identify",
+            lambda _id: (Identification.IDENTIFIED, "pinned for this test"))
+
+        r = driver_spec.validate(DRIVERS / "virtio-net.md")
 
         assert r.unmapped == ["net"]
         assert r.ok
@@ -226,8 +236,18 @@ class TestStatusIsAClaimAboutThisTree:
         with pytest.raises(DriverError, match="does not contain it"):
             validate(record(status="implemented", provides="[vfs]"))
 
-    def test_specified_without_a_source_mapping_is_reported(self, record):
-        r = validate(record(status="specified", provides="[vfs]"))
+    def test_specified_without_a_source_mapping_is_reported(self, record, monkeypatch):
+        # Pin identification: .cache/vendor/ is gitignored, so on a fresh clone
+        # every device id is UNAVAILABLE and r.ok is False for a reason that has
+        # nothing to do with what this test asserts. The subject here is that an
+        # unmapped capability is *reported*, not refused.
+        import driver_spec
+
+        monkeypatch.setattr(
+            driver_spec, "identify",
+            lambda _id: (Identification.IDENTIFIED, "pinned for this test"))
+
+        r = driver_spec.validate(record(status="specified", provides="[vfs]"))
 
         assert r.unmapped == ["vfs"]
         assert r.ok

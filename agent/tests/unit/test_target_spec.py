@@ -331,6 +331,14 @@ def test_exit_codes_are_three_distinct_values(target_file, monkeypatch, capsys):
     own exit 2 for a usage error."""
     import target_spec
 
+    # Pin identification, because this test is about the three exit codes and
+    # not about the registry. .cache/vendor/ is gitignored, so on a fresh clone
+    # every id came back UNAVAILABLE and a "valid" target exited 3 — the test
+    # passed only on a machine where someone had run the ingest.
+    monkeypatch.setattr(
+        target_spec, "identify",
+        lambda _id: (Identification.IDENTIFIED, "pinned for this test"))
+
     good = target_file(**{"class": "vm"})
     assert target_spec.main(["--validate", str(good)]) == 0
 

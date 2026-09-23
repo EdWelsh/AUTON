@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import shutil
 import sys
+import time
 
 import pytest
 
@@ -195,3 +196,38 @@ def test_real_launch_windows() -> None:
     result = launcher.handle("launch notepad")
     assert result.handled
     launcher.handle("close notepad.exe")
+
+
+class TestRunnerSurvivesADetachedGrandchild:
+    """The launch runner must not wait on a process it did not start.
+
+    `start` hands the GUI app off and exits, and the app inherits whatever
+    stdout/stderr it was given. With pipes that is a deadlock: subprocess.run's
+    timeout fires, it kills the finished child, then drains the pipes a second
+    time with no timeout while the GUI app still holds them open. The
+    TimeoutExpired handler in Launcher._run is written for exactly this and
+    never gets reached, because the hang is inside subprocess.run.
+
+    Reproduced with a POSIX shell rather than `start`, because the mechanism is
+    the inherited handle, not Windows: a backgrounded sleep that outlives its
+    parent shell holds the same handle the same way. This is the test that was
+    missing when the Windows CI leg spent 25 minutes wedged on `launch
+    notepad`.
+    """
+
+    @pytest.mark.skipif(
+        sys.platform.startswith("win"), reason="needs a POSIX shell to stage the grandchild"
+    )
+    def test_a_grandchild_holding_stdout_does_not_hang_the_runner(self) -> None:
+        from controlplane.backends.desktop.launcher import _default_runner
+
+        # `sh` exits at once; the sleep survives it holding stdout and stderr.
+        start = time.monotonic()
+        rc, out, err = _default_runner(["sh", "-c", "sleep 30 & exit 0"])
+        elapsed = time.monotonic() - start
+
+        assert elapsed < 10, (
+            f"the runner waited {elapsed:.1f}s on a detached grandchild; with pipes "
+            f"it waits for the grandchild to exit, which a GUI app never does"
+        )
+        assert rc == 0

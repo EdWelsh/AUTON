@@ -47,9 +47,21 @@ if [ ! -f "$KERNEL_TREE/kernel/mm/pmm.c" ]; then
 	echo "mm.h is present but kernel/mm/pmm.c is not: the allocator was not generated." >&2
 	exit 2
 fi
+# boot.h belongs to the *boot* subsystem, which mm.md lists as a dependency
+# ("boot: provides boot_mmap_t") and which an mm goal does not produce. Demanding
+# it from the tree made this gate unpassable for the thing it gates: a correct
+# allocator scored "generated wrong" because a different subsystem was absent.
+#
+# That is the tftp_stub defect again — a gate requiring an artifact from outside
+# the scope of what it verifies — and it cost a five-hour run a real verdict. So
+# the spec-derived reference header stands in when the tree has none. The tree's
+# own boot.h still wins when it exists, because -I order puts the tree first.
+BOOT_INCLUDE=""
 if [ ! -f "$KERNEL_TREE/kernel/include/boot.h" ]; then
-	echo "no kernel/include/boot.h: boot.md's boot_mmap_t, which pmm_init takes, is missing." >&2
-	exit 1
+	BOOT_INCLUDE="-I$HERE/mm_reference/include"
+	echo "note: kernel/include/boot.h absent; using boot.md's reference header" >&2
+	echo "      from tests/kernel/mm_reference/include/. boot is a separate" >&2
+	echo "      subsystem, so its absence is not an allocator defect." >&2
 fi
 
 SOURCES=""
@@ -64,7 +76,7 @@ fi
 
 # shellcheck disable=SC2086
 clang -O1 -g -fsanitize=address,undefined \
-	-I"$KERNEL_TREE/kernel/include" \
+	-I"$KERNEL_TREE/kernel/include" $BOOT_INCLUDE \
 	"$HERE/mm_test.c" $SOURCES \
 	-o "$OUT" || {
 		echo "compile failed — the generated allocator does not match mm.md's interface" >&2

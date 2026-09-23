@@ -17,6 +17,7 @@ import enum
 import shutil
 import subprocess  # noqa: S404 - launching apps is the whole point of this backend
 import sys
+import tempfile
 from dataclasses import dataclass
 from typing import Callable
 
@@ -99,16 +100,36 @@ def _after_keyword(text: str, keyword: str) -> str:
 
 
 def _default_runner(argv: list[str]) -> tuple[int, str, str]:
-    """Run ``argv`` and capture output. On Windows, ``start`` is a shell builtin."""
+    """Run ``argv`` and capture output through files, never pipes.
+
+    capture_output=True deadlocks here, and not in the way the timeout below
+    protects against. ``start`` detaches the GUI app, which inherits the pipe
+    handles and outlives the ``cmd`` that spawned it. subprocess.run's timeout
+    fires, it kills the (already finished) cmd, and then calls communicate() a
+    second time — with no timeout — to drain the pipes the GUI app is still
+    holding open. That second call is unbounded, so the TimeoutExpired handler
+    in Launcher._run never gets to run. On the Windows CI runner this hung for
+    25 minutes until the job timed out, leaving orphan notepad and firefox
+    processes for the runner to reap.
+
+    A file cannot be held open against us: the grandchild inherits a write
+    handle, we wait on the child alone, and we read the file afterwards. Same
+    failure and the same shape of fix as the orphaned ``sleep`` that held a log
+    pipe open in scripts/lib/toolchain.sh.
+    """
     if sys.platform.startswith("win"):
         argv = ["cmd", "/c", *argv]
-    proc = subprocess.run(  # noqa: S603 - argv is built from vetted adapters
-        argv,
-        capture_output=True,
-        text=True,
-        timeout=_LAUNCH_TIMEOUT_S,
-    )
-    return proc.returncode, proc.stdout, proc.stderr
+    with tempfile.TemporaryFile(mode="w+") as out, tempfile.TemporaryFile(mode="w+") as err:
+        proc = subprocess.run(  # noqa: S603 - argv is built from vetted adapters
+            argv,
+            stdout=out,
+            stderr=err,
+            text=True,
+            timeout=_LAUNCH_TIMEOUT_S,
+        )
+        out.seek(0)
+        err.seek(0)
+        return proc.returncode, out.read(), err.read()
 
 
 class Launcher:
