@@ -21,8 +21,10 @@ from aiosmtpd.controller import Controller
 from openpyxl import Workbook, load_workbook
 
 from controlplane.operator.approval import always_allow, always_deny
+from controlplane.operator.brain import BrainUnavailable, LLMBrain, resolve_model
 from controlplane.operator.runner import Operator
 from controlplane.operator.tools import SMTPConfig, ToolExecutor
+from tests.ollama_probe import responsive_endpoint, skip_reason
 
 
 # --- fixtures: a real file server and a real SMTP sink ----------------------
@@ -147,26 +149,46 @@ def test_scenario_blocks_email_when_not_approved(xlsx_server, smtp_sink, tmp_pat
 
 # --- live Ollama brain (guarded) --------------------------------------------
 
-def _ollama_up() -> bool:
-    try:
-        import httpx
-
-        httpx.get("http://localhost:11434/api/tags", timeout=2).raise_for_status()
-        return True
-    except Exception:  # noqa: BLE001
-        return False
+# Per model call. Enough for a large local model to answer one turn when it is
+# not contended; short enough that a contended one skips instead of stalling
+# the suite for the ten turns the brain is allowed.
+LIVE_CALL_BUDGET = 120.0
 
 
-@pytest.mark.skipif(not _ollama_up(), reason="ollama not reachable")
 def test_live_llm_brain_drives_tools(xlsx_server, smtp_sink, tmp_path):
+    # Probed inside the test, not in a skipif: a skipif argument runs at
+    # collection time, so every invocation of this suite — including ones
+    # selected down to a single unrelated test — would pay the probe.
+    #
+    # And reachability is not the question. /api/tags answers instantly on a
+    # saturated server, so the old guard admitted the test and then blocked
+    # behind the queue. See tests/ollama_probe.py.
+    model = resolve_model()
+    if responsive_endpoint(model) is None:
+        pytest.skip(skip_reason(model))
+
     base, _ = xlsx_server
     cfg, sink = smtp_sink
     goal = (
         f"Download the spreadsheet at {base}/budget.xlsx, set cell B2 to 1234, "
         f"then email it to boss@example.com with subject 'Updated budget'."
     )
-    op = Operator(approval=always_allow, smtp=cfg, workspace_root=tmp_path / "ops")
-    result = op.run(goal, brain="llm")
+    # A budget, because this is a smoke test of tool-driving, not of patience.
+    # The brain's own default is ten minutes per call and it may take ten
+    # turns; on a machine whose model is busy that is an hour of suite. The
+    # probe above says the server can answer, so exceeding this means it got
+    # busy in between — a skip, not a verdict on the model.
+    op = Operator(
+        approval=always_allow,
+        smtp=cfg,
+        workspace_root=tmp_path / "ops",
+        request_timeout=LIVE_CALL_BUDGET,
+    )
+    try:
+        result = op.run(goal, brain="llm")
+    except BrainUnavailable as exc:
+        pytest.skip(f"live brain gave up within {LIVE_CALL_BUDGET:.0f}s per call: {exc}")
+
     # The model must have actually driven the tools (downloaded + sent).
     tools_used = {a["tool"] for a in result.actions}
     assert "download_file" in tools_used
@@ -283,3 +305,53 @@ class TestBrainProvenance:
             brain="rule",
         )
         assert result.brain == "rule"
+
+
+# --- the brain's calls are bounded -----------------------------------------
+
+
+class TestBrainRequestDeadline:
+    """A model call must carry a deadline, or the fallback can never fire.
+
+    LLMBrain converts every provider error into BrainUnavailable so the runner
+    drops to the deterministic planner. A call with no timeout defeats that
+    without tripping a single assertion: it does not error, it just never
+    returns, and the runner waits behind it. That is not theoretical here —
+    this machine runs the generation swarm, and a saturated Ollama is the
+    normal state of it for hours at a time.
+    """
+
+    def _stub_litellm(self, monkeypatch, on_call):
+        import sys
+        import types
+
+        stub = types.ModuleType("litellm")
+        stub.completion = on_call
+        monkeypatch.setitem(sys.modules, "litellm", stub)
+        return stub
+
+    def test_completion_is_called_with_a_timeout(self, monkeypatch, tmp_path):
+        seen: dict = {}
+
+        def capture(**kwargs):
+            seen.update(kwargs)
+            raise RuntimeError("stop after the first call")
+
+        self._stub_litellm(monkeypatch, capture)
+        brain = LLMBrain(model="gpt-4o-mini", request_timeout=12.5)
+        with pytest.raises(BrainUnavailable):
+            brain.run("do a thing", ToolExecutor(tmp_path, approval=always_allow))
+
+        assert seen.get("timeout") == 12.5, (
+            "litellm.completion was called without a timeout — a wedged model "
+            "server would hang the operator instead of falling back"
+        )
+
+    def test_a_provider_timeout_becomes_brain_unavailable(self, monkeypatch, tmp_path):
+        def time_out(**kwargs):
+            raise TimeoutError("the model did not answer in time")
+
+        self._stub_litellm(monkeypatch, time_out)
+        brain = LLMBrain(model="gpt-4o-mini")
+        with pytest.raises(BrainUnavailable):
+            brain.run("do a thing", ToolExecutor(tmp_path, approval=always_allow))

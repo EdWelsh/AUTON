@@ -13,8 +13,6 @@ from __future__ import annotations
 import asyncio
 import gc
 import os
-import urllib.error
-import urllib.request
 import warnings
 from types import SimpleNamespace
 
@@ -28,6 +26,7 @@ from controlplane.core import (
 )
 from controlplane.intent import make_resolver
 from controlplane.intent.resolver import _resolve_via_llm, deterministic_resolve
+from tests.ollama_probe import responsive_endpoint, skip_reason
 
 
 def _docker_cap() -> Capability:
@@ -126,28 +125,20 @@ def test_router_resolver_returns_unhandled_for_gibberish():
 
 # --- 2. Real-LLM path, guarded ------------------------------------------
 
-def _ollama_reachable() -> str | None:
-    url = os.environ.get("AUTON_OLLAMA_URL", "http://localhost:11434")
-    try:
-        with urllib.request.urlopen(f"{url}/api/tags", timeout=1.5) as resp:
-            if resp.status == 200:
-                return url
-    except (urllib.error.URLError, OSError, ValueError):
-        return None
-    return None
-
-
 @pytest.mark.asyncio
 async def test_real_llm_resolves_intent_if_reachable():
-    url = _ollama_reachable()
-    if url is None:
-        pytest.skip("no reachable ollama endpoint; skipping real-LLM test")
-
     # Default to the configured model rather than a second hardcoded name —
     # that divergence is exactly what this test would otherwise stop catching.
     from controlplane.operator.brain import resolve_model
 
     model = os.environ.get("AUTON_INTENT_MODEL") or resolve_model()
+    # Reachable is not enough: /api/tags answers instantly on a server that is
+    # fully occupied, and the call below would then queue for as long as the
+    # agent client allows. See tests/ollama_probe.py.
+    url = responsive_endpoint(model)
+    if url is None:
+        pytest.skip(skip_reason(model))
+
     reg = _registry()
     resolve = make_resolver(model=model, endpoints={"ollama": url})
     # A phrase with no keyword substring overlap with docker, to force the LLM

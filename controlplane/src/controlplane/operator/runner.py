@@ -34,10 +34,17 @@ class Operator:
         approval: Approval | None = None,
         smtp: SMTPConfig | None = None,
         workspace_root: Path | None = None,
+        request_timeout: float | None = None,
     ) -> None:
         self.approval = approval or always_deny
         self.smtp = smtp
         self.workspace_root = workspace_root or DEFAULT_WORKSPACE_ROOT
+        # How long one model call may take before the brain gives up and
+        # "auto" degrades to the deterministic planner. None keeps the brain's
+        # own default. A caller that would rather have a rule-engine answer
+        # now than a model answer in ten minutes can say so here; without this
+        # seam the only way to express that was to not use the LLM at all.
+        self.request_timeout = request_timeout
 
     def run(self, goal: str, brain: str = "auto", model_request: str | None = None) -> TaskResult:
         ws = self.workspace_root / f"task-{int(time.time() * 1000)}"
@@ -58,7 +65,10 @@ class Operator:
                 # (unreadable config, no [llm].model), so it belongs inside the
                 # try — otherwise "auto" would propagate instead of degrading.
                 model = resolve_model(model_request)
-                return f"llm:{model}", LLMBrain(model=model).run(goal, executor)
+                brain_kwargs = {}
+                if self.request_timeout is not None:
+                    brain_kwargs["request_timeout"] = self.request_timeout
+                return f"llm:{model}", LLMBrain(model=model, **brain_kwargs).run(goal, executor)
             except BrainUnavailable:
                 if brain == "llm":
                     raise

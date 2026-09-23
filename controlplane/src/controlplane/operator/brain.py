@@ -153,12 +153,27 @@ def _installed_ollama_tags(base: str) -> set[str] | None:
     return {m["name"] for m in payload.get("models", []) if m.get("name")}
 
 
+# One model call may not take longer than this. The fallback to the
+# deterministic planner is the whole point of BrainUnavailable, and a call with
+# no deadline can never reach it: an HTTP read that never returns raises
+# nothing, so the runner waits instead of falling back. Matches
+# DEFAULT_REQUEST_TIMEOUT in agent/orchestrator/llm/client.py, which already
+# bounds its calls this way.
+DEFAULT_REQUEST_TIMEOUT = 600.0
+
+
 class LLMBrain:
     """Agentic tool-calling loop over any LiteLLM-supported provider."""
 
-    def __init__(self, model: str | None = None, max_turns: int = 10) -> None:
+    def __init__(
+        self,
+        model: str | None = None,
+        max_turns: int = 10,
+        request_timeout: float = DEFAULT_REQUEST_TIMEOUT,
+    ) -> None:
         self.model = model or _config_model()
         self.max_turns = max_turns
+        self.request_timeout = request_timeout
 
     def _litellm_model(self) -> str:
         # ollama_chat/ has the most reliable tool-calling support in LiteLLM.
@@ -172,7 +187,7 @@ class LLMBrain:
         except ImportError as exc:  # pragma: no cover - llm extra not installed
             raise BrainUnavailable("litellm not installed") from exc
 
-        kwargs: dict = {"temperature": 0}
+        kwargs: dict = {"temperature": 0, "timeout": self.request_timeout}
         if self.model.startswith("ollama"):
             base = _ollama_api_base()
             if base:
