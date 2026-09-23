@@ -21,10 +21,10 @@ from aiosmtpd.controller import Controller
 from openpyxl import Workbook, load_workbook
 
 from controlplane.operator.approval import always_allow, always_deny
-from controlplane.operator.brain import BrainUnavailable, LLMBrain, resolve_model
+from controlplane.operator.brain import BrainUnavailable, LLMBrain
 from controlplane.operator.runner import Operator
 from controlplane.operator.tools import SMTPConfig, ToolExecutor
-from tests.ollama_probe import responsive_endpoint, skip_reason
+from tests.ollama_probe import live_skip_reason, live_target
 
 
 # --- fixtures: a real file server and a real SMTP sink ----------------------
@@ -163,9 +163,8 @@ def test_live_llm_brain_drives_tools(xlsx_server, smtp_sink, tmp_path):
     # And reachability is not the question. /api/tags answers instantly on a
     # saturated server, so the old guard admitted the test and then blocked
     # behind the queue. See tests/ollama_probe.py.
-    model = resolve_model()
-    if responsive_endpoint(model) is None:
-        pytest.skip(skip_reason(model))
+    if live_target() is None:
+        pytest.skip(live_skip_reason())
 
     base, _ = xlsx_server
     cfg, sink = smtp_sink

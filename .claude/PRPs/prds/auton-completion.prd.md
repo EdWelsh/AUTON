@@ -52,7 +52,7 @@ see. A suite that cannot fail is not evidence.
 | Services generated and passing their gate | 1 of 7 (TFTP) | 7 |
 | Generation runs whose result was decided by a pre-registered gate | 5 | every one |
 | Validation scenarios passing their external probe | 0 of 6 | 4 of 6 (C4, C5 need TLS) |
-| CI workflows that have ever run | 0 | all 4 |
+| CI matrix legs that have ever run | 0 of 5 | 5 |
 | Suites scored by injected bugs | 10 | stays 10; each new one scored before use |
 
 ## Implementation Phases
@@ -76,7 +76,7 @@ Three kinds of phase, distinguished because they fail differently: **R** runs th
 | R12 | Doom (was I1/G) | `run-intent-probe.sh doom`: a non-blank frame, and input that changes it | R1, D1 for distribution only |
 | D1 | The Doom engine's licence | a written verdict in `decisions/doom-engine-licence.md` | owner |
 | D2 | Where a fleet report goes, if anywhere | a written verdict in `decisions/fleet-endpoint.md` | owner |
-| D3 | Push the branch | CI runs; four workflows stop being theoretical | owner |
+| D3 | Push the branch | CI runs; two workflows, five matrix legs, stop being theoretical | owner |
 | X1 | Driver ↔ erratum join (was V10) | `errata_join.py` finds a real pair for `e1000e` | one Intel NIC spec update |
 | X2 | Errata lineage (was H9) | `retrodict.py` scores a real cutoff against the baseline | six Intel spec updates |
 | X3 | Real-silicon conformance (was J/I6) | `run_conformance.sh` does not SKIP, on metal | an x86 machine |

@@ -122,3 +122,47 @@ def skip_reason(model: str) -> str:
         f"{deadline(tag):.0f}s: unreachable, not installed, or busy serving "
         f"another request"
     )
+
+
+def configured_model() -> str | None:
+    """The model the brain would use, or None when nothing is configured.
+
+    resolve_model() raises BrainUnavailable when agent/config/auton.toml is
+    missing, and that file is local configuration — .gitignore tracks only
+    auton.toml.example — so it is absent in every CI checkout. A host with no
+    configured model cannot judge a model, which is a skip; calling
+    resolve_model() unguarded turns it into a failure instead.
+    """
+    try:
+        from controlplane.operator.brain import BrainUnavailable, resolve_model
+    except ImportError:
+        return None
+    try:
+        return resolve_model()
+    except BrainUnavailable:
+        return None
+
+
+def live_target() -> tuple[str, str] | None:
+    """``(base_url, model)`` when a live model can be judged right now, else None.
+
+    None covers every "not now" — no configured model, unreachable server, or
+    one too busy to produce a token. skip_reason() says which.
+    """
+    model = configured_model()
+    if model is None:
+        return None
+    url = responsive_endpoint(model)
+    if url is None:
+        return None
+    return url, model
+
+
+def live_skip_reason() -> str:
+    model = configured_model()
+    if model is None:
+        return (
+            "no model configured: agent/config/auton.toml is absent (only "
+            "auton.toml.example is tracked), so there is nothing to judge"
+        )
+    return skip_reason(model)

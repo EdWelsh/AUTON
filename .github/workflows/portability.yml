@@ -39,11 +39,23 @@ jobs:
         with:
           python-version: "3.13"
 
+      # This list was wrong in every one of the four dependencies the agent
+      # unit suite actually needs, and nothing caught it because the workflow
+      # had never run: it was added, never pushed, and reviewed only by reading.
+      # litellm, gitpython and rich are imported at module scope by the
+      # orchestrator that agent/tests/conftest.py loads; without pytest-asyncio
+      # every async test fails rather than erroring, which looks like 46 broken
+      # tests instead of one missing plugin.
+      #
+      # Deliberately still not torch: SLM/tests/test_pipeline_e2e.py does
+      # pytest.importorskip("torch") and reports a skipped module, which is a
+      # stated absence rather than a silent one.
       - name: Install python deps
         run: |
           python -m venv .venv
           .venv/bin/pip install -q --upgrade pip
-          .venv/bin/pip install -q pytest pyyaml pdfplumber
+          .venv/bin/pip install -q pytest pytest-asyncio pyyaml pdfplumber \
+            litellm gitpython rich
 
       - name: Unit suites
         run: |

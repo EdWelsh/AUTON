@@ -26,7 +26,12 @@ from controlplane.core import (
 )
 from controlplane.intent import make_resolver
 from controlplane.intent.resolver import _resolve_via_llm, deterministic_resolve
-from tests.ollama_probe import responsive_endpoint, skip_reason
+from tests.ollama_probe import (
+    live_skip_reason,
+    live_target,
+    responsive_endpoint,
+    skip_reason,
+)
 
 
 def _docker_cap() -> Capability:
@@ -127,17 +132,25 @@ def test_router_resolver_returns_unhandled_for_gibberish():
 
 @pytest.mark.asyncio
 async def test_real_llm_resolves_intent_if_reachable():
-    # Default to the configured model rather than a second hardcoded name —
-    # that divergence is exactly what this test would otherwise stop catching.
-    from controlplane.operator.brain import resolve_model
-
-    model = os.environ.get("AUTON_INTENT_MODEL") or resolve_model()
     # Reachable is not enough: /api/tags answers instantly on a server that is
     # fully occupied, and the call below would then queue for as long as the
-    # agent client allows. See tests/ollama_probe.py.
-    url = responsive_endpoint(model)
-    if url is None:
-        pytest.skip(skip_reason(model))
+    # agent client allows. live_target also refuses when no model is configured.
+    # See tests/ollama_probe.py.
+    override = os.environ.get("AUTON_INTENT_MODEL")
+    if override:
+        # An explicit override still has to be answerable, but it does not need
+        # the repo's own config to exist.
+        url = responsive_endpoint(override)
+        if url is None:
+            pytest.skip(skip_reason(override))
+        model = override
+    else:
+        # Default to the configured model rather than a second hardcoded name —
+        # that divergence is exactly what this test would otherwise stop catching.
+        target = live_target()
+        if target is None:
+            pytest.skip(live_skip_reason())
+        url, model = target
 
     reg = _registry()
     resolve = make_resolver(model=model, endpoints={"ollama": url})
