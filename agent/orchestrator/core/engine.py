@@ -27,6 +27,7 @@ from orchestrator.core.state import OrchestratorState
 from orchestrator.core.task_graph import TaskGraph, TaskState
 from orchestrator.arch_registry import ArchProfile, get_arch_profile
 from orchestrator.llm.client import (
+    DEFAULT_MAX_TOOL_TURNS,
     DEFAULT_REQUEST_TIMEOUT,
     CostTracker,
     LLMClient,
@@ -106,6 +107,7 @@ class OrchestrationEngine:
             provider_config=provider_config,
             cost_tracker=self.cost_tracker,
             request_timeout=float(llm_config.get("request_timeout", DEFAULT_REQUEST_TIMEOUT)),
+            max_tool_turns=int(llm_config.get("max_tool_turns", DEFAULT_MAX_TOOL_TURNS)),
         )
         self.workspace = GitWorkspace(
             workspace_path=workspace_path,

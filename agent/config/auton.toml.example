@@ -33,6 +33,12 @@ temperature = 0.0
 # to the edge; raise it for slow local models.
 # request_timeout = 1800.0
 
+# How many tool calls one task may take (default 20). A model that reads the
+# tree before writing spends turns on reading, and the useful ones come last:
+# w14's F6 run wrote a working TFTP server and then hit the cap with its tests
+# unwritten. Raise it for local models that explore.
+# max_tool_turns = 60
+
 [llm.cost]
 # Budget limits per orchestration run
 max_cost_usd = 50.0

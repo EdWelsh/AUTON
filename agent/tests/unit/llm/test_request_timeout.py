@@ -44,3 +44,29 @@ def test_tool_calls_are_logged_without_file_bodies():
     line = _summarise_args({"path": "kernel/a.c", "content": "x" * 5000})
     assert "path='kernel/a.c'" in line and "<5000 chars>" in line and "xxxx" not in line
     assert _summarise_result("y" * 500).endswith("(500 chars)")
+
+
+class TestTheToolTurnCap:
+    """20 turns was never a considered number, and it ended w14's F6 run: the
+    model wrote a working TFTP server, then hit the cap with its tests
+    unwritten. A model that reads before it writes spends turns on reading."""
+
+    def test_the_cap_defaults_to_twenty(self):
+        from orchestrator.llm.client import DEFAULT_MAX_TOOL_TURNS, LLMClient
+
+        client = LLMClient(model="ollama_chat/x", preflight=False)
+        assert client.max_tool_turns == DEFAULT_MAX_TOOL_TURNS == 20
+
+    def test_the_cap_is_configurable(self):
+        from orchestrator.llm.client import LLMClient
+
+        assert LLMClient(model="ollama_chat/x", preflight=False,
+                         max_tool_turns=60).max_tool_turns == 60
+
+    def test_the_engine_reads_it_from_config(self):
+        from pathlib import Path
+
+        import orchestrator.core.engine as engine
+
+        text = Path(engine.__file__).read_text()
+        assert 'llm_config.get("max_tool_turns"' in text

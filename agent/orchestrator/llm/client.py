@@ -100,6 +100,13 @@ class ProviderConfig:
         return self.endpoints.get(provider)
 
 
+# How many tool calls one task may take. 20 was never a considered number, and
+# it is what ended w14's F6 run: qwen3.5:27b wrote a working TFTP server, then
+# hit the cap with its tests unwritten. A model that reads before it writes
+# spends turns on reading, and the useful ones come last.
+DEFAULT_MAX_TOOL_TURNS = 20
+
+
 class ModelTimeoutError(Exception):
     """A model call exceeded its request timeout.
 
@@ -210,8 +217,10 @@ class LLMClient:
         cost_tracker: CostTracker | None = None,
         preflight: bool = True,
         request_timeout: float = DEFAULT_REQUEST_TIMEOUT,
+        max_tool_turns: int = DEFAULT_MAX_TOOL_TURNS,
     ):
         self.model = model
+        self.max_tool_turns = max_tool_turns
         self.max_tokens = max_tokens
         self.provider_config = provider_config or ProviderConfig()
         self.cost_tracker = cost_tracker or CostTracker()
@@ -309,12 +318,13 @@ class LLMClient:
         messages: list[dict[str, Any]],
         tools: list[dict[str, Any]],
         tool_executor: Any,
-        max_turns: int = 20,
+        max_turns: int | None = None,
         temperature: float = 0.0,
         model_override: str | None = None,
     ) -> list[dict[str, Any]]:
         """Run an agentic tool-use loop until the model stops calling tools."""
         messages = list(messages)
+        max_turns = max_turns or self.max_tool_turns
 
         for turn in range(max_turns):
             response = await self.send_message(
