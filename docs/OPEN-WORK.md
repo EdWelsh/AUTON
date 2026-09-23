@@ -39,6 +39,20 @@ the same shape of task, and each is one command.
 | Where a fleet conformance report goes, if anywhere | owner | `agent/kernel_spec/decisions/fleet-endpoint.md` | Nothing else: the format, the consent flow and the local aggregator are built, and the tool has no network code at all |
 | Push this branch | owner | — | 90 commits have never reached CI. Every workflow here is unrun: the Linux e2e, the 3-OS control-plane matrix, the x86 conformance venues |
 
+## not yet scoped
+
+Two rows of the intent PRD's scenario corpus have no phase, no plan and no code, and should not
+be planned until what they rest on does:
+
+| Scenario | What it needs that does not exist |
+|---|---|
+| *"a database for user info with RBAC and OAuth"* (I4) | **TLS**, OAuth, and a permission model. The KV store is not this, and the SSH gate's primitives (X25519, Ed25519, ChaCha20-Poly1305) are not a TLS stack |
+| *"I want to interact with yedgi.com"* (I5) | **TLS**, an HTTP client, and a browser-shaped framebuffer surface |
+| *"receive all my emails"* (the second half of I3) | **IMAP**. F11 receives and stores mail and says it has no IMAP; that is scope, not an oversight |
+
+The common blocker is TLS, which deserves its own PRD phase with a gate like the SSH crypto
+one — reuse or port, never synthesize — rather than being invented inside a scenario plan.
+
 ## hardware, and the documents behind a paywall of clicks
 
 | What | Needs | Already done |

@@ -208,6 +208,23 @@ I1 and I2 come first: I1 needs no network, I2 needs no storage, and between them
 both axes and prove `excludes` is enforced in both directions. I3, I4 and I6 map onto factory
 services (email, database, drivers) and should follow its ladder rather than race it.
 
+**Where the corpus actually stands (2026-09-23), because "maps onto a factory service" is not
+the same as covered:**
+
+| Scenario | State |
+|---|---|
+| I1 Doom | spec, input decision, external probe. Needs a build; distribution needs the licence decision |
+| I2 host this repo | spec, 28-check suite, real `git clone`, packaging, probe. Needs a build |
+| I3 email | **half.** F11 receives and stores mail, and says plainly that it has no IMAP. "Receive all my emails" needs an inbound fetch nothing implements |
+| I4 database with RBAC and OAuth | **no phase, no plan, no code.** F9's KV store is not it: RBAC, OAuth and TLS are three capabilities the tree does not have, and the SSH gate's crypto (X25519/Ed25519/ChaCha20) is not a TLS stack |
+| I5 interact with yedgi.com | **no phase, no plan, no code.** Needs TLS, an HTTP client and a framebuffer browser |
+| I6 wifi | blocked on hardware; no wifi driver exists |
+
+I4 and I5 are the honest remainder of this PRD: they were written as target scenarios and never
+became phases. Neither should be planned until the capabilities they rest on (TLS above all)
+have a PRD phase of their own — inventing a TLS stack inside a scenario plan is the mistake
+`DEFERRED.md` exists to prevent.
+
 Grading uses the chat rubric lifted to deployments: **worked** (probe passes), **honestly
 refused** (names the missing capability), **failed** (claimed success without the probe
 passing, or errored). Claiming success while the probe fails is the deployment-level
@@ -244,10 +261,10 @@ Numbered to avoid collision with the factory's phases, which are cited as `F<n>`
 | D | Scoped corpus | `build_corpus.py --manifest`; grounding fix folded in; garbage re-measured | B |
 | E | Leakage enforcement | Excluded-subsystem symbols fail the build | C, **F5** |
 | F | Packaging | `--output <dir>`: ISO, installer, scoped model, spec subset, provenance | C, E |
-| G | I1 Doom — **spec + input decision done, still blocked**, [report](../reports/w11-intent-doom-report.md): needs a generated tree and a doomgeneric (GPL-2.0) licence decision — *planned: [`w14-intent-doom-boots`](../plans/completed/w14-intent-doom-boots.plan.md)* | `AUTON train "I want to play Doom" --output ./Doom` boots and plays | F |
-| H | I2 host-this-repo — *planned: [`w14-intent-host-repo`](../plans/completed/w14-intent-host-repo.plan.md)* | Second intent, disjoint capabilities; image sizes measurably differ | F |
+| G | I1 Doom — **spec, input decision and external probe done** (`run-intent-probe.sh doom` grades the framebuffer via QEMU's monitor). Building needs a generation run; **distributing** needs the engine-licence decision (`decisions/doom-engine-licence.md`) | `AUTON train "I want to play Doom" --output ./Doom` boots and plays | F |
+| H | I2 host-this-repo — **complete except the build**: `host-repo.md`, a 28-check suite, `--clone` proved by real git, `package_image.py --repo`, and the external probe. The image itself needs a generation run | Second intent, disjoint capabilities; image sizes measurably differ | F |
 | I | Device table — **complete**, [report](../reports/w10-intent-device-table-report.md) | Compiled PCI/USB table in the model file; retrieval-only device facts | D |
-| J | I6 real silicon — *planned: [`w15-intent-real-silicon`](../plans/completed/w15-intent-real-silicon.plan.md)* | Driver selection on hardware absent from the corpus | I |
+| J | I6 real silicon — **blocked on hardware**: an x86 machine to run on. The harness, oracle and disclosure path are built | Driver selection on hardware absent from the corpus | I |
 
 **Blocked on the factory**: C needs F2 (spec format), E needs F5 (validator wiring), and
 everything downstream of generation needs the agent loop to dispatch at all — currently

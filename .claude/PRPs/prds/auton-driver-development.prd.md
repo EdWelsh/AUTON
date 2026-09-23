@@ -175,7 +175,7 @@ Specifically:
 | V7 | **Framebuffer + input** — **complete**, [report](../reports/w8-driver-framebuffer-input-report.md) | Unblocks Doom, which is the PRD-set's headline intent and currently `INCOMPLETE` | V5 |
 | V8 | **Agent-authored driver** — **re-run w13 on the repaired loop: one invalid record, no reference or tests**, [report](../reports/w13-driver-v8-rerun-report.md); gate suite frozen (29 checks, 8/8 injected bugs); awaits a capable model (owner). w11: **run once, produced nothing**, [report](../reports/w11-driver-agent-authored-report.md). Loop defects, not the model: empty-diff review + terminal rejection. Re-run after the loop fix — *planned: [`w13-driver-v8-rerun`](../plans/completed/w13-driver-v8-rerun.plan.md)* | The real test: the loop drafts a driver from a vendor spec, a human reviews, cost measured against V5. Requires the F6 workspace fix | V5, F6 |
 | V9 | **Verification harness** — **complete**, [report](../reports/w7-driver-verification-gate-report.md) | Driver verification runs in the factory pipeline as a gate, like leakage | V2, F5 |
-| V10 | **Errata join** — *deferred: no document links a device to an erratum* — *planned: [`w13-driver-errata-join`](../plans/completed/w13-driver-errata-join.plan.md)* | A driver for silicon with applicable errata reports them, and applies a mitigation where H6 has one | H4, H6 |
+| V10 | **Errata join** — *deferred on data, not design*: blocked on one Intel NIC specification update a person must download (the CDN refuses curl). The join and the 'add a field only for a real pair' rule are ready | A driver for silicon with applicable errata reports them, and applies a mitigation where H6 has one | H4, H6 |
 
 ## Risks
 
