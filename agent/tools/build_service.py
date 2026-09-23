@@ -410,13 +410,15 @@ def build(name: str, tree: Path, make_iso: bool = False, cc: str | None = None,
     # define existed. Separate directories mean no object is ever shared
     # between two configurations, and both stay incremental.
     build_dir = f"build-{name}"
+    # cwd rather than -C, so GNU make does not print "Entering directory" into
+    # output this function parses and reports. Same reason as base_agent.
     r = subprocess.run(
-        ["make", "-C", str(tree), f"CC={cc}", f"BUILD={build_dir}",
+        ["make", f"CC={cc}", f"BUILD={build_dir}",
          f"CSRC={' '.join(csrc)}",
          f"ASRC={' '.join(asrc)}", f"CFLAGS={cflags}",
          f"GRUB_MKRESCUE={os.environ.get('GRUB_MKRESCUE', 'grub-mkrescue')}",
          f"-j{jobs}", *target],
-        capture_output=True, text=True, timeout=900)
+        cwd=str(tree), capture_output=True, text=True, timeout=900)
     if r.returncode != 0:
         undef = sorted({ln.split("`")[1].rstrip("'")
                         for ln in r.stderr.splitlines() + r.stdout.splitlines()

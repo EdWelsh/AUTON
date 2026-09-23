@@ -349,15 +349,16 @@ class Agent:
         if not makefile.exists():
             return "No Makefile found in workspace. Cannot build."
 
-        return await self._run_argv(
-            ["make", "-C", str(self.workspace.path), target], timeout=120
-        )
+        # No -C: _run_argv already runs in the workspace, so -C was redundant
+        # and cost us portability. GNU make answers it with "Entering
+        # directory" on stdout where BSD make says nothing, which made the
+        # agent-visible build output differ by platform.
+        return await self._run_argv(["make", target], timeout=120)
 
     async def _run_test(self, test_name: str, timeout: int) -> str:
         """Run a kernel test."""
         return await self._run_argv(
-            ["make", "-C", str(self.workspace.path), f"test-{test_name}"],
-            timeout=timeout,
+            ["make", f"test-{test_name}"], timeout=timeout
         )
 
     # Commands an agent may run. Defined next to the tool schema so the model is

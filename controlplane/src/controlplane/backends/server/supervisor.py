@@ -191,6 +191,14 @@ def _is_bare_web_request(original: str, residual: str) -> bool:
 # ---------------------------------------------------------------------------
 
 
+# Windows has no SIGKILL. There, os.kill maps SIGTERM onto TerminateProcess,
+# which is already the unconditional kill that the escalation below wants — so
+# there is no harder second signal to reach for, and asking for one raised
+# AttributeError and left the process running. Resolved once, at import, so the
+# stop path has no platform branch in it.
+_FORCE_KILL = getattr(signal, "SIGKILL", signal.SIGTERM)
+
+
 def _launch_target(command: str) -> str | list[str]:
     """What to hand Popen: an argv list on POSIX, the raw string on Windows.
 
@@ -356,7 +364,7 @@ class Supervisor:
 
         if self.is_alive(pid):
             try:
-                os.kill(pid, signal.SIGKILL)
+                os.kill(pid, _FORCE_KILL)
             except (ProcessLookupError, PermissionError):
                 pass
 

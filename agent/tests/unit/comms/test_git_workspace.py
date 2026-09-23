@@ -234,6 +234,26 @@ class TestTheWorkspaceOwnsItsCommitterIdentity:
             "either not set or set outside the workspace"
         )
 
+    def test_an_adopted_repo_also_gets_the_identity(self, tmp_path):
+        """The case my first fix missed.
+
+        Setting the identity only where the repo is created left every adopted
+        workspace relying on the host again — which is what the orchestrator
+        tests do, and why they stayed red in CI after the first attempt.
+        """
+        import subprocess
+
+        path = tmp_path / "adopted"
+        path.mkdir()
+        subprocess.run(["git", "init", "-q", "-b", "main", str(path)], check=True)
+
+        ws = GitWorkspace(path)
+        ws.init()
+
+        with ws.repo.config_reader() as cfg:
+            assert cfg.get_value("user", "name")
+            assert cfg.get_value("user", "email")
+
     def test_commits_carry_that_identity(self, tmp_path):
         ws = GitWorkspace(tmp_path / "ws")
         ws.init()

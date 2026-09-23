@@ -241,3 +241,46 @@ class TestCommandSplittingIsPlatformCorrect:
         for platform in ("nt", "posix"):
             monkeypatch.setattr(supervisor.os, "name", platform)
             assert supervisor._executable_of("   ") == ""
+
+
+class TestTheForceKillSignalExistsEverywhere:
+    """SIGKILL is POSIX-only, and the stop path escalates to it.
+
+    On Windows `signal.SIGKILL` is simply absent, so the escalation raised
+    AttributeError and the process it was trying to kill stayed running. os.kill
+    there maps SIGTERM onto TerminateProcess, which is already the unconditional
+    kill the escalation wants, so there is no harder signal to reach for.
+
+    This is the layer under the shlex bug: once launching worked on Windows,
+    stopping did not.
+    """
+
+    def test_a_force_signal_is_resolved_on_this_platform(self):
+        from controlplane.backends.server.supervisor import _FORCE_KILL
+
+        assert _FORCE_KILL is not None
+
+    def test_it_is_sigkill_where_sigkill_exists(self):
+        import signal
+
+        from controlplane.backends.server.supervisor import _FORCE_KILL
+
+        if hasattr(signal, "SIGKILL"):
+            assert _FORCE_KILL == signal.SIGKILL
+        else:
+            assert _FORCE_KILL == signal.SIGTERM
+
+    def test_the_module_imports_without_sigkill(self, monkeypatch):
+        """What Windows sees. Import must not reach for an absent attribute."""
+        import importlib
+        import signal
+
+        monkeypatch.delattr(signal, "SIGKILL", raising=False)
+        mod = importlib.reload(
+            importlib.import_module("controlplane.backends.server.supervisor")
+        )
+        assert mod._FORCE_KILL == signal.SIGTERM
+
+        # Leave the module as the rest of the session expects it.
+        monkeypatch.undo()
+        importlib.reload(mod)
