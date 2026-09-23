@@ -290,9 +290,27 @@ class GitWorkspace:
 
     def commit_pending(self, branch: str, message: str) -> bool:
         """Commit an agent's uncommitted work on its own branch, excluding
-        engine state. Returns whether anything was committed."""
+        engine state. Returns whether anything was committed.
+
+        The branch does not have to be checked out. It used to: anything that
+        switched the workspace between the agent writing and its result being
+        handled — a merge, or a review's compile check — left the work
+        uncommitted, and the engine then reported "no output: branch identical
+        to main" while a finished implementation sat in the working tree. That
+        happened to a 364-line TFTP server (w14, qwen3.5:27b).
+
+        Git carries uncommitted changes across a checkout when they do not
+        conflict, which is the normal case here: agent branches descend from
+        main and the work is usually new files. When it does conflict git
+        refuses, and so does this — saying so beats committing the work
+        somewhere it does not belong.
+        """
         if not self._is_current(branch):
-            return False
+            try:
+                self.repo.git.checkout(branch)
+            except GitCommandError as exc:
+                logger.warning("cannot carry pending work to %s: %s", branch, exc)
+                return False
         self.repo.git.add("-A", "--", ".", *self._NOT_WORK)
         if not self.repo.git.diff("--cached", "--name-only"):
             return False

@@ -329,3 +329,47 @@ class TestAnUnknownToolNamesTheRealOnes:
         out = await Agent._execute_tool(agent, "tftp_server_init", {})
 
         assert "read_file, write_file" in out and "write_file" in out.split("To create")[1]
+
+
+class TestWorkIsNeverOrphaned:
+    """w14, qwen3.5:27b: a 364-line TFTP server sat untracked in the working
+    tree while the engine reported "no output: branch identical to main".
+
+    commit_pending only committed when the agent's branch happened to be
+    checked out. checkout_main() commits first, so it was safe — but
+    merge_branch() checks out main directly, and after it the agent's files
+    were still in the working tree with no branch holding them.
+    """
+
+    def test_pending_work_survives_a_raw_checkout(self, tmp_path):
+        ws = _repo(tmp_path)
+        branch = ws.create_branch("dev-01", "services", "2")
+        (tmp_path / "kernel" / "services" / "tftp").mkdir(parents=True)
+        (tmp_path / "kernel" / "services" / "tftp" / "server.c").write_text("int s;\n")
+        # What merge_branch does: leave the branch without committing first.
+        ws.repo.git.checkout("main")
+
+        assert ws.commit_pending(branch, "dev-001: uncommitted agent output")
+        assert ws.has_changes(branch), "the work must be ON the branch, not lost"
+        files = subprocess.run(["git", "-C", str(tmp_path), "show", "--name-only",
+                                "--format=", branch], capture_output=True, text=True).stdout
+        assert "kernel/services/tftp/server.c" in files
+
+    def test_a_branch_with_nothing_pending_still_reports_nothing(self, tmp_path):
+        ws = _repo(tmp_path)
+        branch = ws.create_branch("dev-01", "x", "1")
+        ws.repo.git.checkout("main")
+        assert ws.commit_pending(branch, "nothing") is False
+
+    async def test_the_engine_reviews_work_a_checkout_left_behind(self, tmp_path):
+        ws, g = _repo(tmp_path), _chain()
+        g.update_state("t-1", TaskState.MERGED)
+        branch = ws.create_branch("dev-01", "x", "2")
+        (tmp_path / "b.c").write_text("int b;\n")
+        ws.repo.git.checkout("main")            # as merge_branch does
+        eng = _engine(ws, g)
+
+        await eng._handle_result(g.get_task("t-2"), _ok("t-2", branch))
+
+        assert eng._reviewer.agent.review_branch.await_count == 1, \
+            "the work exists; it must reach review rather than be called no output"
