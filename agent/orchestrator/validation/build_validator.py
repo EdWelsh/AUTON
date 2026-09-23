@@ -55,8 +55,15 @@ class BuildValidator:
 
         start = time.monotonic()
         try:
+            # cwd, not `make -C`: GNU make answers -C with "Entering
+            # directory '...'" on stdout and BSD make does not, so the same
+            # build produced different agent-visible output on Linux and macOS.
+            # The banner tells an agent nothing it does not already know, and
+            # --no-print-directory would suppress it only on GNU. Running in the
+            # directory means neither make has anything to announce.
             proc = await asyncio.create_subprocess_exec(
-                "make", "-C", str(self.workspace_path), target,
+                "make", target,
+                cwd=str(self.workspace_path),
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
             )

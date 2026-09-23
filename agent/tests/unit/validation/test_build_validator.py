@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from pathlib import Path
 
 import pytest
@@ -252,3 +253,37 @@ class TestParseGccDiagnostics:
         assert errors[0]["line"] == 0
         assert errors[0]["column"] == 0
         assert "something wrong" in errors[0]["message"]
+
+
+class TestMakeIsRunInTheWorkspaceNotPointedAtIt:
+    """`make -C dir` makes the build output platform-dependent.
+
+    GNU make answers -C by printing "make: Entering directory '...'" and
+    "Leaving directory" on stdout; BSD make says nothing. The same build
+    therefore produced different agent-visible output on Linux and macOS, and
+    two tests asserting the output shape were green on every macOS host here and
+    red on the Linux CI runner.
+
+    --no-print-directory would fix it only on GNU. Running in the directory
+    means neither implementation has anything to announce, so the invariant is
+    that -C is never passed. Asserted on the argv because this machine has no
+    GNU make to reproduce the banner with.
+    """
+
+    async def test_make_is_not_given_dash_C(self, tmp_path, monkeypatch):
+        (tmp_path / "Makefile").write_text("all:\n\t@echo building\n")
+        seen: dict = {}
+
+        async def fake_exec(*argv, **kwargs):
+            seen["argv"] = argv
+            seen["cwd"] = kwargs.get("cwd")
+            raise FileNotFoundError("stop here; the argv is the subject")
+
+        monkeypatch.setattr(asyncio, "create_subprocess_exec", fake_exec)
+        await BuildValidator(tmp_path).build()
+
+        assert "-C" not in seen["argv"], (
+            "make was given -C, so GNU make will print 'Entering directory' "
+            "into the build output an agent reads"
+        )
+        assert seen["cwd"] == str(tmp_path), "make must run in the workspace instead"

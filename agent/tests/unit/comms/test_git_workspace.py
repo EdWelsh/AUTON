@@ -197,3 +197,47 @@ class TestCommit:
         tracked = [item.path for item in workspace.repo.head.commit.tree.traverse()]
         names = [t.replace("\\", "/") for t in tracked]
         assert "staged.txt" in names
+
+
+class TestTheWorkspaceOwnsItsCommitterIdentity:
+    """Commits here are made on an agent's behalf, so the identity is ours.
+
+    Without this, `git commit` falls back to whatever the host can derive, and
+    on a host that can derive nothing it fails with "Committer identity
+    unknown". That is not hypothetical: it failed exactly that way on the Linux
+    CI runner, whose gecos name is empty, while passing on every macOS host
+    here because macOS supplies one. Three orchestrator tests were red in CI and
+    green locally for that reason alone.
+
+    Asserted on the config rather than by blanking the environment, because the
+    fallback that breaks is git deriving a name from the OS user, and a test
+    cannot take that away portably. What it can check is that we never reach the
+    fallback.
+    """
+
+    def test_a_new_workspace_sets_user_name_and_email(self, tmp_path):
+        ws = GitWorkspace(tmp_path / "ws")
+        ws.init()
+
+        with ws.repo.config_reader() as cfg:
+            assert cfg.get_value("user", "name")
+            assert cfg.get_value("user", "email")
+
+    def test_the_identity_is_repo_scoped_not_global(self, tmp_path):
+        """A tool that wrote --global would reconfigure the user's own git."""
+        ws = GitWorkspace(tmp_path / "ws")
+        ws.init()
+
+        local_config = tmp_path / "ws" / ".git" / "config"
+        assert "auton" in local_config.read_text().lower(), (
+            "the identity is not in the workspace's own .git/config, so it was "
+            "either not set or set outside the workspace"
+        )
+
+    def test_commits_carry_that_identity(self, tmp_path):
+        ws = GitWorkspace(tmp_path / "ws")
+        ws.init()
+
+        head = ws.repo.head.commit
+        assert head.committer.name
+        assert head.committer.email
