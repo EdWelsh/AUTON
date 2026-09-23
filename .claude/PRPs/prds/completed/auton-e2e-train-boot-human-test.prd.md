@@ -38,8 +38,8 @@
 > `.claude/PRPs/reports/`.
 >
 > Forward-looking work lives in
-> [`auton-service-kernel-factory.prd.md`](./auton-service-kernel-factory.prd.md) (generation)
-> and [`auton-intent-to-os-compiler.prd.md`](./auton-intent-to-os-compiler.prd.md) (intent).
+> [`auton-service-kernel-factory.prd.md`](../auton-service-kernel-factory.prd.md) (generation)
+> and [`auton-intent-to-os-compiler.prd.md`](../auton-intent-to-os-compiler.prd.md) (intent).
 
 ## Problem Statement
 
@@ -255,18 +255,18 @@ $ make -C kernels/x86_64 run-neural     # then just talk to it
 
 | # | Phase | Description | Status | Parallel | Depends | PRP Plan |
 |---|-------|-------------|--------|----------|---------|----------|
-| 0 | Native bench | Toolchain install + GRUB spike + disk floor; ISO builds and boots with no Docker | complete | - | - | [plan](../plans/completed/auton-e2e-phase0-native-bench.plan.md) · [report](../reports/auton-e2e-phase0-native-bench-report.md) |
-| 1 | LLM config repair | Pick and qualify a local model; add a preflight that fails loudly on drift | **complete** | with 0 | `ollama/gemma4:latest` qualified | [plan](../plans/completed/auton-e2e-phase1-llm-config-repair.plan.md) · [report](../reports/auton-e2e-phase1-llm-config-repair-report.md) |
-| 2 | E2E spine | `scripts/e2e.sh`: train→export→parity→iso→boot→markers→transcript, artifacts + exit codes | **complete** | - | 0, 1 | [plan](../plans/completed/auton-e2e-phase2-e2e-spine.plan.md) · [report](../reports/auton-e2e-phase2-e2e-spine-report.md) |
-| 3a | Training rung: prove pipeline | Retrain tiny on existing corpus, re-verify parity + neural boot | **complete** | with 4, 5 | 2 | [plan](../plans/completed/auton-e2e-phase3a-training-prove-pipeline.plan.md) · [baseline](../reports/e2e-rung3a-baseline.md) |
-| 3b | Training rung: real chat quality | Corpus research + build, real tokenizer, contract update, train to a quality bar | **complete (bar half met)** | - | 3a, 6 | [plan](../plans/completed/auton-e2e-phase3b-training-chat-quality.plan.md) · [corpus plan](../reports/e2e-rung3b-corpus-plan.md) · [attempts](../reports/e2e-rung3b-training-attempts.md) |
-| 3c | Training rung: int8 quantization | Quantize, extend flat format quant path, kernel dequant, re-parity | **complete** | - | 3b | [plan](../plans/completed/auton-e2e-phase3c-training-int8-quant.plan.md) · [criterion](../reports/e2e-rung3c-parity-criterion.md) · [results](../reports/e2e-rung3c-int8-results.md) |
-| 3d | Inference hardening | Load time, RAM floor, fallback behavior, garbage-output guards | **complete** | with 3c | 3a | [plan](../plans/completed/auton-e2e-phase3d-inference-hardening.plan.md) · [results](../reports/e2e-rung3d-hardening.md) |
-| 4 | Control-plane E2E lane | Terminal + UI + desktop over one session; docker/k8s/os/server backends asserted honestly | **complete** | with 3a, 5 | 1 | [plan](../plans/completed/auton-e2e-phase4-controlplane-lane.plan.md) · [report](../reports/e2e-phase4-5-lanes.md) |
-| 5 | Operator E2E lane | `auton-do` goal → real tools → approval gate, live-model and deterministic-planner paths | **complete** | with 3a, 4 | 1 | [plan](../plans/completed/auton-e2e-phase5-operator-lane.plan.md) · [report](../reports/e2e-phase4-5-lanes.md) |
-| 6 | Graded chat eval | 50-prompt rubric (correct / honest-roadmap / garbage), scored runner, baseline recorded | **complete** | - | 2, 3a | [plan](../plans/completed/auton-e2e-phase6-graded-chat-eval.plan.md) · [baselines](../reports/e2e-eval-baselines.md) |
-| 7 | Live human sessions | Unscripted 20-min session per rung; findings logged and fed back | **complete (automated stand-in)** | - | 6 | [plan](../plans/completed/auton-e2e-phase7-live-human-sessions.plan.md) · [sessions](../reports/e2e-human-session-all-rungs-2026-09-12.md) |
-| 8 | Orchestrator lane (stretch) | Agent loop writes/extends the kernel against the local model | **complete (negative result)** | - | 1, 2 | [plan](../plans/completed/auton-e2e-phase8-orchestrator-lane.plan.md) · [result](../reports/e2e-orchestrator-lane.md) |
+| 0 | Native bench | Toolchain install + GRUB spike + disk floor; ISO builds and boots with no Docker | complete | - | - | [plan](../../plans/completed/auton-e2e-phase0-native-bench.plan.md) · [report](../../reports/auton-e2e-phase0-native-bench-report.md) |
+| 1 | LLM config repair | Pick and qualify a local model; add a preflight that fails loudly on drift | **complete** | with 0 | `ollama/gemma4:latest` qualified | [plan](../../plans/completed/auton-e2e-phase1-llm-config-repair.plan.md) · [report](../../reports/auton-e2e-phase1-llm-config-repair-report.md) |
+| 2 | E2E spine | `scripts/e2e.sh`: train→export→parity→iso→boot→markers→transcript, artifacts + exit codes | **complete** | - | 0, 1 | [plan](../../plans/completed/auton-e2e-phase2-e2e-spine.plan.md) · [report](../../reports/auton-e2e-phase2-e2e-spine-report.md) |
+| 3a | Training rung: prove pipeline | Retrain tiny on existing corpus, re-verify parity + neural boot | **complete** | with 4, 5 | 2 | [plan](../../plans/completed/auton-e2e-phase3a-training-prove-pipeline.plan.md) · [baseline](../../reports/e2e-rung3a-baseline.md) |
+| 3b | Training rung: real chat quality | Corpus research + build, real tokenizer, contract update, train to a quality bar | **complete (bar half met)** | - | 3a, 6 | [plan](../../plans/completed/auton-e2e-phase3b-training-chat-quality.plan.md) · [corpus plan](../../reports/e2e-rung3b-corpus-plan.md) · [attempts](../../reports/e2e-rung3b-training-attempts.md) |
+| 3c | Training rung: int8 quantization | Quantize, extend flat format quant path, kernel dequant, re-parity | **complete** | - | 3b | [plan](../../plans/completed/auton-e2e-phase3c-training-int8-quant.plan.md) · [criterion](../../reports/e2e-rung3c-parity-criterion.md) · [results](../../reports/e2e-rung3c-int8-results.md) |
+| 3d | Inference hardening | Load time, RAM floor, fallback behavior, garbage-output guards | **complete** | with 3c | 3a | [plan](../../plans/completed/auton-e2e-phase3d-inference-hardening.plan.md) · [results](../../reports/e2e-rung3d-hardening.md) |
+| 4 | Control-plane E2E lane | Terminal + UI + desktop over one session; docker/k8s/os/server backends asserted honestly | **complete** | with 3a, 5 | 1 | [plan](../../plans/completed/auton-e2e-phase4-controlplane-lane.plan.md) · [report](../../reports/e2e-phase4-5-lanes.md) |
+| 5 | Operator E2E lane | `auton-do` goal → real tools → approval gate, live-model and deterministic-planner paths | **complete** | with 3a, 4 | 1 | [plan](../../plans/completed/auton-e2e-phase5-operator-lane.plan.md) · [report](../../reports/e2e-phase4-5-lanes.md) |
+| 6 | Graded chat eval | 50-prompt rubric (correct / honest-roadmap / garbage), scored runner, baseline recorded | **complete** | - | 2, 3a | [plan](../../plans/completed/auton-e2e-phase6-graded-chat-eval.plan.md) · [baselines](../../reports/e2e-eval-baselines.md) |
+| 7 | Live human sessions | Unscripted 20-min session per rung; findings logged and fed back | **complete (automated stand-in)** | - | 6 | [plan](../../plans/completed/auton-e2e-phase7-live-human-sessions.plan.md) · [sessions](../../reports/e2e-human-session-all-rungs-2026-09-12.md) |
+| 8 | Orchestrator lane (stretch) | Agent loop writes/extends the kernel against the local model | **complete (negative result)** | - | 1, 2 | [plan](../../plans/completed/auton-e2e-phase8-orchestrator-lane.plan.md) · [result](../../reports/e2e-orchestrator-lane.md) |
 
 ### Phase Details
 

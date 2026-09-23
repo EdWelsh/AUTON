@@ -17,7 +17,7 @@
 > run on macOS, and three of five OS profiles are gated behind an unwired KVM host. Real
 > hardware and a second host OS are still the missing signals.
 
-> Companion to [auton-e2e-train-boot-human-test.prd.md](./auton-e2e-train-boot-human-test.prd.md),
+> Companion to [auton-e2e-train-boot-human-test.prd.md](completed/auton-e2e-train-boot-human-test.prd.md),
 > which establishes the macOS-native bench. This PRD takes AUTON off one Mac —
 > across dev hosts, onto real hardware, and toward other architectures.
 
@@ -245,19 +245,19 @@ WSL2. **LOW** for real metal and Lane D — both are real engineering, not confi
 
 | # | Phase | Description | Status | Parallel | Depends | PRP Plan |
 |---|-------|-------------|--------|----------|---------|----------|
-| 0 | Access + target selection | Proxmox reachability; name the physical test machine; record its firmware/NIC/storage/serial | planned | - | - | [`w15-portability-proxmox`](../plans/w15-portability-proxmox.plan.md) |
-| A1 | Linux dev bench | Native apt toolchain, per-host preflight, E2E green on Linux | planned | with C1 | PRD#1 ph.2 | [`w12-portability-linux-bench`](../plans/w12-portability-linux-bench.plan.md) |
+| 0 | Access + target selection | Proxmox reachability; name the physical test machine; record its firmware/NIC/storage/serial | planned | - | - | [`w15-portability-proxmox`](../plans/completed/w15-portability-proxmox.plan.md) |
+| A1 | Linux dev bench | Native apt toolchain, per-host preflight, E2E green on Linux | planned | with C1 | PRD#1 ph.2 | [`w12-portability-linux-bench`](../plans/completed/w12-portability-linux-bench.plan.md) |
 | A2 | Host-agnostic entry point — **complete**, [report](../reports/w11-portability-host-agnostic-entry-report.md); `docs/HOST-MATRIX.md` | One `e2e.sh` with host detection + `--accel` selection; three-host matrix documented | complete | - | A1 | `completed/w11-portability-host-agnostic-entry` |
-| A3 | WSL2 Windows bench | WSL2 setup path, WHPX acceleration, E2E green; native-Windows explicitly ruled out in docs | planned | with B1 | A2 | [`w15-portability-wsl2`](../plans/w15-portability-wsl2.plan.md) |
-| B1 | KVM boot on Proxmox | Same ISO, `/dev/kvm`, timed against TCG; the 10x metric | planned | with A3 | 0, A1 | [`w12-portability-linux-bench`](../plans/w12-portability-linux-bench.plan.md), [`w15-portability-proxmox`](../plans/w15-portability-proxmox.plan.md) |
-| B2 | Real PMM | Bitmap physical allocator behind the `[MM]` marker; real memory map from boot_info | generation run: 0 allocator lines on gemma4 (1 non-compiling header); [report](../reports/w13-generate-mm-report.md). Awaits a capable model (owner) or the labelled human fallback | with C2 | A1 | [`w13-generate-mm`](../plans/w13-generate-mm.plan.md) |
-| B3 | UEFI boot path | `x86_64-efi` GRUB target + `grub-efi.cfg`; boots in QEMU/OVMF | planned | - | A1 | [`w12-portability-uefi`](../plans/w12-portability-uefi.plan.md) |
-| B4 | Metal boot-only | USB media, serial capture, boots to `auton>` on the physical machine. No net, no storage | planned | - | 0, B2, B3 | [`w16-portability-metal`](../plans/w16-portability-metal.plan.md) |
-| B5 | Metal networking | One real NIC driver for that machine; real DHCP lease from the LAN | planned | - | B4 | [`w16-portability-metal`](../plans/w16-portability-metal.plan.md) |
-| C1 | Control-plane on Linux+Windows | controlplane test suite + all three surfaces green on both hosts | Linux green (178 passed, container), 3 host bugs fixed; CI matrix + per-surface smoke wired for macOS/Linux/Windows, unrun until push; [report](../reports/w13-portability-controlplane-hosts-report.md) | with A1 | - | [`w13-portability-controlplane-hosts`](../plans/w13-portability-controlplane-hosts.plan.md) |
-| C2 | KVM OS profiles made real | windows-dockur / android / macos-dockur actually booted on Proxmox; profiles.py corrected to observed truth | planned | with B2 | 0, C1 | [`w15-portability-proxmox`](../plans/w15-portability-proxmox.plan.md) |
-| D1 | HAL extraction | Implement `hal.md`; refactor x86_64 behind it; grep gate forbidding direct arch calls in portable code | planned | - | A1, PRD#1 ph.2 | [`w12-portability-hal-extraction`](../plans/w12-portability-hal-extraction.plan.md) |
-| D2 | Second architecture | aarch64 (recommended) port to `auton>` in QEMU, rule-engine backend, arch acceptance markers | planned | - | D1 | [`w14-portability-aarch64`](../plans/w14-portability-aarch64.plan.md) |
+| A3 | WSL2 Windows bench | WSL2 setup path, WHPX acceleration, E2E green; native-Windows explicitly ruled out in docs | planned | with B1 | A2 | [`w15-portability-wsl2`](../plans/completed/w15-portability-wsl2.plan.md) |
+| B1 | KVM boot on Proxmox | Same ISO, `/dev/kvm`, timed against TCG; the 10x metric | planned | with A3 | 0, A1 | [`w12-portability-linux-bench`](../plans/completed/w12-portability-linux-bench.plan.md), [`w15-portability-proxmox`](../plans/completed/w15-portability-proxmox.plan.md) |
+| B2 | Real PMM | Bitmap physical allocator behind the `[MM]` marker; real memory map from boot_info | generation run: 0 allocator lines on gemma4 (1 non-compiling header); [report](../reports/w13-generate-mm-report.md). Awaits a capable model (owner) or the labelled human fallback | with C2 | A1 | [`w13-generate-mm`](../plans/completed/w13-generate-mm.plan.md) |
+| B3 | UEFI boot path | `x86_64-efi` GRUB target + `grub-efi.cfg`; boots in QEMU/OVMF | planned | - | A1 | [`w12-portability-uefi`](../plans/completed/w12-portability-uefi.plan.md) |
+| B4 | Metal boot-only | USB media, serial capture, boots to `auton>` on the physical machine. No net, no storage | planned | - | 0, B2, B3 | [`w16-portability-metal`](../plans/completed/w16-portability-metal.plan.md) |
+| B5 | Metal networking | One real NIC driver for that machine; real DHCP lease from the LAN | planned | - | B4 | [`w16-portability-metal`](../plans/completed/w16-portability-metal.plan.md) |
+| C1 | Control-plane on Linux+Windows | controlplane test suite + all three surfaces green on both hosts | Linux green (178 passed, container), 3 host bugs fixed; CI matrix + per-surface smoke wired for macOS/Linux/Windows, unrun until push; [report](../reports/w13-portability-controlplane-hosts-report.md) | with A1 | - | [`w13-portability-controlplane-hosts`](../plans/completed/w13-portability-controlplane-hosts.plan.md) |
+| C2 | KVM OS profiles made real | windows-dockur / android / macos-dockur actually booted on Proxmox; profiles.py corrected to observed truth | planned | with B2 | 0, C1 | [`w15-portability-proxmox`](../plans/completed/w15-portability-proxmox.plan.md) |
+| D1 | HAL extraction | Implement `hal.md`; refactor x86_64 behind it; grep gate forbidding direct arch calls in portable code | planned | - | A1, PRD#1 ph.2 | [`w12-portability-hal-extraction`](../plans/completed/w12-portability-hal-extraction.plan.md) |
+| D2 | Second architecture | aarch64 (recommended) port to `auton>` in QEMU, rule-engine backend, arch acceptance markers | planned | - | D1 | [`w14-portability-aarch64`](../plans/completed/w14-portability-aarch64.plan.md) |
 
 ### Phase Details
 

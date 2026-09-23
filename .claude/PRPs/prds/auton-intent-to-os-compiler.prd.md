@@ -4,7 +4,7 @@
 **Created**: 2026-09-12
 **Layer**: the user-facing intent surface. The generation engine beneath it is
 [`auton-service-kernel-factory.prd.md`](./auton-service-kernel-factory.prd.md) — read that first.
-**Supersedes**: [`auton-real-world-deployments-and-silicon.prd.md`](./auton-real-world-deployments-and-silicon.prd.md)
+**Supersedes**: `auton-real-world-deployments-and-silicon.prd.md` (removed; its grounding fix, device-table design and scenario list were carried into this document)
 
 > **Scope boundary.** The factory PRD answers *"how does one minimal bootable image get
 > generated from a spec?"* — manifest-driven builds, a `kernel_spec/services/` format, the
@@ -244,10 +244,10 @@ Numbered to avoid collision with the factory's phases, which are cited as `F<n>`
 | D | Scoped corpus | `build_corpus.py --manifest`; grounding fix folded in; garbage re-measured | B |
 | E | Leakage enforcement | Excluded-subsystem symbols fail the build | C, **F5** |
 | F | Packaging | `--output <dir>`: ISO, installer, scoped model, spec subset, provenance | C, E |
-| G | I1 Doom — **spec + input decision done, still blocked**, [report](../reports/w11-intent-doom-report.md): needs a generated tree and a doomgeneric (GPL-2.0) licence decision — *planned: [`w14-intent-doom-boots`](../plans/w14-intent-doom-boots.plan.md)* | `AUTON train "I want to play Doom" --output ./Doom` boots and plays | F |
-| H | I2 host-this-repo — *planned: [`w14-intent-host-repo`](../plans/w14-intent-host-repo.plan.md)* | Second intent, disjoint capabilities; image sizes measurably differ | F |
+| G | I1 Doom — **spec + input decision done, still blocked**, [report](../reports/w11-intent-doom-report.md): needs a generated tree and a doomgeneric (GPL-2.0) licence decision — *planned: [`w14-intent-doom-boots`](../plans/completed/w14-intent-doom-boots.plan.md)* | `AUTON train "I want to play Doom" --output ./Doom` boots and plays | F |
+| H | I2 host-this-repo — *planned: [`w14-intent-host-repo`](../plans/completed/w14-intent-host-repo.plan.md)* | Second intent, disjoint capabilities; image sizes measurably differ | F |
 | I | Device table — **complete**, [report](../reports/w10-intent-device-table-report.md) | Compiled PCI/USB table in the model file; retrieval-only device facts | D |
-| J | I6 real silicon — *planned: [`w15-intent-real-silicon`](../plans/w15-intent-real-silicon.plan.md)* | Driver selection on hardware absent from the corpus | I |
+| J | I6 real silicon — *planned: [`w15-intent-real-silicon`](../plans/completed/w15-intent-real-silicon.plan.md)* | Driver selection on hardware absent from the corpus | I |
 
 **Blocked on the factory**: C needs F2 (spec format), E needs F5 (validator wiring), and
 everything downstream of generation needs the agent loop to dispatch at all — currently

@@ -446,18 +446,18 @@ Prefixed `H` to avoid collision with the factory (`F`) and intent (`A`–`J`) ph
 | H4 | Errata table format | Schema, compiled layout, model-file section, `VERSION` bump | H2 |
 | H5 | Identity at boot | Exact silicon identity: CPUID family/model/stepping, microcode revision, board/vendor via SMBIOS/DT | — |
 | H6 | Mitigation registry | Mitigations as spec, with cost and a verification method | H4 |
-| H7 | Generated mitigations — **not runnable: no VMM**, [report](../reports/w11-hardware-generated-mitigations-report.md). F00F `requires: vmm`, phantom in every tree — *planned: [`w14-hardware-h7-run`](../plans/w14-hardware-h7-run.plan.md)* | Agents implement from spec; validators gate; F00F-class IDT remap as the worked example | H6, **F5** |
+| H7 | Generated mitigations — **not runnable: no VMM**, [report](../reports/w11-hardware-generated-mitigations-report.md). F00F `requires: vmm`, phantom in every tree — *planned: [`w14-hardware-h7-run`](../plans/completed/w14-hardware-h7-run.plan.md)* | Agents implement from spec; validators gate; F00F-class IDT remap as the worked example | H6, **F5** |
 | H8 | "Is this machine safe?" | The OS reports applicable, mitigated, declined, and unmitigatable errata | H5, H7 |
-| H9 | Errata lineage — *planned: [`w13-hardware-errata-lineage`](../plans/w13-hardware-errata-lineage.plan.md)* | Families as lineages; erratum classes; historical corpus made predictive | H2, H3 |
-| H10 | Conformance harness — *planned: [`w14-hardware-conformance-harness`](../plans/w14-hardware-conformance-harness.plan.md)* | Spec-clause-cited tests; runs on real hardware | H1, H5 |
-| H10a | **Semantic conformance** — *planned: [`w14-hardware-conformance-harness`](../plans/w14-hardware-conformance-harness.plan.md)* | Differential execution against SoftFloat/MPFR; spec-derived corner cases; the FDIV class | H10 |
-| H10b | **Fault conformance** — *planned: [`w14-hardware-conformance-harness`](../plans/w14-hardware-conformance-harness.plan.md)* | Invalid and reserved encodings assert the architected exception; the F00F class | H10 |
-| H10c | **Generated self-tests** — *planned: [`w15-hardware-conformance-every-image`](../plans/w15-hardware-conformance-every-image.plan.md)* | The factory emits an intent-scoped conformance suite per image | H10a, H10b, **F5** |
-| H10d | **Install-time verification** — *planned: [`w15-hardware-conformance-every-image`](../plans/w15-hardware-conformance-every-image.plan.md)* | Every deployment tests its own silicon and can report it in chat | H10c, H8 |
-| H10e | **Fleet reporting** — *planned: [`w16-hardware-fleet-reporting`](../plans/w16-hardware-fleet-reporting.plan.md)* | Divergences aggregate across deployments, with consent. Scale is the mechanism | H10d, H11 |
+| H9 | Errata lineage — *planned: [`w13-hardware-errata-lineage`](../plans/completed/w13-hardware-errata-lineage.plan.md)* | Families as lineages; erratum classes; historical corpus made predictive | H2, H3 |
+| H10 | Conformance harness — *planned: [`w14-hardware-conformance-harness`](../plans/completed/w14-hardware-conformance-harness.plan.md)* | Spec-clause-cited tests; runs on real hardware | H1, H5 |
+| H10a | **Semantic conformance** — *planned: [`w14-hardware-conformance-harness`](../plans/completed/w14-hardware-conformance-harness.plan.md)* | Differential execution against SoftFloat/MPFR; spec-derived corner cases; the FDIV class | H10 |
+| H10b | **Fault conformance** — *planned: [`w14-hardware-conformance-harness`](../plans/completed/w14-hardware-conformance-harness.plan.md)* | Invalid and reserved encodings assert the architected exception; the F00F class | H10 |
+| H10c | **Generated self-tests** — *planned: [`w15-hardware-conformance-every-image`](../plans/completed/w15-hardware-conformance-every-image.plan.md)* | The factory emits an intent-scoped conformance suite per image | H10a, H10b, **F5** |
+| H10d | **Install-time verification** — *planned: [`w15-hardware-conformance-every-image`](../plans/completed/w15-hardware-conformance-every-image.plan.md)* | Every deployment tests its own silicon and can report it in chat | H10c, H8 |
+| H10e | **Fleet reporting** — *planned: [`w16-hardware-fleet-reporting`](../plans/completed/w16-hardware-fleet-reporting.plan.md)* | Divergences aggregate across deployments, with consent. Scale is the mechanism | H10d, H11 |
 | H11 | Disclosure pipeline | Private records, vendor contacts, embargo tracking | H10 |
 | H12 | Unmitigated sweep — *complete: 51 of 94 ADL errata documented-unmitigated (Linux+FreeBSD, exact id/title, 2026-09-22); [report](../reports/w13-hardware-unmitigated-sweep-report.md)* | Published errata that no OS mitigates on the test fleet. Report with a count |
-| H13 | Device table merge — *planned: [`w13-hardware-table-merge`](../plans/w13-hardware-table-merge.plan.md)* | Fold the intent PRD's device table and this errata table into one shipped section | **I** (intent PRD) |
+| H13 | Device table merge — *planned: [`w13-hardware-table-merge`](../plans/completed/w13-hardware-table-merge.plan.md)* | Fold the intent PRD's device table and this errata table into one shipped section | **I** (intent PRD) |
 
 **H0 first, without exception.** Pointing an agent loop that interpolates into a shell at
 externally fetched vendor documents is the worst sequencing available in this document.

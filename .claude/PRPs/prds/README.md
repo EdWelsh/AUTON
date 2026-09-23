@@ -59,7 +59,7 @@ reproduce silicon divergence.
 training pipeline, all of which still stand. Its kernel work was hand-written, which
 contradicted the premise; those capabilities are now spec.
 
-**[`auton-real-world-deployments-and-silicon.prd.md`](./auton-real-world-deployments-and-silicon.prd.md)** —
+**`auton-real-world-deployments-and-silicon.prd.md`** (removed, not archived) —
 **superseded**. Planned features for one general kernel, and mis-triaged its own scenarios by
 what they sounded like rather than by reading the tree. Its grounding fix, device-table design
 and scenario list were carried into (2).

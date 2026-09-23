@@ -25,7 +25,7 @@
 
 > How AUTON builds purpose-built kernels for other services — one minimal bootable image
 > per service, generated and validated by the existing agent loop.
-> Companion to [auton-e2e-train-boot-human-test.prd.md](./auton-e2e-train-boot-human-test.prd.md)
+> Companion to [auton-e2e-train-boot-human-test.prd.md](completed/auton-e2e-train-boot-human-test.prd.md)
 > (the verification spine) and [auton-windows-linux.prd.md](./auton-windows-linux.prd.md)
 > (which shares the physical-memory-manager prerequisite).
 
@@ -291,12 +291,12 @@ for genuinely autonomous agent-loop authorship.
 | 4 | Service #1 — DHCP server (prove the factory) | Human-authored against the spec; static-IP manifest path; `auton-dhcp.iso` serves real leases | complete | - | 1, 2 | `completed/w3-factory-dhcp-service` |
 | 5 | Factory pipeline + gates | `auton build-service <name>`; wire build/test/**composition** validators; per-image marker sets | complete | - | 4 | `completed/w3-factory-pipeline` |
 | 6 | Service #2 — agent-loop authored — **DONE on a qualified model (qwen3.5:27b): 430 lines, 31/31 of the frozen gate suite, having never seen it**; [report](../reports/w14-f6-qwen-report.md). Two harness defects masked it on the day (the gate's stub shadowed libk; the engine orphaned uncommitted work), both fixed with tests. Still owed: the agent's own tests — that task never ran. Earlier gemma4 runs: 0 lines, [w11](../reports/w11-factory-agent-authored-service-report.md) |
-| 7 | Storage unlock — block driver + minimal FS | virtio-blk or ATA PIO + FAT32 behind a small VFS interface | specified + gated (FAT32 spec, host suites, `run-storage-acceptance.sh`); generation on gemma4: 0 lines, [report](../reports/w13-generate-storage-report.md). Awaits a capable model (owner) | with 6 | 3 | [`w12-factory-storage-fat32-spec`](../plans/w12-factory-storage-fat32-spec.plan.md), [`w13-generate-storage`](../plans/w13-generate-storage.plan.md) |
-| 8 | Service #3 — file server | HTTP/simple-protocol docroot served from the filesystem | planned | with 9 | 7 | [`w14-factory-fileserver`](../plans/w14-factory-fileserver.plan.md) |
-| 9 | Service #4 — key-value database | Persistent KV store + query verbs over the network | planned | with 8 | 7 | [`w14-factory-kvstore`](../plans/w14-factory-kvstore.plan.md) |
-| 10 | Service #5 — SSH (gated) | Only if a vetted freestanding crypto port exists. Otherwise cut and recorded as cut | **gate GO** (Monocypher + BearSSL, 6 primitives x 4 criteria, [record](../../../agent/kernel_spec/decisions/ssh-crypto.md)); `ssh.md` specified + 28-check host suite (8/8 injected bugs); implementation awaits a capable model. [report](../reports/w14-factory-ssh-gate-report.md) | - | 5 | [`w14-factory-ssh-gate`](../plans/w14-factory-ssh-gate.plan.md) |
-| 11 | Service #6 — email server | SMTP receive + mail storage. The heaviest row, deliberately last | planned | - | 7, 8 | [`w15-factory-email`](../plans/w15-factory-email.plan.md) |
-| 12 | Catalogue + roles.c truth-up | `roles.c` reflects which services have real images; chat points at them | planned | - | 8, 9 | [`w15-factory-catalogue`](../plans/w15-factory-catalogue.plan.md) |
+| 7 | Storage unlock — block driver + minimal FS | virtio-blk or ATA PIO + FAT32 behind a small VFS interface | specified + gated (FAT32 spec, host suites, `run-storage-acceptance.sh`); generation on gemma4: 0 lines, [report](../reports/w13-generate-storage-report.md). Awaits a capable model (owner) | with 6 | 3 | [`w12-factory-storage-fat32-spec`](../plans/completed/w12-factory-storage-fat32-spec.plan.md), [`w13-generate-storage`](../plans/completed/w13-generate-storage.plan.md) |
+| 8 | Service #3 — file server | HTTP/simple-protocol docroot served from the filesystem | planned | with 9 | 7 | [`w14-factory-fileserver`](../plans/completed/w14-factory-fileserver.plan.md) |
+| 9 | Service #4 — key-value database | Persistent KV store + query verbs over the network | planned | with 8 | 7 | [`w14-factory-kvstore`](../plans/completed/w14-factory-kvstore.plan.md) |
+| 10 | Service #5 — SSH (gated) | Only if a vetted freestanding crypto port exists. Otherwise cut and recorded as cut | **gate GO** (Monocypher + BearSSL, 6 primitives x 4 criteria, [record](../../../agent/kernel_spec/decisions/ssh-crypto.md)); `ssh.md` specified + 28-check host suite (8/8 injected bugs); implementation awaits a capable model. [report](../reports/w14-factory-ssh-gate-report.md) | - | 5 | [`w14-factory-ssh-gate`](../plans/completed/w14-factory-ssh-gate.plan.md) |
+| 11 | Service #6 — email server | SMTP receive + mail storage. The heaviest row, deliberately last | planned | - | 7, 8 | [`w15-factory-email`](../plans/completed/w15-factory-email.plan.md) |
+| 12 | Catalogue + roles.c truth-up | `roles.c` reflects which services have real images; chat points at them | planned | - | 8, 9 | [`w15-factory-catalogue`](../plans/completed/w15-factory-catalogue.plan.md) |
 
 ### Phase Details
 
