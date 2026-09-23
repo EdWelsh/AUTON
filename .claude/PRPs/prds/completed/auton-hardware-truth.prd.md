@@ -1,5 +1,10 @@
 # AUTON Hardware Truth: Vendor Specifications, Silicon Errata, and Fault Discovery
 
+> **Closed 2026-09-23. Superseded for everything still open by**
+> [`auton-completion.prd.md`](../auton-completion.prd.md).
+>
+> Phases H7, H9, H10c, H10d, H10e are carried to **R10, R11, X2, D2**, each with the gate that decides it. The phases below record what was built and what it was measured against; nothing open is tracked here any more, so there is one place to look rather than five.
+
 **Status**: draft
 **Created**: 2026-09-12
 **Depends on**: [`auton-service-kernel-factory.prd.md`](./auton-service-kernel-factory.prd.md)
@@ -456,8 +461,8 @@ Prefixed `H` to avoid collision with the factory (`F`) and intent (`A`–`J`) ph
 | H10d | **Install-time verification** — **not built**: it needs H10c's in-kernel runner inside a generated image | Every deployment tests its own silicon and can report it in chat | H10c, H8 |
 | H10e | **Fleet reporting** — **complete except the endpoint**: allowlist schema, local aggregator, consent dialogue specified (default no). Where a report goes is an owner decision, written up in `decisions/fleet-endpoint.md` | Divergences aggregate across deployments, with consent. Scale is the mechanism | H10d, H11 |
 | H11 | Disclosure pipeline | Private records, vendor contacts, embargo tracking | H10 |
-| H12 | Unmitigated sweep — *complete: 51 of 94 ADL errata documented-unmitigated (Linux+FreeBSD, exact id/title, 2026-09-22); [report](../reports/w13-hardware-unmitigated-sweep-report.md)* | Published errata that no OS mitigates on the test fleet. Report with a count |
-| H13 | Device table merge — **complete**, [report](../reports/w13-hardware-table-merge-report.md) | Fold the intent PRD's device table and this errata table into one shipped section | **I** (intent PRD) |
+| H12 | Unmitigated sweep — *complete: 51 of 94 ADL errata documented-unmitigated (Linux+FreeBSD, exact id/title, 2026-09-22); [report](../../reports/w13-hardware-unmitigated-sweep-report.md)* | Published errata that no OS mitigates on the test fleet. Report with a count |
+| H13 | Device table merge — **complete**, [report](../../reports/w13-hardware-table-merge-report.md) | Fold the intent PRD's device table and this errata table into one shipped section | **I** (intent PRD) |
 
 **H0 first, without exception.** Pointing an agent loop that interpolates into a shell at
 externally fetched vendor documents is the worst sequencing available in this document.

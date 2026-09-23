@@ -38,8 +38,8 @@
 > `.claude/PRPs/reports/`.
 >
 > Forward-looking work lives in
-> [`auton-service-kernel-factory.prd.md`](../auton-service-kernel-factory.prd.md) (generation)
-> and [`auton-intent-to-os-compiler.prd.md`](../auton-intent-to-os-compiler.prd.md) (intent).
+> [`auton-service-kernel-factory.prd.md`](./auton-service-kernel-factory.prd.md) (generation)
+> and [`auton-intent-to-os-compiler.prd.md`](./auton-intent-to-os-compiler.prd.md) (intent).
 
 ## Problem Statement
 

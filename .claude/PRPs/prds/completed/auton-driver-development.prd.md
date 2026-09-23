@@ -1,5 +1,10 @@
 # PRD: Driver Selection, Synthesis and Provenance
 
+> **Closed 2026-09-23. Superseded for everything still open by**
+> [`auton-completion.prd.md`](../auton-completion.prd.md).
+>
+> Phases V8 and V10 are carried to **R8 and X1**, each with the gate that decides it. The phases below record what was built and what it was measured against; nothing open is tracked here any more, so there is one place to look rather than five.
+
 **Status**: proposed
 **Depends on**: hardware definition (`auton-hardware-definition.prd.md`) entirely; F5 (factory
 pipeline, landed); H6 (mitigation registry, landed)
@@ -166,15 +171,15 @@ Specifically:
 
 | # | Phase | Deliverable | Depends on |
 |---|---|---|---|
-| V1 | **Truth up the capability index** — **complete**, [report](../reports/w6-driver-capability-honesty-report.md) | **27** capabilities across **11** subsystems have no source mapping, not the two first reported. Most of that is correct per-tree information; the defect is that nothing acts on it — `resolve()` computes the list, `main()` warns to stderr, and the pipeline never reads it. Make it load-bearing | — |
-| V2 | **Decision record format** — **complete**, [report](../reports/w6-driver-decision-record-report.md) | `kernel_spec/drivers/` per-device records; `verification` mandatory and executable; two worked examples of different strategies | D1 |
+| V1 | **Truth up the capability index** — **complete**, [report](../../reports/w6-driver-capability-honesty-report.md) | **27** capabilities across **11** subsystems have no source mapping, not the two first reported. Most of that is correct per-tree information; the defect is that nothing acts on it — `resolve()` computes the list, `main()` warns to stderr, and the pipeline never reads it. Make it load-bearing | — |
+| V2 | **Decision record format** — **complete**, [report](../../reports/w6-driver-decision-record-report.md) | `kernel_spec/drivers/` per-device records; `verification` mandatory and executable; two worked examples of different strategies | D1 |
 | V3 | **Identification from the registry** — **complete**, same report | A device id yields its identity from ingested `pci.ids` with provenance — deterministic, no model | H2 |
-| V4 | **Strategy selection** — **complete**, [report](../reports/w7-driver-strategy-selection-report.md) | reuse / port / synthesize, from stated criteria, with the rationale recorded. Refuses rather than guessing when no option is defensible | V2, V3 |
-| V5 | **virtio-net, human-authored** — **complete**, [report](../reports/w7-driver-virtio-net-report.md) | The control, as DHCP was for services. virtio because microVMs need it and its spec is open | V2, F5 |
-| V6 | **virtio-blk** — **complete**, [report](../reports/w8-driver-virtio-blk-report.md) | Unblocks storage, and with it the whole service ladder F7–F11 | V5 |
-| V7 | **Framebuffer + input** — **complete**, [report](../reports/w8-driver-framebuffer-input-report.md) | Unblocks Doom, which is the PRD-set's headline intent and currently `INCOMPLETE` | V5 |
-| V8 | **Agent-authored driver** — **re-run w13 on the repaired loop: one invalid record, no reference or tests**, [report](../reports/w13-driver-v8-rerun-report.md); gate suite frozen (29 checks, 8/8 injected bugs); awaits a capable model (owner). w11: **run once, produced nothing**, [report](../reports/w11-driver-agent-authored-report.md). Loop defects, not the model: empty-diff review + terminal rejection. Re-run after the loop fix — *planned: [`w13-driver-v8-rerun`](../plans/completed/w13-driver-v8-rerun.plan.md)* | The real test: the loop drafts a driver from a vendor spec, a human reviews, cost measured against V5. Requires the F6 workspace fix | V5, F6 |
-| V9 | **Verification harness** — **complete**, [report](../reports/w7-driver-verification-gate-report.md) | Driver verification runs in the factory pipeline as a gate, like leakage | V2, F5 |
+| V4 | **Strategy selection** — **complete**, [report](../../reports/w7-driver-strategy-selection-report.md) | reuse / port / synthesize, from stated criteria, with the rationale recorded. Refuses rather than guessing when no option is defensible | V2, V3 |
+| V5 | **virtio-net, human-authored** — **complete**, [report](../../reports/w7-driver-virtio-net-report.md) | The control, as DHCP was for services. virtio because microVMs need it and its spec is open | V2, F5 |
+| V6 | **virtio-blk** — **complete**, [report](../../reports/w8-driver-virtio-blk-report.md) | Unblocks storage, and with it the whole service ladder F7–F11 | V5 |
+| V7 | **Framebuffer + input** — **complete**, [report](../../reports/w8-driver-framebuffer-input-report.md) | Unblocks Doom, which is the PRD-set's headline intent and currently `INCOMPLETE` | V5 |
+| V8 | **Agent-authored driver** — **re-run w13 on the repaired loop: one invalid record, no reference or tests**, [report](../../reports/w13-driver-v8-rerun-report.md); gate suite frozen (29 checks, 8/8 injected bugs); awaits a capable model (owner). w11: **run once, produced nothing**, [report](../../reports/w11-driver-agent-authored-report.md). Loop defects, not the model: empty-diff review + terminal rejection. Re-run after the loop fix — *planned: [`w13-driver-v8-rerun`](../../plans/completed/w13-driver-v8-rerun.plan.md)* | The real test: the loop drafts a driver from a vendor spec, a human reviews, cost measured against V5. Requires the F6 workspace fix | V5, F6 |
+| V9 | **Verification harness** — **complete**, [report](../../reports/w7-driver-verification-gate-report.md) | Driver verification runs in the factory pipeline as a gate, like leakage | V2, F5 |
 | V10 | **Errata join** — *deferred on data, not design*: blocked on one Intel NIC specification update a person must download (the CDN refuses curl). The join and the 'add a field only for a real pair' rule are ready | A driver for silicon with applicable errata reports them, and applies a mitigation where H6 has one | H4, H6 |
 
 ## Risks

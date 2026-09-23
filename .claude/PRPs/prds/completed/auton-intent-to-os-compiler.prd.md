@@ -1,10 +1,15 @@
 # AUTON: Intent to Operating System
 
+> **Closed 2026-09-23. Superseded for everything still open by**
+> [`auton-completion.prd.md`](../auton-completion.prd.md).
+>
+> Phases G, H, J and the scenario corpus are carried to **R12, R6, X3 and the validation scenarios C1–C6**, each with the gate that decides it. The phases below record what was built and what it was measured against; nothing open is tracked here any more, so there is one place to look rather than five.
+
 **Status**: draft
 **Created**: 2026-09-12
 **Layer**: the user-facing intent surface. The generation engine beneath it is
 [`auton-service-kernel-factory.prd.md`](./auton-service-kernel-factory.prd.md) — read that first.
-**Supersedes**: `auton-real-world-deployments-and-silicon.prd.md` (removed; its grounding fix, device-table design and scenario list were carried into this document)
+**Supersedes**: [`auton-real-world-deployments-and-silicon.prd.md`](../superseded/auton-real-world-deployments-and-silicon.prd.md) — its grounding fix, device-table design and scenario list were carried into this document
 
 > **Scope boundary.** The factory PRD answers *"how does one minimal bootable image get
 > generated from a spec?"* — manifest-driven builds, a `kernel_spec/services/` format, the
@@ -263,7 +268,7 @@ Numbered to avoid collision with the factory's phases, which are cited as `F<n>`
 | F | Packaging | `--output <dir>`: ISO, installer, scoped model, spec subset, provenance | C, E |
 | G | I1 Doom — **spec, input decision and external probe done** (`run-intent-probe.sh doom` grades the framebuffer via QEMU's monitor). Building needs a generation run; **distributing** needs the engine-licence decision (`decisions/doom-engine-licence.md`) | `AUTON train "I want to play Doom" --output ./Doom` boots and plays | F |
 | H | I2 host-this-repo — **complete except the build**: `host-repo.md`, a 28-check suite, `--clone` proved by real git, `package_image.py --repo`, and the external probe. The image itself needs a generation run | Second intent, disjoint capabilities; image sizes measurably differ | F |
-| I | Device table — **complete**, [report](../reports/w10-intent-device-table-report.md) | Compiled PCI/USB table in the model file; retrieval-only device facts | D |
+| I | Device table — **complete**, [report](../../reports/w10-intent-device-table-report.md) | Compiled PCI/USB table in the model file; retrieval-only device facts | D |
 | J | I6 real silicon — **blocked on hardware**: an x86 machine to run on. The harness, oracle and disclosure path are built | Driver selection on hardware absent from the corpus | I |
 
 **Blocked on the factory**: C needs F2 (spec format), E needs F5 (validator wiring), and

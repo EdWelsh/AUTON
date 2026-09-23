@@ -5,6 +5,24 @@ system from a stated need. `README.md:11` — *"We don't write the kernel. The a
 
 Everything below is aligned to that. If a PRD contradicts it, the PRD is wrong.
 
+## Start here (2026-09-23)
+
+**One PRD is open: [`auton-completion.prd.md`](./auton-completion.prd.md).** It carries
+every phase that is not finished — twelve generation runs, three decisions, four things to
+acquire — each with the gate that decides it.
+
+The five PRDs that preceded it are in [`completed/`](./completed/). Their phases are done, and
+each carries a banner saying where its open rows went. They are worth reading for *why* a thing
+is shaped the way it is; they are no longer where you look for what to do next.
+
+The repository's own view of the same work, for a reader who does not have this directory:
+[`docs/OPEN-WORK.md`](../../../docs/OPEN-WORK.md) and
+[`docs/GENERATION-QUEUE.md`](../../../docs/GENERATION-QUEUE.md).
+
+One line of it matters most: **the swarm now works.** On 2026-09-22 an agent wrote a 430-line
+TFTP server that passed all 31 checks of a suite it never saw
+([report](../reports/w14-f6-qwen-report.md)).
+
 ## Current state of the repo, which all of these assume
 
 | Fact | Consequence for planning |
@@ -15,7 +33,7 @@ Everything below is aligned to that. If a PRD contradicts it, the PRD is wrong.
 | Its contracts are in `agent/kernel_spec/` | Prompt contract, module validation, degenerate guard, format versioning, retrieval-only device ID |
 | Kernel tests live in `tests/kernel/`, not in the kernel tree | Verification must not live inside the artifact it verifies |
 | `scripts/e2e.sh --target <dir>` | The spine validates generated output, not a fixed path |
-| The agent loop **dispatches zero tasks** | Gates every generation phase in every PRD below |
+| The agent loop **generates code that passes frozen gates** (2026-09-22) | Generation phases are runnable; what gates them now is turns, time and a push |
 
 ## Two orderings
 
@@ -26,17 +44,17 @@ scheduler fix that appears in no PRD's phase table.
 
 ## Read in this order
 
-**1. [`auton-service-kernel-factory.prd.md`](./auton-service-kernel-factory.prd.md)** —
+**1. [`auton-service-kernel-factory.prd.md`](./completed/auton-service-kernel-factory.prd.md)** —
 *canonical for generation.* One service spec in, one minimal bootable image out. Contains the
 observation the rest depends on: AUTON is already a unikernel, so per-image scoping adds no
 architectural debt. 12 phases, a six-service ladder, and the storage unlock.
 
-**2. [`auton-intent-to-os-compiler.prd.md`](./auton-intent-to-os-compiler.prd.md)** — the
+**2. [`auton-intent-to-os-compiler.prd.md`](./completed/auton-intent-to-os-compiler.prd.md)** — the
 layer above. Turns a sentence (`AUTON train "I want to play Doom" --output ./Doom`) into the
 spec the factory consumes, scopes the SLM to that intent, and packages an installer. Also
 carries the device-table design and the consumer scenario ladder.
 
-**3. [`auton-hardware-truth.prd.md`](./auton-hardware-truth.prd.md)** — what the generated OS
+**3. [`auton-hardware-truth.prd.md`](./completed/auton-hardware-truth.prd.md)** — what the generated OS
 knows about the silicon it runs on. Ingests every public vendor specification and errata
 document, keys them to exact silicon identity, generates mitigations for the faults that
 apply, and — because every generated image carries an intent-scoped conformance suite — tests
@@ -46,7 +64,7 @@ fleet-scale differential testing is how mercurial cores were found more recently
 intent PRD's device table into an errata table. Absorbs the shell-injection fix deferred by
 the orchestrator lane.
 
-**4. [`auton-windows-linux.prd.md`](./auton-windows-linux.prd.md)** — portability. Off one
+**4. [`auton-windows-linux.prd.md`](./completed/auton-windows-linux.prd.md)** — portability. Off one
 Mac, onto real hardware and other architectures. Orthogonal to 1 and 2; its
 "architectures have no source tree" premise is now answered by generation. Note that (3)'s
 conformance harness **requires** this work — QEMU implements an idealised CPU and will not
@@ -59,7 +77,7 @@ reproduce silicon divergence.
 training pipeline, all of which still stand. Its kernel work was hand-written, which
 contradicted the premise; those capabilities are now spec.
 
-**`auton-real-world-deployments-and-silicon.prd.md`** (removed, not archived) —
+**[`auton-real-world-deployments-and-silicon.prd.md`](./superseded/auton-real-world-deployments-and-silicon.prd.md)** —
 **superseded**. Planned features for one general kernel, and mis-triaged its own scenarios by
 what they sounded like rather than by reading the tree. Its grounding fix, device-table design
 and scenario list were carried into (2).
@@ -151,7 +169,7 @@ Two PRDs added after waves 0–4, because the blocker analysis kept returning th
 | PRD | Answers | Blocks |
 |---|---|---|
 | [completed/auton-hardware-definition.prd.md](completed/auton-hardware-definition.prd.md) — **complete, all 8 phases** | *What am I building for?* Five target classes — bare metal, VM, microVM, k8s pod, AUTON-hosted — with every fact carrying a `source` | nothing; it unblocked the driver PRD entirely |
-| [auton-driver-development.prd.md](auton-driver-development.prd.md) | *What drives it?* reuse / port / synthesize per device, with mandatory executable verification | Doom, storage, the whole service ladder |
+| [auton-driver-development.prd.md](./completed/auton-driver-development.prd.md) | *What drives it?* reuse / port / synthesize per device, with mandatory executable verification | Doom, storage, the whole service ladder |
 
 Read them in that order; the second is meaningless without the first.
 
@@ -365,7 +383,7 @@ in any ingested document links a device or a driver to an erratum.
 
 ## Security work has one home
 
-[`auton-hardware-truth.prd.md`](./auton-hardware-truth.prd.md) is the security PRD. Anything
+[`auton-hardware-truth.prd.md`](./completed/auton-hardware-truth.prd.md) is the security PRD. Anything
 deferred to "the security PRD" belongs there — currently the shell-injection path in
 `base_agent.py`, which interpolates tool arguments into `create_subprocess_shell`. Its phase
 H0 fixes that before any vendor-document ingestion, because pointing an agent loop that holds

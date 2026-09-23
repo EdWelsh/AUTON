@@ -11,7 +11,7 @@ point.
 
 ## The ordering, and why it is not the intuitive one
 
-From [`auton-driver-development.prd.md`](../../../.claude/PRPs/prds/auton-driver-development.prd.md):
+From [`auton-driver-development.prd.md`](../../../.claude/PRPs/prds/completed/auton-driver-development.prd.md):
 
 | Option | Optimal for | Costs |
 |---|---|---|

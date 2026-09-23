@@ -18,6 +18,7 @@ defects in our own harness that nearly buried the result.
 | Where to look | What it holds |
 |---|---|
 | [`docs/OPEN-WORK.md`](docs/OPEN-WORK.md) | everything unfinished, its blocker, and the next step |
+| [`auton-completion.prd.md`](.claude/PRPs/prds/auton-completion.prd.md) | the one open PRD: every remaining phase with the gate that decides it. The five it consolidates are in `prds/completed/` |
 | [`docs/GENERATION-QUEUE.md`](docs/GENERATION-QUEUE.md) | each generation run, its command, and the gate that decides it |
 | [`docs/HOST-MATRIX.md`](docs/HOST-MATRIX.md) | what each host can build, boot and verify — and what it cannot |
 

@@ -1,8 +1,10 @@
 # Open work
 
 Every piece of AUTON that is not finished, what blocks it, and the exact next step. One file,
-because the work left is no longer *design* — the plans that designed it are in
-`.claude/PRPs/plans/completed/`, and what remains is running commands and taking decisions.
+because the work left is no longer *design*: all 90 plans and all five original PRDs are closed
+(`.claude/PRPs/plans/completed/`, `.claude/PRPs/prds/completed/`), and a single PRD —
+[`auton-completion.prd.md`](../.claude/PRPs/prds/auton-completion.prd.md) — carries what is
+left, phase by phase, with the gate that decides each one.
 
 Nothing here is blocked on something unnamed. Three kinds of blocker:
 
@@ -39,19 +41,26 @@ the same shape of task, and each is one command.
 | Where a fleet conformance report goes, if anywhere | owner | `agent/kernel_spec/decisions/fleet-endpoint.md` | Nothing else: the format, the consent flow and the local aggregator are built, and the tool has no network code at all |
 | Push this branch | owner | — | 90 commits have never reached CI. Every workflow here is unrun: the Linux e2e, the 3-OS control-plane matrix, the x86 conformance venues |
 
-## not yet scoped
+## the validation scenarios — the swarm's exam, not its backlog
 
-Two rows of the intent PRD's scenario corpus have no phase, no plan and no code, and should not
-be planned until what they rest on does:
+Six sentences, each one `AUTON train` invocation graded by a probe **outside** the image.
+Passing one means the whole chain worked: intent → manifest → spec → generation → gates → boot
+→ external proof. They are not features to implement; they are how we find out whether the
+swarm works.
 
-| Scenario | What it needs that does not exist |
-|---|---|
-| *"a database for user info with RBAC and OAuth"* (I4) | **TLS**, OAuth, and a permission model. The KV store is not this, and the SSH gate's primitives (X25519, Ed25519, ChaCha20-Poly1305) are not a TLS stack |
-| *"I want to interact with yedgi.com"* (I5) | **TLS**, an HTTP client, and a browser-shaped framebuffer surface |
-| *"receive all my emails"* (the second half of I3) | **IMAP**. F11 receives and stores mail and says it has no IMAP; that is scope, not an oversight |
+| # | Scenario | Probe | Runnable when |
+|---|---|---|---|
+| C1 | *"I want to play Doom"* | a non-blank frame, and input that changes it | the Doom run (R12) |
+| C2 | *"host this repo"* | `git clone` the served URL; tree matches HEAD | the repo-server run (R6) |
+| C3 | *"be an email server"* | smtplib delivers; a reboot keeps it | the email run (R5) |
+| C4 | *"a database with RBAC and OAuth"* | OAuth round-trip; a low-privilege query refused | **needs TLS** — no phase, deliberately |
+| C5 | *"interact with yedgi.com"* | page title matches; a form submits | **needs TLS** |
+| C6 | *"my laptop won't connect to wifi"* | the right driver on real silicon; association succeeds | real hardware, and a wifi driver |
 
-The common blocker is TLS, which deserves its own PRD phase with a gate like the SSH crypto
-one — reuse or port, never synthesize — rather than being invented inside a scenario plan.
+C4 and C5 rest on **TLS**, which has no phase on purpose: a TLS stack invented inside a
+scenario plan is the mistake `DEFERRED.md` exists to prevent. It needs its own phase with the
+SSH crypto gate's rule — reuse or port, never synthesize. The second half of C3 ("receive all
+my emails") needs IMAP, which F11 says plainly it does not provide.
 
 ## hardware, and the documents behind a paywall of clicks
 
