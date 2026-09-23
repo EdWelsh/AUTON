@@ -60,8 +60,13 @@ agent/tools/*/target/
 .DS_Store
 Thumbs.db
 
-# Claude Code
-.claude/
+# Claude Code's own scratch stays out; the research record does not.
+# .claude/PRPs holds the PRDs, the 90 closed plans and ~50 experiment reports,
+# and docs/ cites those paths — a citation git ignores resolves for one person
+# and nobody else, which is the phantom-citation defect this project refuses
+# everywhere else.
+.claude/*
+!.claude/PRPs/
 SLM/work/
 SLM/models/exports/
 
