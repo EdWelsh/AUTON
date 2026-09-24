@@ -8,10 +8,10 @@ of that work, phase by phase, with the gate that decides each one.
 
 One PRD of **new** scope was opened on 2026-09-24:
 [`auton-application-to-environment.prd.md`](../.claude/PRPs/prds/auton-application-to-environment.prd.md)
-— give AUTON an application that already exists and a machine, and have it derive the minimum
-environment that runs it. Its phases are not listed in the blocker tables below, because they
-are unstarted rather than blocked: nothing stands in their way but the decision to begin. Its
-two owner decisions are in [decide](#decide).
+— give AUTON an application repository that already exists and a machine, and have an Analyst
+agent work out what it needs and hand the existing swarm a manifest. Its phases are not listed
+in the blocker tables below, because they are unstarted rather than blocked: nothing stands in
+their way but the decision to begin. Its **three** owner decisions are in [decide](#decide).
 
 Nothing here is blocked on something unnamed. Three kinds of blocker:
 
@@ -49,6 +49,7 @@ the same shape of task, and each is one command.
 | Push this branch | owner | — | **Done 2026-09-23.** CI now runs; what it found is tracked above |
 | First substrate for application-to-environment: container or microVM | owner | `agent/kernel_spec/decisions/first-substrate.md` (to be written) | Phase A5 of the application-to-environment PRD. Everything before A5 is substrate-agnostic, so this can wait until A4 |
 | How far to go on syscalls and seccomp | owner | `agent/kernel_spec/decisions/syscall-scope.md` (to be written) | Whether that PRD attempts syscall extraction at all. A seccomp profile that is *almost* right is an outage with a confusing error message |
+| Is a subject application repository trusted? | owner | `agent/kernel_spec/decisions/subject-trust.md` (to be written) | Phase A5. An Analyst agent reads files AUTON did not write and feeds them to a model, then runs the application to observe it. A README saying "ignore previous instructions" is a live injection vector into a task graph other agents execute |
 
 ## the validation scenarios — the swarm's exam, not its backlog
 

@@ -14,9 +14,15 @@ defined: twelve generation runs, three decisions, four things to acquire, each w
 that decides it. Every open row there waits on a generation run.
 
 [`auton-application-to-environment.prd.md`](./auton-application-to-environment.prd.md) is new
-scope, added 2026-09-24: give AUTON an application that already exists and a machine, and have
-it derive the minimum environment that runs it. It waits on nothing, and it is a second front
-end onto the manifest pipeline the intent compiler already built — not a second pipeline.
+scope, added 2026-09-24: give AUTON an application repository that already exists and a machine,
+and have **an Analyst agent** work out what it needs and hand the existing swarm a manifest it
+already knows how to build from. Two new roles, one staging rule, one new tool; everything
+between the manifest and the probe is the loop that already runs. It waits on nothing.
+
+Its governing rule is worth knowing even if you never plan it: **agents gather evidence,
+deterministic tools adjudicate it.** A table cannot read an unfamiliar repository, and a model
+cannot be trusted to name a capability — that failure is measured at 5 phantom hardware
+citations per 50 turns.
 
 The five PRDs that preceded it are in [`completed/`](./completed/). Their phases are done, and
 each carries a banner saying where its open rows went. They are worth reading for *why* a thing
