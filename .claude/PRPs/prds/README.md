@@ -7,9 +7,16 @@ Everything below is aligned to that. If a PRD contradicts it, the PRD is wrong.
 
 ## Start here (2026-09-23)
 
-**One PRD is open: [`auton-completion.prd.md`](./auton-completion.prd.md).** It carries
-every phase that is not finished — twelve generation runs, three decisions, four things to
-acquire — each with the gate that decides it.
+**Two PRDs are open.**
+
+[`auton-completion.prd.md`](./auton-completion.prd.md) is the finish line for work already
+defined: twelve generation runs, three decisions, four things to acquire, each with the gate
+that decides it. Every open row there waits on a generation run.
+
+[`auton-application-to-environment.prd.md`](./auton-application-to-environment.prd.md) is new
+scope, added 2026-09-24: give AUTON an application that already exists and a machine, and have
+it derive the minimum environment that runs it. It waits on nothing, and it is a second front
+end onto the manifest pipeline the intent compiler already built — not a second pipeline.
 
 The five PRDs that preceded it are in [`completed/`](./completed/). Their phases are done, and
 each carries a banner saying where its open rows went. They are worth reading for *why* a thing

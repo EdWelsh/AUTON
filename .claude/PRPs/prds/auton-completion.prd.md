@@ -1,6 +1,10 @@
 # AUTON Completion
 
-**Status**: canonical for all remaining work. The five PRDs it consolidates are in
+**Status**: canonical for all remaining work **that was already defined**. New scope added
+2026-09-24 lives in
+[`auton-application-to-environment.prd.md`](./auton-application-to-environment.prd.md) —
+deriving the minimum environment for an application that already exists. It does not block, and
+is not blocked by, anything below. The five PRDs it consolidates are in
 [`completed/`](./completed/) — their phases are done, and every phase that was not is a phase
 below, carried over with its evidence.
 

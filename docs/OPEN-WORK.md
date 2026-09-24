@@ -1,10 +1,17 @@
 # Open work
 
-Every piece of AUTON that is not finished, what blocks it, and the exact next step. One file,
-because the work left is no longer *design*: all 90 plans and all five original PRDs are closed
-(`.claude/PRPs/plans/completed/`, `.claude/PRPs/prds/completed/`), and a single PRD —
-[`auton-completion.prd.md`](../.claude/PRPs/prds/auton-completion.prd.md) — carries what is
-left, phase by phase, with the gate that decides each one.
+Every piece of AUTON that is not finished, what blocks it, and the exact next step. All 90
+plans and all five original PRDs are closed (`.claude/PRPs/plans/completed/`,
+`.claude/PRPs/prds/completed/`), and
+[`auton-completion.prd.md`](../.claude/PRPs/prds/auton-completion.prd.md) carries what is left
+of that work, phase by phase, with the gate that decides each one.
+
+One PRD of **new** scope was opened on 2026-09-24:
+[`auton-application-to-environment.prd.md`](../.claude/PRPs/prds/auton-application-to-environment.prd.md)
+— give AUTON an application that already exists and a machine, and have it derive the minimum
+environment that runs it. Its phases are not listed in the blocker tables below, because they
+are unstarted rather than blocked: nothing stands in their way but the decision to begin. Its
+two owner decisions are in [decide](#decide).
 
 Nothing here is blocked on something unnamed. Three kinds of blocker:
 
@@ -39,7 +46,9 @@ the same shape of task, and each is one command.
 |---|---|---|---|
 | The Doom engine's licence | owner | `agent/kernel_spec/decisions/doom-engine-licence.md` | **Distributing** a Doom image. Building and probing one locally is not blocked |
 | Where a fleet conformance report goes, if anywhere | owner | `agent/kernel_spec/decisions/fleet-endpoint.md` | Nothing else: the format, the consent flow and the local aggregator are built, and the tool has no network code at all |
-| Push this branch | owner | — | 90 commits have never reached CI. Every workflow here is unrun: the Linux e2e, the 3-OS control-plane matrix, the x86 conformance venues |
+| Push this branch | owner | — | **Done 2026-09-23.** CI now runs; what it found is tracked above |
+| First substrate for application-to-environment: container or microVM | owner | `agent/kernel_spec/decisions/first-substrate.md` (to be written) | Phase A5 of the application-to-environment PRD. Everything before A5 is substrate-agnostic, so this can wait until A4 |
+| How far to go on syscalls and seccomp | owner | `agent/kernel_spec/decisions/syscall-scope.md` (to be written) | Whether that PRD attempts syscall extraction at all. A seccomp profile that is *almost* right is an outage with a confusing error message |
 
 ## the validation scenarios — the swarm's exam, not its backlog
 

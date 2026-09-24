@@ -40,8 +40,8 @@ having closed one task of six. Its gates returned `1` (generated wrong) and `2`
 There is no finished kernel, and this README will not imply otherwise. What
 exists is everything that *judges* a kernel: specifications, gates, oracles,
 acceptance harnesses, and an orchestration loop. What remains is running the
-swarm — tracked in [`docs/OPEN-WORK.md`](docs/OPEN-WORK.md) and the single open
-PRD, [`auton-completion.prd.md`](.claude/PRPs/prds/auton-completion.prd.md).
+swarm — tracked in [`docs/OPEN-WORK.md`](docs/OPEN-WORK.md) and
+[`auton-completion.prd.md`](.claude/PRPs/prds/auton-completion.prd.md).
 
 ### Why there is no kernel here
 
@@ -62,7 +62,8 @@ scripts/kernel-base.sh /tmp/tree          # or --rev kernel-base-v4
 |---|---|
 | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | how the orchestrator, agents and validation layers fit together |
 | [`docs/OPEN-WORK.md`](docs/OPEN-WORK.md) | everything unfinished, its blocker, and the next step |
-| [`auton-completion.prd.md`](.claude/PRPs/prds/auton-completion.prd.md) | the one open PRD: every remaining phase with the gate that decides it |
+| [`auton-completion.prd.md`](.claude/PRPs/prds/auton-completion.prd.md) | finishing what is defined: every remaining phase with the gate that decides it |
+| [`auton-application-to-environment.prd.md`](.claude/PRPs/prds/auton-application-to-environment.prd.md) | new scope: give AUTON an application that already exists and a machine, and derive the minimum environment that runs it |
 | [`docs/GENERATION-QUEUE.md`](docs/GENERATION-QUEUE.md) | each generation run, its command, and the gate that decides it |
 | [`docs/HOST-MATRIX.md`](docs/HOST-MATRIX.md) | what each host can build, boot and verify — and what it cannot |
 | [`agent/kernel_spec/`](agent/kernel_spec/) | the kernel specification the agents are held to |
