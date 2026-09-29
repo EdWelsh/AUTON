@@ -55,3 +55,22 @@ changes only by the tool-boundary fix. Pre-registration addendum below.
 Unchanged except: loop at the tool-boundary commit. Additional prediction: the manager now
 emits one `analyst` task. If it again answers in prose, that is a manager-prompt finding for
 local models, reported separately from A4.
+
+## Run 2 (tool boundary fixed): stopped by the operator in design
+
+**2026-09-29 19:59:55Z → 20:22Z.** Archive: `.artifacts/authorship/2026-09-29-analyst-run2/`.
+
+- The boundary held live. The manager tried `write_file` again, was refused, and then planned.
+- **Prediction missed.** The manager did not make ONE analyst task, as its prompt asks. It made
+  four (`analyst-001`…`004`: analyse source, dependencies, build config, then generate the
+  record), and labelled them with the kernel subsystems `sys` and `pkg`.
+- **Second harness defect.** Because of those labels, the design phase asked the architect to
+  design kernel interfaces for `sys` and `pkg`. After 15 minutes the Analyst had not been
+  reached. **Fixed** in `70a6485`: design covers only subsystems of developer/tester/architect
+  tasks.
+- The operator stopped the run with SIGTERM. The w17 pause worked live, mid-model-call: exit 75,
+  `PAUSED`, graph saved. It was not resumed. The loop had changed, so continuing would be a
+  different experiment presented as the same one.
+
+Run 3 is a fresh run on the fixed loop (`.artifacts/authorship/2026-09-29-analyst-run3/`), with
+the same model, subject, goal and budget.

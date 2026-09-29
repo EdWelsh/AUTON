@@ -76,7 +76,9 @@ if grep -q "Refusing to resume" "$LOG"; then
 	exit 2
 fi
 if grep -q "Orchestration paused" "$LOG"; then
-	echo "ORCHESTRATOR: PAUSED after ${TIMEOUT}s — work in flight committed, graph saved"
+	# Paused by the budget or by a signal from outside; either way resumable.
+	if [ "$rc" -eq 124 ]; then why="at the ${TIMEOUT}s budget"; else why="on a signal"; fi
+	echo "ORCHESTRATOR: PAUSED $why — work in flight committed, graph saved"
 	echo "  resume: ORCH_CONFIG=$CONFIG scripts/orchestrate-native.sh --resume"
 	exit 75
 fi
