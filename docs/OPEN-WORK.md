@@ -47,9 +47,9 @@ the same shape of task, and each is one command.
 | The Doom engine's licence | owner | `agent/kernel_spec/decisions/doom-engine-licence.md` | **Distributing** a Doom image. Building and probing one locally is not blocked |
 | Where a fleet conformance report goes, if anywhere | owner | `agent/kernel_spec/decisions/fleet-endpoint.md` | Nothing else: the format, the consent flow and the local aggregator are built, and the tool has no network code at all |
 | Push this branch | owner | — | **Done 2026-09-23.** CI now runs; what it found is tracked above |
-| First substrate for application-to-environment: container or microVM | owner | `agent/kernel_spec/decisions/first-substrate.md` (to be written) | Phase A5 of the application-to-environment PRD. Everything before A5 is substrate-agnostic, so this can wait until A4 |
-| How far to go on syscalls and seccomp | owner | `agent/kernel_spec/decisions/syscall-scope.md` (to be written) | Whether that PRD attempts syscall extraction at all. A seccomp profile that is *almost* right is an outage with a confusing error message |
-| Is a subject application repository trusted? | owner | `agent/kernel_spec/decisions/subject-trust.md` (to be written) | Phase A5. An Analyst agent reads files AUTON did not write and feeds them to a model, then runs the application to observe it. A README saying "ignore previous instructions" is a live injection vector into a task graph other agents execute |
+| First substrate for application-to-environment: container or microVM | owner | [`decisions/first-substrate.md`](../agent/kernel_spec/decisions/first-substrate.md) | Phase A5 of the application-to-environment PRD. Everything before A5 is substrate-agnostic, so this can wait until A4 |
+| How far to go on syscalls and seccomp | owner | [`decisions/syscall-scope.md`](../agent/kernel_spec/decisions/syscall-scope.md) | Whether that PRD attempts syscall extraction at all. A seccomp profile that is *almost* right is an outage with a confusing error message |
+| Is a subject application repository trusted? | owner | [`decisions/subject-trust.md`](../agent/kernel_spec/decisions/subject-trust.md) | Phase A5. An Analyst agent reads files AUTON did not write and feeds them to a model, then runs the application to observe it. A README saying "ignore previous instructions" is a live injection vector into a task graph other agents execute |
 
 ## the validation scenarios — the swarm's exam, not its backlog
 
@@ -73,6 +73,8 @@ SSH crypto gate's rule — reuse or port, never synthesize. The second half of C
 my emails") needs IMAP, which F11 says plainly it does not provide.
 
 ## hardware, and the documents behind a paywall of clicks
+
+Each row, as one command and one gate: [`ACQUIRE.md`](ACQUIRE.md).
 
 | What | Needs | Already done |
 |---|---|---|

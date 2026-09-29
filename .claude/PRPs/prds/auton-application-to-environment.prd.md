@@ -231,9 +231,9 @@ is not a tool that never over-claims.
 | A8 | **The Packager agent.** New `AgentRole.PACKAGER`: validated manifest → deployable artifact | Same three-part registration gate as A3. The artifact builds and the application starts | A6, D-A1 · plan: [`w20-app-packager`](../plans/w20-app-packager.plan.md) |
 | A9 | **Ablation score.** Owned by the Tester | Every capability in `requires` removed in turn; the probe must fail each time. `N of N`, or the manifest over-claimed | A8, A10 · plan: [`w21-app-ablation-score`](../plans/w21-app-ablation-score.plan.md) |
 | A10 | **External probe** | `run-intent-probe.sh`'s rubric: `WORKED` / `HONESTLY REFUSED` / `FAILED`. A log line saying "started" is the image grading itself | A8 · plan: [`w21-app-external-probe`](../plans/w21-app-external-probe.plan.md) |
-| D-A1 | **Decision**: first substrate — container or microVM | a verdict in `decisions/first-substrate.md` | owner · plan: [`w17-owner-gates`](../plans/w17-owner-gates.plan.md) |
-| D-A2 | **Decision**: how far on syscalls and seccomp | a verdict in `decisions/syscall-scope.md` | owner · plan: [`w17-owner-gates`](../plans/w17-owner-gates.plan.md) |
-| D-A3 | **Decision**: is the subject repository trusted? | a verdict in `decisions/subject-trust.md` | owner · plan: [`w17-owner-gates`](../plans/w17-owner-gates.plan.md) |
+| D-A1 | **Decision**: first substrate — container or microVM | a verdict in [`decisions/first-substrate.md`](../../../agent/kernel_spec/decisions/first-substrate.md) (question written; verdict empty) | owner · plan: [`w17-owner-gates`](../plans/w17-owner-gates.plan.md) |
+| D-A2 | **Decision**: how far on syscalls and seccomp | a verdict in [`decisions/syscall-scope.md`](../../../agent/kernel_spec/decisions/syscall-scope.md) (question written; verdict empty) | owner · plan: [`w17-owner-gates`](../plans/w17-owner-gates.plan.md) |
+| D-A3 | **Decision**: is the subject repository trusted? | a verdict in [`decisions/subject-trust.md`](../../../agent/kernel_spec/decisions/subject-trust.md) (question written; verdict empty) | owner · plan: [`w17-owner-gates`](../plans/w17-owner-gates.plan.md) |
 
 ### D-A3 deserves reading before A5 is scheduled
 
