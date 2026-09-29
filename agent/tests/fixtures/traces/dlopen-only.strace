@@ -1,0 +1,54 @@
+10    execve("/app/plugin-host", ["/app/plugin-host"], 0xffffdf60f7f8 /* 4 vars */) = 0
+10    brk(NULL)                         = 0xaaab07e60000
+10    mmap(NULL, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0xffff9b4bd000
+10    faccessat(AT_FDCWD, "/etc/ld.so.preload", R_OK) = -1 ENOENT (No such file or directory)
+10    openat(AT_FDCWD, "/etc/ld.so.cache", O_RDONLY|O_CLOEXEC) = 3
+10    newfstatat(3, "", {st_mode=S_IFREG|0644, st_size=6999, ...}, AT_EMPTY_PATH) = 0
+10    mmap(NULL, 6999, PROT_READ, MAP_PRIVATE, 3, 0) = 0xffff9b4bb000
+10    close(3)                          = 0
+10    openat(AT_FDCWD, "/lib/aarch64-linux-gnu/libc.so.6", O_RDONLY|O_CLOEXEC) = 3
+10    read(3, "\177ELF\2\1\1\3\0\0\0\0\0\0\0\0\3\0\267\0\1\0\0\0000y\2\0\0\0\0\0@\0\0\0\0\0\0\0\20#\31\0\0\0\0\0\0\0\0\0@\08\0\n\0@\0?\0>\0\6\0\0\0\4\0\0\0@\0\0\0\0\0\0\0@\0\0\0\0\0\0\0@\0\0\0\0\0\0\0000\2\0\0\0\0\0\0000\2\0\0\0\0\0\0\10\0\0\0\0\0\0\0\3\0\0\0\4\0\0\08\326\25\0\0\0\0\08\326\25\0\0\0\0\08\326\25\0\0\0\0\0\33\0\0\0\0\0\0\0\33\0\0\0\0\0\0\0\10\0\0\0\0\0\0\0\1\0\0\0\5\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\234\270\30\0\0\0\0\0\234\270\30\0\0\0\0\0\0\0\1\0\0\0\0\0\1\0\0\0\6\0\0\0\300\315\30\0\0\0\0\0\300\315\31\0\0\0\0\0"..., 832) = 832
+10    newfstatat(3, "", {st_mode=S_IFREG|0755, st_size=1651408, ...}, AT_EMPTY_PATH) = 0
+10    mmap(NULL, 1826912, PROT_NONE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0xffff9b2c5000
+10    mmap(0xffff9b2d0000, 1761376, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0) = 0xffff9b2d0000
+10    munmap(0xffff9b2c5000, 45056)     = 0
+10    munmap(0xffff9b47f000, 16480)     = 0
+10    mprotect(0xffff9b45c000, 65536, PROT_NONE) = 0
+10    mmap(0xffff9b46c000, 24576, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x18c000) = 0xffff9b46c000
+10    mmap(0xffff9b472000, 49248, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_ANONYMOUS, -1, 0) = 0xffff9b472000
+10    close(3)                          = 0
+10    set_tid_address(0xffff9b4be050)   = 10
+10    set_robust_list(0xffff9b4be060, 24) = 0
+10    rseq(0xffff9b4be6a0, 0x20, 0, 0xd428bc00) = 0
+10    mprotect(0xffff9b46c000, 16384, PROT_READ) = 0
+10    mprotect(0xaaaad0abf000, 4096, PROT_READ) = 0
+10    mprotect(0xffff9b4c2000, 8192, PROT_READ) = 0
+10    prlimit64(0, RLIMIT_STACK, NULL, {rlim_cur=8192*1024, rlim_max=RLIM64_INFINITY}) = 0
+10    munmap(0xffff9b4bb000, 6999)      = 0
+10    getrandom("\x60\x6c\x15\x2a\x8e\xc7\x4f\xaa", 8, GRND_NONBLOCK) = 8
+10    brk(NULL)                         = 0xaaab07e60000
+10    brk(0xaaab07e81000)               = 0xaaab07e81000
+10    openat(AT_FDCWD, "/app/plugins.conf", O_RDONLY) = 3
+10    newfstatat(3, "", {st_mode=S_IFREG|0644, st_size=2, ...}, AT_EMPTY_PATH) = 0
+10    read(3, "z\n", 4096)              = 2
+10    close(3)                          = 0
+10    openat(AT_FDCWD, "/etc/ld.so.cache", O_RDONLY|O_CLOEXEC) = 3
+10    newfstatat(3, "", {st_mode=S_IFREG|0644, st_size=6999, ...}, AT_EMPTY_PATH) = 0
+10    mmap(NULL, 6999, PROT_READ, MAP_PRIVATE, 3, 0) = 0xffff9b4bb000
+10    close(3)                          = 0
+10    openat(AT_FDCWD, "/lib/aarch64-linux-gnu/libz.so.1", O_RDONLY|O_CLOEXEC) = 3
+10    read(3, "\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\3\0\267\0\1\0\0\0\0\0\0\0\0\0\0\0@\0\0\0\0\0\0\0\320\2\2\0\0\0\0\0\0\0\0\0@\08\0\7\0@\0\33\0\32\0\1\0\0\0\5\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0000\231\1\0\0\0\0\0000\231\1\0\0\0\0\0\0\0\1\0\0\0\0\0\1\0\0\0\6\0\0\0P\374\1\0\0\0\0\0P\374\2\0\0\0\0\0P\374\2\0\0\0\0\0H\5\0\0\0\0\0\0P\5\0\0\0\0\0\0\0\0\1\0\0\0\0\0\2\0\0\0\6\0\0\0\260\375\1\0\0\0\0\0\260\375\2\0\0\0\0\0\260\375\2\0\0\0\0\0\0\2\0\0\0\0\0\0\0\2\0\0\0\0\0\0\10\0\0\0\0\0\0\0\4\0\0\0\4\0\0\0\310\1\0\0\0\0\0\0\310\1\0\0\0\0\0\0"..., 832) = 832
+10    newfstatat(3, "", {st_mode=S_IFREG|0644, st_size=133520, ...}, AT_EMPTY_PATH) = 0
+10    mmap(NULL, 262560, PROT_NONE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0xffff9b28f000
+10    mmap(0xffff9b290000, 197024, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0) = 0xffff9b290000
+10    munmap(0xffff9b28f000, 4096)      = 0
+10    munmap(0xffff9b2c1000, 57760)     = 0
+10    mprotect(0xffff9b2aa000, 86016, PROT_NONE) = 0
+10    mmap(0xffff9b2bf000, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x1f000) = 0xffff9b2bf000
+10    close(3)                          = 0
+10    mprotect(0xffff9b2bf000, 4096, PROT_READ) = 0
+10    munmap(0xffff9b4bb000, 6999)      = 0
+10    newfstatat(1, "", {st_mode=S_IFCHR|0666, st_rdev=makedev(0x1, 0x3), ...}, AT_EMPTY_PATH) = 0
+10    ioctl(1, TCGETS, 0xfffff2574a30)  = -1 ENOTTY (Inappropriate ioctl for device)
+10    write(1, "loaded libz.so.1\n", 17) = 17
+10    exit_group(0)                     = ?
