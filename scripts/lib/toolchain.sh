@@ -119,9 +119,16 @@ auton_timeout() {
 	# The killer's output goes to /dev/null: killing the subshell does not kill
 	# its `sleep`, and an orphaned sleep holding the caller's stdout keeps a
 	# downstream `| tee` waiting for EOF until the whole timeout elapses.
-	( sleep "$secs"; : > "$fired"; kill -TERM "$cmd_pid" 2>/dev/null
+	# Wall-clock, not `sleep "$secs"`: macOS sleep does not count time the
+	# machine spends asleep, so a 2 h budget ran 2 h 14 min across a lid close
+	# (w18 live Analyst run 3). Short sleeps against `date +%s` do.
+	( end=$(( $(date +%s) + secs ))
+	  while [ "$(date +%s)" -lt "$end" ]; do sleep 5; done
+	  : > "$fired"; kill -TERM "$cmd_pid" 2>/dev/null
 	  if [ -n "$grace" ]; then
-		sleep "$grace"; kill -KILL "$cmd_pid" 2>/dev/null
+		end=$(( $(date +%s) + grace ))
+		while [ "$(date +%s)" -lt "$end" ]; do sleep 2; done
+		kill -KILL "$cmd_pid" 2>/dev/null
 	  fi ) >/dev/null 2>&1 &
 	local killer_pid=$!
 
