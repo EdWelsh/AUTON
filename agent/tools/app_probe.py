@@ -1,7 +1,6 @@
 """Grade a packaged application from outside it (application-to-environment A10).
 
     python agent/tools/app_probe.py --image <tag> --probe <probe.yaml>
-    python agent/tools/app_probe.py --workspace <ws> --probe <probe.yaml>
 
 The rubric `run-intent-probe.sh` uses for kernel images, lifted to applications:
 
@@ -37,7 +36,7 @@ import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from package_gate import REPORT, load_bases  # noqa: E402
+from package_gate import CONFINE, load_bases  # noqa: E402
 
 EXIT_WORKED, EXIT_FAILED, EXIT_REFUSED = 0, 1, 2
 KINDS = ("http", "tcp", "exec")
@@ -144,13 +143,17 @@ def probe(image: str, spec: dict) -> Verdict:
     if _docker("network", "create", "--internal", net).returncode != 0:
         raise ProbeError("could not create an internal network (is Docker running?)")
     try:
-        r = _docker("run", "-d", "--name", app, "--network", net, "--network-alias", "app",
-                    "--security-opt", "no-new-privileges", image)
+        # CONFINE's --network none is replaced by the internal network.
+        confine = [a for a in CONFINE]
+        i = confine.index("--network")
+        confine[i + 1] = net
+        r = _docker("run", "-d", "--name", app, "--network-alias", "app", *confine, image)
         if r.returncode != 0:
             raise ProbeError(f"the image would not run: {r.stderr.strip()[:300]}")
         return _grade(app, net, sidecar, spec, markers)
     finally:
-        _docker("rm", "-f", app)
+        leftovers = _docker("ps", "-aq", "--filter", f"network={net}").stdout.split()
+        _docker("rm", "-f", "-v", app, *leftovers)
         _docker("network", "rm", net)
 
 
@@ -182,8 +185,11 @@ def _run_check(app: str, net: str, sidecar: str, check: dict) -> dict:
     if check["kind"] == "exec":
         r = _docker("exec", app, *check["command"], timeout=60)
         return {"exit": r.returncode, "body": r.stdout}
-    r = _docker("run", "--rm", "--network", net, sidecar, "python", "-c", CLIENT,
-                json.dumps(check), timeout=60)
+    try:
+        r = _docker("run", "--rm", "--network", net, "--cap-drop", "ALL", sidecar,
+                    "python", "-c", CLIENT, json.dumps(check), timeout=60)
+    except subprocess.TimeoutExpired:
+        return {"error": "the probe client timed out"}
     try:
         return json.loads(r.stdout.strip().splitlines()[-1])
     except (IndexError, json.JSONDecodeError):
@@ -193,21 +199,13 @@ def _run_check(app: str, net: str, sidecar: str, check: dict) -> dict:
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
-    src = ap.add_mutually_exclusive_group(required=True)
-    src.add_argument("--image", help="the packaged image")
-    src.add_argument("--workspace", help="a workspace whose package gate recorded an image")
+    # An image, never a report file: the image tag comes from whoever ran the
+    # package gate, not from a file in a workspace an agent works in (w18 H1).
+    ap.add_argument("--image", required=True, help="the packaged image")
     ap.add_argument("--probe", required=True, help="the operator's probe.yaml")
     args = ap.parse_args(argv)
     try:
-        image = args.image
-        if args.workspace:
-            report = Path(args.workspace) / REPORT
-            if not report.is_file():
-                raise ProbeError(f"no {REPORT}: the package gate never built this workspace")
-            image = json.loads(report.read_text()).get("image") or ""
-            if not image:
-                raise ProbeError("the package gate recorded no image (the recipe never built)")
-        verdict = probe(image, load_probe(Path(args.probe)))
+        verdict = probe(args.image, load_probe(Path(args.probe)))
     except (ProbeError, subprocess.TimeoutExpired) as exc:
         print(f"HONESTLY REFUSED the probe could not run: {exc}")
         return EXIT_REFUSED

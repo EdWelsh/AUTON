@@ -28,6 +28,7 @@ decided *report only*.
 
 from __future__ import annotations
 
+import posixpath
 import re
 import sys
 from dataclasses import dataclass, field
@@ -47,7 +48,14 @@ ADDR = re.compile(r'(?:sin_addr=inet_addr\("([^"]+)"\)|inet_pton\(AF_INET6, "([^
 SOCKET = re.compile(r"^(AF_INET6?), (SOCK_STREAM|SOCK_DGRAM)")
 
 PATH_ROOTS = ("/etc/", "/usr/share/", "/var/", "/run/", "/srv/", "/opt/", "/home/")
-LOADER_FILES = ("/etc/ld.so.cache", "/etc/ld.so.preload")
+# Not the application's needs: the loader's own files, and what the container
+# runtime bind-mounts into every container whatever the image says.
+NOT_NEEDS = ("/etc/ld.so.cache", "/etc/ld.so.preload", "/etc/hosts", "/etc/hostname",
+             "/etc/resolv.conf")
+# A soname counts only from the system's library directories: an application's
+# own vendored /app/lib/libz.so.1 is part of the application, not a need.
+LIB_DIRS = ("/lib/", "/lib64/", "/usr/lib/", "/usr/lib64/", "/usr/local/lib/")
+LOOPBACK = ("127.", "::1", "0.0.0.0")
 OPEN_CALLS = ("openat", "open", "openat2")
 
 
@@ -99,8 +107,11 @@ def _first_path(args: str) -> str | None:
 def observe_text(text: str, index: Index | None = None) -> Observed:
     index = index or load_index()
     obs = Observed()
-    sockets: dict[tuple[str, str], str] = {}        # (pid, fd) -> "tcp"/"udp"
-    bound: dict[tuple[str, str], str] = {}          # (pid, fd) -> port
+    # Keyed by fd alone: under `strace -f` the pid column is a thread id, and a
+    # server may socket() on one thread and listen() on another (Go does).
+    # Cleared on close(), so a reused fd number is not the old socket.
+    sockets: dict[str, str] = {}        # fd -> "tcp"/"udp"
+    bound: dict[str, str] = {}          # fd -> port
 
     def add(cap: str, detail: str) -> None:
         if index.refusal(cap) is None:
@@ -117,13 +128,16 @@ def observe_text(text: str, index: Index | None = None) -> Observed:
             path = _first_path(c.args)
             if not path:
                 continue
+            # The loader opens `/usr/local/bin/../lib/libpython3.12.so.1.0`;
+            # classify what was opened, not how it was spelled.
+            path = posixpath.normpath(path) if path.startswith("/") else path
             ok = c.ret is not None and c.ret >= 0
             base = path.rsplit("/", 1)[-1]
-            if ok and SONAME.match(base) and "/lib" in path:
+            if ok and SONAME.match(base) and path.startswith(LIB_DIRS):
                 add(f"lib:{base}", path)
             elif path.startswith("/dev/"):
                 add(f"device:{path[5:]}", path)
-            elif path.startswith(PATH_ROOTS) and path not in LOADER_FILES:
+            elif path.startswith(PATH_ROOTS) and path not in NOT_NEEDS:
                 add(f"path:{path.rstrip('/')}", "opened" if ok else f"failed {c.errno}")
         elif c.name == "execve" and c.ret == 0:
             path = _first_path(c.args)
@@ -131,28 +145,36 @@ def observe_text(text: str, index: Index | None = None) -> Observed:
                 add(f"exec:{path.rsplit('/', 1)[-1]}", path)
         elif c.name == "socket" and c.ret is not None and c.ret >= 0:
             if m := SOCKET.match(c.args):
-                sockets[(c.pid, str(c.ret))] = "tcp" if m.group(2) == "SOCK_STREAM" else "udp"
+                sockets[str(c.ret)] = "tcp" if m.group(2) == "SOCK_STREAM" else "udp"
+                bound.pop(str(c.ret), None)
+        elif c.name == "close" and c.ret == 0:
+            fd = c.args.strip()
+            sockets.pop(fd, None)
+            bound.pop(fd, None)
         elif c.name == "bind" and c.ret == 0:
             fd = c.args.split(",", 1)[0].strip()
             if (p := PORT.search(c.args)) and int(p.group(1)):
-                bound[(c.pid, fd)] = p.group(1)
-                if sockets.get((c.pid, fd)) == "udp":
+                bound[fd] = p.group(1)
+                if sockets.get(fd) == "udp":
                     add(f"listen:udp/{p.group(1)}", "bound datagram socket")
         elif c.name == "listen" and c.ret == 0:
             fd = c.args.split(",", 1)[0].strip()
-            if port := bound.get((c.pid, fd)):
+            if port := bound.get(fd):
                 add(f"listen:tcp/{port}", "bound and listening")
         elif c.name == "connect":
             fd = c.args.split(",", 1)[0].strip()
             p, a = PORT.search(c.args), ADDR.search(c.args)
             if not (p and a):
                 continue
-            proto = sockets.get((c.pid, fd), "tcp")
+            proto = sockets.get(fd, "tcp")
             host = a.group(1) or a.group(2)
+            if host.startswith(LOOPBACK):
+                continue                # the application talking to itself
             if p.group(1) == "53":
                 # The resolver's address comes from the sandbox's resolv.conf,
                 # not from the application; the need is name resolution.
                 host = "resolver"
-            result = "connected" if c.ret == 0 else (c.errno or "failed")
+            result = ("connected" if c.ret == 0 else "attempted" if c.errno == "EINPROGRESS"
+                      else c.errno or "failed")
             add(f"dial:{proto}/{host}:{p.group(1)}", result)
     return obs

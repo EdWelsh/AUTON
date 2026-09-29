@@ -54,3 +54,54 @@ async def test_the_tester_cannot_ablate_without_the_operators_probe(tmp_path):
                   arch_profile=get_arch_profile("x86_64"))
     out = await agent._execute_tool("run_ablation", {})
     assert "no probe declaration" in out
+
+
+def _ws(tmp_path, requires, recipe=None):
+    import json
+    from package_gate import load_bases
+    ws = tmp_path / "ws"
+    (ws / ".auton").mkdir(parents=True)
+    (ws / "package").mkdir()
+    m = {"application": {"runtime": "runtime:python-3.12", "requires": requires}}
+    (ws / ".auton" / "manifest.json").write_text(json.dumps(m))
+    (ws / "package" / "Dockerfile").write_text(
+        recipe or f"FROM {load_bases()['runtime:python-3.12']}\n")
+    probe = tmp_path / "probe.yaml"
+    probe.write_text("checks: [{kind: http, port: 80}]\n")
+    return ws, probe
+
+
+def test_a_crafted_requirement_never_reaches_a_dockerfile(tmp_path):
+    """w18 review H2: shlex.quote protects the shell, not the Dockerfile parser;
+    a newline in a name would start a new RUN."""
+    from ablate import ablate
+    from app_probe import ProbeError
+    ws, probe = _ws(tmp_path, ["lib:x\nRUN touch /pwned"])
+    with pytest.raises(ProbeError, match="outside the index"):
+        ablate(ws, probe)
+
+
+def test_a_rewritten_manifest_is_refused(tmp_path):
+    from ablate import ablate
+    from app_probe import ProbeError
+    ws, probe = _ws(tmp_path, ["lib:libssl.so.3"])
+    with pytest.raises(ProbeError, match="changed after the engine wrote it"):
+        ablate(ws, probe, manifest_sha256="0" * 64)
+
+
+def test_a_recipe_the_gate_would_refuse_is_not_built(tmp_path):
+    from ablate import ablate
+    from app_probe import ProbeError
+    ws, probe = _ws(tmp_path, ["lib:libssl.so.3"], recipe="FROM ubuntu:24.04\n")
+    with pytest.raises(ProbeError, match="package gate would pass"):
+        ablate(ws, probe)
+
+
+def test_removal_as_root_restores_the_final_user():
+    from ablate import _as_root
+    out = _as_root("FROM x\nUSER app\n", "RUN rm -f /a")
+    assert out.endswith("USER root\nRUN rm -f /a\nUSER app\n")
+
+
+def test_a_system_directory_is_too_broad_to_ablate():
+    assert removal("path:/etc", PROBE)[0] == "not-ablatable"

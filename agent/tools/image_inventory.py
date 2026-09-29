@@ -44,7 +44,7 @@ def inventory(image: str) -> dict[str, list[str]]:
             names = [m.name for m in tar]
         proc.wait()
     finally:
-        subprocess.run(["docker", "rm", "-f", cid], capture_output=True)
+        subprocess.run(["docker", "rm", "-f", "-v", cid], capture_output=True)
     return inventory_from_names(names)
 
 

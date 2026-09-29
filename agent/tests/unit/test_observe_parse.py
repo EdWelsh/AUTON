@@ -69,3 +69,26 @@ def test_unfinished_and_resumed_calls_are_joined():
     [first, second] = calls(text)
     assert first.name == "getpid" and second.name == "openat" and second.ret == 3
     assert "lib:libssl.so.3" in observe_text(text).facts
+
+
+def test_vendored_libraries_loopback_and_runtime_mounts_are_not_needs():
+    """w18 review M5: an app's own /app/lib/libz.so.1 is part of the app; a dial
+    to 127.0.0.1 is the app talking to itself; /etc/hosts is the runtime's."""
+    text = ('1 openat(AT_FDCWD, "/app/lib/libz.so.1", O_RDONLY) = 3\n'
+            '1 openat(AT_FDCWD, "/etc/hosts", O_RDONLY) = 3\n'
+            '1 socket(AF_INET, SOCK_STREAM, IPPROTO_IP) = 4\n'
+            '1 connect(4, {sa_family=AF_INET, sin_port=htons(8000), '
+            'sin_addr=inet_addr("127.0.0.1")}, 16) = 0\n')
+    assert observe_text(text).facts == {}
+
+
+def test_a_listen_on_another_thread_and_a_reused_fd():
+    text = ('10 socket(AF_INET, SOCK_STREAM, IPPROTO_IP) = 3\n'
+            '10 bind(3, {sa_family=AF_INET, sin_port=htons(9000), sin_addr=inet_addr("0.0.0.0")}, 16) = 0\n'
+            '11 listen(3, 128) = 0\n'
+            '10 close(3) = 0\n'
+            '10 socket(AF_INET, SOCK_DGRAM, IPPROTO_IP) = 3\n'
+            '10 connect(3, {sa_family=AF_INET, sin_port=htons(5432), sin_addr=inet_addr("10.0.0.9")}, 16) = -1 EINPROGRESS (x)\n')
+    facts = observe_text(text).facts
+    assert "listen:tcp/9000" in facts, "socket on one thread, listen on another"
+    assert facts["dial:udp/10.0.0.9:5432"]["detail"] == "attempted", "fd 3 is udp now"

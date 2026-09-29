@@ -73,3 +73,23 @@ def test_a_listed_builder_may_compile_but_never_run():
     assert base_problems(ok, "runtime:static-elf", BASES) == []
     bad = f"FROM {go}\nRUN go build\n"
     assert base_problems(bad, "runtime:static-elf", BASES)
+
+
+def test_other_ways_to_bring_in_an_image_are_refused():
+    """w18 review M8: FROM is not the only door."""
+    for recipe, why in [
+        (f"# syntax=evil/frontend\nFROM {PY}\n", "syntax"),
+        (f"FROM {PY}\nCOPY --from=alpine:3 /bin/sh /x\n", "--from=alpine:3"),
+        (f"FROM {PY}\nRUN --mount=type=bind,from=busybox,target=/b true\n", "busybox"),
+        (f"FROM {PY}\nADD https://example.com/x.tgz /x\n", "ADD <url>"),
+    ]:
+        problems = base_problems(recipe, "runtime:python-3.12", BASES)
+        assert any(why in p for p in problems), (why, problems)
+
+
+def test_the_manifest_is_revalidated_whoever_wrote_it(tmp_path):
+    (tmp_path / "package").mkdir()
+    (tmp_path / "package" / "Dockerfile").write_text(f"FROM {PY}\n")
+    report = check(tmp_path, manifest={"application": {"runtime": "runtime:python-3.12",
+                                                       "requires": ["lib:x\nRUN y"]}})
+    assert report.problems and "lib:x" in report.problems[0]

@@ -366,10 +366,18 @@ class Agent:
         if not probe:
             return ("Refused: no probe declaration was given to this run (run --probe); "
                     "ablation without an external probe measures nothing")
+        manifest = getattr(self, "manifest", None)
+        if not manifest:
+            return "Refused: no manifest was handed to this run; there is nothing to ablate"
+        # The engine's copy, checked by hash: the file on disk is only a carrier.
+        import hashlib
+        text = (json.dumps(manifest, indent=2) + "\n").encode()
         tools = Path(__file__).resolve().parents[2] / "tools"
         return await self._run_argv(
             [sys.executable, str(tools / "ablate.py"), "--workspace",
-             str(self.workspace.path), "--probe", str(probe)], timeout=7200)
+             str(self.workspace.path), "--probe", str(probe),
+             "--manifest", str(self.workspace.path / ".auton" / "manifest.json"),
+             "--manifest-sha256", hashlib.sha256(text).hexdigest()], timeout=7200)
 
     def _read_spec(self, subsystem: str) -> str:
         """Read a kernel specification document.

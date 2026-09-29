@@ -25,6 +25,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import re
 import shlex
 import subprocess
 import sys
@@ -35,7 +36,13 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from app_probe import EXIT_WORKED, ProbeError, load_probe, probe  # noqa: E402
-from package_gate import DOCKERFILE, MANIFEST, SUBJECT_DIR  # noqa: E402
+from package_gate import (  # noqa: E402
+    DOCKERFILE, MANIFEST, SUBJECT_DIR, base_problems, load_bases, requirement_problems)
+
+# Removing any of these takes the whole image with it; the probe would fail
+# and the capability would be scored load-bearing for the wrong reason.
+TOO_BROAD = {"/etc", "/usr", "/usr/lib", "/usr/share", "/var", "/run", "/lib", "/opt",
+             "/srv", "/home", "/proc", "/sys", "/tmp"}
 
 OUT = "package/ABLATION.json"
 NOT_REMOVABLE = {
@@ -76,6 +83,9 @@ def removal(capability: str, probe_spec: dict) -> str | tuple[str, str]:
         return (f"RUN find / -xdev -name {shlex.quote(name)} "
                 f"\\( -type f -o -type l \\) -exec rm -f {{}} +")
     if kind == "path":
+        if name.rstrip("/") in TOO_BROAD:
+            return ("not-ablatable", f"{name} is too broad: removing it removes the system, "
+                                     f"so a failing probe would prove nothing about it")
         return f"RUN rm -rf {shlex.quote(name)}"
     if kind == "exec":
         return (f"RUN for d in /bin /sbin /usr/bin /usr/sbin /usr/local/bin; do "
@@ -93,20 +103,50 @@ def _build(ws: Path, recipe: str) -> tuple[str | None, str]:
     tag = "auton-ablate-" + hashlib.sha256(recipe.encode()).hexdigest()[:12]
     df = ws / ".auton" / f"{tag}.Dockerfile"
     df.write_text(recipe)
-    r = subprocess.run(["docker", "build", "-q", "-f", str(df), "-t", tag,
-                        str(ws / SUBJECT_DIR)], capture_output=True, text=True, timeout=1800)
-    df.unlink(missing_ok=True)
+    try:
+        r = subprocess.run(["docker", "build", "-q", "-f", str(df), "-t", tag,
+                            str(ws / SUBJECT_DIR)], capture_output=True, text=True,
+                           timeout=1800)
+    except subprocess.TimeoutExpired:
+        return None, "build timed out"
+    finally:
+        df.unlink(missing_ok=True)
     if r.returncode != 0:
         return None, "\n".join(r.stderr.strip().splitlines()[-5:])
     return tag, ""
 
 
-def ablate(ws: Path, probe_path: Path) -> Score:
+def _drop(tag: str | None) -> None:
+    if tag:
+        subprocess.run(["docker", "rmi", "-f", tag], capture_output=True)
+
+
+def _as_root(recipe: str, line: str) -> str:
+    """Append a removal as root, then restore the recipe's final USER: a
+    non-root final user would make every `rm` fail and every step unprobeable."""
+    users = re.findall(r"^\s*USER\s+(\S+)", recipe, re.I | re.M)
+    tail = f"USER root\n{line}\n" + (f"USER {users[-1]}\n" if users else "")
+    return recipe.rstrip("\n") + "\n" + tail
+
+
+def ablate(ws: Path, probe_path: Path, manifest_path: Path | None = None,
+           manifest_sha256: str | None = None) -> Score:
+    """`manifest_sha256`, when given (the engine gives it), must match: the
+    manifest is read from disk here, and a manifest someone rewrote is refused
+    rather than scored (w18 review H1)."""
     ws = Path(ws)
     spec = load_probe(probe_path)
-    manifest = json.loads((ws / MANIFEST).read_text())
-    requires = list((manifest.get("application") or {}).get("requires") or [])
+    raw = Path(manifest_path or ws / MANIFEST).read_bytes()
+    if manifest_sha256 and hashlib.sha256(raw).hexdigest() != manifest_sha256:
+        raise ProbeError("the manifest changed after the engine wrote it; refusing to score it")
+    manifest = json.loads(raw)
+    app = manifest.get("application") or {}
+    requires = list(app.get("requires") or [])
+    if bad := requirement_problems(requires):
+        raise ProbeError("the manifest names capabilities outside the index: " + "; ".join(bad))
     recipe = (ws / DOCKERFILE).read_text()
+    if bad := base_problems(recipe, app.get("runtime", ""), load_bases()):
+        raise ProbeError("the recipe is not one the package gate would pass: " + "; ".join(bad))
     score = Score()
     started = time.monotonic()
 
@@ -114,6 +154,7 @@ def ablate(ws: Path, probe_path: Path) -> Score:
     if tag is None:
         raise ProbeError(f"the unablated package does not build: {err}")
     base = probe(tag, spec)
+    _drop(tag)
     score.baseline = base.line
     if base.code != EXIT_WORKED:
         raise ProbeError(f"the unablated package does not pass its probe ({base.line}); "
@@ -125,12 +166,13 @@ def ablate(ws: Path, probe_path: Path) -> Score:
         if isinstance(how, tuple):
             score.steps.append(Step(cap, how[0], how[1]))
             continue
-        tag, err = _build(ws, recipe.rstrip("\n") + "\n" + how + "\n")
+        tag, err = _build(ws, _as_root(recipe, how))
         if tag is None:
             score.steps.append(Step(cap, "unprobeable", f"build failed: {err}",
                                     round(time.monotonic() - t0, 1)))
             continue
         v = probe(tag, spec)
+        _drop(tag)
         outcome = "over-claimed" if v.code == EXIT_WORKED else "load-bearing"
         score.steps.append(Step(cap, outcome, v.line.strip(), round(time.monotonic() - t0, 1)))
 
@@ -150,9 +192,12 @@ def main(argv: list[str] | None = None) -> int:
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--workspace", required=True)
     ap.add_argument("--probe", required=True)
+    ap.add_argument("--manifest", help="default: <workspace>/.auton/manifest.json")
+    ap.add_argument("--manifest-sha256", help="refuse the manifest unless it hashes to this")
     args = ap.parse_args(argv)
     try:
-        s = ablate(Path(args.workspace), Path(args.probe))
+        s = ablate(Path(args.workspace), Path(args.probe),
+                   Path(args.manifest) if args.manifest else None, args.manifest_sha256)
     except (ProbeError, OSError, subprocess.SubprocessError) as exc:
         print(f"UNPROBEABLE: {exc}", file=sys.stderr)
         return 2

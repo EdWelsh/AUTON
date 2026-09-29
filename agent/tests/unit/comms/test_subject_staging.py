@@ -322,3 +322,17 @@ def test_the_exclude_is_found_in_a_worktree(tmp_path, subject):
                              capture_output=True, text=True).stdout
     assert "subject" not in tracked
     ws.unstage_subject()
+
+
+@pytest.mark.parametrize("path", [".auton/manifest.json", ".auton/package-report.json",
+                                  ".auton/state.json", ".AUTON/manifest.json"])
+def test_agents_cannot_write_anything_the_engine_keeps(ws, path):
+    """w18 review H1: a Packager could empty the manifest its image is checked
+    against by editing .auton/manifest.json."""
+    (ws.path / ".auton").mkdir(exist_ok=True)
+    (ws.path / ".auton" / "manifest.json").write_text("{}")
+    if path.startswith(".AUTON") and not (ws.path / ".AUTON").exists():
+        pytest.skip("case-sensitive filesystem")
+    ws._seen.add(path)
+    with pytest.raises(WorkspaceError, match="engine"):
+        ws.write_file(path, "{}")

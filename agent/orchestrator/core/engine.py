@@ -218,6 +218,7 @@ class OrchestrationEngine:
                 f"tester-{i+1:02d}", AgentRole.TESTER, TesterAgent
             )
             agent.probe_path = getattr(self, "probe_path", None)
+            agent.manifest = getattr(self, "manifest", None) or {}
             self._agents[f"tester-{i+1:02d}"] = agent
             self.scheduler.register_agent("tester", agent)
 
@@ -835,7 +836,10 @@ class OrchestrationEngine:
         _, changed = self.workspace.branch_diff(branch)
         self.workspace.checkout(branch)
         try:
-            return syntax_gate.check(self.workspace.path, changed)
+            # The manifest from memory, not from .auton/: the gate must not
+            # read its standard from a file an agent could have rewritten.
+            return syntax_gate.check(self.workspace.path, changed,
+                                     manifest=getattr(self, "manifest", None) or None)
         finally:
             self.workspace.checkout_main()
 

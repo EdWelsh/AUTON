@@ -121,23 +121,31 @@ class GitWorkspace:
         return self.path / SUBJECT_DIR
 
     def _refuse_subject(self, path: str, resolved: Path) -> None:
-        """Refuse a write under the staged subject.
+        """Refuse an agent's write under `.auton/`: the staged subject, and
+        everything else the engine keeps there — the manifest the package gate
+        is handed, state, reports (w18 review H1: a Packager could otherwise
+        empty the requirements its own image is checked against).
 
         Compared by file identity, not by string: on a case-insensitive
-        filesystem `.auton/SUBJECT/app.py` is the same file, and a prefix check
+        filesystem `.AUTON/subject/app.py` is the same file, and a prefix check
         on the text would let it through.
         """
-        root = self.subject_path
-        if not root.exists():
-            return
+        subject, engine = self.subject_path, self.path / ".auton"
         for candidate in (resolved, *resolved.parents):
             if candidate == self.path or self.path not in (candidate, *candidate.parents):
                 break
-            if candidate.exists() and os.path.samefile(candidate, root):
+            if not candidate.exists():
+                continue
+            if subject.exists() and os.path.samefile(candidate, subject):
                 raise WorkspaceError(
                     f"refusing to write {path!r}: {SUBJECT_DIR}/ is the application "
                     f"under analysis, and evidence the analysis can edit is not "
                     f"evidence. Write findings under analysis/ instead")
+            if engine.exists() and os.path.samefile(candidate, engine):
+                raise WorkspaceError(
+                    f"refusing to write {path!r}: .auton/ is the engine's — its state, "
+                    f"and the manifest your work is checked against. Agents do not "
+                    f"write there")
 
     def stage_subject(self, source: Path) -> str:
         """Stage an application read-only at SUBJECT_DIR; return its tree hash.

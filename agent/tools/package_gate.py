@@ -46,6 +46,12 @@ SUBJECT_DIR = ".auton/subject"
 MANIFEST = ".auton/manifest.json"
 DOCKERFILE = "package/Dockerfile"
 REPORT = ".auton/package-report.json"
+# How an untrusted packaged application is run for a check: no network, no
+# capabilities, no privilege escalation, bounded (w18 review M3). A low port
+# is bindable without CAP_NET_BIND_SERVICE via the sysctl.
+CONFINE = ["--network", "none", "--cap-drop", "ALL", "--security-opt", "no-new-privileges",
+           "--sysctl", "net.ipv4.ip_unprivileged_port_start=0",
+           "--pids-limit", "256", "--memory", "1g", "--cpus", "2"]
 FROM = re.compile(r"^\s*FROM\s+(?:--platform=\S+\s+)?(\S+)(?:\s+AS\s+(\S+))?", re.I | re.M)
 
 
@@ -65,6 +71,14 @@ def load_bases(path: Path = BASES) -> dict[str, str]:
 
 def load_builders(path: Path = BASES) -> set[str]:
     return set((yaml.safe_load(path.read_text()).get("builders") or {}).values())
+
+
+def requirement_problems(capabilities: list[str]) -> list[str]:
+    """Every requirement must be a name the index holds, whoever wrote the file
+    it came from. Also what keeps a crafted name out of a Dockerfile line."""
+    from artifact_spec import load_index
+    index = load_index()
+    return [why for cap in capabilities if (why := index.refusal(str(cap)))]
 
 
 def base_problems(dockerfile: str, runtime: str, bases: dict[str, str],
@@ -90,10 +104,33 @@ def base_problems(dockerfile: str, runtime: str, bases: dict[str, str],
                                if builders else ""))
         if alias:
             stages.add(alias)
+    problems += _smuggling(dockerfile, stages | {allowed} | set(bases.values()) | builders)
     final = froms[-1][0]
     if final != allowed and final not in stages and not any(final in p for p in problems):
         problems.append(f"the final stage must build FROM {allowed} (or a stage built "
                         f"from it), not {final}")
+    return problems
+
+
+FROM_FLAG = re.compile(r"--from=(\S+)")
+SYNTAX = re.compile(r"^\s*#\s*syntax\s*=", re.I | re.M)
+ADD_URL = re.compile(r"^\s*ADD\s+(--\S+\s+)*(https?|git)://", re.I | re.M)
+
+
+def _smuggling(dockerfile: str, allowed: set[str]) -> list[str]:
+    """Checking FROM alone is not checking the base (w18 review): COPY --from,
+    RUN --mount from=, a `# syntax=` frontend and ADD <url> each bring in
+    content no FROM names."""
+    problems = []
+    if SYNTAX.search(dockerfile):
+        problems.append("a `# syntax=` directive runs a builder frontend of the recipe's "
+                        "choosing; remove it")
+    for ref in FROM_FLAG.findall(dockerfile) + re.findall(r"\bfrom=([^,\s]+)", dockerfile):
+        if ref not in allowed and not ref.isdigit():
+            problems.append(f"--from={ref} names an image that is neither a stage nor listed")
+    if ADD_URL.search(dockerfile):
+        problems.append("ADD <url> fetches content no manifest names; COPY from the "
+                        "application instead")
     return problems
 
 
@@ -109,18 +146,27 @@ def _run(args: list[str], timeout: int = 900) -> subprocess.CompletedProcess:
     return subprocess.run(args, capture_output=True, text=True, timeout=timeout)
 
 
-def check(workspace: Path, *, start_seconds: int = 4) -> PackageReport:
+def check(workspace: Path, *, manifest: dict | None = None,
+          start_seconds: int = 4) -> PackageReport:
+    """`manifest` is passed by the engine from memory. Read from the workspace
+    only when absent (the CLI), and in both cases re-validated: a gate that
+    trusts a file an agent could write checks nothing (w18 review H1)."""
     ws = Path(workspace)
     report = PackageReport()
-    manifest_path, dockerfile = ws / MANIFEST, ws / DOCKERFILE
-    if not manifest_path.is_file():
-        report.problems.append(f"no manifest at {MANIFEST}: nothing says what to package")
-        return report
+    dockerfile = ws / DOCKERFILE
+    if manifest is None:
+        if not (ws / MANIFEST).is_file():
+            report.problems.append(f"no manifest at {MANIFEST}: nothing says what to package")
+            return report
+        manifest = json.loads((ws / MANIFEST).read_text())
     if not dockerfile.is_file():
         report.problems.append(f"no {DOCKERFILE}")
         return report
-    app = json.loads(manifest_path.read_text()).get("application") or {}
+    app = manifest.get("application") or {}
     runtime, required = app.get("runtime", ""), list(app.get("requires") or [])
+    report.problems += requirement_problems([runtime, *required])
+    if report.problems:
+        return report
 
     report.problems += base_problems(dockerfile.read_text(), runtime, load_bases())
     if report.problems:
@@ -149,7 +195,7 @@ def check(workspace: Path, *, start_seconds: int = 4) -> PackageReport:
 
 def _starts(tag: str, seconds: int) -> str:
     name = f"{tag}-start-{int(time.time())}"
-    r = _run(["docker", "run", "-d", "--name", name, "--network", "none", tag], timeout=60)
+    r = _run(["docker", "run", "-d", "--name", name, *CONFINE, tag], timeout=60)
     if r.returncode != 0:
         return f"docker run failed: {r.stderr.strip()[:300]}"
     try:
@@ -164,7 +210,7 @@ def _starts(tag: str, seconds: int) -> str:
         logs = _run(["docker", "logs", "--tail", "10", name])
         return f"exited {code}: {(logs.stdout + logs.stderr).strip()[-400:]}"
     finally:
-        _run(["docker", "rm", "-f", name])
+        _run(["docker", "rm", "-f", "-v", name])
 
 
 def main(argv: list[str] | None = None) -> int:

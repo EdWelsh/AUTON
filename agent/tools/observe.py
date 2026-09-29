@@ -102,15 +102,20 @@ def observe(subject: Path, *, record: Path | None = None, exercise: str = "",
         exercise=exercise, exercise_exit=exercise_exit, duration=time.monotonic() - started)
 
     if record is not None:
+        # Validate the merged record BEFORE it replaces the original: a merge
+        # that does not validate must leave the record as it was (w18 review).
+        merged = merge(record, observation)
+        staged = record.with_suffix(".merging.yaml")
+        staged.write_text(yaml.safe_dump(merged, sort_keys=False))
+        report = validate(staged, allow_observed=True)
+        if not report.ok:
+            staged.unlink()
+            raise RuntimeError("the merged record does not validate:\n  "
+                               + "\n  ".join(report.problems))
         out_dir = record.parent / "observations"
         out_dir.mkdir(parents=True, exist_ok=True)
         (out_dir / f"{observation['id']}.json").write_text(json.dumps(observation, indent=2) + "\n")
-        merged = merge(record, observation)
-        record.write_text(yaml.safe_dump(merged, sort_keys=False))
-        report = validate(record, allow_observed=True)
-        if not report.ok:
-            raise RuntimeError("the merged record does not validate:\n  "
-                               + "\n  ".join(report.problems))
+        staged.replace(record)
     return observation
 
 

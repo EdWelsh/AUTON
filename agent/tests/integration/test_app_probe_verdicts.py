@@ -84,14 +84,11 @@ def test_honestly_refused(tmp_path):
     assert "libpq" in r.stdout
 
 
-def test_the_script_branch_reads_the_workspace(tmp_path):
-    ws = tmp_path / "ws"
-    (ws / ".auton").mkdir(parents=True)
+def test_the_script_branch_takes_an_image_and_a_probe(tmp_path):
     tag = _image(tmp_path, FULL, "auton-probe-test-full")
-    (ws / ".auton" / "package-report.json").write_text(f'{{"image": "{tag}"}}')
-    r = subprocess.run(["bash", str(ROOT / "scripts/run-intent-probe.sh"), "app", str(ws),
+    r = subprocess.run(["bash", str(ROOT / "scripts/run-intent-probe.sh"), "app", tag,
                         str(PROBE)], capture_output=True, text=True, timeout=300)
     assert r.returncode == 0 and "WORKED" in r.stdout, r.stdout + r.stderr
-    r = subprocess.run(["bash", str(ROOT / "scripts/run-intent-probe.sh"), "app", str(ws)],
+    r = subprocess.run(["bash", str(ROOT / "scripts/run-intent-probe.sh"), "app", tag],
                        capture_output=True, text=True)
     assert r.returncode == 2 and "probe.yaml" in r.stderr
