@@ -9,7 +9,10 @@ TOOL_READ_FILE = {
     "type": "function",
     "function": {
         "name": "read_file",
-        "description": "Read the contents of a file from the kernel workspace.",
+        "description": (
+            "Read the contents of a file from the kernel workspace. An application "
+            "staged for analysis is under .auton/subject/ (read-only)."
+        ),
         "parameters": {
             "type": "object",
             "properties": {
@@ -88,7 +91,10 @@ TOOL_SEARCH_CODE = {
     "type": "function",
     "function": {
         "name": "search_code",
-        "description": "Search for a pattern in the kernel workspace using regex.",
+        "description": (
+            "Search for a pattern in the kernel workspace using regex, including "
+            "a staged application under .auton/subject/."
+        ),
         "parameters": {
             "type": "object",
             "properties": {

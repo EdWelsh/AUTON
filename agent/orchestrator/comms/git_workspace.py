@@ -17,6 +17,8 @@ from pathlib import Path
 
 import git as _git
 
+from orchestrator.comms import subject_hash
+
 # Configure GitPython to find git executable on Windows
 _git_exe = shutil.which("git")
 if not _git_exe:
@@ -36,6 +38,11 @@ from git import Repo
 from git.exc import GitCommandError, InvalidGitRepositoryError, NoSuchPathError
 
 logger = logging.getLogger(__name__)
+
+
+# Where a subject application is staged for analysis (application-to-
+# environment A2). Nothing may write under it: the subject is evidence.
+SUBJECT_DIR = ".auton/subject"
 
 
 class WorkspaceError(Exception):
@@ -60,6 +67,8 @@ class GitWorkspace:
         # nobody looked at is how `net.h` became a placeholder — see
         # _resolve_for_write.
         self._seen: set[str] = set()
+        self._subject_manifest: dict[str, str] | None = None
+        self.subject_commit: str | None = None
 
     def _resolve(self, path: str) -> Path:
         """Resolve a workspace-relative path, or refuse.
@@ -96,6 +105,7 @@ class GitWorkspace:
         every write a read-first ceremony gets worked around.
         """
         resolved = self._resolve(path)
+        self._refuse_subject(path, resolved)
         if resolved.exists() and path not in self._seen:
             raise WorkspaceError(
                 f"refusing to overwrite {path!r}, which this workspace has not "
@@ -103,6 +113,117 @@ class GitWorkspace:
                 f"placeholder. read_file({path!r}) first, or use edit_file() to "
                 f"change part of it")
         return resolved
+
+    # --- the staged subject (A2) ------------------------------------------ #
+
+    @property
+    def subject_path(self) -> Path:
+        return self.path / SUBJECT_DIR
+
+    def _refuse_subject(self, path: str, resolved: Path) -> None:
+        """Refuse a write under the staged subject.
+
+        Compared by file identity, not by string: on a case-insensitive
+        filesystem `.auton/SUBJECT/app.py` is the same file, and a prefix check
+        on the text would let it through.
+        """
+        root = self.subject_path
+        if not root.exists():
+            return
+        for candidate in (resolved, *resolved.parents):
+            if candidate == self.path or self.path not in (candidate, *candidate.parents):
+                break
+            if candidate.exists() and os.path.samefile(candidate, root):
+                raise WorkspaceError(
+                    f"refusing to write {path!r}: {SUBJECT_DIR}/ is the application "
+                    f"under analysis, and evidence the analysis can edit is not "
+                    f"evidence. Write findings under analysis/ instead")
+
+    def stage_subject(self, source: Path) -> str:
+        """Stage an application read-only at SUBJECT_DIR; return its tree hash.
+
+        A git repository is exported at HEAD (`git archive`), so the history
+        and any uncommitted edits are not part of what is analysed, and the
+        commit is recorded. Anything else is copied with symlinks kept as
+        links. Write bits are then removed. The hash is what `verify_subject`
+        checks later, and what an artifact record's `subject.tree_hash` cites.
+        """
+        source = Path(source).resolve()
+        dest = self.subject_path
+        if dest.exists():
+            raise WorkspaceError(
+                f"a subject is already staged at {SUBJECT_DIR}/; restaging would "
+                f"replace evidence mid-analysis. Unstage it, or start a new run")
+        if not source.is_dir():
+            raise WorkspaceError(f"no application directory at {source}")
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        self._exclude_from_git(SUBJECT_DIR)
+
+        if (source / ".git").exists():
+            import io
+            import subprocess
+            import tarfile
+            head = subprocess.run(["git", "-C", str(source), "rev-parse", "HEAD"],
+                                  check=True, capture_output=True, text=True).stdout.strip()
+            archive = subprocess.run(["git", "-C", str(source), "archive", "--format=tar", head],
+                                     check=True, capture_output=True).stdout
+            dest.mkdir()
+            with tarfile.open(fileobj=io.BytesIO(archive)) as tar:
+                tar.extractall(dest, filter="data")
+            self.subject_commit = head
+        else:
+            shutil.copytree(source, dest, symlinks=True,
+                            ignore=shutil.ignore_patterns(".git"))
+            self.subject_commit = None
+
+        self._subject_manifest = subject_hash.manifest(dest)
+        _make_read_only(dest)
+        digest = subject_hash.digest(self._subject_manifest)
+        logger.info("Staged subject %s at %s (tree %s)", source, SUBJECT_DIR, digest[:12])
+        return digest
+
+    def verify_subject(self, expected: str) -> None:
+        """Refuse if the staged subject differs from the tree hashed at staging,
+        naming what changed. Whatever wrote it — a file tool, the shell, git —
+        a changed subject means nothing built on it can be trusted."""
+        root = self.subject_path
+        if not root.exists():
+            raise WorkspaceError(f"no subject staged at {SUBJECT_DIR}/")
+        now = subject_hash.manifest(root)
+        if subject_hash.digest(now) == expected:
+            return
+        changed = (subject_hash.differences(self._subject_manifest, now)
+                   if self._subject_manifest is not None else [])
+        raise WorkspaceError(
+            f"the staged subject changed after it was hashed "
+            f"({', '.join(changed[:10]) or 'tree hash differs'}); evidence the "
+            f"analysis can edit is not evidence, so this record is refused")
+
+    def unstage_subject(self) -> None:
+        """Remove the staged subject, restoring write bits so it can be removed."""
+        root = self.subject_path
+        if not root.exists() and not root.is_symlink():
+            return
+        for dirpath, dirnames, filenames in os.walk(root, followlinks=False):
+            os.chmod(dirpath, 0o755)
+            for name in filenames:
+                full = os.path.join(dirpath, name)
+                if not os.path.islink(full):
+                    os.chmod(full, 0o644)
+        shutil.rmtree(root)
+        self._subject_manifest = None
+        self.subject_commit = None
+
+    def _exclude_from_git(self, rel: str) -> None:
+        """Keep `rel` out of every `git add -A`, including an agent's own via
+        the shell tool, by listing it in the workspace's local exclude file."""
+        exclude = self.path / ".git" / "info" / "exclude"
+        if not exclude.parent.exists():
+            return
+        lines = exclude.read_text().splitlines() if exclude.exists() else []
+        entry = f"/{rel}/"
+        if entry not in lines:
+            exclude.write_text("\n".join([*lines, entry]) + "\n")
 
     @property
     def repo(self) -> Repo:
@@ -242,6 +363,7 @@ class GitWorkspace:
         know which it is changing. Applied blindly, both are silent corruption.
         """
         full_path = self._resolve(path)
+        self._refuse_subject(path, full_path)
         if not full_path.exists():
             raise FileNotFoundError(f"File not found: {path}")
 
@@ -284,6 +406,13 @@ class GitWorkspace:
         for path in self.path.rglob(glob):
             if not path.is_file() or ".git" in path.parts:
                 continue
+            if path.is_symlink():
+                # A link is read through only when it stays inside the
+                # workspace; one pointing out would leak the file it names.
+                try:
+                    path.resolve().relative_to(self.path)
+                except ValueError:
+                    continue
             try:
                 content = path.read_text(encoding="utf-8")
                 for i, line in enumerate(content.splitlines(), 1):
@@ -416,3 +545,14 @@ class GitWorkspace:
             if name in [b.name for b in self.repo.branches]:
                 return name
         return "main"
+
+
+def _make_read_only(root: Path) -> None:
+    """Remove every write bit under `root`, files first and directories last,
+    keeping execute bits. Links are left alone: chmod would follow them."""
+    for dirpath, dirnames, filenames in os.walk(root, topdown=False, followlinks=False):
+        for name in filenames:
+            full = os.path.join(dirpath, name)
+            if not os.path.islink(full):
+                os.chmod(full, os.stat(full).st_mode & ~0o222)
+        os.chmod(dirpath, os.stat(dirpath).st_mode & ~0o222)

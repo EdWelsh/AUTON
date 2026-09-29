@@ -201,6 +201,12 @@ tools adjudicate it.**
   `inferred` (each citing `file:line` and the quoted line), or `unknown` (saying where it
   looked). [`artifact_spec.py`](../agent/tools/artifact_spec.py) refuses anything else and
   names the fix.
+- **The subject is staged, not reached through a new tool.** The application is exported
+  read-only to `.auton/subject/` inside the workspace, so the existing file tools and their
+  sandbox reach it. Nothing may write there, in three layers: the file tools refuse the path
+  (compared by file identity, so a case variant is caught), the files lose their write bits,
+  and a tree hash taken at staging is re-checked before anything built on the subject is
+  accepted. The hash is the gate; agents hold a `shell` that can walk around the first two.
 
 ## A note on architecture support
 
