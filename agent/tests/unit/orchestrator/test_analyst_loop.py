@@ -193,3 +193,17 @@ async def test_analysis_tasks_do_not_trigger_kernel_design(workspace, monkeypatc
     monkeypatch.setattr(eng.client, "send_with_tools", model)
     await eng.run("analyse the staged application")
     assert "architect" not in model.prompts, "no kernel task, so nothing to design"
+
+
+async def test_the_analyst_can_check_its_record_before_the_gate(workspace, monkeypatch):
+    from orchestrator.agents.analyst_agent import AnalystAgent  # noqa: F401
+    eng = _engine(workspace)
+    monkeypatch.setattr(eng.client, "send_with_tools", Model())
+    await eng.run("analyse the staged application")
+    analyst = eng._agents["analyst"]
+    (workspace / "analysis").mkdir(exist_ok=True)
+    (workspace / "analysis" / "bad.artifact.yaml").write_text("facts: [unclosed\n")
+    out = await analyst._execute_tool("check_record", {"path": "analysis/bad.artifact.yaml"})
+    assert out.startswith("NOT OK") and "YAML" in out
+    out = await analyst._execute_tool("check_record", {"path": RECORD})
+    assert out.startswith("OK")

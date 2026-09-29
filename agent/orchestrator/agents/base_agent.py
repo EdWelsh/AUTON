@@ -278,6 +278,9 @@ class Agent:
                 case "read_spec":
                     return self._read_spec(tool_input["subsystem"])
 
+                case "check_record":
+                    return self._check_record(tool_input["path"])
+
                 case "run_ablation":
                     return await self._run_ablation()
 
@@ -355,6 +358,25 @@ class Agent:
 
         except Exception as e:
             return f"Error executing {tool_name}: {e}"
+
+    def _check_record(self, path: str) -> str:
+        """The gate's own check, offered early: a model that only hears about a
+        YAML error after its task ends has spent the task (w18 live run 3)."""
+        tools = Path(__file__).resolve().parents[2] / "tools"
+        if str(tools) not in sys.path:
+            sys.path.insert(0, str(tools))
+        from artifact_spec import ArtifactError, validate
+
+        subject = self.workspace.path / ".auton" / "subject"
+        try:
+            report = validate(self.workspace._resolve(path),
+                              subject=subject if subject.is_dir() else None,
+                              allow_observed=False)
+        except ArtifactError as exc:
+            return f"NOT OK: {exc}"
+        if report.ok:
+            return f"OK: {len(report.artifact.facts)} fact(s) pass every check"
+        return "NOT OK:\n" + "\n".join(f"- {p}" for p in report.problems)
 
     async def _run_ablation(self) -> str:
         """The ablation score (A9), run by a tool, not reasoned about by a model.

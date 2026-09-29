@@ -246,6 +246,24 @@ SHELL_ALLOWLIST = frozenset({
     "ls", "cat", "grep", "find", "qemu-system-x86_64",
 })
 
+TOOL_CHECK_RECORD = {
+    "type": "function",
+    "function": {
+        "name": "check_record",
+        "description": (
+            "Check an artifact record exactly as the gate will: YAML, the capability index, "
+            "provenance, and that every quote is on the line it cites in .auton/subject/. "
+            "Returns OK or the problems to fix. The gate still decides."
+        ),
+        "parameters": {
+            "type": "object",
+            "properties": {"path": {"type": "string",
+                                    "description": "e.g. analysis/app.artifact.yaml"}},
+            "required": ["path"],
+        },
+    },
+}
+
 TOOL_RUN_ABLATION = {
     "type": "function",
     "function": {
@@ -566,6 +584,7 @@ TESTER_TOOLS = [
 # Reads and writes files, commits; no shell. It reads, it does not run —
 # running the subject is observe.py's job, in a sandbox, by a tool (A5).
 ANALYST_TOOLS = [
+    TOOL_CHECK_RECORD,
     TOOL_READ_FILE,
     TOOL_WRITE_FILE,
     TOOL_EDIT_FILE,

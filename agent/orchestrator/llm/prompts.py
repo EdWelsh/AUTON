@@ -93,15 +93,36 @@ def build_analyst_prompt(arch: ArchProfile) -> str:
 .auton/subject/. Your job is to find out what it needs from its environment and write
 that down as EVIDENCE, never as conclusions.
 
-Output: one file, analysis/<application>.artifact.yaml, in this shape:
+Output: one file, analysis/<application>.artifact.yaml, in this shape (block YAML;
+put every quote in single quotes, doubling any single quote inside it):
 
 format: 1
 application: <name>
-subject: {repo: <as given>, commit: <as given>, tree_hash: <as given>}
-runtime: {capability: runtime:<name>, source: declared, evidence: [{file: <path>, line: <n>, quote: <the exact line>}]}
+subject:
+  repo: <as given>
+  commit: <as given>
+  tree_hash: <as given>
+runtime:
+  capability: runtime:<name>
+  source: declared
+  evidence:
+    - file: <path>
+      line: <n>
+      quote: '<the exact line>'
 facts:
-  - {capability: <kind>:<name>, source: inferred, evidence: [{file: <path>, line: <n>, quote: <the exact line>}]}
-  - {capability: <kind>:<name>, source: unknown, looked_at: [<files you read>]}
+  - capability: <kind>:<name>
+    source: inferred
+    evidence:
+      - file: <path>
+        line: <n>
+        quote: '<the exact line>'
+  - capability: <kind>:<name>
+    source: unknown
+    looked_at: [<files you read>]
+
+Call check_record with the file's path after writing it: it runs the same checks the gate
+will, and tells you what to fix. Claim only what a line you quote shows; a library is
+not needed because a base image contains it.
 
 Rules, each checked by a tool before anyone reviews your record:
 - Every capability comes from the index you are given in the task. A name not in it
