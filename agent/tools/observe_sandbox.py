@@ -38,7 +38,12 @@ TRACER_BASE = ("debian:bookworm-slim@sha256:"
                "abd67ffcfa541b485a3dff59865ab629aa048a6c613e639d36e7456b0b229241")
 TRACER_RECIPE = (f"FROM {TRACER_BASE}\n"
                  "RUN apt-get update && apt-get install -y --no-install-recommends strace "
-                 "&& rm -rf /var/lib/apt/lists/*\n")
+                 "busybox-static && rm -rf /var/lib/apt/lists/*\n")
+# The subject's gate needs a shell, and scratch and distroless images have none.
+# A static busybox is copied into the OBSERVATION image only — instrumentation,
+# like the tracer — never into the package. Its path is outside anything an
+# application would open, and the gate execs the application's own command.
+SHELL = "/.auton-observe/busybox"
 SUBJECT_USER = "65534:65534"
 
 # Runs as the subject's PID 1, with shell builtins only (no grep): block until
@@ -94,9 +99,11 @@ def build(subject: Path, tag: str, dockerfile: Path | None = None) -> str:
     if not recipe.is_file():
         raise RuntimeError(f"{subject} has no Dockerfile and none was given; observe.py "
                            f"runs the application as a declared recipe builds it, or not at all")
-    _docker(["build", "-q", "-f", str(recipe), "-t", tag, str(subject)])
     _docker(["build", "-q", "-t", tracer_tag(), "-"], stdin=TRACER_RECIPE)
-    return _docker(["image", "inspect", "--format", "{{.Id}}", tag]).strip()
+    _docker(["build", "-q", "-f", str(recipe), "-t", f"{tag}-app", str(subject)])
+    _docker(["build", "-q", "-t", tag, "-"],
+            stdin=f"FROM {tag}-app\nCOPY --from={tracer_tag()} /bin/busybox {SHELL}\n")
+    return _docker(["image", "inspect", "--format", "{{.Id}}", f"{tag}-app"]).strip()
 
 
 def command_of(tag: str) -> list[str]:
@@ -119,7 +126,7 @@ def subject_argv(name: str, tag: str, command: list[str], limits: Limits) -> lis
     return ["docker", "run", "-d", "--name", name, *_confine(limits),
             "--cap-drop", "ALL", "--user", SUBJECT_USER,
             "--sysctl", "net.ipv4.ip_unprivileged_port_start=0",
-            "--entrypoint", "sh", tag, "-c", GATE, "sh", *command]
+            "--entrypoint", SHELL, tag, "sh", "-c", GATE, "sh", *command]
 
 
 def tracer_argv(name: str, subject: str, limits: Limits) -> list[str]:
@@ -144,12 +151,13 @@ def run(tag: str, command: list[str], exercise: str, limits: Limits) -> tuple[st
         time.sleep(limits.warmup_seconds)
         exercise_exit = 0
         if exercise.strip():
-            r = subprocess.run(["docker", "exec", "--user", SUBJECT_USER, subj, "sh", "-c",
-                                exercise], capture_output=True, text=True,
+            r = subprocess.run(["docker", "exec", "--user", SUBJECT_USER, subj, SHELL, "sh",
+                                "-c", exercise], capture_output=True, text=True,
                                timeout=limits.exercise_seconds)
             exercise_exit = r.returncode
         # The application first, so its exit is traced; then the container.
-        subprocess.run(["docker", "exec", "--user", SUBJECT_USER, subj, "sh", "-c", STOP_APP],
+        subprocess.run(["docker", "exec", "--user", SUBJECT_USER, subj, SHELL, "sh", "-c",
+                        STOP_APP],
                        capture_output=True, timeout=30)
         time.sleep(1)
         subprocess.run(["docker", "stop", "-t", "2", subj], capture_output=True, timeout=60)

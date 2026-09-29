@@ -93,7 +93,7 @@ def observe(subject: Path, *, record: Path | None = None, exercise: str = "",
     subject = Path(subject).resolve()
     tag = sandbox.image_tag(subject)
     image = sandbox.build(subject, tag, dockerfile)
-    command = command or sandbox.command_of(tag)
+    command = command or sandbox.command_of(f"{tag}-app")
     started = time.monotonic()
     trace, exercise_exit = sandbox.run(tag, command, exercise, limits)
     obs = observe_text(trace)

@@ -46,3 +46,15 @@ only fully agent-driven subjects. The fallback count is reported beside it.
   index). Ablation reports most of them over-claimed.
 - **Python (js_example)**: the most likely full pass. Predicted over-claims include
   `/etc/ssl/certs` again.
+
+## Amendment, before any w22 run
+
+The `whoami` prediction above names a coverage gap in A5, and the gap was closed before any w22
+run started. The observation image now carries its own static busybox for the tracer handshake:
+instrumentation, like the tracer, and never part of the package. Observing `whoami` from its own
+`scratch` Dockerfile then worked (`listen:tcp/80`; a failed open of `/etc/localtime`; its CA
+bundle and zoneinfo never opened).
+
+**Revised prediction for whoami:** it reaches `ablate`, if the Packager writes a Go build that
+passes the gate. The CA bundle and `/usr/share/zoneinfo` come out over-claimed if the Analyst
+claims them.

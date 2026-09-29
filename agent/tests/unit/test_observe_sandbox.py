@@ -64,6 +64,11 @@ def test_no_host_mounts_and_no_host_environment():
             assert flag not in argv, flag
 
 
+def test_the_gate_shell_is_our_instrumentation_not_the_images():
+    from observe_sandbox import SHELL
+    assert _pair(SUBJECT, "--entrypoint") == SHELL
+
+
 def test_the_command_is_argv_not_a_shell_string():
     assert SUBJECT[-2:] == ["python", "app.py"]
 
