@@ -139,6 +139,55 @@ class TaskGraph:
         self._nodes[task_id].assigned_agent_id = agent_id
         self._nodes[task_id].state = TaskState.RUNNING
 
+    def to_dict(self) -> list[dict[str, Any]]:
+        """Every node, as JSON-safe data. Persisted each iteration so a run cut
+        off by its time budget can resume without re-planning (w17)."""
+        return [{
+            "task_id": n.task_id,
+            "title": n.title,
+            "subsystem": n.subsystem,
+            "assigned_to": n.assigned_to,
+            "priority": n.priority,
+            "state": n.state.value,
+            "dependencies": list(n.dependencies),
+            "data": n.data,
+            "assigned_agent_id": n.assigned_agent_id,
+            "review_rounds": n.review_rounds,
+        } for n in self._nodes.values()]
+
+    @classmethod
+    def from_dict(cls, nodes: list[dict[str, Any]]) -> TaskGraph:
+        graph = cls()
+        graph.load_nodes(nodes)
+        return graph
+
+    def load_nodes(self, nodes: list[dict[str, Any]]) -> None:
+        """Replace this graph's contents with saved nodes, states included.
+
+        In place rather than a new graph, because the scheduler holds a
+        reference to this one.
+        """
+        self._nodes.clear()
+        self._dependents.clear()
+        for raw in nodes:
+            node = TaskNode(
+                task_id=raw["task_id"],
+                title=raw["title"],
+                subsystem=raw["subsystem"],
+                assigned_to=raw["assigned_to"],
+                priority=raw.get("priority", 3),
+                state=TaskState(raw["state"]),
+                dependencies=list(raw.get("dependencies") or []),
+                data=dict(raw.get("data") or {}),
+                assigned_agent_id=raw.get("assigned_agent_id"),
+                review_rounds=raw.get("review_rounds", 0),
+            )
+            self._nodes[node.task_id] = node
+            for dep_id in node.dependencies:
+                self._dependents[dep_id].add(node.task_id)
+        for node in self._nodes.values():
+            self._update_readiness(node)
+
     def get_task(self, task_id: str) -> TaskNode | None:
         return self._nodes.get(task_id)
 

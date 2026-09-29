@@ -24,6 +24,37 @@ deterministic tools adjudicate it.** A table cannot read an unfamiliar repositor
 cannot be trusted to name a capability — that failure is measured at 5 phantom hardware
 citations per 50 turns.
 
+### Status 2026-09-29: both open PRDs are fully planned
+
+Twelve plans in `../plans/` cover every open phase of both PRDs. Execute with `/prp-implement`
+in wave order; within a wave, plans are independent unless a row says otherwise.
+
+| Wave | Plans | PRD phases | Waits on |
+|---|---|---|---|
+| **w17** | `w17-run-resume` (**first**), `w17-owner-gates`, `w17-app-artifact-record`, `w17-app-subject-staging` | enables R1–R12; writes D1/D2/D-A1–3 as questions, X1–X4 as commands; A1; A2 | nothing |
+| **w18** | `w18-generation-campaign`, `w18-app-analyst` | R1–R12 and scenarios C1–C3; A3+A4 | run-resume; A1+A2 |
+| **w19** | `w19-app-observe`, `w19-app-artifact-to-manifest` | A5; A6 | **D-A3 and D-A1 verdicts** (A5 runs untrusted code) |
+| **w20** | `w20-app-swarm-handoff`, `w20-app-packager` | A7; A8 | A6; D-A1 |
+| **w21** | `w21-app-external-probe`, then `w21-app-ablation-score` | A10; A9 | A8 |
+| **w22** | `w22-app-three-runtimes` | validation of A1–A10 | everything above |
+
+**What the planning found that the PRDs did not say**
+
+1. **A cut-off run loses its work.** `OrchestratorState` claims "crash recovery" but persists
+   no task graph, and `engine.run()` always re-plans. R1 lost an uncommitted 13,982-byte
+   `pmm.c` at the five-hour timeout. Every long R run needs `w17-run-resume` first.
+2. **"Nothing may write under `.auton/subject/`" needs three layers, not one.** Agents hold a
+   `shell` whose allowlist includes `python` and `git`, so a tool-level refusal can be walked
+   around. The plan adds read-only modes and a tree hash checked before any Analyst output is
+   accepted; the hash is the actual gate.
+3. **The Analyst's quotes can be checked, not just cited.** The evidence gate verifies every
+   quoted line appears at its `file:line` in the staged subject, through the same pre-review
+   hook (`syntax_gate.record_errors`) that already refuses malformed driver records.
+4. **Open Questions 2–5 of the application PRD are answered in the plans that need them**:
+   typed capabilities in a second, disjoint index with one bridge table (A1); Packager as its
+   own role (A8); `declared`-only ports recorded as assumptions (A1); ablation cost measured
+   (A9).
+
 The five PRDs that preceded it are in [`completed/`](./completed/). Their phases are done, and
 each carries a banner saying where its open rows went. They are worth reading for *why* a thing
 is shaped the way it is; they are no longer where you look for what to do next.

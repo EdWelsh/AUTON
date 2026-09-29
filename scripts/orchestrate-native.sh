@@ -22,15 +22,25 @@ source "$ROOT/scripts/lib/toolchain.sh"   # validators shell out to the cross to
 PY="${PYTHON:-$ROOT/.venv/bin/python}"
 case "$PY" in /*) ;; *) PY="$ROOT/$PY";; esac
 
-GOAL="${1:?usage: orchestrate-native.sh \"<goal>\" [--timeout SECS]}"
-shift || true
+USAGE='usage: orchestrate-native.sh "<goal>" [--timeout SECS] | --resume [--timeout SECS]'
+GOAL=""
+RESUME=""
 TIMEOUT="${ORCH_TIMEOUT:-900}"
+# At the budget the orchestrator gets TERM and this long to commit its work in
+# flight and save its graph before KILL (w17: R1 lost an uncommitted pmm.c).
+GRACE="${ORCH_GRACE:-120}"
 while [ $# -gt 0 ]; do
 	case "$1" in
 		--timeout) TIMEOUT="${2:?--timeout needs a value}"; shift 2 ;;
-		*) echo "unknown argument: $1" >&2; exit 2 ;;
+		--resume) RESUME=1; shift ;;
+		-*) echo "unknown argument: $1" >&2; echo "$USAGE" >&2; exit 2 ;;
+		*) [ -z "$GOAL" ] || { echo "$USAGE" >&2; exit 2; }; GOAL="$1"; shift ;;
 	esac
 done
+[ -n "$GOAL" ] || [ -n "$RESUME" ] || { echo "$USAGE" >&2; exit 2; }
+RUN_ARGS=(run)
+[ -n "$GOAL" ] && RUN_ARGS+=("$GOAL")
+[ -n "$RESUME" ] && RUN_ARGS+=(--resume)
 
 LOG="${ORCH_LOG:-$ROOT/.artifacts/orchestrator/$(date -u +%Y-%m-%dT%H-%M-%SZ).log}"
 # ORCH_CONFIG selects another config (an experiment's workspace and caps) without
@@ -38,7 +48,7 @@ LOG="${ORCH_LOG:-$ROOT/.artifacts/orchestrator/$(date -u +%Y-%m-%dT%H-%M-%SZ).lo
 CONFIG="${ORCH_CONFIG:-$ROOT/agent/config/auton.toml}"
 mkdir -p "$(dirname "$LOG")"
 
-echo "goal:    $GOAL"
+echo "goal:    ${GOAL:-(resuming the saved run)}"
 echo "model:   $("$PY" -c "
 import tomllib; print(tomllib.load(open('$CONFIG','rb'))['llm']['model'])" 2>/dev/null || echo unknown)"
 echo "cap:     $("$PY" -c "
@@ -51,13 +61,25 @@ echo
 cd "$ROOT/agent" || exit 1
 # Plain output: the rich console emits ANSI and hyperlink escapes that make the
 # captured log hard to grep for the phase transitions this lane measures.
-TERM=dumb NO_COLOR=1 auton_timeout "$TIMEOUT" "$PY" -m orchestrator.cli \
-	--config "$CONFIG" run "$GOAL" 2>&1 | tee "$LOG"
+TERM=dumb NO_COLOR=1 AUTON_KILL_AFTER="$GRACE" auton_timeout "$TIMEOUT" "$PY" \
+	-m orchestrator.cli --config "$CONFIG" "${RUN_ARGS[@]}" 2>&1 | tee "$LOG"
 rc="${PIPESTATUS[0]}"
 
 echo
+# The log decides, not the status: at the budget `timeout` reports 124 whether
+# the orchestrator paused cleanly inside the grace period or was killed.
+if grep -q "Refusing to resume" "$LOG"; then
+	echo "ORCHESTRATOR: RESUME REFUSED (see the reason above)"
+	exit 2
+fi
+if grep -q "Orchestration paused" "$LOG"; then
+	echo "ORCHESTRATOR: PAUSED after ${TIMEOUT}s — work in flight committed, graph saved"
+	echo "  resume: ORCH_CONFIG=$CONFIG scripts/orchestrate-native.sh --resume"
+	exit 75
+fi
 if [ "$rc" -eq 124 ]; then
-	echo "ORCHESTRATOR: TIMEOUT after ${TIMEOUT}s (did not reach a terminal phase)"
+	echo "ORCHESTRATOR: TIMEOUT after ${TIMEOUT}s, not paused within the ${GRACE}s grace"
+	echo "  (killed: work in flight may be uncommitted; --resume may still work from the last iteration)"
 	exit 1
 fi
 

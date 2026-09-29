@@ -30,7 +30,13 @@ Defined in `w13-factory-f6-rerun.plan.md` and unchanged since:
 1. **Pre-register** before starting: model, budget, goal text, and the gates *in order*, into
    `.claude/PRPs/reports/<run>-preregistration.md`. Predictions are stated in advance so a
    result cannot be reinterpreted afterwards.
-2. **Run once.** A second attempt is a different experiment and is labelled as one.
+2. **Run once.** A second attempt is a different experiment and is labelled as one. A run
+   may span several **sessions**: at `ORCH_TIMEOUT` the orchestrator gets SIGTERM and
+   `ORCH_GRACE` seconds (default 120) to commit the work in flight and save its task graph,
+   and the script says `PAUSED` (exit 75). `scripts/orchestrate-native.sh --resume` continues
+   the same run without re-planning. A resume refuses a changed goal, a changed model, or a
+   `main` that moved, because each of those makes it a different experiment. The report lists
+   every session's wall-clock.
 3. **Archive** the transcript, timing, goal, config and branch diffs to `.artifacts/authorship/`.
 4. **Gates decide**, in the pre-registered order. Exit 2 means not generated; exit 1 means
    generated wrong. These are different results and are never merged into "failed".

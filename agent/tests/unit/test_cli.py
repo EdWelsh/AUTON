@@ -182,3 +182,24 @@ class TestLocalModelsNeedNoApiKey:
     def test_an_environment_variable_satisfies_it(self, monkeypatch):
         monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-x")
         assert has_api_key("anthropic", {})
+
+
+class TestRunResume:
+    """w17: `run --resume` continues a paused run; without it a goal is required."""
+
+    def _config(self, tmp_path):
+        cfg = tmp_path / "auton.toml"
+        cfg.write_text('[llm]\nmodel = "ollama_chat/x"\n')
+        return cfg
+
+    def test_a_goal_is_required_without_resume(self, tmp_path):
+        result = CliRunner().invoke(cli, ["-c", str(self._config(tmp_path)), "run"])
+        assert result.exit_code == 2
+        assert "GOAL is required unless --resume" in result.output
+
+    def test_resume_with_no_saved_run_is_refused(self, tmp_path):
+        ws = tmp_path / "ws"
+        result = CliRunner().invoke(
+            cli, ["-c", str(self._config(tmp_path)), "run", "--resume", "-w", str(ws)])
+        assert result.exit_code == 2
+        assert "no saved run" in result.output

@@ -174,6 +174,19 @@ class GitWorkspace:
             logger.info("Created branch %s", branch_name)
         return branch_name
 
+    def branch_exists(self, branch: str) -> bool:
+        return branch in [b.name for b in self.repo.branches]
+
+    def main_head(self) -> str:
+        """The commit main points at."""
+        return self.repo.git.rev_parse(self._get_main_branch())
+
+    def current_branch(self) -> str | None:
+        try:
+            return self.repo.active_branch.name
+        except TypeError:           # detached HEAD
+            return None
+
     def checkout(self, branch: str) -> None:
         """Switch to a branch."""
         self.repo.git.checkout(branch)

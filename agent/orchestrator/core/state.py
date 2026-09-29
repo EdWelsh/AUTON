@@ -8,6 +8,8 @@ from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any
 
+STATE_FORMAT = 2
+
 
 @dataclass
 class OrchestratorState:
@@ -28,17 +30,29 @@ class OrchestratorState:
     agent_states: dict[str, str] = field(default_factory=dict)
     errors: list[dict[str, Any]] = field(default_factory=list)
     iteration: int = 0
+    # Format 2 (w17) persists what a resume needs. Format 1 saved counters only,
+    # so despite this module's docstring nothing could be recovered from it.
+    format: int = STATE_FORMAT
+    graph: list[dict[str, Any]] = field(default_factory=list)
+    model: str = ""
+    head_at_save: str = ""      # main's commit when paused; a resume refuses if it moved
+    resume_count: int = 0
+    design_adopted: bool = False   # phase 2 finished; a resume skips it
 
     def save(self, path: Path) -> None:
-        """Save state to a JSON file."""
+        """Save state to a JSON file, atomically: a kill mid-write must not
+        leave a truncated file where the only copy of the graph was."""
         self.updated_at = time.time()
         path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(json.dumps(asdict(self), indent=2), encoding="utf-8")
+        tmp = path.with_suffix(".json.tmp")
+        tmp.write_text(json.dumps(asdict(self), indent=2), encoding="utf-8")
+        tmp.replace(path)
 
     @classmethod
     def load(cls, path: Path) -> OrchestratorState:
-        """Load state from disk."""
+        """Load state from disk. A file with no `format` predates format 2."""
         data = json.loads(path.read_text(encoding="utf-8"))
+        data.setdefault("format", 1)
         return cls(**data)
 
     @classmethod

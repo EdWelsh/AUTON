@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import signal
 import uuid
 from enum import Enum
 from pathlib import Path
@@ -23,7 +24,7 @@ from orchestrator.comms.git_workspace import GitWorkspace
 from orchestrator.comms.message_bus import MessageBus
 from orchestrator.core import syntax_gate
 from orchestrator.core.scheduler import Scheduler
-from orchestrator.core.state import OrchestratorState
+from orchestrator.core.state import STATE_FORMAT, OrchestratorState
 from orchestrator.core.task_graph import TaskGraph, TaskState
 from orchestrator.arch_registry import ArchProfile, get_arch_profile
 from orchestrator.llm.client import (
@@ -231,67 +232,71 @@ class OrchestrationEngine:
                 training_count,
             )
 
-    async def run(self, goal: str) -> dict[str, Any]:
+    async def run(self, goal: str, resume: bool = False) -> dict[str, Any]:
         """Run the full orchestration loop for a goal.
 
         This is the main entry point. It runs until all tasks are
         complete, the budget is exhausted, or max iterations are reached.
+
+        SIGTERM or SIGINT pauses rather than kills: the work in flight is
+        committed on its branch, the task graph is saved, and the result says
+        `paused`. `resume=True` continues that run without re-planning (w17:
+        R1 lost an uncommitted 13,982-byte pmm.c at its time budget).
         """
-        run_id = uuid.uuid4().hex[:8]
         state_path = self.workspace_path / ".auton" / "state.json"
-        self.state = OrchestratorState.load_or_create(state_path, run_id, goal)
+        model = str(self.config.get("llm", {}).get("model", ""))
 
-        logger.info("=== AUTON Orchestration Run %s ===", run_id)
-        logger.info("Goal: %s", goal)
-
-        # Initialize workspace and agents
+        # Initialize workspace first: a resume is checked against main's HEAD.
         self.workspace.init()
+        if resume:
+            refusal = self._resume_refusal(state_path, goal, model)
+            if refusal:
+                logger.error("Refusing to resume: %s", refusal)
+                return {"success": False, "resume_refused": refusal,
+                        "error": f"refusing to resume: {refusal}"}
+            self.state = OrchestratorState.load(state_path)
+            self.state.resume_count += 1
+        else:
+            # A new run never inherits a saved one. load_or_create used to hand
+            # a fresh run the previous run's id and goal.
+            self.state = OrchestratorState(
+                run_id=uuid.uuid4().hex[:8], goal=goal, model=model)
+        self.state.save(state_path)
+
+        logger.info("=== AUTON Orchestration Run %s%s ===", self.state.run_id,
+                    f" (resumed, session {self.state.resume_count + 1})" if resume else "")
+        logger.info("Goal: %s", goal)
         self._init_agents()
 
+        self._pause_requested = False
+        self._main_task = asyncio.current_task()
+        restore_signals = self._install_pause_handlers()
         try:
-            # Phase 1: Manager decomposes the goal into tasks
-            self.state.phase = "planning"
-            self.state.save(state_path)
-            logger.info("--- Phase 1: Planning ---")
+            return await self._run_phases(goal, state_path, resume)
+        except asyncio.CancelledError:
+            if not self._pause_requested:
+                raise
+            if self._main_task is not None and hasattr(self._main_task, "uncancel"):
+                self._main_task.uncancel()
+            return self._pause(state_path)
+        finally:
+            restore_signals()
 
-            # Create task graph based on workflow mode
-            if self.workflow_mode == WorkflowMode.KERNEL_BUILD:
-                # Existing kernel build workflow
-                manager: ManagerAgent = self._agents["manager"]
-                tasks = await manager.decompose_goal(goal)
-            elif self.workflow_mode == WorkflowMode.SLM_TRAINING:
-                # SLM training workflow only
-                tasks = self.task_graph.create_slm_training_tasks(goal)
-            elif self.workflow_mode == WorkflowMode.DUAL:
-                # Both kernel and SLM tasks
-                manager: ManagerAgent = self._agents["manager"]
-                kernel_tasks = await manager.decompose_goal(goal)
-                slm_tasks = self.task_graph.create_slm_training_tasks(goal)
-                tasks = kernel_tasks + slm_tasks
+    async def _run_phases(self, goal: str, state_path: Path, resume: bool) -> dict[str, Any]:
+        run_id = self.state.run_id
+        manager: ManagerAgent = self._agents["manager"]
+        try:
+            if resume:
+                tasks = self._restore_graph()
             else:
-                return {"success": False, "error": f"Unknown workflow mode: {self.workflow_mode}"}
+                planned = await self._plan(goal, state_path)
+                if isinstance(planned, dict):
+                    return planned
+                tasks = planned
 
-            self.state.tasks_created = len(tasks)
-
-            if not tasks:
-                return {"success": False, "error": "Manager produced no tasks"}
-
-            # Add tasks to the graph
-            self.task_graph.add_tasks(tasks)
-            logger.info("Task graph: %d tasks, order: %s",
-                        len(tasks), self.task_graph.topological_order())
-
-            # Phase 2: Architect designs interfaces for each subsystem
-            self.state.phase = "designing"
-            self.state.save(state_path)
-            logger.info("--- Phase 2: Design ---")
-
-            architect: ArchitectAgent = self._agents["architect"]
-            subsystems = sorted(set(t.get("subsystem", "") for t in tasks if t.get("subsystem")))
-            for subsystem in subsystems:
-                design = await architect.design_subsystem(subsystem)
-                self.workspace.checkout_main()
-                self._adopt_design(design.get("branch"))
+            # A resume skips design unless the pause landed inside it.
+            if not self.state.design_adopted:
+                await self._design(tasks, state_path)
 
             # Phase 3: Development loop
             self.state.phase = "developing"
@@ -304,10 +309,16 @@ class OrchestrationEngine:
             max_iterations = int(
                 self.config.get("orchestrator", {}).get("max_iterations", 50)
             )
-            for iteration in range(max_iterations):
+            # A resumed session numbers its iterations after the last one.
+            first = self.state.iteration if resume else 0
+            for iteration in range(first, first + max_iterations):
+                if self._pause_requested:
+                    # The cancellation normally lands first; this catches one
+                    # that something below swallowed.
+                    raise asyncio.CancelledError
                 self.state.iteration = iteration
                 self.state.total_cost_usd = self.cost_tracker.total_cost_usd
-                self.state.save(state_path)
+                self._checkpoint(state_path)
 
                 if self.task_graph.is_complete:
                     logger.info("All tasks complete!")
@@ -359,7 +370,7 @@ class OrchestrationEngine:
 
             # Phase 4: Final integration check
             self.state.phase = "integrating"
-            self.state.save(state_path)
+            self._checkpoint(state_path)
             logger.info("--- Phase 4: Final Integration ---")
 
             integrator = self._agents["integrator"]
@@ -390,7 +401,7 @@ class OrchestrationEngine:
                 validation_ok = validation_ok and composition_result.success
 
             self.state.phase = "done"
-            self.state.save(state_path)
+            self._checkpoint(state_path)
 
             success = (self.task_graph.is_complete
                        and final_check.get("success", False) and validation_ok)
@@ -417,6 +428,184 @@ class OrchestrationEngine:
             self.state.phase = "error"
             self.state.save(state_path)
             return {"success": False, "error": str(e), "cost": self.cost_tracker.total_cost_usd}
+
+    # ------------------------------------------------------------------ #
+    # Planning and design (phases 1 and 2)
+    # ------------------------------------------------------------------ #
+
+    async def _plan(self, goal: str, state_path: Path) -> list[dict[str, Any]] | dict[str, Any]:
+        """Phase 1: the task list, or a result dict saying why there is none."""
+        self.state.phase = "planning"
+        self.state.save(state_path)
+        logger.info("--- Phase 1: Planning ---")
+
+        manager: ManagerAgent = self._agents["manager"]
+        if self.workflow_mode == WorkflowMode.KERNEL_BUILD:
+            tasks = await manager.decompose_goal(goal)
+        elif self.workflow_mode == WorkflowMode.SLM_TRAINING:
+            tasks = self.task_graph.create_slm_training_tasks(goal)
+        elif self.workflow_mode == WorkflowMode.DUAL:
+            kernel_tasks = await manager.decompose_goal(goal)
+            slm_tasks = self.task_graph.create_slm_training_tasks(goal)
+            tasks = kernel_tasks + slm_tasks
+        else:
+            return {"success": False, "error": f"Unknown workflow mode: {self.workflow_mode}"}
+
+        self.state.tasks_created = len(tasks)
+        if not tasks:
+            return {"success": False, "error": "Manager produced no tasks"}
+
+        self.task_graph.add_tasks(tasks)
+        logger.info("Task graph: %d tasks, order: %s",
+                    len(tasks), self.task_graph.topological_order())
+        self._checkpoint(state_path)
+        return tasks
+
+    async def _design(self, tasks: list[dict[str, Any]], state_path: Path) -> None:
+        """Phase 2: the architect designs each subsystem's interfaces."""
+        self.state.phase = "designing"
+        self._checkpoint(state_path)
+        logger.info("--- Phase 2: Design ---")
+
+        architect: ArchitectAgent = self._agents["architect"]
+        subsystems = sorted(set(t.get("subsystem", "") for t in tasks if t.get("subsystem")))
+        for subsystem in subsystems:
+            design = await architect.design_subsystem(subsystem)
+            self.workspace.checkout_main()
+            self._adopt_design(design.get("branch"))
+        self.state.design_adopted = True
+        self._checkpoint(state_path)
+
+    # ------------------------------------------------------------------ #
+    # Pause and resume (w17)
+    # ------------------------------------------------------------------ #
+
+    def _checkpoint(self, state_path: Path) -> None:
+        """Save state with the whole task graph: what a resume starts from."""
+        self.state.graph = self.task_graph.to_dict()
+        self.state.save(state_path)
+
+    def request_pause(self) -> None:
+        """Stop at the next await: commit the work in flight, save, return.
+
+        Installed as the SIGTERM/SIGINT handler, so a time budget ends a
+        session instead of the run.
+        """
+        if self._pause_requested:
+            return
+        self._pause_requested = True
+        logger.warning("Pause requested: committing work in flight and saving the task graph")
+        task = getattr(self, "_main_task", None)
+        if task is not None and not task.done():
+            task.cancel()
+
+    def _install_pause_handlers(self):
+        """SIGTERM and SIGINT pause the run. Returns a function that restores
+        the previous handlers."""
+        sigs = [signal.SIGTERM, signal.SIGINT]
+        loop = asyncio.get_running_loop()
+        try:
+            for sig in sigs:
+                loop.add_signal_handler(sig, self.request_pause)
+        except (NotImplementedError, RuntimeError, ValueError):
+            # Windows has no loop signal handlers; a worker thread has no
+            # signals at all. Fall back to the plain handler where possible.
+            for sig in sigs:
+                try:
+                    loop.remove_signal_handler(sig)
+                except (NotImplementedError, RuntimeError, ValueError):
+                    pass
+            previous = {}
+            try:
+                for sig in sigs:
+                    previous[sig] = signal.signal(
+                        sig, lambda *_: loop.call_soon_threadsafe(self.request_pause))
+            except ValueError:          # not the main thread
+                for sig, handler in previous.items():
+                    signal.signal(sig, handler)
+                return lambda: None
+
+            def restore_plain() -> None:
+                for sig, handler in previous.items():
+                    signal.signal(sig, handler)
+            return restore_plain
+
+        def restore_loop() -> None:
+            for sig in sigs:
+                loop.remove_signal_handler(sig)
+        return restore_loop
+
+    def _pause(self, state_path: Path) -> dict[str, Any]:
+        """Commit the work in flight on its branch, save the graph, and report.
+
+        The workspace is one checkout, so the work in flight is whatever sits
+        on the checked-out branch. `checkout_main` commits it there before
+        leaving, which is the same rule that stopped a checkout orphaning work.
+        """
+        current = self.workspace.current_branch()
+        message = f"WIP: paused at iteration {self.state.iteration}"
+        if current and self.workspace.commit_pending(current, message):
+            logger.info("Committed work in flight on %s", current)
+        self.workspace.checkout_main()
+
+        self.state.phase = "paused"
+        self.state.head_at_save = self.workspace.main_head()
+        self._checkpoint(state_path)
+        progress = self.task_graph.progress
+        logger.warning("Orchestration paused at iteration %d | Progress: %s",
+                       self.state.iteration, progress)
+        return {
+            "success": False,
+            "paused": True,
+            "error": "paused; resume with --resume",
+            "run_id": self.state.run_id,
+            "progress": progress,
+            "iterations": self.state.iteration,
+            "total_cost_usd": self.cost_tracker.total_cost_usd,
+        }
+
+    def _resume_refusal(self, state_path: Path, goal: str, model: str) -> str | None:
+        """Why this run cannot resume, or None. Each reason names what differs."""
+        if not state_path.exists():
+            return f"no saved run at {state_path}; start a new run without --resume"
+        saved = OrchestratorState.load(state_path)
+        if saved.format < STATE_FORMAT:
+            return (f"state format {saved.format} predates resume (format {STATE_FORMAT}) "
+                    f"and saved no task graph; start a new run")
+        if saved.goal != goal:
+            return (f"saved goal {saved.goal!r} differs from {goal!r}; resume with the "
+                    f"saved goal, or start a new run")
+        if saved.model and saved.model != model:
+            return (f"saved run used model {saved.model!r} and the config says {model!r}; "
+                    f"a model change is a different experiment — pre-register it and "
+                    f"start a new run")
+        if not saved.graph:
+            return ("no task graph was saved: the run stopped before planning finished; "
+                    "start a new run")
+        if saved.phase == "done":
+            return f"run {saved.run_id} already finished"
+        head = self.workspace.main_head()
+        if saved.head_at_save and saved.head_at_save != head:
+            return (f"main moved since the pause (was {saved.head_at_save[:8]}, now "
+                    f"{head[:8]}); the saved graph never saw that work")
+        return None
+
+    def _restore_graph(self) -> list[dict[str, Any]]:
+        """Load the saved graph; work that was in flight goes back to READY.
+
+        A task that was RUNNING or waiting for review when the session ended
+        is handed to an agent again, told that its branch already holds what
+        was done, so it continues rather than starting over.
+        """
+        self.task_graph.load_nodes(self.state.graph)
+        for node in self.task_graph.all_tasks:
+            if node.state in (TaskState.RUNNING, TaskState.REVIEW):
+                node.state = TaskState.READY
+                node.assigned_agent_id = None
+                node.data["resumed"] = True
+        logger.info("Resumed run %s at iteration %d: %s", self.state.run_id,
+                    self.state.iteration, self.task_graph.progress)
+        return [n.data for n in self.task_graph.all_tasks]
 
     async def _execute_agent_task(self, agent: Any, task_node: Any) -> TaskResult:
         """Execute a task with the appropriate agent method."""
@@ -457,6 +646,7 @@ class OrchestrationEngine:
         good. Each branch below exists for one of those.
         """
         task_id = task_node.task_id
+        task_node.data.pop("resumed", None)
         if not (isinstance(result, TaskResult) and result.success):
             summary = getattr(result, "summary", "") or "no summary"
             logger.info("Task %s did not succeed: %s", task_id, summary)

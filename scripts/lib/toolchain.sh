@@ -87,11 +87,22 @@ export TIMEOUT_BIN
 # auton_timeout <seconds> <command> [args...]
 # Returns the command's exit status, or 124 when it was killed on timeout
 # (matching coreutils `timeout`).
+#
+# AUTON_KILL_AFTER=<seconds>: send TERM at the timeout, then KILL only if the
+# command is still running that much later (coreutils `-k`). The orchestrator
+# uses the grace to commit work in flight and save its task graph (w17). The
+# status is 124 either way; the caller reads its own log to tell a clean pause
+# from a kill.
 auton_timeout() {
 	local secs="$1"
 	shift
+	local grace="${AUTON_KILL_AFTER:-}"
 	if [ -n "$TIMEOUT_BIN" ]; then
-		"$TIMEOUT_BIN" "$secs" "$@"
+		if [ -n "$grace" ]; then
+			"$TIMEOUT_BIN" -k "$grace" "$secs" "$@"
+		else
+			"$TIMEOUT_BIN" "$secs" "$@"
+		fi
 		return $?
 	fi
 
@@ -101,21 +112,27 @@ auton_timeout() {
 	# suppresses that substitution.
 	"$@" <&0 &
 	local cmd_pid=$!
+	# The flag records that the timeout fired, which with a grace period no
+	# longer coincides with the killer having exited.
+	local fired
+	fired="$(mktemp)" && rm -f "$fired"
 	# The killer's output goes to /dev/null: killing the subshell does not kill
 	# its `sleep`, and an orphaned sleep holding the caller's stdout keeps a
 	# downstream `| tee` waiting for EOF until the whole timeout elapses.
-	( sleep "$secs"; kill -TERM "$cmd_pid" 2>/dev/null ) >/dev/null 2>&1 &
+	( sleep "$secs"; : > "$fired"; kill -TERM "$cmd_pid" 2>/dev/null
+	  if [ -n "$grace" ]; then
+		sleep "$grace"; kill -KILL "$cmd_pid" 2>/dev/null
+	  fi ) >/dev/null 2>&1 &
 	local killer_pid=$!
 
 	local rc=0
 	wait "$cmd_pid" 2>/dev/null || rc=$?
-	# Killer still alive => the command finished on its own.
 	if kill -0 "$killer_pid" 2>/dev/null; then
 		kill "$killer_pid" 2>/dev/null
 		wait "$killer_pid" 2>/dev/null || true
-	else
-		rc=124
 	fi
+	[ -e "$fired" ] && rc=124
+	rm -f "$fired"
 	return "$rc"
 }
 

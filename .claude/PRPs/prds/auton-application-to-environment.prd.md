@@ -1,6 +1,6 @@
 # AUTON: Application to Environment
 
-**Status**: draft, 2026-09-24
+**Status**: planned, 2026-09-29 — every phase has a plan; wave order in [README.md](./README.md). Validation: [`w22-app-three-runtimes`](../plans/w22-app-three-runtimes.plan.md)
 **Layer**: a second front end for the compiler, staffed by agents. The manifest pipeline
 beneath it already exists — read
 [`auton-intent-to-os-compiler.prd.md`](./completed/auton-intent-to-os-compiler.prd.md) first.
@@ -221,19 +221,19 @@ is not a tool that never over-claims.
 
 | # | Phase | Gate that decides it | Depends on |
 |---|---|---|---|
-| A1 | **Artifact record + validator.** The contract the Analyst writes into: per-fact provenance, one capability vocabulary | `artifact_spec.py --validate` refuses a fact with no source and names what is missing, mirroring `target_spec.missing_facts` | — |
-| A2 | **Subject staging.** The application repo mounted read-only at `.auton/subject/` | `read_file`/`search_code`/`list_files` reach it unchanged; **every write under `.auton/subject/` is refused**, scored by attempting one | — |
-| A3 | **The Analyst agent.** New `AgentRole.ANALYST`, prompt, and registration | Constructed **and** `scheduler.register_agent("analyst", …)` **and** advertised in the manager's `assigned_to` list. A task assigned to `analyst` is dispatched — see `engine.py:165` for what happens when only two of the three are done | A1, A2 |
-| A4 | **Evidence discipline.** Every finding is `file:line` + quoted line + a capability from the index | Scored adversarially: prompt the Analyst toward a capability that does not exist and confirm the refusal names the known list. A run that invents one fails the phase | A3 |
-| A5 | **`observe.py`.** Run the application under observation; record what it opened, loaded and bound | An application whose only dependency is `dlopen`ed is caught here and **missed by A4's static reading**. If A4 catches it, one of the two is not doing its job. `observe.py` is the only writer of `observed`, enforced by test | A1, D-A3 |
-| A6 | **Artifact → Manifest.** `build_from_artifact(…) -> Manifest` | A contradictory artifact manifest is refused with the dependency path, exactly as a sentence one is; **zero downstream files changed** | A4, A5 |
-| A7 | **The swarm handoff.** Manager decomposes from the manifest; a capability the target cannot supply becomes a generation task for the existing Architect/Developer loop | A manifest naming a capability the kernel does not yet have produces a task graph the existing loop runs, and the gate for that capability is the one that already exists | A6 |
-| A8 | **The Packager agent.** New `AgentRole.PACKAGER`: validated manifest → deployable artifact | Same three-part registration gate as A3. The artifact builds and the application starts | A6, D-A1 |
-| A9 | **Ablation score.** Owned by the Tester | Every capability in `requires` removed in turn; the probe must fail each time. `N of N`, or the manifest over-claimed | A8, A10 |
-| A10 | **External probe** | `run-intent-probe.sh`'s rubric: `WORKED` / `HONESTLY REFUSED` / `FAILED`. A log line saying "started" is the image grading itself | A8 |
-| D-A1 | **Decision**: first substrate — container or microVM | a verdict in `decisions/first-substrate.md` | owner |
-| D-A2 | **Decision**: how far on syscalls and seccomp | a verdict in `decisions/syscall-scope.md` | owner |
-| D-A3 | **Decision**: is the subject repository trusted? | a verdict in `decisions/subject-trust.md` | owner |
+| A1 | **Artifact record + validator.** The contract the Analyst writes into: per-fact provenance, one capability vocabulary | `artifact_spec.py --validate` refuses a fact with no source and names what is missing, mirroring `target_spec.missing_facts` | — · plan: [`w17-app-artifact-record`](../plans/w17-app-artifact-record.plan.md) |
+| A2 | **Subject staging.** The application repo mounted read-only at `.auton/subject/` | `read_file`/`search_code`/`list_files` reach it unchanged; **every write under `.auton/subject/` is refused**, scored by attempting one | — · plan: [`w17-app-subject-staging`](../plans/w17-app-subject-staging.plan.md) |
+| A3 | **The Analyst agent.** New `AgentRole.ANALYST`, prompt, and registration | Constructed **and** `scheduler.register_agent("analyst", …)` **and** advertised in the manager's `assigned_to` list. A task assigned to `analyst` is dispatched — see `engine.py:165` for what happens when only two of the three are done | A1, A2 · plan: [`w18-app-analyst`](../plans/w18-app-analyst.plan.md) |
+| A4 | **Evidence discipline.** Every finding is `file:line` + quoted line + a capability from the index | Scored adversarially: prompt the Analyst toward a capability that does not exist and confirm the refusal names the known list. A run that invents one fails the phase | A3 · plan: [`w18-app-analyst`](../plans/w18-app-analyst.plan.md) |
+| A5 | **`observe.py`.** Run the application under observation; record what it opened, loaded and bound | An application whose only dependency is `dlopen`ed is caught here and **missed by A4's static reading**. If A4 catches it, one of the two is not doing its job. `observe.py` is the only writer of `observed`, enforced by test | A1, D-A3 · plan: [`w19-app-observe`](../plans/w19-app-observe.plan.md) |
+| A6 | **Artifact → Manifest.** `build_from_artifact(…) -> Manifest` | A contradictory artifact manifest is refused with the dependency path, exactly as a sentence one is; **zero downstream files changed** | A4, A5 · plan: [`w19-app-artifact-to-manifest`](../plans/w19-app-artifact-to-manifest.plan.md) |
+| A7 | **The swarm handoff.** Manager decomposes from the manifest; a capability the target cannot supply becomes a generation task for the existing Architect/Developer loop | A manifest naming a capability the kernel does not yet have produces a task graph the existing loop runs, and the gate for that capability is the one that already exists | A6 · plan: [`w20-app-swarm-handoff`](../plans/w20-app-swarm-handoff.plan.md) |
+| A8 | **The Packager agent.** New `AgentRole.PACKAGER`: validated manifest → deployable artifact | Same three-part registration gate as A3. The artifact builds and the application starts | A6, D-A1 · plan: [`w20-app-packager`](../plans/w20-app-packager.plan.md) |
+| A9 | **Ablation score.** Owned by the Tester | Every capability in `requires` removed in turn; the probe must fail each time. `N of N`, or the manifest over-claimed | A8, A10 · plan: [`w21-app-ablation-score`](../plans/w21-app-ablation-score.plan.md) |
+| A10 | **External probe** | `run-intent-probe.sh`'s rubric: `WORKED` / `HONESTLY REFUSED` / `FAILED`. A log line saying "started" is the image grading itself | A8 · plan: [`w21-app-external-probe`](../plans/w21-app-external-probe.plan.md) |
+| D-A1 | **Decision**: first substrate — container or microVM | a verdict in `decisions/first-substrate.md` | owner · plan: [`w17-owner-gates`](../plans/w17-owner-gates.plan.md) |
+| D-A2 | **Decision**: how far on syscalls and seccomp | a verdict in `decisions/syscall-scope.md` | owner · plan: [`w17-owner-gates`](../plans/w17-owner-gates.plan.md) |
+| D-A3 | **Decision**: is the subject repository trusted? | a verdict in `decisions/subject-trust.md` | owner · plan: [`w17-owner-gates`](../plans/w17-owner-gates.plan.md) |
 
 ### D-A3 deserves reading before A5 is scheduled
 

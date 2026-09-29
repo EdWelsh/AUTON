@@ -451,6 +451,15 @@ class Agent:
         if context := task.get("context"):
             parts.append(f"\n**Additional Context**:\n{context}")
 
+        if task.get("resumed"):
+            where = task.get("resume_branch")
+            parts.append(
+                "\n**Resumed**: an earlier session ended before this task finished. "
+                + (f"Branch `{where}` already holds the work done so far — read those "
+                   "files before writing, and continue rather than start over."
+                   if where else
+                   "Check the workspace for work already done before starting over."))
+
         if feedback := task.get("review_feedback"):
             parts.append("\n**Review feedback on your previous attempt** (address every point):")
             for round_no, review in enumerate(feedback, 1):

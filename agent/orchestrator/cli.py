@@ -89,17 +89,29 @@ def has_api_key(provider: str, sources: dict) -> bool:
     )
 
 
+# Exit statuses a caller can act on. 75 is EX_TEMPFAIL: the run paused at its
+# time budget with its work committed, and `run --resume` continues it.
+EXIT_PAUSED = 75
+EXIT_RESUME_REFUSED = 2
+
+
 @cli.command()
-@click.argument("goal")
+@click.argument("goal", required=False)
 @click.option("--workspace", "-w", default=None, help="Workspace directory (default: repo root)")
 @click.option("--specs", "-s", default="kernel_spec", help="Kernel spec directory")
+@click.option("--resume", is_flag=True,
+              help="Continue the paused run in this workspace instead of planning a new one")
 @click.pass_context
-def run(ctx, goal: str, workspace: str | None, specs: str):
+def run(ctx, goal: str | None, workspace: str | None, specs: str, resume: bool):
     """Run the agent orchestration loop to build toward a goal.
 
     GOAL is a high-level description of what to build, e.g.:
     "Build a minimal bootable kernel that prints to serial console"
+
+    With --resume, GOAL may be omitted: the saved run's goal is used.
     """
+    if not goal and not resume:
+        raise click.UsageError("GOAL is required unless --resume is given")
     config = _load_config(ctx.obj["config_path"])
 
     # Fail fast if no API key is available for the configured provider
@@ -143,6 +155,14 @@ def run(ctx, goal: str, workspace: str | None, specs: str):
     workspace_path.mkdir(parents=True, exist_ok=True)
     spec_path = (agent_dir / specs).resolve() if not Path(specs).is_absolute() else Path(specs).resolve()
 
+    if resume and not goal:
+        state_path = workspace_path / ".auton" / "state.json"
+        if not state_path.exists():
+            console.print(f"[red]Refusing to resume: no saved run at {state_path}[/red]")
+            raise SystemExit(EXIT_RESUME_REFUSED)
+        from orchestrator.core.state import OrchestratorState
+        goal = OrchestratorState.load(state_path).goal
+
     console.print(f"\n[bold green]AUTON Orchestration Engine[/bold green]")
     console.print(f"Goal: {goal}")
     console.print(f"Workspace: {workspace_path}")
@@ -157,13 +177,29 @@ def run(ctx, goal: str, workspace: str | None, specs: str):
         config=config,
     )
 
-    result = asyncio.run(engine.run(goal))
+    result = asyncio.run(engine.run(goal, resume=resume))
+
+    if refusal := result.get("resume_refused"):
+        console.print(f"\n[bold red]Refusing to resume: {refusal}[/bold red]")
+        raise SystemExit(EXIT_RESUME_REFUSED)
+
+    if result.get("paused"):
+        # The wording is what orchestrate-native.sh greps for.
+        console.print(f"\n[bold yellow]Orchestration paused at iteration "
+                      f"{result.get('iterations', 0)}; work in flight is committed. "
+                      f"Continue with: run --resume[/bold yellow]")
+        _print_progress(result)
+        raise SystemExit(EXIT_PAUSED)
 
     if result.get("success"):
         console.print("\n[bold green]Orchestration completed successfully![/bold green]")
     else:
         console.print(f"\n[bold red]Orchestration failed: {result.get('error', 'unknown')}[/bold red]")
 
+    _print_progress(result)
+
+
+def _print_progress(result: dict) -> None:
     console.print(f"Total cost: ${result.get('total_cost_usd', 0):.2f}")
     console.print(f"Iterations: {result.get('iterations', 0)}")
 

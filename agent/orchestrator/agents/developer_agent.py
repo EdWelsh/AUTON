@@ -54,8 +54,17 @@ class DeveloperAgent(Agent):
 
         logger.info("[%s] Implementing %s", self.agent_id, task_id)
 
-        # Create feature branch
-        branch = self.workspace.create_branch(self.agent_id, subsystem, component)
+        # Continue on the branch an earlier attempt left (a paused run, or a
+        # rejection), whichever agent picks the task up; else start one. The
+        # name is written into the task so a pause mid-task can say where the
+        # work is — by the time a cancellation unwinds, _task_branch is gone.
+        earlier = task.get("resume_branch")
+        if earlier and self.workspace.branch_exists(earlier):
+            self.workspace.checkout(earlier)
+            branch = earlier
+        else:
+            branch = self.workspace.create_branch(self.agent_id, subsystem, component)
+        task["resume_branch"] = branch
 
         # Update task metadata
         metadata = TaskMetadata(
