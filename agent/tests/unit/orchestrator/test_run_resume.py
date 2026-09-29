@@ -243,3 +243,41 @@ async def test_a_fresh_run_does_not_inherit_a_paused_state(workspace, monkeypatc
     await eng.run(GOAL)
     assert any("## Goal" in p for p in model.prompts), "a new run plans from scratch"
     assert OrchestratorState.load(workspace / ".auton" / "state.json").resume_count == 0
+
+
+async def test_a_second_session_killed_outright_can_still_resume(workspace, monkeypatch):
+    """w17 review: head_at_save survived a resume, so a session that moved main
+    and was then killed (not paused) could never be resumed again."""
+    await _paused_run(workspace, monkeypatch)
+    state_path = workspace / ".auton" / "state.json"
+
+    eng = _engine(workspace)
+    model = Model()
+    monkeypatch.setattr(eng.client, "send_with_tools", model)
+    await eng.run(GOAL, resume=True)          # merges: main moves
+    state = OrchestratorState.load(state_path)
+    state.phase = "developing"                # as a SIGKILL would leave it
+    state.save(state_path)
+
+    result = await _engine(workspace).run(GOAL, resume=True)
+    assert not result.get("resume_refused"), result
+
+
+async def test_a_pause_that_cannot_commit_still_saves_and_says_so(workspace, monkeypatch):
+    eng = _engine(workspace)
+    model = Model(pause_on="kernel/lib/a.c")
+    model.engine = eng
+    monkeypatch.setattr(eng.client, "send_with_tools", model)
+
+    real = eng.workspace.commit_pending
+
+    def locked(*a, **k):
+        if eng._pause_requested:
+            raise RuntimeError("index.lock exists")
+        return real(*a, **k)
+    monkeypatch.setattr(eng.workspace, "commit_pending", locked)
+    result = await eng.run(GOAL)
+
+    assert result.get("paused") is True
+    assert "index.lock" in result["pause_warning"]
+    assert OrchestratorState.load(workspace / ".auton" / "state.json").phase == "paused"

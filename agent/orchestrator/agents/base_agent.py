@@ -16,6 +16,7 @@ from orchestrator.comms.git_workspace import GitWorkspace
 from orchestrator.comms.message_bus import Message, MessageBus, MessageType
 from orchestrator.llm.client import LLMClient
 from orchestrator.llm.tools import SHELL_ALLOWLIST as _SHELL_ALLOWLIST
+from orchestrator.core.proc import communicate
 
 logger = logging.getLogger(__name__)
 
@@ -33,6 +34,8 @@ class AgentRole(str, Enum):
     REVIEWER = "reviewer"
     TESTER = "tester"
     INTEGRATOR = "integrator"
+    # Application to environment: reads a staged application, emits evidence
+    ANALYST = "analyst"
     # SLM agents
     DATA_SCIENTIST = "data_scientist"
     MODEL_ARCHITECT = "model_architect"
@@ -383,9 +386,7 @@ class Agent:
                 stderr=asyncio.subprocess.PIPE,
                 cwd=str(self.workspace.path),
             )
-            stdout, stderr = await asyncio.wait_for(
-                proc.communicate(), timeout=timeout
-            )
+            stdout, stderr = await communicate(proc, timeout)
             output = ""
             if stdout:
                 output += stdout.decode("utf-8", errors="replace")

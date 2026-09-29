@@ -10,6 +10,7 @@ from enum import Enum
 from pathlib import Path
 from typing import Any
 
+from orchestrator.agents.analyst_agent import AnalystAgent
 from orchestrator.agents.architect_agent import ArchitectAgent
 from orchestrator.agents.base_agent import AgentRole, TaskResult
 from orchestrator.agents.data_scientist_agent import DataScientistAgent
@@ -20,7 +21,7 @@ from orchestrator.agents.model_architect_agent import ModelArchitectAgent
 from orchestrator.agents.reviewer_agent import ReviewerAgent
 from orchestrator.agents.tester_agent import TesterAgent
 from orchestrator.agents.training_agent import TrainingAgent
-from orchestrator.comms.git_workspace import GitWorkspace
+from orchestrator.comms.git_workspace import GitWorkspace, WorkspaceError
 from orchestrator.comms.message_bus import MessageBus
 from orchestrator.core import syntax_gate
 from orchestrator.core.scheduler import Scheduler
@@ -71,10 +72,15 @@ class OrchestrationEngine:
         workspace_path: Path,
         kernel_spec_path: Path,
         config: dict[str, Any],
+        subject_path: Path | None = None,
     ):
         self.workspace_path = workspace_path
         self.kernel_spec_path = kernel_spec_path
         self.config = config
+        # An existing application to analyse (application-to-environment).
+        # Staged read-only into the workspace when the run starts.
+        self.subject_path = Path(subject_path) if subject_path else None
+        self.subject_hash = ""
 
         # Load architecture profile
         kernel_config = config.get("kernel", {})
@@ -198,6 +204,21 @@ class OrchestrationEngine:
             self._agents[f"tester-{i+1:02d}"] = agent
             self.scheduler.register_agent("tester", agent)
 
+        # The Analyst exists only when there is something to analyse, and is
+        # registered AND advertised — all three, or tasks for it never run.
+        if self.subject_path is not None:
+            analyst = self._create_agent("analyst-01", AgentRole.ANALYST, AnalystAgent)
+            analyst.subject_hash = self.subject_hash
+            analyst.subject_commit = self.workspace.subject_commit
+            analyst.subject_repo = str(self.subject_path)
+            self._agents["analyst"] = analyst
+            self.scheduler.register_agent("analyst", analyst)
+            self._agents["manager"].advertise_role(
+                "analyst",
+                "7. An existing application is staged read-only at .auton/subject/. "
+                "Analysing it is ONE task, assigned_to \"analyst\", producing "
+                "analysis/<application>.artifact.yaml.")
+
         logger.info(
             "Initialized %d agents: 1 manager, 1 architect, %d devs, "
             "%d reviewers, %d testers, 1 integrator",
@@ -256,12 +277,23 @@ class OrchestrationEngine:
                         "error": f"refusing to resume: {refusal}"}
             self.state = OrchestratorState.load(state_path)
             self.state.resume_count += 1
+            # The check it guarded has passed. Cleared, because this session
+            # will move main itself: if it is then killed rather than paused,
+            # a stale value would refuse the next resume forever (w17 review).
+            self.state.head_at_save = ""
         else:
             # A new run never inherits a saved one. load_or_create used to hand
             # a fresh run the previous run's id and goal.
             self.state = OrchestratorState(
                 run_id=uuid.uuid4().hex[:8], goal=goal, model=model)
         self.state.save(state_path)
+
+        if self.subject_path is not None:
+            refusal = self._stage_subject(resume)
+            if refusal:
+                return {"success": False, "error": refusal,
+                        **({"resume_refused": refusal} if resume else {})}
+            self.state.save(state_path)
 
         logger.info("=== AUTON Orchestration Run %s%s ===", self.state.run_id,
                     f" (resumed, session {self.state.resume_count + 1})" if resume else "")
@@ -542,14 +574,23 @@ class OrchestrationEngine:
         on the checked-out branch. `checkout_main` commits it there before
         leaving, which is the same rule that stopped a checkout orphaning work.
         """
-        current = self.workspace.current_branch()
-        message = f"WIP: paused at iteration {self.state.iteration}"
-        if current and self.workspace.commit_pending(current, message):
-            logger.info("Committed work in flight on %s", current)
-        self.workspace.checkout_main()
+        warning = None
+        try:
+            current = self.workspace.current_branch()
+            message = f"WIP: paused at iteration {self.state.iteration}"
+            if current and self.workspace.commit_pending(current, message):
+                logger.info("Committed work in flight on %s", current)
+            self.workspace.checkout_main()
+            self.state.head_at_save = self.workspace.main_head()
+        except Exception as exc:          # noqa: BLE001 — the graph must still be saved
+            # A stale index.lock, a checkout that conflicts: the work in flight
+            # may be uncommitted, but the graph is still worth saving, and the
+            # caller must still hear "paused" rather than a traceback.
+            warning = f"work in flight may be uncommitted: {exc}"
+            logger.error("Pause could not commit the work in flight: %s", exc)
+            self.state.head_at_save = ""
 
         self.state.phase = "paused"
-        self.state.head_at_save = self.workspace.main_head()
         self._checkpoint(state_path)
         progress = self.task_graph.progress
         logger.warning("Orchestration paused at iteration %d | Progress: %s",
@@ -562,6 +603,7 @@ class OrchestrationEngine:
             "progress": progress,
             "iterations": self.state.iteration,
             "total_cost_usd": self.cost_tracker.total_cost_usd,
+            **({"pause_warning": warning} if warning else {}),
         }
 
     def _resume_refusal(self, state_path: Path, goal: str, model: str) -> str | None:
@@ -721,8 +763,32 @@ class OrchestrationEngine:
             return False
         return self.workspace.merge_branch(branch)
 
+    def _stage_subject(self, resume: bool) -> str | None:
+        """Stage the subject (or, on resume, check the one already staged).
+        Returns why it could not be, or None."""
+        try:
+            if resume and self.workspace.subject_path.exists():
+                self.workspace.verify_subject(self.state.subject_hash)
+                self.subject_hash = self.state.subject_hash
+            else:
+                self.subject_hash = self.workspace.stage_subject(self.subject_path)
+        except WorkspaceError as exc:
+            return f"subject: {exc}"
+        self.state.subject_hash = self.subject_hash
+        return None
+
     def _syntax_errors(self, branch: str) -> str | None:
-        """The compiler's errors for the C files `branch` changed, or None."""
+        """The compiler's errors for the C files `branch` changed, or None.
+
+        With a staged subject, the subject is re-hashed first: a record built
+        on evidence that changed is refused whatever it says (A2 layer 3).
+        """
+        subject = getattr(self, "subject_hash", "")
+        if subject:
+            try:
+                self.workspace.verify_subject(subject)
+            except WorkspaceError as exc:
+                return str(exc)
         _, changed = self.workspace.branch_diff(branch)
         self.workspace.checkout(branch)
         try:

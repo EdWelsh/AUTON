@@ -158,7 +158,21 @@ class GitWorkspace:
             raise WorkspaceError(f"no application directory at {source}")
         dest.parent.mkdir(parents=True, exist_ok=True)
         self._exclude_from_git(SUBJECT_DIR)
+        try:
+            self._copy_subject(source, dest)
+        except Exception as exc:
+            # A half-staged subject is writable and unhashed; left behind, the
+            # retry would be refused as "already staged" (w17 review).
+            self.unstage_subject()
+            raise WorkspaceError(f"could not stage {source}: {exc}") from exc
 
+        self._subject_manifest = subject_hash.manifest(dest)
+        _make_read_only(dest)
+        digest = subject_hash.digest(self._subject_manifest)
+        logger.info("Staged subject %s at %s (tree %s)", source, SUBJECT_DIR, digest[:12])
+        return digest
+
+    def _copy_subject(self, source: Path, dest: Path) -> None:
         if (source / ".git").exists():
             import io
             import subprocess
@@ -175,12 +189,6 @@ class GitWorkspace:
             shutil.copytree(source, dest, symlinks=True,
                             ignore=shutil.ignore_patterns(".git"))
             self.subject_commit = None
-
-        self._subject_manifest = subject_hash.manifest(dest)
-        _make_read_only(dest)
-        digest = subject_hash.digest(self._subject_manifest)
-        logger.info("Staged subject %s at %s (tree %s)", source, SUBJECT_DIR, digest[:12])
-        return digest
 
     def verify_subject(self, expected: str) -> None:
         """Refuse if the staged subject differs from the tree hashed at staging,
@@ -217,9 +225,12 @@ class GitWorkspace:
     def _exclude_from_git(self, rel: str) -> None:
         """Keep `rel` out of every `git add -A`, including an agent's own via
         the shell tool, by listing it in the workspace's local exclude file."""
-        exclude = self.path / ".git" / "info" / "exclude"
-        if not exclude.parent.exists():
-            return
+        # Asked of git, not assumed: in a worktree `.git` is a file, and the
+        # exclude file lives in the common git directory (w17 review).
+        exclude = Path(self.repo.git.rev_parse("--git-path", "info/exclude"))
+        if not exclude.is_absolute():
+            exclude = self.path / exclude
+        exclude.parent.mkdir(parents=True, exist_ok=True)
         lines = exclude.read_text().splitlines() if exclude.exists() else []
         entry = f"/{rel}/"
         if entry not in lines:
@@ -431,7 +442,15 @@ class GitWorkspace:
     def commit(self, message: str, files: list[str] | None = None) -> str:
         """Stage and commit changes. Returns the commit hash."""
         if files:
-            self.repo.index.add(files)
+            # index.add ignores .gitignore and info/exclude, so a subject path
+            # named explicitly would be committed; it is evidence, not work.
+            kept = [f for f in files if not _under(f, SUBJECT_DIR)]
+            if len(kept) != len(files):
+                logger.warning("Not committing files under %s/: the subject is not work",
+                               SUBJECT_DIR)
+                if not kept:
+                    return self.repo.head.commit.hexsha
+            self.repo.index.add(kept)
         else:
             self.repo.git.add("-A")
 
@@ -556,3 +575,9 @@ def _make_read_only(root: Path) -> None:
             if not os.path.islink(full):
                 os.chmod(full, os.stat(full).st_mode & ~0o222)
         os.chmod(dirpath, os.stat(dirpath).st_mode & ~0o222)
+
+
+def _under(path: str, directory: str) -> bool:
+    """Whether workspace-relative `path` is `directory` or inside it."""
+    norm = os.path.normpath(path).replace(os.sep, "/")
+    return norm == directory or norm.startswith(directory + "/")

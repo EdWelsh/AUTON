@@ -548,6 +548,17 @@ TESTER_TOOLS = [
     TOOL_SHELL,
 ]
 
+# Reads and writes files, commits; no shell. It reads, it does not run —
+# running the subject is observe.py's job, in a sandbox, by a tool (A5).
+ANALYST_TOOLS = [
+    TOOL_READ_FILE,
+    TOOL_WRITE_FILE,
+    TOOL_EDIT_FILE,
+    TOOL_LIST_FILES,
+    TOOL_SEARCH_CODE,
+    TOOL_GIT_COMMIT,
+]
+
 INTEGRATOR_TOOLS = [
     TOOL_READ_FILE,
     TOOL_WRITE_FILE,

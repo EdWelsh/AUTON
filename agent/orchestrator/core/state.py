@@ -38,6 +38,7 @@ class OrchestratorState:
     head_at_save: str = ""      # main's commit when paused; a resume refuses if it moved
     resume_count: int = 0
     design_adopted: bool = False   # phase 2 finished; a resume skips it
+    subject_hash: str = ""   # tree hash of a staged application (A2), if any
 
     def save(self, path: Path) -> None:
         """Save state to a JSON file, atomically: a kill mid-write must not

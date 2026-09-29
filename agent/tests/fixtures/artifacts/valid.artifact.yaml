@@ -3,7 +3,7 @@ application: flask-hello
 subject:
   repo: agent/tests/fixtures/apps/flask-hello
   commit: "0000000000000000000000000000000000000000"
-  tree_hash: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  tree_hash: "b08b7fa0fb9f4570677dfb7814041ed2ec333d7df9675fc79963b24b5bd1654c"
 runtime:
   capability: runtime:python-3.12
   source: declared

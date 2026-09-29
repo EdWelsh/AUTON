@@ -41,6 +41,11 @@ APP_SPEC = ROOT / "agent" / "app_spec"
 INDEX = APP_SPEC / "capabilities.yaml"
 BRIDGE = APP_SPEC / "kernel_bridge.yaml"
 
+# The same hash the workspace takes when it stages a subject; one definition.
+if str(ROOT / "agent") not in sys.path:
+    sys.path.insert(0, str(ROOT / "agent"))
+from orchestrator.comms import subject_hash  # noqa: E402
+
 FORMAT = 1
 SOURCES = ("observed", "declared", "inferred", "unknown")
 CITING_SOURCES = ("declared", "inferred")
@@ -69,6 +74,7 @@ class Kind:
     sources: tuple[str, ...] = SOURCES
     enabled: bool = True
     reason: str = ""
+    max_port: int | None = None     # the name's final number is a port
 
 
 @dataclass(frozen=True)
@@ -88,9 +94,15 @@ class Index:
         if not kind.enabled:
             return f"{capability!r}: kind {kind_name!r} is disabled — {kind.reason}"
         if kind.pattern is not None:
-            if not kind.pattern.match(name):
+            # fullmatch, not match: `$` also matches before a trailing newline,
+            # so "listen:tcp/80\n" passed (w17 review).
+            if not kind.pattern.fullmatch(name):
                 return (f"{capability!r} does not match {kind_name} names "
                         f"({kind.pattern.pattern}); for example {kind.example}")
+            if kind.max_port is not None:
+                port = int(re.search(r"([0-9]+)$", name).group(1))
+                if port > kind.max_port:
+                    return f"{capability!r}: port {port} is above {kind.max_port}"
             return None
         if name not in kind.names:
             return (f"{capability!r} is not in the index. Known {kind_name} names: "
@@ -119,6 +131,7 @@ def load_index(path: Path = INDEX) -> Index:
             sources=tuple(raw.get("sources") or SOURCES),
             enabled=raw.get("enabled", True),
             reason=" ".join(str(raw.get("reason", "")).split()),
+            max_port=raw.get("max_port"),
         )
     return Index(kinds=kinds)
 
@@ -213,6 +226,9 @@ def load(path: str | Path) -> Artifact:
                             f"(required: {', '.join(REQUIRED)})")
     if not isinstance(data["facts"], list):
         raise ArtifactError(f"{path.name}: facts must be a list")
+    for key in ("subject", "runtime"):
+        if not isinstance(data[key], dict):
+            raise ArtifactError(f"{path.name}: {key} must be a mapping")
     return Artifact(path=path, application=str(data["application"]),
                     subject=dict(data["subject"] or {}), runtime=dict(data["runtime"] or {}),
                     facts=tuple(f if isinstance(f, dict) else {"capability": repr(f)}
@@ -230,6 +246,8 @@ def _evidence_problems(label: str, raw: list) -> list[str]:
         if absent:
             problems.append(f"{label}: evidence {n} lacks {', '.join(absent)} "
                             f"(each item needs file, line and quote)")
+        elif not str(ev["quote"]).strip():
+            problems.append(f"{label}: evidence {n} quotes a blank line, which shows nothing")
         elif not isinstance(ev["line"], int) or ev["line"] < 1:
             problems.append(f"{label}: evidence {n} line {ev['line']!r} is not a line "
                             f"number (a positive integer)")
@@ -238,10 +256,10 @@ def _evidence_problems(label: str, raw: list) -> list[str]:
 
 def fact_problems(raw: dict, index: Index, *, runtime: bool = False) -> list[str]:
     """Every defect in one fact."""
-    cap = str(raw.get("capability", ""))
-    label = cap or "a fact with no capability"
-    if not cap:
-        return [f"{label}: give capability as kind:name"]
+    cap = raw.get("capability", "")
+    if not isinstance(cap, str) or not cap:
+        return [f"capability {cap!r}: give capability as a kind:name string"]
+    label = cap
     if runtime and not cap.startswith("runtime:"):
         return [f"runtime is {cap!r}; it must be a runtime:… capability "
                 f"({', '.join(known('runtime', index))})"]
@@ -284,7 +302,7 @@ def derive_assumptions(artifact: Artifact) -> list[str]:
     out = []
     for raw in artifact.facts:
         cap, source = raw.get("capability", ""), raw.get("source")
-        if cap in observed:
+        if not isinstance(cap, str) or cap in observed:
             continue
         if source == "declared" and cap.startswith("listen:"):
             out.append(f"{cap}: declared only ({_cite(raw)}), never observed")
@@ -293,7 +311,64 @@ def derive_assumptions(artifact: Artifact) -> list[str]:
     return out
 
 
-def validate(path: str | Path, index: Index | None = None) -> Report:
+def _norm(text: str) -> str:
+    return " ".join(str(text).split())
+
+
+def quote_problems(raw: dict, subject: Path) -> list[str]:
+    """Check each quote against the line it cites, in the staged subject.
+
+    A citation is evidence only if the line says what the quote says. A model
+    that paraphrases, or cites a file the application does not have, fails
+    here — loudly, and with both strings, so it can correct itself.
+    Whitespace is normalised; nothing else is.
+    """
+    label = raw.get("capability", "a fact")
+    root = subject.resolve()
+    problems = []
+    for ev in raw.get("evidence") or []:
+        if not isinstance(ev, dict) or not all(ev.get(k) for k in ("file", "line", "quote")):
+            continue            # reported by _evidence_problems
+        if not str(ev["quote"]).strip():
+            continue            # likewise
+        rel, line = str(ev["file"]), ev["line"]
+        target = (root / rel).resolve()
+        try:
+            target.relative_to(root)
+        except ValueError:
+            problems.append(f"{label}: evidence cites {rel!r}, outside the subject; "
+                            f"cite paths relative to the application root")
+            continue
+        if not target.is_file():
+            problems.append(f"{label}: evidence cites {rel}, and the subject has no such file")
+            continue
+        if not isinstance(line, int):
+            continue
+        # Split on newline only: splitlines() also breaks on form feeds and
+        # other separators, which made line numbers drift from `grep -n`.
+        lines = target.read_text(encoding="utf-8", errors="replace").split("\n")
+        if lines and lines[-1] == "":
+            lines.pop()
+        if line > len(lines):
+            problems.append(f"{label}: evidence cites {rel}:{line}, and the file has only "
+                            f"{len(lines)} lines")
+            continue
+        actual = lines[line - 1]
+        if _norm(actual.rstrip("\r")) != _norm(ev["quote"]):
+            problems.append(f"{label}: {rel}:{line} reads {actual.strip()!r}, not "
+                            f"{str(ev['quote']).strip()!r} — quote the cited line exactly")
+    return problems
+
+
+def validate(path: str | Path, index: Index | None = None, *,
+             subject: Path | None = None, allow_observed: bool = False) -> Report:
+    """Validate a record. With `subject`, every quote is checked against the
+    staged tree and the record's tree hash against that tree's.
+
+    `observed` is refused unless `allow_observed=True`, which only observe.py
+    passes, for records it wrote itself. The safe setting is the default: a
+    caller that forgets the flag must not accept a stamped claim (w17 review).
+    """
     index = index or load_index()
     artifact = load(path)
     report = Report(artifact=artifact)
@@ -303,10 +378,22 @@ def validate(path: str | Path, index: Index | None = None) -> Report:
         report.problems.append(
             "subject.tree_hash is missing or not a sha256: it ties the record to the "
             "exact tree analysed (GitWorkspace.stage_subject returns it)")
+    elif subject is not None:
+        actual = subject_hash.tree_hash(subject)
+        if actual != tree_hash:
+            report.problems.append(
+                f"subject.tree_hash {tree_hash[:12]} is not the staged subject's "
+                f"({actual[:12]}): this record describes a different tree")
 
-    report.problems += fact_problems(artifact.runtime, index, runtime=True)
-    for raw in artifact.facts:
-        report.problems += fact_problems(raw, index)
+    everything = [(artifact.runtime, True), *((raw, False) for raw in artifact.facts)]
+    for raw, is_runtime in everything:
+        report.problems += fact_problems(raw, index, runtime=is_runtime)
+        if not allow_observed and raw.get("source") == "observed":
+            report.problems.append(
+                f"{raw.get('capability')}: an agent may not write observed — only "
+                f"observe.py may, from a run it watched. Use declared, inferred or unknown")
+        if subject is not None and raw.get("source") in CITING_SOURCES:
+            report.problems += quote_problems(raw, subject)
     report.assumptions = derive_assumptions(artifact)
     return report
 
@@ -315,6 +402,8 @@ def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--validate", metavar="FILE")
+    ap.add_argument("--subject", metavar="DIR",
+                    help="the staged application: quotes and tree_hash are checked against it")
     ap.add_argument("--known", metavar="KIND")
     args = ap.parse_args(argv)
 
@@ -329,7 +418,7 @@ def main(argv: list[str] | None = None) -> int:
         ap.error("give --validate FILE or --known KIND")
 
     try:
-        report = validate(args.validate)
+        report = validate(args.validate, subject=Path(args.subject) if args.subject else None)
     except ArtifactError as exc:
         print(f"UNREADABLE: {exc}", file=sys.stderr)
         return EXIT_UNREADABLE
@@ -340,7 +429,8 @@ def main(argv: list[str] | None = None) -> int:
     if not report.ok:
         return EXIT_REFUSED
     print(f"OK {Path(args.validate).name}: {report.artifact.application}, "
-          f"{len(report.artifact.facts)} fact(s)")
+          f"{len(report.artifact.facts)} fact(s)"
+          + ("" if args.subject else " — quotes NOT checked (no --subject)"))
     return 0
 
 

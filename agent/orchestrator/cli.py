@@ -101,8 +101,11 @@ EXIT_RESUME_REFUSED = 2
 @click.option("--specs", "-s", default="kernel_spec", help="Kernel spec directory")
 @click.option("--resume", is_flag=True,
               help="Continue the paused run in this workspace instead of planning a new one")
+@click.option("--subject", default=None, type=click.Path(exists=True, file_okay=False),
+              help="An existing application to analyse; staged read-only at .auton/subject/")
 @click.pass_context
-def run(ctx, goal: str | None, workspace: str | None, specs: str, resume: bool):
+def run(ctx, goal: str | None, workspace: str | None, specs: str, resume: bool,
+        subject: str | None):
     """Run the agent orchestration loop to build toward a goal.
 
     GOAL is a high-level description of what to build, e.g.:
@@ -175,6 +178,7 @@ def run(ctx, goal: str | None, workspace: str | None, specs: str, resume: bool):
         workspace_path=workspace_path,
         kernel_spec_path=spec_path,
         config=config,
+        subject_path=Path(subject).resolve() if subject else None,
     )
 
     result = asyncio.run(engine.run(goal, resume=resume))

@@ -66,7 +66,7 @@ def test_an_observed_port_is_not_an_assumption(tmp_path):
     data = _record()
     data["facts"].append({"capability": "listen:tcp/8000", "source": "observed",
                           "observation": "obs-1"})
-    report = validate(_write(tmp_path, data))
+    report = validate(_write(tmp_path, data), allow_observed=True)
     assert report.ok, report.problems
     assert not any("listen:tcp/8000" in a for a in report.assumptions)
 
@@ -126,7 +126,7 @@ def test_observed_must_name_its_observation(tmp_path):
     came from. An observed fact without one was written by something else."""
     data = _record()
     data["facts"].append({"capability": "lib:libz.so.1", "source": "observed"})
-    [problem] = _problems(tmp_path, data)
+    [problem] = validate(_write(tmp_path, data), allow_observed=True).problems
     assert "observe.py" in problem and "observation" in problem
 
 
@@ -290,3 +290,54 @@ def test_a_yaml_keyword_in_the_index_is_refused(tmp_path):
     with pytest.raises(ArtifactError, match="quote"):
         load_index(bad)
     assert "null" in known("device")
+
+
+# --------------------------------------------------------------------------- #
+# w17 review findings
+# --------------------------------------------------------------------------- #
+
+@pytest.mark.parametrize("cap", ["listen:tcp/80\n", "dial:tcp/example.com:80\n",
+                                 "listen:tcp/99999", "dial:tcp/db:70000",
+                                 "path:/etc/../root/.ssh", "path:/etc/./x", "path:/etc/.."])
+def test_review_bypasses_are_refused(cap):
+    assert load_index().refusal(cap) is not None, cap
+
+
+def test_a_dotfile_path_is_still_fine():
+    assert load_index().refusal("path:/etc/ssl/.hidden") is None
+
+
+def test_observed_is_refused_by_default(tmp_path):
+    data = _record()
+    data["facts"].append({"capability": "lib:libz.so.1", "source": "observed",
+                          "observation": "x"})
+    p = _write(tmp_path, data)
+    assert not validate(p).ok, "the safe setting is the default"
+    assert validate(p, allow_observed=True).ok
+
+
+def test_a_blank_quote_is_not_evidence(tmp_path):
+    data = _record()
+    data["facts"][0]["evidence"][0]["quote"] = "   "
+    [problem] = _problems(tmp_path, data)
+    assert "blank" in problem
+
+
+@pytest.mark.parametrize("key,value", [("subject", ["x"]), ("runtime", "python")])
+def test_a_malformed_section_is_unreadable_not_a_crash(tmp_path, key, value):
+    data = _record()
+    data[key] = value
+    with pytest.raises(ArtifactError, match=key):
+        validate(_write(tmp_path, data))
+
+
+def test_a_non_string_capability_is_a_problem_not_a_crash(tmp_path):
+    data = _record()
+    data["facts"][1]["capability"] = 8000
+    problems = _problems(tmp_path, data)
+    assert any("8000" in p for p in problems)
+
+
+def test_the_cli_says_when_quotes_were_not_checked(capsys):
+    assert artifact_spec.main(["--validate", str(VALID)]) == 0
+    assert "NOT checked" in capsys.readouterr().out

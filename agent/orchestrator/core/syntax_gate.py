@@ -70,10 +70,42 @@ def record_errors(tree: Path, changed: list[str]) -> list[str]:
     return errors
 
 
+SUBJECT_DIR = ".auton/subject"
+
+
+def artifact_errors(tree: Path, changed: list[str]) -> list[str]:
+    """artifact_spec's refusals for each changed application record (A4).
+
+    Checked against the staged subject when there is one, so every quote must
+    be on the line it cites; and `observed` is refused, because a record on an
+    agent's branch was written by an agent.
+    """
+    paths = [p for p in changed
+             if p.startswith("analysis/") and p.endswith(".artifact.yaml")
+             and (tree / p).is_file()]
+    if not paths:
+        return []
+    if str(TOOLS) not in sys.path:
+        sys.path.insert(0, str(TOOLS))
+    from artifact_spec import ArtifactError, validate
+
+    subject = tree / SUBJECT_DIR
+    errors = []
+    for rel in paths:
+        try:
+            report = validate(tree / rel, subject=subject if subject.is_dir() else None,
+                              allow_observed=False)
+        except ArtifactError as exc:
+            errors.append(f"{rel}: {exc}")
+            continue
+        errors += [f"{rel}: {problem}" for problem in report.problems]
+    return errors
+
+
 def check(tree: Path, changed: list[str], cc: str | None = None) -> str | None:
-    """None when every changed C file compiles and every changed driver record
-    loads; otherwise the errors, trimmed."""
-    rec_errors = record_errors(tree, changed)
+    """None when every changed C file compiles and every changed driver or
+    artifact record validates; otherwise the errors, trimmed."""
+    rec_errors = record_errors(tree, changed) + artifact_errors(tree, changed)
     c_errors = _c_errors(tree, changed, cc)
     errors = rec_errors + c_errors
     if not errors:

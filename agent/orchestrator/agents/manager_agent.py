@@ -71,6 +71,11 @@ class ManagerAgent(Agent):
     5. Detects Frankenstein composition effects
     """
 
+    # Roles the decomposition prompt offers. The engine adds one only after it
+    # registers that role with the scheduler: a role advertised but not
+    # registered routes every task it gets to an empty pool (engine.py, w12).
+    BASE_ROLES = ("developer", "tester", "architect")
+
     def __init__(self, **kwargs):
         system_prompt = _get_prompt(kwargs)
         super().__init__(
@@ -79,6 +84,14 @@ class ManagerAgent(Agent):
             tools=MANAGER_TOOLS,
             **kwargs,
         )
+        self.assignable_roles: list[str] = list(self.BASE_ROLES)
+        self.role_notes: list[str] = []
+
+    def advertise_role(self, role: str, note: str = "") -> None:
+        if role not in self.assignable_roles:
+            self.assignable_roles.append(role)
+        if note:
+            self.role_notes.append(note)
 
     async def decompose_goal(self, goal: str) -> list[dict[str, Any]]:
         """Decompose a high-level goal into actionable tasks.
@@ -89,6 +102,8 @@ class ManagerAgent(Agent):
         self.state = AgentState.THINKING
         logger.info("[%s] Decomposing goal: %s", self.agent_id, goal)
 
+        roles = ", ".join(f'"{r}"' for r in self.assignable_roles)
+        notes = "".join(f"{n}\n" for n in self.role_notes)
         prompt = f"""## Goal
 {goal}
 
@@ -102,12 +117,12 @@ class ManagerAgent(Agent):
 6. Reading a specification is part of every task, not a task. Every task must
    create or change at least one file, listed in `produces`; a task that
    produces nothing will be dropped.
-
+{notes}
 Return the tasks as a JSON array. Each task must have:
 - task_id: unique identifier (e.g., "boot-001")
 - title: short description
 - subsystem: which kernel subsystem
-- assigned_to: agent role ("developer", "tester", "architect")
+- assigned_to: agent role ({roles})
 - dependencies: list of task_ids that must complete first
 - priority: 1 (highest) to 5 (lowest)
 - spec_reference: which spec section to read

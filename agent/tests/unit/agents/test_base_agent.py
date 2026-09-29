@@ -76,8 +76,8 @@ class TestAgentRole:
         assert AgentRole.TRAINING.value == "training"
 
     def test_role_count(self):
-        """All 9 roles (including SLM roles) are present."""
-        assert len(AgentRole) == 9
+        """All 10 roles (SLM roles and the application Analyst included) are present."""
+        assert len(AgentRole) == 10
 
     def test_slm_roles_present(self):
         """The three SLM-specific roles exist."""

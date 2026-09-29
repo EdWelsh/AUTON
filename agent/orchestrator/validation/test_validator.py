@@ -9,6 +9,8 @@ import time
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from orchestrator.core.proc import communicate
+
 logger = logging.getLogger(__name__)
 
 
@@ -89,9 +91,7 @@ class TestValidator:
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
             )
-            stdout, stderr = await asyncio.wait_for(
-                proc.communicate(), timeout=self.timeout
-            )
+            stdout, stderr = await communicate(proc, self.timeout)
             duration = time.monotonic() - start
 
             output = stdout.decode("utf-8", errors="replace")

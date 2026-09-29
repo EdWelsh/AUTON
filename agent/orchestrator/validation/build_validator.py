@@ -8,6 +8,8 @@ import time
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from orchestrator.core.proc import communicate
+
 logger = logging.getLogger(__name__)
 
 
@@ -67,7 +69,7 @@ class BuildValidator:
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
             )
-            stdout, stderr = await asyncio.wait_for(proc.communicate(), timeout=timeout)
+            stdout, stderr = await communicate(proc, timeout)
             duration = time.monotonic() - start
 
             stdout_str = stdout.decode("utf-8", errors="replace")

@@ -282,3 +282,42 @@ async def test_a_shell_chmod_then_write_is_caught_by_layer_three(ws, subject):
         "layers one and two are walked around by this route; that is the point"
     with pytest.raises(WorkspaceError, match="app.py"):
         ws.verify_subject(digest)
+
+
+# --------------------------------------------------------------------------- #
+# w17 review findings
+# --------------------------------------------------------------------------- #
+
+def test_a_failed_stage_leaves_nothing_behind(ws, subject, monkeypatch):
+    def broken(*_a, **_k):
+        raise OSError("disk full")
+    monkeypatch.setattr("shutil.copytree", broken)
+    with pytest.raises(WorkspaceError, match="disk full"):
+        ws.stage_subject(subject)
+    assert not ws.subject_path.exists()
+    monkeypatch.undo()
+    ws.stage_subject(subject)       # and a retry is not refused as "already staged"
+
+
+@pytest.mark.parametrize("name", [f"{SUBJECT_DIR}/app.py", f"./{SUBJECT_DIR}/app.py",
+                                  f"x/../{SUBJECT_DIR}/app.py"])
+def test_naming_a_subject_file_to_commit_commits_nothing(ws, subject, name):
+    ws.stage_subject(subject)
+    head = ws.repo.head.commit.hexsha
+    assert ws.commit("sneak", files=[name]) == head
+
+
+def test_the_exclude_is_found_in_a_worktree(tmp_path, subject):
+    main = GitWorkspace(tmp_path / "main")
+    main.init()
+    wt = tmp_path / "wt"
+    subprocess.run(["git", "-C", str(main.path), "worktree", "add", "-q", "-b", "w", str(wt)],
+                   check=True)
+    ws = GitWorkspace(wt)
+    ws.init()
+    ws.stage_subject(subject)
+    ws.commit("everything")
+    tracked = subprocess.run(["git", "-C", str(wt), "ls-files"], check=True,
+                             capture_output=True, text=True).stdout
+    assert "subject" not in tracked
+    ws.unstage_subject()
