@@ -1,0 +1,22 @@
+{
+  "play-doom": {
+    "sentence": "play doom",
+    "json": "{\n  \"intent\": \"play doom\",\n  \"matched_rule\": \"play-doom\",\n  \"requires\": [\n    \"boot\",\n    \"allocator\",\n    \"pci\",\n    \"terminal\",\n    \"scoped\",\n    \"framebuffer\",\n    \"input\",\n    \"module-asset\",\n    \"timer\"\n  ],\n  \"excludes\": [\n    \"net\",\n    \"fs\",\n    \"sched\",\n    \"ipc\"\n  ],\n  \"assets\": [\n    \"doom.wad\"\n  ],\n  \"markers\": [\n    \"[FB] mode set\",\n    \"[INPUT] keyboard ready\",\n    \"[DOOM] frame 1\"\n  ],\n  \"assumptions\": [],\n  \"target\": \"\",\n  \"decisions\": []\n}"
+  },
+  "host-repo": {
+    "sentence": "host this repo",
+    "json": "{\n  \"intent\": \"host this repo\",\n  \"matched_rule\": \"host-repo\",\n  \"requires\": [\n    \"boot\",\n    \"allocator\",\n    \"pci\",\n    \"terminal\",\n    \"scoped\",\n    \"ipv4\",\n    \"tcp\",\n    \"http-server\",\n    \"dhcp-client\",\n    \"module-asset\",\n    \"e1000\"\n  ],\n  \"excludes\": [\n    \"fs\",\n    \"sched\",\n    \"ipc\"\n  ],\n  \"assets\": [\n    \"repo.cpio\"\n  ],\n  \"markers\": [\n    \"[NET] dhcp bound\",\n    \"[HTTP] repo mounted\",\n    \"[HTTP] listening on :80\"\n  ],\n  \"assumptions\": [\n    \"network: assuming e1000 \\u2014 the QEMU PC's NIC; state a target to choose from its devices instead\",\n    \"input: assuming serial console; pass --input keyboard for a framebuffer image\"\n  ],\n  \"target\": \"\",\n  \"decisions\": []\n}"
+  },
+  "serve-dhcp": {
+    "sentence": "hand out addresses",
+    "json": "{\n  \"intent\": \"hand out addresses\",\n  \"matched_rule\": \"serve-dhcp\",\n  \"requires\": [\n    \"boot\",\n    \"allocator\",\n    \"pci\",\n    \"terminal\",\n    \"scoped\",\n    \"ipv4\",\n    \"udp\",\n    \"e1000\"\n  ],\n  \"excludes\": [\n    \"fs\",\n    \"sched\",\n    \"ipc\",\n    \"tcp\"\n  ],\n  \"assets\": [],\n  \"markers\": [\n    \"[DHCP] listening on :67\",\n    \"[DHCP] lease bound\"\n  ],\n  \"assumptions\": [\n    \"network: assuming e1000 \\u2014 the QEMU PC's NIC; state a target to choose from its devices instead\",\n    \"input: assuming serial console; pass --input keyboard for a framebuffer image\"\n  ],\n  \"target\": \"\",\n  \"decisions\": []\n}"
+  },
+  "serve-files": {
+    "sentence": "file server",
+    "json": "{\n  \"intent\": \"file server\",\n  \"matched_rule\": \"serve-files\",\n  \"requires\": [\n    \"boot\",\n    \"allocator\",\n    \"pci\",\n    \"terminal\",\n    \"scoped\",\n    \"ipv4\",\n    \"tcp\",\n    \"http-server\",\n    \"vfs\",\n    \"initramfs\",\n    \"e1000\"\n  ],\n  \"excludes\": [\n    \"sched\",\n    \"ipc\",\n    \"writable\"\n  ],\n  \"assets\": [\n    \"docroot.cpio\"\n  ],\n  \"markers\": [\n    \"[HTTP] docroot mounted from module\",\n    \"[HTTP] listening on :80\"\n  ],\n  \"assumptions\": [\n    \"network: assuming e1000 \\u2014 the QEMU PC's NIC; state a target to choose from its devices instead\",\n    \"input: assuming serial console; pass --input keyboard for a framebuffer image\"\n  ],\n  \"target\": \"\",\n  \"decisions\": []\n}"
+  },
+  "identify-hardware": {
+    "sentence": "what hardware",
+    "json": "{\n  \"intent\": \"what hardware\",\n  \"matched_rule\": \"identify-hardware\",\n  \"requires\": [\n    \"boot\",\n    \"allocator\",\n    \"pci\",\n    \"terminal\",\n    \"scoped\",\n    \"device-registry\",\n    \"driver-binding\"\n  ],\n  \"excludes\": [\n    \"net\",\n    \"fs\",\n    \"sched\",\n    \"ipc\"\n  ],\n  \"assets\": [],\n  \"markers\": [\n    \"[DEV] PCI scan\",\n    \"[CPU] \"\n  ],\n  \"assumptions\": [\n    \"input: assuming serial console; pass --input keyboard for a framebuffer image\"\n  ],\n  \"target\": \"\",\n  \"decisions\": []\n}"
+  }
+}

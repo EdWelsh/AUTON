@@ -159,9 +159,14 @@ class Manifest:
     # re-deriving it.
     target: str = ""
     decisions: list[dict] = field(default_factory=list)
+    # What an existing application needs, when the manifest was built from an
+    # artifact record (application-to-environment A6, artifact_manifest.py)
+    # rather than a sentence. Empty for a sentence, and then absent from the
+    # JSON, so a sentence-built manifest is byte-identical to before.
+    application: dict = field(default_factory=dict)
 
     def to_json(self) -> str:
-        return json.dumps({
+        data = {
             "intent": self.intent,
             "matched_rule": self.matched,
             "requires": self.requires,
@@ -171,7 +176,10 @@ class Manifest:
             "assumptions": self.assumptions,
             "target": self.target,
             "decisions": self.decisions,
-        }, indent=2)
+        }
+        if self.application:
+            data["application"] = self.application
+        return json.dumps(data, indent=2)
 
 
 def normalise(text: str) -> str:

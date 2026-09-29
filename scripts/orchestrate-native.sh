@@ -22,9 +22,10 @@ source "$ROOT/scripts/lib/toolchain.sh"   # validators shell out to the cross to
 PY="${PYTHON:-$ROOT/.venv/bin/python}"
 case "$PY" in /*) ;; *) PY="$ROOT/$PY";; esac
 
-USAGE='usage: orchestrate-native.sh "<goal>" [--timeout SECS] | --resume [--timeout SECS]'
+USAGE='usage: orchestrate-native.sh "<goal>" [--timeout SECS] [--subject DIR] | --resume [--timeout SECS]'
 GOAL=""
 RESUME=""
+SUBJECT=""
 TIMEOUT="${ORCH_TIMEOUT:-900}"
 # At the budget the orchestrator gets TERM and this long to commit its work in
 # flight and save its graph before KILL (w17: R1 lost an uncommitted pmm.c).
@@ -33,6 +34,7 @@ while [ $# -gt 0 ]; do
 	case "$1" in
 		--timeout) TIMEOUT="${2:?--timeout needs a value}"; shift 2 ;;
 		--resume) RESUME=1; shift ;;
+		--subject) SUBJECT="$(cd "${2:?--subject needs a directory}" && pwd)" || exit 2; shift 2 ;;
 		-*) echo "unknown argument: $1" >&2; echo "$USAGE" >&2; exit 2 ;;
 		*) [ -z "$GOAL" ] || { echo "$USAGE" >&2; exit 2; }; GOAL="$1"; shift ;;
 	esac
@@ -41,6 +43,7 @@ done
 RUN_ARGS=(run)
 [ -n "$GOAL" ] && RUN_ARGS+=("$GOAL")
 [ -n "$RESUME" ] && RUN_ARGS+=(--resume)
+[ -n "$SUBJECT" ] && RUN_ARGS+=(--subject "$SUBJECT")
 
 LOG="${ORCH_LOG:-$ROOT/.artifacts/orchestrator/$(date -u +%Y-%m-%dT%H-%M-%SZ).log}"
 # ORCH_CONFIG selects another config (an experiment's workspace and caps) without
