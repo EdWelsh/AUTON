@@ -1,0 +1,27 @@
+format: 1
+application: flask-hello
+subject:
+  repo: agent/tests/fixtures/apps/flask-hello
+  commit: "0000000000000000000000000000000000000000"
+  tree_hash: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+runtime:
+  capability: runtime:python-3.12
+  source: declared
+  evidence:
+    - {file: pyproject.toml, line: 4, quote: 'requires-python = ">=3.12"'}
+facts:
+  - capability: lib:libssl.so.3
+    source: inferred
+    evidence:
+      - {file: app.py, line: 2, quote: "import ssl"}
+  - capability: listen:tcp/8000
+    source: declared
+    evidence:
+      - {file: Dockerfile, line: 6, quote: "EXPOSE 8000"}
+  - capability: path:/etc/ssl/certs
+    source: unknown
+    looked_at: [Dockerfile, app.py]
+  - capability: env:GREETING
+    source: inferred
+    evidence:
+      - {file: app.py, line: 5, quote: 'GREETING = os.environ.get("GREETING", "hello")'}

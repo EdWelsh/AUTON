@@ -183,6 +183,25 @@ does not live in this repository — see
 
 Agents communicate through **git branches and file-based messaging** — no message broker needed. The VibeTensor insight: treat agents as black boxes, validate only through builds and tests.
 
+## Application to environment
+
+A second front end for the compiler
+([PRD](../.claude/PRPs/prds/auton-application-to-environment.prd.md)): an existing application
+repository in, a minimal environment out. Its rule is **agents gather evidence, deterministic
+tools adjudicate it.**
+
+- **A second capability index.** Application capabilities are typed `kind:name`
+  (`lib:libssl.so.3`, `listen:tcp/8000`) and live in
+  [`agent/app_spec/capabilities.yaml`](../agent/app_spec/capabilities.yaml), disjoint from the
+  kernel's subsystem index so that kernel slices never reason about userland. The only coupling
+  is [`kernel_bridge.yaml`](../agent/app_spec/kernel_bridge.yaml), used when the substrate is
+  AUTON's own kernel; an application fact with no bridge entry is refused there, because the
+  kernel has no POSIX by design.
+- **Every fact has provenance** — `observed` (only `observe.py` may write it), `declared` and
+  `inferred` (each citing `file:line` and the quoted line), or `unknown` (saying where it
+  looked). [`artifact_spec.py`](../agent/tools/artifact_spec.py) refuses anything else and
+  names the fix.
+
 ## A note on architecture support
 
 The HAL and the architecture registry

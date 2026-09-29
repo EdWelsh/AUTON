@@ -1,0 +1,29 @@
+# Application capability -> kernel capabilities, for the AUTON-kernel substrate
+# only (application-to-environment A1; read by the swarm handoff, A7).
+#
+# The bridge is deliberately thin. AUTON's kernel has no POSIX, no libc and no
+# shell by design, so most application capabilities have no kernel equivalent,
+# and an application fact with no entry here is REFUSED on that substrate rather
+# than mapped to something that merely sounds close. A container or VM
+# substrate does not read this file at all.
+#
+# `match` is an fnmatch pattern over `kind:name`. Every `kernel` entry must be a
+# real kernel capability; `test_artifact_spec.py` fails on a phantom one.
+
+format: 1
+
+bridge:
+  - match: "listen:tcp/*"
+    kernel: [tcp, sockets]
+  - match: "listen:udp/*"
+    kernel: [udp, sockets]
+  - match: "dial:tcp/*"
+    kernel: [tcp, sockets, dns]
+  - match: "dial:udp/*"
+    kernel: [udp, sockets, dns]
+  - match: "device:urandom"
+    kernel: [devfs]
+  - match: "device:random"
+    kernel: [devfs]
+  - match: "runtime:static-elf"
+    kernel: [module-load, processes]

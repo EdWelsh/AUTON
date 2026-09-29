@@ -1,0 +1,130 @@
+# The application capability index: the closed vocabulary an Analyst's findings
+# must be drawn from (application-to-environment A1).
+#
+# Why a second index rather than more entries in the kernel's. `capability_slice`
+# closes over subsystem `depends_on` in agent/kernel_spec/subsystems/*.md.
+# Bolting `lib:libssl.so.3` into that front-matter would make every kernel slice
+# reason about userland it never contains. The only coupling between the two is
+# `kernel_bridge.yaml`, and one consumer reads it (the swarm handoff, A7).
+#
+# Why typed. A capability is `kind:name`, and the kind decides two things later
+# phases cannot guess: how it is removed for ablation (A9) and how a substrate
+# supplies it (A8). An untyped `libssl` could be a package, a file or a soname.
+#
+# Two sorts of kind:
+#
+#   names:    a CLOSED list. A name not listed is refused, and the refusal
+#             prints the list. Growing it is a reviewed edit to this file —
+#             which is the point: a model asked to name capabilities invents
+#             plausible ones (measured: 5 phantom hardware citations per 50
+#             turns), and a closed list is the fix that worked.
+#   pattern:  a PARAMETRIC kind whose names cannot be enumerated (ports, paths).
+#             The pattern is anchored and narrow; a name that does not match is
+#             refused with the pattern and an example.
+#
+# `sources` restricts which provenance a kind accepts. Ports are never
+# `inferred`: static reading cannot know a listening port, and a guessed one
+# fails in a way nobody can trace back to the guess (PRD Decisions Log).
+#
+# `enabled: false` keeps a kind in the vocabulary, so a proposal naming it is
+# refused *with the reason*, rather than as an unknown kind.
+
+format: 1
+
+kinds:
+  runtime:
+    description: the interpreter or binary format the application runs as
+    names:
+      - python-3.10
+      - python-3.11
+      - python-3.12
+      - python-3.13
+      - node-18
+      - node-20
+      - node-22
+      - glibc-elf       # a dynamically linked native binary
+      - static-elf      # a statically linked native binary (Go, static C)
+
+  lib:
+    description: a shared library, by soname, the application loads
+    names:
+      - libc.so.6
+      - libm.so.6
+      - libpthread.so.0
+      - libdl.so.2
+      - librt.so.1
+      - libstdc++.so.6
+      - libgcc_s.so.1
+      - libssl.so.3
+      - libcrypto.so.3
+      - libz.so.1
+      - libbz2.so.1.0
+      - liblzma.so.5
+      - libzstd.so.1
+      - libffi.so.8
+      - libexpat.so.1
+      - libxml2.so.2
+      - libxslt.so.1
+      - libyaml-0.so.2
+      - libsqlite3.so.0
+      - libpq.so.5
+      - libmysqlclient.so.21
+      - libcurl.so.4
+      - libuuid.so.1
+      - libreadline.so.8
+      - libncursesw.so.6
+      - libjpeg.so.62
+      - libpng16.so.16
+
+  exec:
+    description: a program the application executes as a subprocess
+    names:
+      - sh
+      - bash
+      - env
+      - git
+      - curl
+      - python3
+      - node
+      - openssl
+      - tar
+      - gzip
+
+  device:
+    description: a device node the application opens
+    names:
+      - "null"      # quoted: bare null is YAML's None
+      - zero
+      - random
+      - urandom
+      - tty
+      - shm
+
+  listen:
+    description: a port the application binds and listens on
+    pattern: '^(tcp|udp)/([1-9][0-9]{0,4})$'
+    example: listen:tcp/8000
+    sources: [declared, observed, unknown]
+
+  dial:
+    description: a network endpoint the application connects to
+    pattern: '^(tcp|udp)/[a-z0-9]([a-z0-9.-]{0,251}[a-z0-9])?:([1-9][0-9]{0,4})$'
+    example: dial:tcp/db.internal:5432
+
+  path:
+    description: a filesystem path the application reads, outside its own tree
+    pattern: '^/(etc|usr/share|usr/lib|var|tmp|run|opt|srv|home|proc|sys)(/[A-Za-z0-9._@+-]+)*/?$'
+    example: path:/etc/ssl/certs
+
+  env:
+    description: an environment variable the application reads
+    pattern: '^[A-Z_][A-Z0-9_]{0,127}$'
+    example: env:DATABASE_URL
+
+  syscalls:
+    description: a syscall group; see agent/kernel_spec/decisions/syscall-scope.md
+    enabled: false
+    reason: >-
+      syscall capabilities are not recorded until the owner decides
+      agent/kernel_spec/decisions/syscall-scope.md; an almost-right profile is
+      an outage with a confusing error message
