@@ -1,0 +1,7 @@
+# What "works" means for flask-hello, declared by a person (A10).
+format: 1
+start_timeout_s: 60
+checks:
+  - {kind: http, port: 8000, path: /health, expect_status: 200, expect_body_contains: "ok"}
+  - {kind: http, port: 8000, path: /, expect_status: 200, expect_body_contains: "hello over OpenSSL"}
+refusal_markers: ["AUTON-REFUSED:"]

@@ -3,6 +3,7 @@
 #
 #   scripts/run-intent-probe.sh host-repo <package dir>
 #   scripts/run-intent-probe.sh doom      <package dir>
+#   scripts/run-intent-probe.sh app       <workspace> <probe.yaml>
 #
 # The PRD's rubric, lifted from the chat evaluation to whole deployments:
 #
@@ -26,7 +27,7 @@ source "$ROOT/scripts/lib/toolchain.sh"
 INTENT="${1:-}"
 PKG="${2:-}"
 [ -n "$INTENT" ] && [ -n "$PKG" ] || {
-	echo "usage: $0 {host-repo|doom} <package dir>" >&2; exit 2; }
+	echo "usage: $0 {host-repo|doom} <package dir> | app <workspace> <probe.yaml>" >&2; exit 2; }
 [ -d "$PKG" ] || { echo "no package at $PKG" >&2; exit 2; }
 PKG="$(cd "$PKG" && pwd)"
 PY="${PY:-$ROOT/.venv/bin/python}"
@@ -81,6 +82,16 @@ refusal_in() {
 }
 
 case "$INTENT" in
+app)
+	# An existing application, packaged (application-to-environment A10). The
+	# probe declaration is the operator's and is passed explicitly: it must not
+	# live anywhere an agent writes. `$PKG` is a workspace whose package gate
+	# recorded an image.
+	PROBE="${3:-}"
+	[ -n "$PROBE" ] || { echo "usage: $0 app <workspace> <probe.yaml>" >&2; exit 2; }
+	"$PY" "$ROOT/agent/tools/app_probe.py" --workspace "$PKG" --probe "$PROBE"
+	exit $?
+	;;
 
 host-repo)
 	command -v git >/dev/null || { echo "git is required" >&2; exit 2; }
@@ -135,7 +146,7 @@ doom)
 	;;
 
 *)
-	echo "unknown intent '$INTENT' (host-repo, doom)" >&2
+	echo "unknown intent '$INTENT' (host-repo, doom, app)" >&2
 	exit 2
 	;;
 esac
