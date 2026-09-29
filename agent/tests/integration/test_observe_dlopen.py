@@ -73,3 +73,14 @@ def test_observed_facts_merge_into_a_record_and_validate(tmp_path):
     assert z["source"] == "observed" and z["observation"] == obs["id"]
     assert (record.parent / "observations" / f"{obs['id']}.json").is_file()
     assert validate(record, subject=subject, allow_observed=True).ok
+
+
+def test_a_subject_cannot_forge_its_own_observation():
+    """w18 review H3: running as root beside the tracer, a subject could rewrite
+    the trace or print a fake one to the wrapper's stdout. It now runs as
+    another uid with no capabilities, in another container from the tracer."""
+    from observe import observe
+
+    obs = observe(APPS / "forger")
+    caps = {f["capability"] for f in obs["facts"]}
+    assert "lib:libpq.so.5" not in caps, "the forged need reached the record"

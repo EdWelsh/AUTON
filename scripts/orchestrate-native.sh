@@ -22,10 +22,12 @@ source "$ROOT/scripts/lib/toolchain.sh"   # validators shell out to the cross to
 PY="${PYTHON:-$ROOT/.venv/bin/python}"
 case "$PY" in /*) ;; *) PY="$ROOT/$PY";; esac
 
-USAGE='usage: orchestrate-native.sh "<goal>" [--timeout SECS] [--subject DIR] | --resume [--timeout SECS]'
+USAGE='usage: orchestrate-native.sh "<goal>" [--timeout SECS] [--subject DIR] [--manifest FILE] [--probe FILE] | --resume [--timeout SECS]'
 GOAL=""
 RESUME=""
 SUBJECT=""
+MANIFEST=""
+PROBE=""
 TIMEOUT="${ORCH_TIMEOUT:-900}"
 # At the budget the orchestrator gets TERM and this long to commit its work in
 # flight and save its graph before KILL (w17: R1 lost an uncommitted pmm.c).
@@ -35,15 +37,19 @@ while [ $# -gt 0 ]; do
 		--timeout) TIMEOUT="${2:?--timeout needs a value}"; shift 2 ;;
 		--resume) RESUME=1; shift ;;
 		--subject) SUBJECT="$(cd "${2:?--subject needs a directory}" && pwd)" || exit 2; shift 2 ;;
+		--manifest) MANIFEST="${2:?--manifest needs a file}"; shift 2 ;;
+		--probe) PROBE="${2:?--probe needs a file}"; shift 2 ;;
 		-*) echo "unknown argument: $1" >&2; echo "$USAGE" >&2; exit 2 ;;
 		*) [ -z "$GOAL" ] || { echo "$USAGE" >&2; exit 2; }; GOAL="$1"; shift ;;
 	esac
 done
-[ -n "$GOAL" ] || [ -n "$RESUME" ] || { echo "$USAGE" >&2; exit 2; }
+[ -n "$GOAL" ] || [ -n "$RESUME" ] || [ -n "$MANIFEST" ] || { echo "$USAGE" >&2; exit 2; }
 RUN_ARGS=(run)
 [ -n "$GOAL" ] && RUN_ARGS+=("$GOAL")
 [ -n "$RESUME" ] && RUN_ARGS+=(--resume)
 [ -n "$SUBJECT" ] && RUN_ARGS+=(--subject "$SUBJECT")
+[ -n "$MANIFEST" ] && RUN_ARGS+=(--manifest "$(cd "$(dirname "$MANIFEST")" && pwd)/$(basename "$MANIFEST")")
+[ -n "$PROBE" ] && RUN_ARGS+=(--probe "$(cd "$(dirname "$PROBE")" && pwd)/$(basename "$PROBE")")
 
 LOG="${ORCH_LOG:-$ROOT/.artifacts/orchestrator/$(date -u +%Y-%m-%dT%H-%M-%SZ).log}"
 # ORCH_CONFIG selects another config (an experiment's workspace and caps) without
@@ -51,7 +57,7 @@ LOG="${ORCH_LOG:-$ROOT/.artifacts/orchestrator/$(date -u +%Y-%m-%dT%H-%M-%SZ).lo
 CONFIG="${ORCH_CONFIG:-$ROOT/agent/config/auton.toml}"
 mkdir -p "$(dirname "$LOG")"
 
-echo "goal:    ${GOAL:-(resuming the saved run)}"
+echo "goal:    ${GOAL:-(from the manifest, or the saved run)}"
 echo "model:   $("$PY" -c "
 import tomllib; print(tomllib.load(open('$CONFIG','rb'))['llm']['model'])" 2>/dev/null || echo unknown)"
 echo "cap:     $("$PY" -c "

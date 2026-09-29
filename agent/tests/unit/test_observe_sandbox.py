@@ -1,7 +1,9 @@
 """The sandbox flags are asserted, not assumed (A5, subject-trust.md).
 
 The owner decided subject repositories are untrusted and observed only in a
-sandbox. Each clause of that verdict is a flag, and each flag is checked here.
+sandbox. Each clause of that verdict is a flag, checked here — and, after the
+w18 review found the subject could forge its own trace, so is the separation
+between the subject and the tracer.
 """
 
 from __future__ import annotations
@@ -14,42 +16,56 @@ import pytest
 ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(ROOT / "agent" / "tools"))
 
-from observe_sandbox import Limits, build, run_argv  # noqa: E402
+from observe_sandbox import (  # noqa: E402
+    SUBJECT_USER,
+    Limits,
+    build,
+    subject_argv,
+    tracer_argv,
+)
 
-ARGV = run_argv("img", ["python", "app.py"], "curl x", Limits())
+SUBJECT = subject_argv("s", "img", ["python", "app.py"], Limits())
+TRACER = tracer_argv("t", "s", Limits())
 
 
-def _pair(flag):
-    return ARGV[ARGV.index(flag) + 1]
+def _pair(argv, flag):
+    return argv[argv.index(flag) + 1]
 
 
-def test_no_network():
-    assert _pair("--network") == "none"
+def test_no_network_for_either():
+    assert _pair(SUBJECT, "--network") == "none" and _pair(TRACER, "--network") == "none"
+
+
+def test_the_subject_holds_no_capability_and_no_root():
+    assert _pair(SUBJECT, "--cap-drop") == "ALL" and "--cap-add" not in SUBJECT
+    assert _pair(SUBJECT, "--user") == SUBJECT_USER and not SUBJECT_USER.startswith("0")
+
+
+def test_only_the_tracer_can_trace_and_it_joins_from_outside():
+    assert _pair(TRACER, "--cap-drop") == "ALL" and _pair(TRACER, "--cap-add") == "SYS_PTRACE"
+    assert TRACER.count("--cap-add") == 1
+    assert _pair(TRACER, "--pid") == "container:s"
 
 
 def test_read_only_root_and_only_a_tmpfs_is_writable():
-    assert "--read-only" in ARGV and _pair("--tmpfs").startswith("/tmp")
+    assert "--read-only" in SUBJECT and _pair(SUBJECT, "--tmpfs").startswith("/tmp")
 
 
-def test_every_capability_dropped_but_the_tracers():
-    assert _pair("--cap-drop") == "ALL" and _pair("--cap-add") == "SYS_PTRACE"
-    assert ARGV.count("--cap-add") == 1
-    assert _pair("--security-opt") == "no-new-privileges"
+def test_no_new_privileges_and_limits():
+    for argv in (SUBJECT, TRACER):
+        assert _pair(argv, "--security-opt") == "no-new-privileges"
+        assert _pair(argv, "--pids-limit") and _pair(argv, "--memory")
+    assert _pair(SUBJECT, "--cpus")
 
 
 def test_no_host_mounts_and_no_host_environment():
-    assert "-v" not in ARGV and "--volume" not in ARGV and "--mount" not in ARGV
-    envs = [ARGV[i + 1] for i, a in enumerate(ARGV) if a == "--env"]
-    assert all(e.startswith("AUTON_") for e in envs), envs
-    assert "--env-file" not in ARGV
+    for argv in (SUBJECT, TRACER):
+        for flag in ("-v", "--volume", "--mount", "--env", "-e", "--env-file"):
+            assert flag not in argv, flag
 
 
-def test_limits_are_set():
-    assert _pair("--pids-limit") and _pair("--memory") and _pair("--cpus")
-
-
-def test_disposable():
-    assert "--rm" in ARGV
+def test_the_command_is_argv_not_a_shell_string():
+    assert SUBJECT[-2:] == ["python", "app.py"]
 
 
 def test_a_subject_without_a_dockerfile_is_refused(tmp_path):

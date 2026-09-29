@@ -223,7 +223,9 @@ class OrchestrationEngine:
 
         # The Analyst exists only when there is something to analyse, and is
         # registered AND advertised — all three, or tasks for it never run.
-        if self.subject_path is not None:
+        # With a manifest the analysis is done; a run then packages, and an
+        # Analyst advertised beside the Packager would only invite a re-analysis.
+        if self.subject_path is not None and not getattr(self, "manifest", None):
             analyst = self._create_agent("analyst-01", AgentRole.ANALYST, AnalystAgent)
             analyst.subject_hash = self.subject_hash
             analyst.subject_commit = self.workspace.subject_commit
