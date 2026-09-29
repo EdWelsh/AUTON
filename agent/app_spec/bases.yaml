@@ -1,0 +1,16 @@
+# Runtime -> the base image a package is built FROM (application-to-environment
+# A8). The Packager may not choose a base; the gate refuses any FROM not listed
+# here for the manifest's runtime. Pinned by multi-arch index digest, so the
+# same line builds on arm64 and x86-64 and cannot drift under a moving tag.
+#
+# Refreshing a pin is a reviewed edit: `docker pull <tag>` then
+# `docker image inspect --format '{{index .RepoDigests 0}}' <tag>`.
+
+version: 1
+
+bases:
+  runtime:python-3.12: python:3.12-slim@sha256:2f17fc044b579bab302c2e8054d3a686e2cb9a83de48e70534b94cd8ebbe06a9
+  runtime:python-3.13: python:3.13-slim@sha256:7c61056e61ac89e852de05f3dc6fa51a6dd2181797bceed46aa725dd7cb2cd3b
+  runtime:node-22: node:22-slim@sha256:43ac6c60b8f89723f746e8a92ce91abd5017e627ce1ddfe4238355d3a30b772c
+  runtime:glibc-elf: debian:bookworm-slim@sha256:abd67ffcfa541b485a3dff59865ab629aa048a6c613e639d36e7456b0b229241
+  runtime:static-elf: scratch

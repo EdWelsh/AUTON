@@ -17,6 +17,7 @@ from orchestrator.agents.data_scientist_agent import DataScientistAgent
 from orchestrator.agents.developer_agent import DeveloperAgent
 from orchestrator.agents.integrator_agent import IntegratorAgent
 from orchestrator.agents.manager_agent import ManagerAgent
+from orchestrator.agents.packager_agent import PackagerAgent
 from orchestrator.agents.model_architect_agent import ModelArchitectAgent
 from orchestrator.agents.reviewer_agent import ReviewerAgent
 from orchestrator.agents.tester_agent import TesterAgent
@@ -74,6 +75,7 @@ class OrchestrationEngine:
         config: dict[str, Any],
         subject_path: Path | None = None,
         seed_tasks: list[dict[str, Any]] | None = None,
+        manifest: dict[str, Any] | None = None,
     ):
         self.workspace_path = workspace_path
         self.kernel_spec_path = kernel_spec_path
@@ -84,6 +86,9 @@ class OrchestrationEngine:
         self.subject_hash = ""
         # Tasks a manifest handoff (A7) requires, each carrying its gate.
         self.seed_tasks = list(seed_tasks or [])
+        # A manifest to package (A8). Written to .auton/manifest.json, where the
+        # package gate reads it; its substrate decides whether a Packager runs.
+        self.manifest = dict(manifest or {})
 
         # Load architecture profile
         kernel_config = config.get("kernel", {})
@@ -218,9 +223,21 @@ class OrchestrationEngine:
             self.scheduler.register_agent("analyst", analyst)
             self._agents["manager"].advertise_role(
                 "analyst",
-                "7. An existing application is staged read-only at .auton/subject/. "
+                "- An existing application is staged read-only at .auton/subject/. "
                 "Analysing it is ONE task, assigned_to \"analyst\", producing "
                 "analysis/<application>.artifact.yaml.")
+
+        substrate = (self.manifest.get("application") or {}).get("substrate")
+        if substrate in ("docker", "kubernetes", "server"):
+            packager = self._create_agent("packager-01", AgentRole.PACKAGER, PackagerAgent)
+            packager.manifest = self.manifest
+            self._agents["packager"] = packager
+            self.scheduler.register_agent("packager", packager)
+            self._agents["manager"].advertise_role(
+                "packager",
+                f"- The manifest's substrate is {substrate}. Packaging the application is "
+                "ONE task, assigned_to \"packager\", producing package/Dockerfile and "
+                "package/PROVENANCE.json.")
 
         logger.info(
             "Initialized %d agents: 1 manager, 1 architect, %d devs, "
@@ -297,6 +314,12 @@ class OrchestrationEngine:
                 return {"success": False, "error": refusal,
                         **({"resume_refused": refusal} if resume else {})}
             self.state.save(state_path)
+
+        if getattr(self, "manifest", None):
+            import json as _json
+            target = self.workspace_path / ".auton" / "manifest.json"
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_text(_json.dumps(self.manifest, indent=2) + "\n")
 
         logger.info("=== AUTON Orchestration Run %s%s ===", self.state.run_id,
                     f" (resumed, session {self.state.resume_count + 1})" if resume else "")

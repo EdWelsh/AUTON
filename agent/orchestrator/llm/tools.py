@@ -559,6 +559,17 @@ ANALYST_TOOLS = [
     TOOL_GIT_COMMIT,
 ]
 
+# Writes a recipe; does not build it. The gate builds it (package_gate.py), so
+# the Packager cannot decide its own recipe works.
+PACKAGER_TOOLS = [
+    TOOL_READ_FILE,
+    TOOL_WRITE_FILE,
+    TOOL_EDIT_FILE,
+    TOOL_LIST_FILES,
+    TOOL_SEARCH_CODE,
+    TOOL_GIT_COMMIT,
+]
+
 INTEGRATOR_TOOLS = [
     TOOL_READ_FILE,
     TOOL_WRITE_FILE,

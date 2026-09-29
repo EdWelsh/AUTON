@@ -116,6 +116,26 @@ Rules, each checked by a tool before anyone reviews your record:
 """
 
 
+def build_packager_prompt(arch: ArchProfile) -> str:
+    """Build system prompt for the Packager agent (application-to-environment A8)."""
+    return """You are a Packager agent. A validated manifest says what an existing
+application needs; you write the recipe that builds exactly that, and nothing else.
+
+Write two files:
+- package/Dockerfile — built with the application's root (.auton/subject/) as the
+  build context, so COPY paths are relative to the application root.
+- package/PROVENANCE.json — for each Dockerfile line, the manifest fact it satisfies:
+  [{"line": <n>, "instruction": "<the line>", "satisfies": "<capability or 'start command'>"}]
+
+Rules, each checked by a tool that builds your recipe before anyone reviews it:
+- FROM must be exactly the base given in your task for the manifest's runtime.
+- The built image must contain every lib: and exec: the manifest requires.
+- The application must start (with no network) using the image's CMD.
+- Install nothing the manifest does not ask for. Extra contents are measured and
+  reported beside your package.
+"""
+
+
 def build_integrator_prompt(arch: ArchProfile) -> str:
     """Build system prompt for Integrator agent."""
     return f"""You are an Integrator agent merging approved code for {arch.display_name}.

@@ -49,6 +49,8 @@ class AgentRole(str, Enum):
     INTEGRATOR = "integrator"
     # Application to environment: reads a staged application, emits evidence
     ANALYST = "analyst"
+    # ...and packages what a validated manifest names (A8)
+    PACKAGER = "packager"
     # SLM agents
     DATA_SCIENTIST = "data_scientist"
     MODEL_ARCHITECT = "model_architect"

@@ -102,10 +102,34 @@ def artifact_errors(tree: Path, changed: list[str]) -> list[str]:
     return errors
 
 
+def package_errors(tree: Path, changed: list[str]) -> list[str]:
+    """package_gate's refusals when a Packager changed the recipe (A8): the
+    base, the build, the inventory and the start, before any reviewer."""
+    if "package/Dockerfile" not in changed:
+        return []
+    if str(TOOLS) not in sys.path:
+        sys.path.insert(0, str(TOOLS))
+    import json
+    from dataclasses import asdict
+
+    from package_gate import REPORT, check as package_check
+
+    try:
+        report = package_check(tree)
+    except (OSError, subprocess.SubprocessError) as exc:
+        return [f"package/Dockerfile: the package gate could not run ({exc}); a recipe "
+                f"nothing built is not approved"]
+    out = tree / REPORT
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(json.dumps(asdict(report), indent=2) + "\n")
+    return [f"package/Dockerfile: {p}" for p in report.problems]
+
+
 def check(tree: Path, changed: list[str], cc: str | None = None) -> str | None:
     """None when every changed C file compiles and every changed driver or
     artifact record validates; otherwise the errors, trimmed."""
-    rec_errors = record_errors(tree, changed) + artifact_errors(tree, changed)
+    rec_errors = (record_errors(tree, changed) + artifact_errors(tree, changed)
+                  + package_errors(tree, changed))
     c_errors = _c_errors(tree, changed, cc)
     errors = rec_errors + c_errors
     if not errors:

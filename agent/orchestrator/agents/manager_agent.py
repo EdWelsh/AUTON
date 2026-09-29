@@ -122,7 +122,7 @@ class ManagerAgent(Agent):
             # Seeds come from the manifest handoff (A7) and carry their gates.
             # They are inserted after parsing whatever the model returns, so a
             # model that drops or rewrites one cannot lose it.
-            notes += ("8. These tasks are already defined and will be included "
+            notes += ("- These tasks are already defined and will be included "
                       "exactly as written; do not repeat them, but you may add tasks "
                       "that depend on them: "
                       + ", ".join(f"{t['task_id']} ({t['title']})" for t in seed_tasks)

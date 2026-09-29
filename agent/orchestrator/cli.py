@@ -162,6 +162,7 @@ def run(ctx, goal: str | None, workspace: str | None, specs: str, resume: bool,
     spec_path = (agent_dir / specs).resolve() if not Path(specs).is_absolute() else Path(specs).resolve()
 
     seed_tasks: list = []
+    manifest_data: dict = {}
     if manifest_path and not resume:
         tools = agent_dir / "tools"
         if str(tools) not in sys.path:
@@ -175,6 +176,8 @@ def run(ctx, goal: str | None, workspace: str | None, specs: str, resume: bool,
             raise SystemExit(2)
         goal = goal or handoff.goal
         seed_tasks = handoff.seed_tasks
+        import json as _json
+        manifest_data = _json.loads(Path(manifest_path).read_text())
 
     if resume and not goal:
         state_path = workspace_path / ".auton" / "state.json"
@@ -198,6 +201,7 @@ def run(ctx, goal: str | None, workspace: str | None, specs: str, resume: bool,
         config=config,
         subject_path=Path(subject).resolve() if subject else None,
         seed_tasks=seed_tasks,
+        manifest=manifest_data,
     )
 
     result = asyncio.run(engine.run(goal, resume=resume))
