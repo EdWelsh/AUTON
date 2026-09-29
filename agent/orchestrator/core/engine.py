@@ -73,6 +73,7 @@ class OrchestrationEngine:
         kernel_spec_path: Path,
         config: dict[str, Any],
         subject_path: Path | None = None,
+        seed_tasks: list[dict[str, Any]] | None = None,
     ):
         self.workspace_path = workspace_path
         self.kernel_spec_path = kernel_spec_path
@@ -81,6 +82,8 @@ class OrchestrationEngine:
         # Staged read-only into the workspace when the run starts.
         self.subject_path = Path(subject_path) if subject_path else None
         self.subject_hash = ""
+        # Tasks a manifest handoff (A7) requires, each carrying its gate.
+        self.seed_tasks = list(seed_tasks or [])
 
         # Load architecture profile
         kernel_config = config.get("kernel", {})
@@ -472,8 +475,9 @@ class OrchestrationEngine:
         logger.info("--- Phase 1: Planning ---")
 
         manager: ManagerAgent = self._agents["manager"]
+        seeds = getattr(self, "seed_tasks", [])
         if self.workflow_mode == WorkflowMode.KERNEL_BUILD:
-            tasks = await manager.decompose_goal(goal)
+            tasks = await manager.decompose_goal(goal, seed_tasks=seeds)
         elif self.workflow_mode == WorkflowMode.SLM_TRAINING:
             tasks = self.task_graph.create_slm_training_tasks(goal)
         elif self.workflow_mode == WorkflowMode.DUAL:

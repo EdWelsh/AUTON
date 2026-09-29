@@ -60,6 +60,19 @@ def drop_undeliverable(tasks: list[dict[str, Any]]) -> list[dict[str, Any]]:
         kept.append({**t, "dependencies": deps})
     return kept
 
+def merge_seeds(tasks: list[dict[str, Any]],
+                seeds: list[dict[str, Any]] | tuple) -> list[dict[str, Any]]:
+    """Seed tasks first, exactly as given; a model task with a seed's id is
+    replaced by the seed, because the seed carries the gate that decides it."""
+    if not seeds:
+        return tasks
+    seed_ids = {s["task_id"] for s in seeds}
+    replaced = [t["task_id"] for t in tasks if t["task_id"] in seed_ids]
+    if replaced:
+        logger.warning("Manager rewrote seed task(s) %s; keeping the seeds", replaced)
+    return [dict(s) for s in seeds] + [t for t in tasks if t["task_id"] not in seed_ids]
+
+
 class ManagerAgent(Agent):
     """The Manager decomposes high-level goals into tasks and coordinates agents.
 
@@ -93,7 +106,8 @@ class ManagerAgent(Agent):
         if note:
             self.role_notes.append(note)
 
-    async def decompose_goal(self, goal: str) -> list[dict[str, Any]]:
+    async def decompose_goal(self, goal: str,
+                             seed_tasks: list[dict[str, Any]] | tuple = ()) -> list[dict[str, Any]]:
         """Decompose a high-level goal into actionable tasks.
 
         Sends the goal to Claude, which reads specs and returns a structured
@@ -104,6 +118,15 @@ class ManagerAgent(Agent):
 
         roles = ", ".join(f'"{r}"' for r in self.assignable_roles)
         notes = "".join(f"{n}\n" for n in self.role_notes)
+        if seed_tasks:
+            # Seeds come from the manifest handoff (A7) and carry their gates.
+            # They are inserted after parsing whatever the model returns, so a
+            # model that drops or rewrites one cannot lose it.
+            notes += ("8. These tasks are already defined and will be included "
+                      "exactly as written; do not repeat them, but you may add tasks "
+                      "that depend on them: "
+                      + ", ".join(f"{t['task_id']} ({t['title']})" for t in seed_tasks)
+                      + "\n")
         prompt = f"""## Goal
 {goal}
 
@@ -142,7 +165,8 @@ Return ONLY the JSON array, no other text."""
         )
 
         # Parse tasks from the response
-        tasks = drop_undeliverable(self._parse_tasks(result_messages))
+        tasks = merge_seeds(drop_undeliverable(self._parse_tasks(result_messages)),
+                            seed_tasks)
         self.state = AgentState.DONE
 
         # Save task metadata

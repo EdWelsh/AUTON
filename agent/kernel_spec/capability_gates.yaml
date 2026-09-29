@@ -1,0 +1,42 @@
+# Kernel capability -> the gate that decides whether a tree provides it
+# (application-to-environment A7, the swarm handoff).
+#
+# When a manifest needs a kernel capability the tree does not implement, the
+# handoff turns it into a generation task for the existing Architect/Developer
+# loop. A generation task is only worth running if something decides it, so
+# the task's acceptance criteria are the gate commands listed here — the same
+# frozen suites the completion PRD's R phases use, never new ones.
+#
+# A capability with NO entry here is refused by the handoff rather than handed
+# to the loop ungated: "a generation run that produces code nobody checked is
+# worth nothing" (auton-completion.prd.md).
+#
+# `produces` are the files the gate looks for (read from each gate script), so
+# a seed task names a concrete deliverable. `gates` run in order, from the repo
+# root, with KERNEL_TREE=<workspace>. `test_capability_gates.py` checks every
+# gate exists, every key is a real kernel capability, and every `produces`
+# path is one the gate script actually names.
+
+version: 1
+
+capabilities:
+  allocator:
+    spec: subsystems/mm.md
+    produces: [kernel/include/mm.h, kernel/mm/pmm.c]
+    gates: [tests/kernel/run_mm_test.sh]
+  pmm:
+    spec: subsystems/mm.md
+    produces: [kernel/include/mm.h, kernel/mm/pmm.c]
+    gates: [tests/kernel/run_mm_test.sh]
+  vmm:
+    spec: subsystems/mm.md
+    produces: [kernel/mm/vmm.c]
+    gates: [tests/kernel/run_vmm_test.sh]
+  virtio-blk:
+    spec: subsystems/drivers.md
+    produces: [kernel/drivers/blk/virtio_blk.c]
+    gates: [tests/kernel/run_virtio_blk_test.sh]
+  fat32:
+    spec: subsystems/fs.md
+    produces: [kernel/fs/fat32.c]
+    gates: [tests/kernel/run_fat32_test.sh]

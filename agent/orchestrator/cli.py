@@ -103,9 +103,12 @@ EXIT_RESUME_REFUSED = 2
               help="Continue the paused run in this workspace instead of planning a new one")
 @click.option("--subject", default=None, type=click.Path(exists=True, file_okay=False),
               help="An existing application to analyse; staged read-only at .auton/subject/")
+@click.option("--manifest", "manifest_path", default=None,
+              type=click.Path(exists=True, dir_okay=False),
+              help="Build from a manifest: what the tree lacks becomes gated seed tasks")
 @click.pass_context
 def run(ctx, goal: str | None, workspace: str | None, specs: str, resume: bool,
-        subject: str | None):
+        subject: str | None, manifest_path: str | None):
     """Run the agent orchestration loop to build toward a goal.
 
     GOAL is a high-level description of what to build, e.g.:
@@ -113,8 +116,8 @@ def run(ctx, goal: str | None, workspace: str | None, specs: str, resume: bool,
 
     With --resume, GOAL may be omitted: the saved run's goal is used.
     """
-    if not goal and not resume:
-        raise click.UsageError("GOAL is required unless --resume is given")
+    if not goal and not resume and not manifest_path:
+        raise click.UsageError("GOAL is required unless --resume or --manifest is given")
     config = _load_config(ctx.obj["config_path"])
 
     # Fail fast if no API key is available for the configured provider
@@ -158,6 +161,21 @@ def run(ctx, goal: str | None, workspace: str | None, specs: str, resume: bool,
     workspace_path.mkdir(parents=True, exist_ok=True)
     spec_path = (agent_dir / specs).resolve() if not Path(specs).is_absolute() else Path(specs).resolve()
 
+    seed_tasks: list = []
+    if manifest_path and not resume:
+        tools = agent_dir / "tools"
+        if str(tools) not in sys.path:
+            sys.path.insert(0, str(tools))
+        from intent_manifest import IntentError
+        from manifest_goal import manifest_from_json, plan
+        try:
+            handoff = plan(manifest_from_json(Path(manifest_path).read_text()), workspace_path)
+        except IntentError as exc:
+            console.print(f"[red]Refusing the manifest: {exc}[/red]")
+            raise SystemExit(2)
+        goal = goal or handoff.goal
+        seed_tasks = handoff.seed_tasks
+
     if resume and not goal:
         state_path = workspace_path / ".auton" / "state.json"
         if not state_path.exists():
@@ -179,6 +197,7 @@ def run(ctx, goal: str | None, workspace: str | None, specs: str, resume: bool,
         kernel_spec_path=spec_path,
         config=config,
         subject_path=Path(subject).resolve() if subject else None,
+        seed_tasks=seed_tasks,
     )
 
     result = asyncio.run(engine.run(goal, resume=resume))
