@@ -88,11 +88,11 @@ def merge(record_path: Path, observation: dict) -> dict:
 
 
 def observe(subject: Path, *, record: Path | None = None, exercise: str = "",
-            command: list[str] | None = None,
+            command: list[str] | None = None, dockerfile: Path | None = None,
             limits: sandbox.Limits = sandbox.Limits()) -> dict:
     subject = Path(subject).resolve()
     tag = sandbox.image_tag(subject)
-    image = sandbox.build(subject, tag)
+    image = sandbox.build(subject, tag, dockerfile)
     command = command or sandbox.command_of(tag)
     started = time.monotonic()
     trace, exercise_exit = sandbox.run(tag, command, exercise, limits)
@@ -121,6 +121,8 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--record", help="an artifact record to merge observed facts into")
     ap.add_argument("--exercise", help="a shell script run inside the sandbox, untraced")
     ap.add_argument("--command", nargs="+", help="override the image's start command")
+    ap.add_argument("--dockerfile", help="a recipe to build with, e.g. the gated "
+                                         "package/Dockerfile, when the subject has none")
     ap.add_argument("--warmup", type=int, default=3)
     args = ap.parse_args(argv)
 
@@ -128,6 +130,7 @@ def main(argv: list[str] | None = None) -> int:
     try:
         obs = observe(Path(args.subject), record=Path(args.record) if args.record else None,
                       exercise=exercise, command=args.command,
+                      dockerfile=Path(args.dockerfile) if args.dockerfile else None,
                       limits=sandbox.Limits(warmup_seconds=args.warmup))
     except (RuntimeError, OSError) as exc:
         print(f"FAILED: {exc}", file=sys.stderr)

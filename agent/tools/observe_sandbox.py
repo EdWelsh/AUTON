@@ -64,15 +64,20 @@ def image_tag(subject: Path) -> str:
     return f"auton-observe-{digest}"
 
 
-def build(subject: Path, tag: str) -> str:
-    """Build the subject's own Dockerfile, then add a tracer layer. Returns the
-    traced image's id. Refuses a subject with no Dockerfile: how the
-    application is assembled is the subject's to declare, not ours to guess."""
+def build(subject: Path, tag: str, dockerfile: Path | None = None) -> str:
+    """Build the application, then add a tracer layer. Returns the traced
+    image's id.
+
+    By default the subject's own Dockerfile; with `dockerfile`, a recipe from
+    elsewhere — the Packager's gated `package/Dockerfile` for a repository that
+    ships none. Refuses when there is neither: how the application is assembled
+    is declared by its author or by a gated recipe, never guessed here."""
     subject = Path(subject)
-    if not (subject / "Dockerfile").is_file():
-        raise RuntimeError(f"{subject} has no Dockerfile; observe.py runs the application "
-                           f"as its own Dockerfile builds it, or not at all")
-    _docker(["build", "-q", "-t", f"{tag}-app", str(subject)])
+    recipe = Path(dockerfile) if dockerfile else subject / "Dockerfile"
+    if not recipe.is_file():
+        raise RuntimeError(f"{subject} has no Dockerfile and none was given; observe.py "
+                           f"runs the application as a declared recipe builds it, or not at all")
+    _docker(["build", "-q", "-f", str(recipe), "-t", f"{tag}-app", str(subject)])
     _docker(["build", "-q", "-t", tag, "-"], stdin=f"FROM {tag}-app\n{TRACER_LAYER}")
     return _docker(["image", "inspect", "--format", "{{.Id}}", tag]).strip()
 

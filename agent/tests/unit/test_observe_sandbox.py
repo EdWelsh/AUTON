@@ -53,5 +53,5 @@ def test_disposable():
 
 
 def test_a_subject_without_a_dockerfile_is_refused(tmp_path):
-    with pytest.raises(RuntimeError, match="no Dockerfile"):
+    with pytest.raises(RuntimeError, match="no Dockerfile and none was given"):
         build(tmp_path, "t")

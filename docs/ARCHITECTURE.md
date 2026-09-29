@@ -207,6 +207,29 @@ tools adjudicate it.**
   (compared by file identity, so a case variant is caught), the files lose their write bits,
   and a tree hash taken at staging is re-checked before anything built on the subject is
   accepted. The hash is the gate; agents hold a `shell` that can walk around the first two.
+- **Two roles, each gated by a tool before any reviewer.** The **Analyst** (no shell) writes
+  `analysis/<app>.artifact.yaml`; `syntax_gate` re-hashes the subject, validates the record
+  against the index and checks every quote is on the line it cites. The **Packager** (no build
+  tool) writes `package/Dockerfile`; [`package_gate.py`](../agent/tools/package_gate.py) builds
+  it from a digest-pinned base, reads the image's inventory, and checks it starts. An agent may
+  call only the tools in its own list. That used to be advisory, and on the first live run the
+  manager wrote the Analyst's record itself.
+- **Observation is the only source of `observed`.**
+  [`observe.py`](../agent/tools/observe.py) runs the subject in a disposable container: no
+  network, read-only root, every capability dropped but the tracer's. It records what the
+  process loaded, opened, bound and dialled, and states its coverage (the start command and the
+  exercise script, nothing else). A name the index does not hold is reported as *unindexed*,
+  never stamped.
+- **Same manifest, then the existing loop.**
+  [`artifact_manifest.py`](../agent/tools/artifact_manifest.py) builds the same `Manifest` a
+  sentence does. On a container substrate that is the whole kernel story. On AUTON's kernel,
+  [`manifest_goal.py`](../agent/tools/manifest_goal.py) turns each capability the tree lacks into
+  a seed task carrying its frozen gate, and refuses one that has no gate.
+- **Judged from outside, then ablated.** [`app_probe.py`](../agent/tools/app_probe.py) grades
+  the package from a sidecar on an internal network against a `probe.yaml` a person wrote
+  (`WORKED` / `HONESTLY REFUSED` / `FAILED`). [`ablate.py`](../agent/tools/ablate.py) then
+  removes each requirement in turn: the probe failing proves it load-bearing, and the probe
+  passing is an over-claim, reported and never trimmed automatically.
 
 ## A note on architecture support
 
