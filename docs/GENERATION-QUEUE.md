@@ -45,6 +45,9 @@ Defined in `w13-factory-f6-rerun.plan.md` and unchanged since:
 
 ## The queue
 
+The schedule these runs follow — order, model, budget in sessions, and the stop rules — is
+[`CAMPAIGN.md`](CAMPAIGN.md).
+
 | # | Run | Command | Gate that decides it |
 |---|---|---|---|
 | 1 | **TFTP service** (F6) | `ORCH_CONFIG=<cfg> scripts/orchestrate-native.sh "$(cat goal.txt)"` | `KERNEL_TREE=<ws> tests/kernel/run_tftp_test.sh` (31 checks, frozen) |
