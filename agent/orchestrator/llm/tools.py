@@ -246,6 +246,20 @@ SHELL_ALLOWLIST = frozenset({
     "ls", "cat", "grep", "find", "qemu-system-x86_64",
 })
 
+TOOL_RUN_ABLATION = {
+    "type": "function",
+    "function": {
+        "name": "run_ablation",
+        "description": (
+            "Score the packaged application (application-to-environment A9): remove each "
+            "capability the manifest requires, rebuild, and run the external probe. Writes "
+            "package/ABLATION.json. Takes no arguments: the workspace and the operator's "
+            "probe are fixed by the run."
+        ),
+        "parameters": {"type": "object", "properties": {}},
+    },
+}
+
 TOOL_SHELL = {
     "type": "function",
     "function": {
@@ -536,6 +550,7 @@ REVIEWER_TOOLS = [
 ]
 
 TESTER_TOOLS = [
+    TOOL_RUN_ABLATION,
     TOOL_READ_FILE,
     TOOL_WRITE_FILE,
     TOOL_EDIT_FILE,

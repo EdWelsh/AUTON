@@ -76,6 +76,7 @@ class OrchestrationEngine:
         subject_path: Path | None = None,
         seed_tasks: list[dict[str, Any]] | None = None,
         manifest: dict[str, Any] | None = None,
+        probe_path: Path | None = None,
     ):
         self.workspace_path = workspace_path
         self.kernel_spec_path = kernel_spec_path
@@ -89,6 +90,9 @@ class OrchestrationEngine:
         # A manifest to package (A8). Written to .auton/manifest.json, where the
         # package gate reads it; its substrate decides whether a Packager runs.
         self.manifest = dict(manifest or {})
+        # The operator's probe declaration (A10); kept outside the workspace,
+        # where no agent can rewrite what "works" means.
+        self.probe_path = Path(probe_path).resolve() if probe_path else None
 
         # Load architecture profile
         kernel_config = config.get("kernel", {})
@@ -209,6 +213,7 @@ class OrchestrationEngine:
             agent = self._create_agent(
                 f"tester-{i+1:02d}", AgentRole.TESTER, TesterAgent
             )
+            agent.probe_path = getattr(self, "probe_path", None)
             self._agents[f"tester-{i+1:02d}"] = agent
             self.scheduler.register_agent("tester", agent)
 

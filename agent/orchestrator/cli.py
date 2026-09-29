@@ -106,9 +106,12 @@ EXIT_RESUME_REFUSED = 2
 @click.option("--manifest", "manifest_path", default=None,
               type=click.Path(exists=True, dir_okay=False),
               help="Build from a manifest: what the tree lacks becomes gated seed tasks")
+@click.option("--probe", "probe_path", default=None,
+              type=click.Path(exists=True, dir_okay=False),
+              help="The operator's probe.yaml: what 'works' means (A10, A9)")
 @click.pass_context
 def run(ctx, goal: str | None, workspace: str | None, specs: str, resume: bool,
-        subject: str | None, manifest_path: str | None):
+        subject: str | None, manifest_path: str | None, probe_path: str | None):
     """Run the agent orchestration loop to build toward a goal.
 
     GOAL is a high-level description of what to build, e.g.:
@@ -202,6 +205,7 @@ def run(ctx, goal: str | None, workspace: str | None, specs: str, resume: bool,
         subject_path=Path(subject).resolve() if subject else None,
         seed_tasks=seed_tasks,
         manifest=manifest_data,
+        probe_path=Path(probe_path) if probe_path else None,
     )
 
     result = asyncio.run(engine.run(goal, resume=resume))

@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+import sys
 import subprocess
 from dataclasses import dataclass, field
 from enum import Enum
@@ -277,6 +278,9 @@ class Agent:
                 case "read_spec":
                     return self._read_spec(tool_input["subsystem"])
 
+                case "run_ablation":
+                    return await self._run_ablation()
+
                 case "shell":
                     return await self._run_allowlisted(
                         tool_input["command"],
@@ -351,6 +355,21 @@ class Agent:
 
         except Exception as e:
             return f"Error executing {tool_name}: {e}"
+
+    async def _run_ablation(self) -> str:
+        """The ablation score (A9), run by a tool, not reasoned about by a model.
+
+        The probe path is the operator's, set by the engine from `run --probe`;
+        the agent cannot name a probe of its own choosing.
+        """
+        probe = getattr(self, "probe_path", None)
+        if not probe:
+            return ("Refused: no probe declaration was given to this run (run --probe); "
+                    "ablation without an external probe measures nothing")
+        tools = Path(__file__).resolve().parents[2] / "tools"
+        return await self._run_argv(
+            [sys.executable, str(tools / "ablate.py"), "--workspace",
+             str(self.workspace.path), "--probe", str(probe)], timeout=7200)
 
     def _read_spec(self, subsystem: str) -> str:
         """Read a kernel specification document.
