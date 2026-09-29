@@ -1,6 +1,9 @@
 # AUTON: Application to Environment
 
-**Status**: planned, 2026-09-29 — every phase has a plan; wave order in [README.md](./README.md). Validation: [`w22-app-three-runtimes`](../plans/w22-app-three-runtimes.plan.md)
+**Status**: implemented 2026-09-29 — A1–A10 built and gated on fixtures, including live Docker
+runs of A5, A8, A9 and A10; the owner's three decisions are recorded. Open: the live-model runs
+(the Analyst's A4 gate, and w22's three real applications). Plans in [README.md](./README.md);
+validation: [`w22-app-three-runtimes`](../plans/w22-app-three-runtimes.plan.md).
 **Layer**: a second front end for the compiler, staffed by agents. The manifest pipeline
 beneath it already exists — read
 [`auton-intent-to-os-compiler.prd.md`](./completed/auton-intent-to-os-compiler.prd.md) first.
@@ -201,6 +204,24 @@ implementation. A manifest that cannot survive ablation has not earned the word 
 - **Guessing ports from a binary.** A listening port is `declared` or `observed`, never
   `inferred`.
 - **Multi-application images in v1.**
+
+## Implementation status (2026-09-29)
+
+| Phase | Commit | Proved by |
+|---|---|---|
+| A1 record + validator | `fc850d8` | 36+ refusal tests; the second, disjoint index; bridge checked against the kernel index |
+| A2 subject staging | `634423b` | every write route an agent has, through its real tool dispatcher, stopped by the layer named |
+| A3+A4 Analyst | `ffb7f32`, `4a7b964` | three-part registration; an invented capability refused by the tool before any reviewer; live runs: see [report](../reports/w18-analyst-live-report.md) |
+| A5 observe | `95e0805`, `edce332` | dlopen fixture: static scan misses it, observation finds it; a forger subject cannot plant a fact |
+| A6 artifact → Manifest | `535bad3` | sentence manifests byte-identical to golden; zero consumer files changed |
+| A7 handoff | `e95a205` | unmapped capability → seed task carrying its frozen gate; ungated → refused |
+| A8 Packager | `c8e184e`, `f36d1fe` | on Docker: an unlisted base refused by the gate, the fixed recipe builds, starts, merges |
+| A10 probe | `6bcd20b` | all three verdicts on real containers |
+| A9 ablation | `8b68aaa` | a seeded over-claim caught, and a real one the record carried as unknown |
+
+Two code reviews found 3 HIGH and 14 MEDIUM defects between them; all are fixed with regression
+tests (`ffb7f32`, `f36d1fe`, `edce332`). The live runs found two harness defects: tool lists
+were advisory (`4a7b964`), and kernel design ran for analysis tasks (`70a6485`).
 
 ## Success Metrics
 
