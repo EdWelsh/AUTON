@@ -1,0 +1,6 @@
+# heroku/node-js-getting-started (w22). Declared by the operator.
+format: 1
+start_timeout_s: 90
+checks:
+  - {kind: http, port: 5006, path: /, expect_status: 200}
+refusal_markers: ["AUTON-REFUSED:"]

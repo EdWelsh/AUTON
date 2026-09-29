@@ -64,3 +64,12 @@ def test_missing_fails_and_extras_are_only_reported():
 
 def test_no_manifest_is_refused(tmp_path):
     assert "no manifest" in check(tmp_path).problems[0]
+
+
+def test_a_listed_builder_may_compile_but_never_run():
+    from package_gate import load_builders
+    go = sorted(load_builders())[0]
+    ok = f"FROM {go} AS build\nRUN go build\nFROM scratch\nCOPY --from=build /w /w\n"
+    assert base_problems(ok, "runtime:static-elf", BASES) == []
+    bad = f"FROM {go}\nRUN go build\n"
+    assert base_problems(bad, "runtime:static-elf", BASES)

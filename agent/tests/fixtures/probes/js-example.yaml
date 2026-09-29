@@ -1,0 +1,6 @@
+# pallets/flask examples/javascript (w22). Declared by the operator.
+format: 1
+start_timeout_s: 90
+checks:
+  - {kind: http, port: 5000, path: /, expect_status: 200, expect_body_contains: "JavaScript"}
+refusal_markers: ["AUTON-REFUSED:"]

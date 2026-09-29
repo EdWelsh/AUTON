@@ -63,7 +63,13 @@ def load_bases(path: Path = BASES) -> dict[str, str]:
     return dict(yaml.safe_load(path.read_text())["bases"])
 
 
-def base_problems(dockerfile: str, runtime: str, bases: dict[str, str]) -> list[str]:
+def load_builders(path: Path = BASES) -> set[str]:
+    return set((yaml.safe_load(path.read_text()).get("builders") or {}).values())
+
+
+def base_problems(dockerfile: str, runtime: str, bases: dict[str, str],
+                  builders: set[str] | None = None) -> list[str]:
+    builders = load_builders() if builders is None else builders
     allowed = bases.get(runtime)
     if allowed is None:
         return [f"no base is listed for {runtime} in agent/app_spec/bases.yaml; the "
@@ -73,10 +79,15 @@ def base_problems(dockerfile: str, runtime: str, bases: dict[str, str]) -> list[
     froms = FROM.findall(dockerfile)
     if not froms:
         return ["the Dockerfile has no FROM"]
-    for image, alias in froms:
-        if image != allowed and image not in stages and image not in bases.values():
+    for n, (image, alias) in enumerate(froms, 1):
+        final_stage = n == len(froms)
+        listed = image == allowed or image in stages or image in bases.values() \
+            or (image in builders and not final_stage)
+        if not listed:
             problems.append(f"FROM {image} is not a listed base; for {runtime} use "
-                            f"FROM {allowed}")
+                            f"FROM {allowed}"
+                            + (f" (a build stage may use: {', '.join(sorted(builders))})"
+                               if builders else ""))
         if alias:
             stages.add(alias)
     final = froms[-1][0]

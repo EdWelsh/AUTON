@@ -1,0 +1,7 @@
+# traefik/whoami (w22). Declared by the operator.
+format: 1
+start_timeout_s: 60
+checks:
+  - {kind: http, port: 80, path: /, expect_status: 200, expect_body_contains: "Hostname"}
+  - {kind: http, port: 80, path: /health, expect_status: 200}
+refusal_markers: ["AUTON-REFUSED:"]
