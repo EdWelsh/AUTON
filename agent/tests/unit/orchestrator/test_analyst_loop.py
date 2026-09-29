@@ -183,3 +183,13 @@ async def test_a_subject_changed_mid_run_refuses_the_record(workspace, monkeypat
     assert node.state is TaskState.FAILED
     assert "subject changed" in node.data["failure_reason"]
     assert model.reviewed == []
+
+
+async def test_analysis_tasks_do_not_trigger_kernel_design(workspace, monkeypatch):
+    """w18 live run 2: the manager labelled analyst tasks `sys`/`pkg` and the
+    architect then designed kernel headers for them."""
+    eng = _engine(workspace)
+    model = Model()
+    monkeypatch.setattr(eng.client, "send_with_tools", model)
+    await eng.run("analyse the staged application")
+    assert "architect" not in model.prompts, "no kernel task, so nothing to design"

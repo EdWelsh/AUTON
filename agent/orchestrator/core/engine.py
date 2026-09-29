@@ -45,6 +45,10 @@ from orchestrator.validation import (
 logger = logging.getLogger(__name__)
 
 
+# Roles whose tasks change the kernel tree, and so need its interfaces designed.
+KERNEL_ROLES = ("developer", "tester", "architect")
+
+
 class WorkflowMode(str, Enum):
     """Orchestration workflow modes."""
     KERNEL_BUILD = "kernel_build"
@@ -532,7 +536,12 @@ class OrchestrationEngine:
         logger.info("--- Phase 2: Design ---")
 
         architect: ArchitectAgent = self._agents["architect"]
-        subsystems = sorted(set(t.get("subsystem", "") for t in tasks if t.get("subsystem")))
+        # Only subsystems someone will write kernel code for. On the w18 live
+        # Analyst run the manager labelled analysis tasks `sys` and `pkg`, and
+        # the architect spent the run designing kernel headers nobody needed.
+        subsystems = sorted(set(t.get("subsystem", "") for t in tasks
+                                if t.get("subsystem")
+                                and (t.get("assigned_to") or "developer") in KERNEL_ROLES))
         for subsystem in subsystems:
             design = await architect.design_subsystem(subsystem)
             self.workspace.checkout_main()
