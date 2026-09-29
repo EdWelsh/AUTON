@@ -853,7 +853,7 @@ class OrchestrationEngine:
         errors = self._syntax_errors(result.branch)
         if errors is not None:
             review_result = {"verdict": "request_changes",
-                             "summary": f"the change does not compile:\n{errors}"}
+                             "summary": f"the change fails its mechanical checks (compiler, record validators, package gate):\n{errors}"}
         else:
             reviewer_slot = self.scheduler.get_available_agent("reviewer")
             if reviewer_slot is None:

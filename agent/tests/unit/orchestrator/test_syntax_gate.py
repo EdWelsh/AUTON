@@ -69,7 +69,7 @@ async def test_the_engine_requeues_without_asking_the_reviewer(tmp_path):
     assert eng._reviewer.agent.review_branch.await_count == 0
     assert node.state is not TaskState.APPROVED
     assert node.review_rounds == 1
-    assert "does not compile" in str(node.data.get("feedback") or node.data)
+    assert "fails its mechanical checks" in str(node.data.get("feedback") or node.data)
 
 
 def _design(tmp_path, header: str | None):

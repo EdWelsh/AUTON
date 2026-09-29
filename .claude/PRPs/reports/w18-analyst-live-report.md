@@ -74,3 +74,33 @@ local models, reported separately from A4.
 
 Run 3 is a fresh run on the fixed loop (`.artifacts/authorship/2026-09-29-analyst-run3/`), with
 the same model, subject, goal and budget.
+
+## Run 3 (design scoped): the gate held; the model could not write the format
+
+**2026-09-29 20:21:59Z → 22:36Z.** Archive: `.artifacts/authorship/2026-09-29-analyst-run3/`. Loop `70a6485`.
+
+- **Planning:** one Analyst task, as asked. No design phase.
+- **First draft:** the model copied the index. Every library in the vocabulary, from `libpq` to
+  `libjpeg`, was "inferred" from `FROM python:3.12-slim`, and every quote was accurate. The
+  quote check cannot catch a true line that does not support the claim. That is what the
+  reviewer and the ablation score are for.
+- **Final draft:** six plausible facts with mostly correct lines (`import ssl` at `app.py:2`,
+  `app.run(...)` at `:20`). They were written in flow-style YAML with unquoted strings that
+  contain `"` and `:`, so the file does not parse.
+- **The gate held.** Round 1 was refused by the tool, which quoted the YAML error, and the
+  reviewer model was never asked. Round 2 produced the same shape. **No record reached review;
+  A4's gate is satisfied, but no record passed either.**
+- **Partly the harness's fault.** The prompt's own example used flow mappings with unquoted
+  placeholders, and the model could only learn a record was invalid after its task ended.
+  **Fixed** in `a3b2acc`: a block-YAML example with single-quoted quotes, and a `check_record`
+  tool that runs the gate's own validation on demand.
+- **Budget.** The run ran past 2 h of wall time. macOS `sleep` does not count time the machine
+  spends asleep, so the timeout shim fires late across a system sleep. The operator enforced
+  the budget with SIGTERM at 2 h 14 min. The pause worked, the graph and the round-2 work were
+  committed, and it was not resumed.
+- **Operator error.** `orchestrate-native.sh` was edited while it was running. bash reads
+  scripts incrementally, so the wrapper died with a syntax error after the pause (rc 2). The
+  engine had already paused cleanly; only the wrapper's summary line was lost. The rule: never
+  edit a script a run is executing.
+
+Run 4 is a fresh run on `a3b2acc`, with the same model, subject, goal and budget.
