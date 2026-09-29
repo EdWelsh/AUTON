@@ -1,7 +1,7 @@
-# Decision (open, owner): how far to go on syscalls and seccomp
+# Decision (owner): how far to go on syscalls and seccomp
 
-**Status: open.** Nothing is blocked by it: until it is answered, `observe.py` does **not**
-record the `syscalls:` capability kind, and no seccomp profile is produced. Plan:
+**Status: decided 2026-09-29 — (b) report only.** `observe.py` records syscalls as evidence;
+the `syscalls:` capability kind stays disabled, and no seccomp profile is produced. Plan:
 [`w19-app-observe`](../../../.claude/PRPs/plans/w19-app-observe.plan.md).
 
 ## Why this is a decision and not a task
@@ -41,4 +41,8 @@ with its coverage, never the default.
 
 ## Verdict
 
-*(empty — the owner writes the decision and its reasoning here)*
+**(b) Report only** — decided by the owner, 2026-09-29.
+
+`observe.py` records the observed syscall set as evidence, with its coverage statement. No
+seccomp profile is generated or enforced. The `syscalls:` capability kind stays disabled in
+the index: a syscall set is reported alongside a record, never proposed as a requirement.

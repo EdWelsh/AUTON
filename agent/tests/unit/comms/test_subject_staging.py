@@ -242,8 +242,9 @@ def _agent(workspace: GitWorkspace):
 
     from orchestrator.agents.base_agent import Agent, AgentRole
     from orchestrator.arch_registry import get_arch_profile
+    from orchestrator.llm.tools import DEVELOPER_TOOLS
     return Agent(agent_id="analyst-01", role=AgentRole.DEVELOPER, system_prompt="t",
-                 tools=[], client=MagicMock(), workspace=workspace,
+                 tools=DEVELOPER_TOOLS, client=MagicMock(), workspace=workspace,
                  message_bus=MagicMock(), kernel_spec_path=Path("/nonexistent"),
                  arch_profile=get_arch_profile("x86_64"))
 

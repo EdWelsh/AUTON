@@ -1,6 +1,6 @@
-# Decision (open, owner): is a subject application repository trusted?
+# Decision (owner): is a subject application repository trusted?
 
-**Status: open.** It blocks phase A5 (`observe.py`) of
+**Status: decided 2026-09-29 — (a) untrusted, sandboxed.** It governs phase A5 (`observe.py`) of
 [`auton-application-to-environment.prd.md`](../../../.claude/PRPs/prds/auton-application-to-environment.prd.md),
 and changes how A3 (the Analyst) frames what it reads. Everything before A5 can be built without
 an answer. Plan: [`w19-app-observe`](../../../.claude/PRPs/plans/w19-app-observe.plan.md).
@@ -56,4 +56,10 @@ where the closed vocabulary already constrains it.
 
 ## Verdict
 
-*(empty — the owner writes the decision and its reasoning here)*
+**(a) Untrusted, sandboxed** — decided by the owner, 2026-09-29.
+
+`observe.py` runs the subject in a disposable container with `--network none`, a read-only
+root, `--cap-drop ALL` (plus `SYS_PTRACE` for the tracer only), no host mounts except the
+subject read-only, no host environment, and memory/pid/time limits. Subject content is data,
+never instruction, in every prompt. The residual risk — a container escape — is accepted as
+the container runtime's risk class.

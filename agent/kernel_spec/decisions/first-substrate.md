@@ -1,7 +1,7 @@
-# Decision (open, owner): the first substrate for application-to-environment
+# Decision (owner): the first substrate for application-to-environment
 
-**Status: open.** It blocks A8 (the Packager builds a recipe for *some* substrate) and shapes
-A5's sandbox. A1–A4 and A6 are substrate-agnostic. Plans:
+**Status: decided 2026-09-29 — both, container first.** It governs A8 (the Packager builds a
+recipe for *some* substrate) and shapes A5's sandbox. A1–A4 and A6 are substrate-agnostic. Plans:
 [`w20-app-packager`](../../../.claude/PRPs/plans/w20-app-packager.plan.md),
 [`w19-app-observe`](../../../.claude/PRPs/plans/w19-app-observe.plan.md).
 
@@ -38,4 +38,7 @@ upstream of A8 changes.
 
 ## Verdict
 
-*(empty — the owner writes the decision and its reasoning here)*
+**Both substrates, container first** — decided by the owner, 2026-09-29.
+
+The Packager (A8) builds a Docker/OCI image first, and the ablation score (A9) runs against
+it. A microVM recipe follows as the second substrate; nothing upstream of A8 changes for it.

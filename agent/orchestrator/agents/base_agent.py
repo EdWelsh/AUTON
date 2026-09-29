@@ -27,6 +27,19 @@ logger = logging.getLogger(__name__)
 # mitigation it was asked to implement.
 SPEC_KINDS = ("services", "drivers", "mitigations", "targets", "arch")
 
+def _tool_names(tools) -> set[str]:
+    return {t["function"]["name"] for t in tools or ()
+            if isinstance(t, dict) and isinstance(t.get("function"), dict)}
+
+
+def _all_tool_names() -> set[str]:
+    """Every tool any role has, from the definitions in llm/tools.py."""
+    from orchestrator.llm import tools as tool_defs
+    return {v["function"]["name"] for v in vars(tool_defs).values()
+            if isinstance(v, dict) and isinstance(v.get("function"), dict)
+            and "name" in v["function"]}
+
+
 class AgentRole(str, Enum):
     MANAGER = "manager"
     ARCHITECT = "architect"
@@ -180,6 +193,26 @@ class Agent:
     async def _execute_tool(self, tool_name: str, tool_input: dict) -> str:
         """Execute a tool call from Claude. Returns the result as a string."""
         logger.debug("[%s] Tool call: %s(%s)", self.agent_id, tool_name, tool_input)
+
+        # An agent may use only the tools it was given. Dispatch is by name, so
+        # without this a model could call any tool any role has: on the first
+        # live Analyst run (w18) the manager — read-only tools — called
+        # write_file and wrote the Analyst's record itself, unreviewed. The
+        # Analyst's "no shell" was equally unenforced.
+        allowed = _tool_names(self.tools)
+        if tool_name not in allowed:
+            names = ", ".join(sorted(allowed)) or "none"
+            if tool_name not in _all_tool_names():
+                # Say what does exist. On w13's F6 run gemma4 called a tool
+                # named after a C function in the spec (tftp_server_init)
+                # eight times in a row; "Unknown tool" alone gave it nothing
+                # to correct against.
+                return (f"Unknown tool: {tool_name}. It is not an action you can take. "
+                        f"Your tools are: {names}. To create a file, call write_file "
+                        f"with its path and full content.")
+            logger.warning("[%s] refused %s: not one of its tools", self.agent_id, tool_name)
+            return (f"Refused: {tool_name} is not one of your tools; your role does not "
+                    f"take that action. Your tools are: {names}.")
 
         try:
             match tool_name:

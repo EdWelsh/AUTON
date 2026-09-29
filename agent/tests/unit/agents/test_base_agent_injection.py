@@ -24,6 +24,7 @@ import pytest
 
 from orchestrator.agents.base_agent import Agent, AgentRole
 from orchestrator.arch_registry import get_arch_profile
+from orchestrator.llm.tools import DEVELOPER_TOOLS
 
 pytestmark = pytest.mark.skipif(
     shutil.which("make") is None,
@@ -40,7 +41,7 @@ def _agent(workspace_path: Path) -> Agent:
         agent_id="inject-01",
         role=AgentRole.DEVELOPER,
         system_prompt="test",
-        tools=[],
+        tools=DEVELOPER_TOOLS,
         client=MagicMock(),
         workspace=workspace,
         message_bus=MagicMock(),
