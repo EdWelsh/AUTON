@@ -225,15 +225,15 @@ were advisory (`4a7b964`), and kernel design ran for analysis tasks (`70a6485`).
 
 ## Success Metrics
 
-| Metric | Today | Target |
+| Metric | Measured (2026-09-30) | Target |
 |---|---|---|
-| Applications compilable to a running minimal environment | 0 | **≥3**, in different runtimes |
-| Manifest facts with no recorded provenance | n/a | **0** — refused by the validator |
-| Capability names asserted by an agent that are absent from the index | n/a | **0** — refused, with the known list |
-| `observed` facts written by anything other than `observe.py` | n/a | **0**, enforced by test |
-| Required capabilities proved load-bearing by ablation | n/a | **N of N** |
-| Over-claims caught before release | n/a | **reported, not zero** |
-| Downstream files changed to accommodate the artifact path | n/a | **0** |
+| Applications compilable to a running minimal environment | **0 fully agent-driven; 3 of 3 with a human record + agent package** (w22) | **≥3**, in different runtimes |
+| Manifest facts with no recorded provenance | **0** | **0** — refused by the validator |
+| Capability names asserted by an agent that are absent from the index | **0 reached a manifest**; every one refused with the known list | **0** — refused, with the known list |
+| `observed` facts written by anything other than `observe.py` | **0**, by test both ways and the forger fixture | **0**, enforced by test |
+| Required capabilities proved load-bearing by ablation | **10 of 24** across w22 | **N of N** |
+| Over-claims caught before release | **14** (w22) | **reported, not zero** |
+| Downstream files changed to accommodate the artifact path | **0** | **0** |
 
 The last-but-one row is deliberate. A minimisation tool that has never reported an over-claim
 is not a tool that never over-claims.

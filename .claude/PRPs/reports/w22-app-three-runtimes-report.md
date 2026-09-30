@@ -138,9 +138,62 @@ validated records against the raw clone while agents cite the staged export. The
 - **Fixed** (`7f3d2f6`): one refusal that names the listed builder to declare, and the
   Packager's task now lists the builders a build stage may use.
 
-### Fallback, Packager attempt 2
+### Fallback, Packager attempt 2: **end to end, WORKED**
 
-Running on `7f3d2f6`.
+12:27Z → 13:46Z. The recipe passed the gate first time: `FROM <pinned golang> AS builder`, a
+static `go build`, then `FROM scratch` with the binary alone.
+
+| Stage | Result |
+|---|---|
+| packager (**agent**) | **0 extra libraries**; the image is **4.69 MB against upstream's own 4.95 MB** |
+| observe / regate | 3 observed, 2 unindexed; 0 missing |
+| probe | **WORKED** (2 checks: `/` shows "Hostname", `/health` → 200) |
+| ablate | 0 of 1 load-bearing: `path:/etc/localtime` over-claimed (opened at start-up, absent, not needed) |
+
+**The agent's package is smaller than upstream's, and just as correct by the probe.** Upstream
+copies a CA bundle and the whole zoneinfo tree into `scratch`. The agent's package omits both,
+and the operator's probe cannot tell the difference.
+
+Ablation first came out `unprobeable` here. `scratch` has no shell, so no `RUN rm` can start.
+**Fixed** (`28ee4e4`): the removal runs under a busybox copied in and deleted in the same step.
+
+## Summary
+
+| Subject | Agent Analyst | Agent Packager | Probe | Ablation |
+|---|---|---|---|---|
+| Flask `js_example` (Python) | failed: refused 3×, first for `lib:flask` | passed the gate first time (attempt 2) | **WORKED** | 3 of 14; 11 over-claims |
+| Node starter | failed: no record, 2 attempts | passed first time | **WORKED** | 7 of 9; 2 over-claims |
+| `whoami` (Go, scratch) | failed: budget, duplicate `facts:` | passed on attempt 2 | **WORKED** | 0 of 1; 1 over-claim |
+
+**Against the PRD's metrics:**
+- **Applications compiled to a running minimal environment:** 3 of 3 with a human-written
+  record and an agent-written package. **0 of 3 fully agent-driven.** The pre-registration said
+  the headline counts only the latter, so the headline is **0**.
+- **Facts with no provenance reaching a manifest:** 0. Every refusal was by the validator.
+- **Agent-asserted capabilities absent from the index:** refused every time (`lib:flask`,
+  `lib:libmagic-unicorn.so` in tests). None reached a manifest.
+- **`observed` written by anything but `observe.py`:** 0, held by test from both directions,
+  and by the forger fixture.
+- **Required capabilities proved load-bearing:** 10 of 24 across the three. **Over-claims
+  caught: 14.** Reported, not zero, as the PRD requires.
+- **Downstream files changed:** 0.
+
+**Where the model stands.** On this machine `qwen3.5:9b` reliably *packages*: three of three,
+twice first time. It does not yet *analyse*. Its three failure modes were a missing vocabulary
+kind, never writing, and running out of budget while rewriting. The next experiment is the
+larger model (w23).
+
+**Harness defects found and fixed by w22, all committed with tests:**
+- The probe now runs inside the package gate: a loopback-only server passed every in-container
+  check.
+- An empty result is feedback, not a terminal failure.
+- An application run's one task is seeded, not left to the manager.
+- A duplicate YAML key is refused, not silently dropped.
+- One staged export is used everywhere.
+- A missing build stage is named once, with the fix.
+- Shell-less images can be ablated.
+
+## Findings so far
 
 ## Findings so far
 
