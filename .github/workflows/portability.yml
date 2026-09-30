@@ -98,6 +98,11 @@ jobs:
       - name: SSH wire suite (F12)
         run: tests/kernel/run_ssh_test.sh --self-test
 
+      - name: Play-Doom platform suite (R12) — self-test and injected-bug score
+        run: |
+          tests/kernel/run_play_doom_test.sh --self-test
+          tests/kernel/run_play_doom_test.sh --inject
+
       - name: KV store suite (F9)
         run: tests/kernel/run_kvstore_test.sh --self-test
 

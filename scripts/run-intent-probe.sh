@@ -140,6 +140,7 @@ doom)
 	"$PY" "$ROOT/scripts/qmp_probe.py" "$qmp" "$WORK" || {
 		rc=$?
 		[ "$rc" -eq 3 ] && failed "the frame never changed when keys were sent: input is not reaching the game"
+		[ "$rc" -eq 4 ] && refused "the probe could not run: the frame animates by itself as much as on input, so input cannot be judged (see $WORK)"
 		failed "the frame was a single colour: nothing was drawn"
 	}
 	worked "a non-blank frame, and sending keys changed it"
