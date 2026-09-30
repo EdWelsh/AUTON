@@ -89,8 +89,14 @@ class TestEmptyDiffIsNotReviewable:
         eng = _engine(ws, g)
 
         await eng._handle_result(g.get_task("t-2"), _ok("t-2", "agent/dev-01/x-2"))
-
         node = g.get_task("t-2")
+        assert node.state is TaskState.READY, "returned to the author, not failed outright"
+        assert "you produced no change" in node.data["review_feedback"][0]["summary"]
+
+        # w22 subject 2: an empty result is feedback within the round limit,
+        # and terminal only when the limit is spent.
+        for _ in range(2):
+            await eng._handle_result(g.get_task("t-2"), _ok("t-2", "agent/dev-01/x-2"))
         assert node.state is TaskState.FAILED
         assert "no output" in node.data["failure_reason"]
         assert eng._reviewer.agent.review_branch.await_count == 0

@@ -753,11 +753,25 @@ class OrchestrationEngine:
             logger.info("Committed uncommitted work on %s for %s", result.branch, task_id)
 
         if not self.workspace.has_changes(result.branch):
+            # Never reviewed (a reviewer shown nothing invents something, w11),
+            # but returned to the author with the reason, within the same round
+            # limit as any refusal. Terminal on the first empty result, a task
+            # that read everything and forgot to write lost its whole budget
+            # (w22 subject 2, qwen3.5:9b).
             logger.info("Task %s: branch %s has no changes against main",
                         task_id, result.branch)
-            self.task_graph.fail(
-                task_id, f"no output: branch {result.branch} is identical to main")
-            self.state.tasks_failed += 1
+            produces = ", ".join(task_node.data.get("produces") or []) or "a file"
+            limit = int(getattr(self, "config", {}).get("orchestrator", {})
+                        .get("max_review_rounds", 3))
+            node = self.task_graph.requeue(task_id, {
+                "verdict": "request_changes",
+                "summary": f"you produced no change: this task must write {produces}. "
+                           f"Reading is part of the task, not its result"})
+            if node.review_rounds >= limit:
+                self.task_graph.fail(
+                    task_id, f"no output: branch {result.branch} is identical to main "
+                             f"after {node.review_rounds} attempt(s)")
+                self.state.tasks_failed += 1
             return
 
         task_node.data["branch"] = result.branch
