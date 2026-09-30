@@ -32,7 +32,7 @@ gate that builds the recipe and diffs the inventory against the manifest.
 
 | Priority | File | Why |
 |---|---|---|
-| P0 | `.claude/PRPs/plans/w18-app-analyst.plan.md` | the three-part registration this repeats |
+| P0 | `.claude/PRPs/plans/completed/w18-app-analyst.plan.md` | the three-part registration this repeats |
 | P0 | `agent/tools/build_service.py:232-300` | `gate_leakage` — what "present but excluded" reporting looks like |
 | P0 | `agent/orchestrator/core/syntax_gate.py` | pre-review gate hook |
 | P0 | `agent/tools/package_image.py:1-60` | the kernel-side packager's provenance rules ("an intent that cannot be built produces a package that says so") |

@@ -65,8 +65,8 @@ Three kinds of phase, distinguished because they fail differently: **R** runs th
 **D** needs a person to decide, **X** needs something acquired.
 
 **Plans (2026-09-29):** R1–R12 → [`w18-generation-campaign`](../plans/w18-generation-campaign.plan.md), which
-needs [`w17-run-resume`](../plans/w17-run-resume.plan.md) first (R1 was cut off and lost its
-uncommitted work); D1, D2, X1–X4 → [`w17-owner-gates`](../plans/w17-owner-gates.plan.md).
+needs [`w17-run-resume`](../plans/completed/w17-run-resume.plan.md) first (R1 was cut off and lost its
+uncommitted work); D1, D2, X1–X4 → [`w17-owner-gates`](../plans/completed/w17-owner-gates.plan.md).
 
 | # | Phase | Gate that decides it | Depends on |
 |---|---|---|---|

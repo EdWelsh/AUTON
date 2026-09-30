@@ -1,6 +1,6 @@
 # Pre-registration: three applications, three runtimes, end to end (w22)
 
-**Written 2026-09-29, before any w22 run.** Plan: [`w22-app-three-runtimes`](../plans/w22-app-three-runtimes.plan.md).
+**Written 2026-09-29, before any w22 run.** Plan: [`w22-app-three-runtimes`](../plans/completed/w22-app-three-runtimes.plan.md).
 Driver: `scripts/app_to_env.py` (analyst → manifest → packager → observe → regate → probe → ablate).
 
 ## Subjects, pinned before the Analyst sees them

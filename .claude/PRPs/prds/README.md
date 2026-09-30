@@ -24,6 +24,16 @@ deterministic tools adjudicate it.** A table cannot read an unfamiliar repositor
 cannot be trusted to name a capability — that failure is measured at 5 phantom hardware
 citations per 50 turns.
 
+### Status 2026-09-30: w17–w22 done; what is left is [w23](../plans/w23-remaining-work.plan.md)
+
+Eleven of twelve plans are complete and in `plans/completed/`. Application-to-environment
+A1–A10 are built and gated. w22 compiled three real applications (Python, Node, Go) to running,
+ablated environments with agent-written packages. **None was fully agent-driven**: the local
+9b model packages, and does not yet analyse. The generation campaign (R1–R12) has not started;
+Doom (R12) now has a frozen gate suite (10/10 injected bugs) and a probe that can fail.
+Everything open — the larger model, the campaign, the w22 gaps, and the owner's rows — is in
+[`w23-remaining-work`](../plans/w23-remaining-work.plan.md), for review before execution.
+
 ### Status 2026-09-29: both open PRDs are fully planned
 
 Twelve plans in `../plans/` cover every open phase of both PRDs. Execute with `/prp-implement`

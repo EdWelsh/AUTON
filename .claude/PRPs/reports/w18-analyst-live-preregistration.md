@@ -2,7 +2,7 @@
 
 **Written 2026-09-29, before the run.** Protocol: the Generation Experiment Protocol
 (`completed/w13-factory-f6-rerun.plan.md`), applied to analysis instead of generation.
-Plan: [`w18-app-analyst`](../plans/w18-app-analyst.plan.md), Task 6.
+Plan: [`w18-app-analyst`](../plans/completed/w18-app-analyst.plan.md), Task 6.
 
 | | |
 |---|---|
