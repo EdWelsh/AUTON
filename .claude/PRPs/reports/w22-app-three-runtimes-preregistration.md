@@ -58,3 +58,17 @@ bundle and zoneinfo never opened).
 **Revised prediction for whoami:** it reaches `ablate`, if the Packager writes a Go build that
 passes the gate. The CA bundle and `/usr/share/zoneinfo` come out over-claimed if the Analyst
 claims them.
+
+## Probe self-test, before any w22 run
+
+Every probe was run against a human-written reference build of its own application, and
+against the wrong one, the way a gate suite is scored against a reference:
+
+| Probe | Own reference image | Wrong application |
+|---|---|---|
+| js-example | WORKED (1 check) | FAILED against the node image (connection refused on :5000) |
+| node-getting-started | WORKED (1 check) | FAILED against whoami |
+| whoami | WORKED (2 checks) | FAILED against js-example |
+
+The reference recipes are in `agent/tests/fixtures/recipes/`, labelled human. `whoami` uses its
+own upstream Dockerfile. These are also the fallback recipes the pre-registration names.
