@@ -56,6 +56,28 @@ class WorkflowMode(str, Enum):
     DUAL = "dual"
 
 
+def _one_task_per_seeded_role(tasks: list[dict[str, Any]],
+                              app_seeds: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """A role the engine seeded gets exactly its seed: a model-planned task for
+    the same role is dropped, and anything depending on it depends on the seed.
+    Two analyst tasks writing one record would race each other."""
+    by_role = {sd["assigned_to"]: sd["task_id"] for sd in app_seeds}
+    seed_ids = {sd["task_id"] for sd in app_seeds}
+    dropped = {t["task_id"]: by_role[t.get("assigned_to")] for t in tasks
+               if t.get("assigned_to") in by_role and t["task_id"] not in seed_ids}
+    kept = []
+    for t in tasks:
+        if t["task_id"] in dropped:
+            continue
+        deps = []
+        for d in t.get("dependencies") or []:
+            d = dropped.get(d, d)
+            if d not in deps and d != t["task_id"]:
+                deps.append(d)
+        kept.append({**t, "dependencies": deps})
+    return kept
+
+
 class OrchestrationEngine:
     """The main engine that runs the VibeTensor-style iterative build loop.
 
@@ -510,9 +532,11 @@ class OrchestrationEngine:
         logger.info("--- Phase 1: Planning ---")
 
         manager: ManagerAgent = self._agents["manager"]
-        seeds = getattr(self, "seed_tasks", [])
+        app_seeds = self._application_seeds()
+        seeds = list(getattr(self, "seed_tasks", [])) + app_seeds
         if self.workflow_mode == WorkflowMode.KERNEL_BUILD:
-            tasks = await manager.decompose_goal(goal, seed_tasks=seeds)
+            tasks = _one_task_per_seeded_role(
+                await manager.decompose_goal(goal, seed_tasks=seeds), app_seeds)
         elif self.workflow_mode == WorkflowMode.SLM_TRAINING:
             tasks = self.task_graph.create_slm_training_tasks(goal)
         elif self.workflow_mode == WorkflowMode.DUAL:
@@ -531,6 +555,35 @@ class OrchestrationEngine:
                     len(tasks), self.task_graph.topological_order())
         self._checkpoint(state_path)
         return tasks
+
+    def _application_seeds(self) -> list[dict[str, Any]]:
+        """The one task an application run always needs, added by the engine.
+
+        Its plan is fixed — analyse the staged subject, or package the manifest
+        — so it is not left to a model to plan: on w18's first live run and
+        w22 subject 2 the manager answered in prose, planned nothing, and the
+        run ended before the agent that had the work was ever asked.
+        """
+        seeds: list[dict[str, Any]] = []
+        if "analyst" in getattr(self, "_agents", {}):
+            name = self.subject_path.name if self.subject_path else "application"
+            seeds.append({
+                "task_id": "analysis-001", "title": f"Analyse {name}",
+                "subsystem": "analysis", "assigned_to": "analyst", "dependencies": [],
+                "priority": 1, "produces": [f"analysis/{name}.artifact.yaml"],
+                "description": ("Read the application staged at .auton/subject/ and write "
+                                f"analysis/{name}.artifact.yaml. Check it with check_record."),
+                "seed": True})
+        if "packager" in getattr(self, "_agents", {}):
+            name = (self.manifest.get("application") or {}).get("name", "application")
+            seeds.append({
+                "task_id": "package-001", "title": f"Package {name}",
+                "subsystem": "package", "assigned_to": "packager", "dependencies": [],
+                "priority": 1, "produces": ["package/Dockerfile", "package/PROVENANCE.json"],
+                "description": ("Write package/Dockerfile and package/PROVENANCE.json for the "
+                                "manifest at .auton/manifest.json."),
+                "seed": True})
+        return seeds
 
     async def _design(self, tasks: list[dict[str, Any]], state_path: Path) -> None:
         """Phase 2: the architect designs each subsystem's interfaces."""

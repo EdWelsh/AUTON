@@ -30,9 +30,9 @@ AGENT = Path(__file__).resolve().parents[3]
 SPECS = AGENT / "kernel_spec"
 SUBJECT = AGENT / "tests" / "fixtures" / "apps" / "flask-hello"
 VALID = AGENT / "tests" / "fixtures" / "artifacts" / "valid.artifact.yaml"
-RECORD = "analysis/flask-hello.artifact.yaml"
+RECORD = "analysis/flask-hello.artifact.yaml"  # the seed's deliverable
 
-TASKS = [{"task_id": "app-001", "title": "analyse flask-hello", "subsystem": "app",
+TASKS = [{"task_id": "analysis-001", "title": "analyse flask-hello", "subsystem": "app",
           "assigned_to": "analyst", "dependencies": [], "produces": [RECORD],
           "description": "write the artifact record"}]
 
@@ -120,7 +120,7 @@ async def test_the_analyst_is_constructed_registered_and_advertised(workspace, m
     assert eng.scheduler.status()["analyst"]["total"] == 1, "registered"
     decomposition = model.prompts["manager"][0]
     assert '"analyst"' in decomposition and ".auton/subject/" in decomposition, "advertised"
-    node = eng.task_graph.get_task("app-001")
+    node = eng.task_graph.get_task("analysis-001")
     assert node.assigned_agent_id == "analyst-01", "and a task for it was dispatched"
 
 
@@ -144,7 +144,7 @@ async def test_an_invented_capability_never_reaches_a_reviewer(workspace, monkey
     monkeypatch.setattr(eng.client, "send_with_tools", model)
     await eng.run("analyse the staged application")
 
-    node = eng.task_graph.get_task("app-001")
+    node = eng.task_graph.get_task("analysis-001")
     assert node.state is TaskState.MERGED, node.data.get("failure_reason")
     assert node.review_rounds == 1, "refused once, by the tool"
     refusal = node.data["review_feedback"][0]["summary"]
@@ -179,7 +179,7 @@ async def test_a_subject_changed_mid_run_refuses_the_record(workspace, monkeypat
     monkeypatch.setattr(eng.client, "send_with_tools", tamper)
     await eng.run("analyse the staged application")
 
-    node = eng.task_graph.get_task("app-001")
+    node = eng.task_graph.get_task("analysis-001")
     assert node.state is TaskState.FAILED
     assert "subject changed" in node.data["failure_reason"]
     assert model.reviewed == []
@@ -207,3 +207,21 @@ async def test_the_analyst_can_check_its_record_before_the_gate(workspace, monke
     assert out.startswith("NOT OK") and "YAML" in out
     out = await analyst._execute_tool("check_record", {"path": RECORD})
     assert out.startswith("OK")
+
+
+async def test_a_manager_that_plans_nothing_still_gets_the_analysis_done(workspace, monkeypatch):
+    """w22 subject 2: the manager answered in prose, planned nothing, and the
+    run ended before the Analyst was asked. The engine seeds the one task an
+    application run always needs."""
+    eng = _engine(workspace)
+    model = Model()
+    original = model.__call__
+
+    async def prose_manager(agent_id, system, messages, tools, tool_executor, **kw):
+        if agent_id.startswith("manager") and "## Goal" in messages[0]["content"]:
+            return _say("I would analyse the application and write its record.")
+        return await original(agent_id, system, messages, tools, tool_executor, **kw)
+    monkeypatch.setattr(eng.client, "send_with_tools", prose_manager)
+    await eng.run("analyse the staged application")
+    node = eng.task_graph.get_task("analysis-001")
+    assert node is not None and node.state is TaskState.MERGED, node and node.data

@@ -28,7 +28,7 @@ from orchestrator.core.task_graph import TaskState  # noqa: E402
 AGENT = ROOT / "agent"
 SUBJECT = AGENT / "tests" / "fixtures" / "apps" / "flask-hello"
 RECORD = AGENT / "tests" / "fixtures" / "artifacts" / "valid.artifact.yaml"
-TASKS = [{"task_id": "pkg-001", "title": "package flask-hello", "subsystem": "package",
+TASKS = [{"task_id": "package-001", "title": "package flask-hello", "subsystem": "package",
           "assigned_to": "packager", "dependencies": [],
           "produces": ["package/Dockerfile", "package/PROVENANCE.json"],
           "description": "write the recipe"}]
@@ -127,7 +127,7 @@ async def test_an_unlisted_base_is_refused_by_the_gate_then_the_fix_merges(works
     await eng.run("package the application")
 
     assert eng.scheduler.status()["packager"]["total"] == 1
-    node = eng.task_graph.get_task("pkg-001")
+    node = eng.task_graph.get_task("package-001")
     assert node.state is TaskState.MERGED, node.data.get("failure_reason")
     assert node.review_rounds == 1
     assert "not a listed base" in node.data["review_feedback"][0]["summary"]
@@ -179,7 +179,7 @@ async def test_the_gate_runs_the_operators_probe_before_review(workspace, monkey
     monkeypatch.setattr(eng.client, "send_with_tools", model)
     await eng.run("package the application")
 
-    node = eng.task_graph.get_task("pkg-001")
+    node = eng.task_graph.get_task("package-001")
     assert node.state is TaskState.MERGED, node.data.get("failure_reason")
     first = node.data["review_feedback"][0]["summary"]
     assert "external probe" in first and "Connection refused" in first
