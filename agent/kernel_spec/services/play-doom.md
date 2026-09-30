@@ -43,6 +43,10 @@ See *Licence* below. That is a blocker, not a footnote.
 ## Assumptions carried from the intent
 
 - The user owns a WAD and supplies its path at build time. None is committed or fetched.
+  **The target is the original 1993 DOOM**: the owner chose the id Software shareware
+  `DOOM1.WAD` v1.9 (4,196,020 bytes, MD5 `f0cefca49926d00903cf57551d901abe`, an `IWAD`) for
+  validation, kept locally at `.cache/assets/DOOM1.WAD` and never committed. doomgeneric
+  identifies it as shareware Doom and runs Episode 1.
 - A PS/2 keyboard is present. This excludes microVMs, whose i8042 is vestigial
   (`targets/firecracker.md`).
 - GRUB configured a linear 32-bpp framebuffer (Multiboot2 framebuffer tag, type 1 = RGB).
