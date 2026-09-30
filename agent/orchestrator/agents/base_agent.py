@@ -151,6 +151,10 @@ class Agent:
 
             # Extract the final text response
             summary = self._extract_final_text(result_messages)
+            # What the model said when it stopped. w22 subject 2's Analyst ended
+            # three tasks without writing, and nothing recorded why.
+            logger.info("[%s] Finished task, final reply: %s", self.agent_id,
+                        " ".join((summary or "(empty)").split())[:400])
             artifacts = self._extract_artifacts(result_messages)
 
             return TaskResult(

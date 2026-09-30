@@ -767,6 +767,7 @@ class OrchestrationEngine:
                 "verdict": "request_changes",
                 "summary": f"you produced no change: this task must write {produces}. "
                            f"Reading is part of the task, not its result"})
+            logger.info("No-output round %d/%d for %s", node.review_rounds, limit, task_id)
             if node.review_rounds >= limit:
                 self.task_graph.fail(
                     task_id, f"no output: branch {result.branch} is identical to main "
