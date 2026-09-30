@@ -40,6 +40,27 @@ Two changes followed (`feat(package): the operator's probe runs inside the packa
 
 Attempt 2 of the Packager stage runs on that gate, labelled as a new attempt.
 
+### Attempt 2 of the Packager stage (on the probe-in-gate loop): **end to end, WORKED**
+
+`.artifacts/w22/js-example-attempt2/`, 03:26Z → 04:18Z.
+
+| Stage | Result |
+|---|---|
+| manifest | 16 requirements (see caveat) |
+| packager (**agent**) | first recipe passed the gate, probe included: `pip install flask`, `flask --app js_example run --host 0.0.0.0 --port 5000` |
+| observe / regate | 18 observed; 0 missing |
+| probe | **WORKED**, from outside |
+| ablate | **3 of 14 load-bearing**; 11 over-claimed, among them `libssl.so.3` and `libcrypto.so.3`: this app never uses TLS, and removing them changes nothing the probe can see |
+
+- **The Packager chose `--host 0.0.0.0` unprompted this time.** The new in-gate probe never had
+  to refuse anything, so this attempt does not show whether that feedback would have taught it.
+  The loop test does (`test_the_gate_runs_the_operators_probe_before_review`).
+- **Caveat.** `observe` merges into the record it is given, in place. Attempt 2's copy of the
+  fallback record therefore already carried attempt 1's observed facts for the same subject:
+  valid evidence, but not the 1-fact record attempt 1 started from. Hence 16 requirements.
+- **Counting.** This is a full pipeline pass with a human-written record. It counts toward "the
+  pipeline works on a real repository", not toward the PRD's agent-only metric.
+
 ## Findings so far
 
 1. **The index needs a kind for language packages** (`pypi:`, `npm:`). Without one, an
