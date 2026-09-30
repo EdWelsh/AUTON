@@ -93,6 +93,21 @@ application run's plan is fixed, so the engine now seeds it through the A7 seed 
 instead of depending on a model to plan one task. A model-planned task for the same role is
 dropped. The fallback is re-run on that loop.
 
+### Fallback rerun (seeded loop): **end to end, WORKED**
+
+`.artifacts/w22/node-getting-started-fallback2/`, 07:14Z → 08:11Z.
+
+| Stage | Result |
+|---|---|
+| manifest | 2 requirements (the human record: `runtime:node-22`, `listen:tcp/5006`, `env:PORT`) |
+| packager (**agent**) | first recipe passed the gate, probe included: `FROM <pinned node:22-slim>`, `npm install`, `node index.js` |
+| observe / regate | 11 observed, 2 unindexed; 0 missing |
+| probe | **WORKED** from outside |
+| ablate | **7 of 9 load-bearing**; over-claimed `path:/etc/localtime` and `path:/etc/ssl/openssl.cnf` (read at start-up; the app does not need them) |
+
+A human record again, so this counts toward "the pipeline works on a real repository", not the
+agent-only metric.
+
 ## Findings so far
 
 1. **The index needs a kind for language packages** (`pypi:`, `npm:`). Without one, an
