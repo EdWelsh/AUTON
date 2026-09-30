@@ -125,13 +125,29 @@ def _smuggling(dockerfile: str, allowed: set[str]) -> list[str]:
     if SYNTAX.search(dockerfile):
         problems.append("a `# syntax=` directive runs a builder frontend of the recipe's "
                         "choosing; remove it")
-    for ref in FROM_FLAG.findall(dockerfile) + re.findall(r"\bfrom=([^,\s]+)", dockerfile):
+    refs = dict.fromkeys(FROM_FLAG.findall(dockerfile)
+                         + re.findall(r"(?<!-)\bfrom=([^,\s]+)", dockerfile))
+    for ref in refs:
         if ref not in allowed and not ref.isdigit():
-            problems.append(f"--from={ref} names an image that is neither a stage nor listed")
+            hint = ""
+            if re.fullmatch(r"[a-z][a-z0-9_.-]*", ref):
+                # A bare name is a stage the recipe forgot to declare (w22 whoami:
+                # the builder stage was deleted instead of pinned).
+                pinned = ", ".join(sorted(b for b in allowed if "@sha256:" in b and
+                                          b not in _bases_of(allowed)))
+                hint = (f"; no stage is named {ref!r} — declare it, e.g. "
+                        f"`FROM <a listed builder> AS {ref}`"
+                        + (f" (listed builders: {pinned})" if pinned else ""))
+            problems.append(f"--from={ref} names an image that is neither a stage nor listed"
+                            + hint)
     if ADD_URL.search(dockerfile):
         problems.append("ADD <url> fetches content no manifest names; COPY from the "
                         "application instead")
     return problems
+
+
+def _bases_of(allowed: set[str]) -> set[str]:
+    return set(load_bases().values()) & allowed
 
 
 def diff(required: list[str], inv: dict[str, list[str]]) -> tuple[list[str], list[str]]:

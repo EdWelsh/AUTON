@@ -57,7 +57,7 @@ class PackagerAgent(Agent):
     def _format_task_prompt(self, task: dict[str, Any]) -> str:
         if str(TOOLS) not in sys.path:
             sys.path.insert(0, str(TOOLS))
-        from package_gate import load_bases
+        from package_gate import load_bases, load_builders
 
         app = self.manifest.get("application") or {}
         runtime = app.get("runtime", "?")
@@ -65,6 +65,8 @@ class PackagerAgent(Agent):
         extra = (
             f"\n**Application**: {app.get('name', '?')} on {app.get('substrate', '?')}\n"
             f"- runtime: {runtime} -> FROM {base}\n"
+            f"- a build stage (never the final one) may use: "
+            f"{', '.join(sorted(load_builders())) or 'none'}\n"
             f"- requires: {', '.join(app.get('requires') or []) or 'nothing beyond the runtime'}\n"
             f"- assumptions: {'; '.join(self.manifest.get('assumptions') or []) or 'none'}\n"
             f"\nThe full manifest is at .auton/manifest.json; the application at .auton/subject/.\n"

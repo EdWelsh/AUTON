@@ -93,3 +93,12 @@ def test_the_manifest_is_revalidated_whoever_wrote_it(tmp_path):
     report = check(tmp_path, manifest={"application": {"runtime": "runtime:python-3.12",
                                                        "requires": ["lib:x\nRUN y"]}})
     assert report.problems and "lib:x" in report.problems[0]
+
+
+def test_a_missing_stage_is_named_once_with_the_fix():
+    """w22 whoami: the Packager deleted its builder stage; the refusal repeated
+    six times and never said how to declare it."""
+    problems = base_problems("FROM scratch\nCOPY --from=builder /a /a\nCOPY --from=builder /b /b\n",
+                             "runtime:static-elf", BASES)
+    assert len(problems) == 1
+    assert "AS builder" in problems[0] and "golang:" in problems[0]
