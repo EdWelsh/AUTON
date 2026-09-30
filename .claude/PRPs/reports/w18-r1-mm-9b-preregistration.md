@@ -35,3 +35,23 @@ that is not an attempt.
   2, not reached, or 1 on `vmm_protect`.
 - If 9b is fast and wrong (exit 1 on both), that answers Open Question 3 (*is the faster model
   enough?*) in the negative. The campaign then continues on 27b for R2, per its table.
+
+## Amendment, before the run: the model
+
+**Written 2026-09-30, before R1 attempt 2 started.** At the owner's direction the campaign runs
+on the largest Qwen that fits this machine's ~42 GB. It is **`ollama_chat/qwen3.5:27b-coding-mxfp8`**
+(MLX, 30 GB): the coding-tuned 27B dense model at 8-bit, chosen over the 35B-A3B MoE (3B active)
+and over the bf16 builds (55 GB, which do not fit). 9b and 27b (int4) were removed from the
+machine at the owner's request.
+
+Everything else above stands: the goal, the gates in order, 4 sessions × 5 h, the stop rules.
+This is still R1's attempt 2 (its last); only the model differs, and the report says so.
+Qualification with `scripts/model-probe.py` (4/4) is a precondition, recorded before session 1.
+
+**Revised predictions.** At 8-bit and coding-tuned, the model should hold the `mm.md` interface
+better than attempt 1's 27b int4: `boot_mmap_t` taken from `boot.h` rather than invented. It is
+slower per call than 9b, so throughput stays the risk. Two tasks closed in the first session
+would be better than attempt 1's whole run.
+
+Driver: `scripts/generation_run.py` (sessions with `--resume`, then every gate in order,
+archived in the run directory's `RESULT.json`).
