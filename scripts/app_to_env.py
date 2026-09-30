@@ -93,8 +93,13 @@ def main(argv: list[str] | None = None) -> int:
     t = time.monotonic()
     ws_a = out / "ws-analyst"
     if args.record:
-        record = Path(args.record).resolve()
-        st.record("analyst", True, f"given: {record}", t, skipped=True)
+        # A copy: observe merges into the record it is given, and a fallback
+        # record reused by a later attempt must not carry this one's
+        # observations (w22 subject 1, attempt 2).
+        given = Path(args.record).resolve()
+        record = out / f"record-given-{given.name}"
+        shutil.copy(given, record)
+        st.record("analyst", True, f"given: {given}", t, skipped=True, author="human")
     else:
         rc = orchestrate(ws_a, config, "Analyse the application staged at .auton/subject/ "
                          "and write its artifact record.", args.timeout, out / "analyst.log",
