@@ -108,6 +108,30 @@ dropped. The fallback is re-run on that loop.
 A human record again, so this counts toward "the pipeline works on a real repository", not the
 agent-only metric.
 
+## Subject 3 — traefik/whoami (Go, static, `scratch`)
+
+### Attempt 1, fully agent-driven (seeded loop): stopped at `analyst`, budget
+
+08:12Z → 10:20Z. The seeded analysis task ran, and the manager no longer mattered. **The best
+content any agent has produced here**, with no index dumping:
+- `runtime:static-elf` from `FROM scratch`
+- `listen:tcp/80` from `EXPOSE 80`
+- `path:/etc/ssl/certs` from the `COPY` of the CA bundle
+- two `env:` vars cited to `app.go`
+
+But the whole 2 h budget went inside the one task: 50 model calls and 13 rewrites of the file.
+It ended with **two `facts:` sections** and never reached a gate.
+
+**That exposed a real validator hole.** PyYAML keeps the last duplicate key silently, so the
+first `facts:` list, the correct one, would have vanished without a word. **Fixed**
+(`520cba2`): the loader refuses a duplicate key. The same commit fixes the driver, which
+validated records against the raw clone while agents cite the staged export. The agent's
+`tree_hash` was right; the driver's comparison was wrong.
+
+### Fallback: human record, agent Packager
+
+Running on `520cba2`.
+
 ## Findings so far
 
 1. **The index needs a kind for language packages** (`pypi:`, `npm:`). Without one, an
