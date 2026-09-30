@@ -29,6 +29,7 @@ import argparse
 import json
 import os
 import subprocess
+import threading
 import time
 from datetime import datetime, timezone
 from pathlib import Path
@@ -67,18 +68,57 @@ def pinned_wrapper(out: Path) -> Path:
     return dst
 
 
+def memory_free() -> int | None:
+    """System-wide free memory percent (macOS memory_pressure), or None."""
+    try:
+        r = subprocess.run(["memory_pressure"], capture_output=True, text=True, timeout=30)
+    except (OSError, subprocess.TimeoutExpired):
+        return None
+    for line in r.stdout.splitlines():
+        if "free percentage" in line:
+            return int(line.rsplit(":", 1)[1].strip().rstrip("%"))
+    return None
+
+
+class MemoryGuard(threading.Thread):
+    """Pause the run before the host is out of memory.
+
+    A session killed by the system loses its work in flight; one paused by
+    SIGTERM commits it and resumes (w17). w18 R1's first session was killed
+    by memory pressure; this pauses it first, below `floor` percent free."""
+
+    def __init__(self, cfg: Path, floor: int):
+        super().__init__(daemon=True)
+        self.cfg, self.floor, self.fired, self._stop = cfg, floor, False, threading.Event()
+
+    def run(self) -> None:
+        while not self._stop.wait(30):
+            free = memory_free()
+            if free is not None and free < self.floor:
+                self.fired = True
+                subprocess.run(["pkill", "-TERM", "-f", f"orchestrator.cli --config {self.cfg}"])
+                return
+
+    def stop(self) -> None:
+        self._stop.set()
+
+
 def run_session(n: int, out: Path, wrapper: Path, cfg: Path, goal: str, resume: bool,
-                seconds: int) -> dict:
+                seconds: int, floor: int) -> dict:
     log = out / f"session-{n}.log"
     env = {**os.environ, "ORCH_TIMEOUT": str(seconds), "ORCH_CONFIG": str(cfg),
            "ORCH_LOG": str(out / f"transcript-{n}.log")}
     args = ["bash", str(wrapper)] + (["--resume"] if resume else [goal])
     started, t0 = now(), time.monotonic()
+    guard = MemoryGuard(cfg, floor)
+    guard.start()
     r = subprocess.run(args, env=env, capture_output=True, text=True)
+    guard.stop()
     log.write_text(r.stdout + r.stderr)
     tail = (r.stdout + r.stderr).strip().splitlines()[-3:]
     return {"session": n, "resume": resume, "started": started, "finished": now(),
-            "seconds": round(time.monotonic() - t0), "rc": r.returncode, "tail": tail}
+            "seconds": round(time.monotonic() - t0), "rc": r.returncode, "tail": tail,
+            "memory_paused": guard.fired}
 
 
 def run_gate(cmd: str, ws: Path, out: Path, n: int) -> dict:
@@ -111,6 +151,8 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--base-rev", default="kernel-base-v5")
     ap.add_argument("--out", help="default: .artifacts/authorship/<date>-<run>")
     ap.add_argument("--gates-only", action="store_true", help="re-run the gates on an existing run")
+    ap.add_argument("--memory-floor", type=int, default=12,
+                    help="pause the run below this percent of free memory, resume when it recovers")
     args = ap.parse_args(argv)
 
     out = Path(args.out or ROOT / ".artifacts/authorship" /
@@ -132,14 +174,28 @@ def main(argv: list[str] | None = None) -> int:
         cfg = config(ROOT / "agent/config/auton.toml", out, args.model, ws, args.iterations,
                      args.request_timeout, args.context)
         wrapper = pinned_wrapper(out)
-        done = len(result["sessions"])
-        for n in range(done + 1, args.sessions + 1):
+        counted = sum(1 for s in result["sessions"] if not s.get("memory_paused"))
+        guard_pauses = sum(1 for s in result["sessions"] if s.get("memory_paused"))
+        while counted < args.sessions:
+            n = len(result["sessions"]) + 1
             resume = n > 1 or (ws / ".auton/state.json").exists()
-            s = run_session(n, out, wrapper, cfg, goal, resume, args.session_seconds)
+            s = run_session(n, out, wrapper, cfg, goal, resume, args.session_seconds,
+                            args.memory_floor)
             result["sessions"].append(s)
             result_path.write_text(json.dumps(result, indent=2) + "\n")
-            print(f"session {n}: rc {s['rc']} after {s['seconds']}s — {' | '.join(s['tail'])}",
+            print(f"session {n}: rc {s['rc']} after {s['seconds']}s"
+                  f"{' (memory guard)' if s['memory_paused'] else ''} — {' | '.join(s['tail'])}",
                   flush=True)
+            if s["memory_paused"]:
+                # Not the run's budget spent: the host's. Wait for memory, then go on.
+                guard_pauses += 1
+                if guard_pauses > 10:
+                    print("memory guard fired 10 times; stopping the run", flush=True)
+                    break
+                while (memory_free() or 100) < 30:
+                    time.sleep(60)
+                continue
+            counted += 1
             if s["rc"] != 75 and s["rc"] != 1:
                 break              # terminal (0) or refused (2): no further session helps
 
