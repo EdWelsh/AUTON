@@ -18,11 +18,11 @@ PROBE = {"checks": [{"kind": "http", "port": 8000}]}
 
 def test_a_library_is_deleted_by_soname_including_links():
     line = removal("lib:libssl.so.3", PROBE)
-    assert line.startswith("RUN find / -xdev -name libssl.so.3") and "-type l" in line
+    assert line.startswith("find / -xdev -name libssl.so.3") and "-type l" in line
 
 
 def test_a_path_and_a_program_are_removed():
-    assert removal("path:/etc/ssl/certs", PROBE) == "RUN rm -rf /etc/ssl/certs"
+    assert removal("path:/etc/ssl/certs", PROBE) == "rm -rf /etc/ssl/certs"
     assert "/usr/local/bin" in removal("exec:git", PROBE)
 
 
@@ -99,8 +99,10 @@ def test_a_recipe_the_gate_would_refuse_is_not_built(tmp_path):
 
 def test_removal_as_root_restores_the_final_user():
     from ablate import _as_root
-    out = _as_root("FROM x\nUSER app\n", "RUN rm -f /a")
-    assert out.endswith("USER root\nRUN rm -f /a\nUSER app\n")
+    out = _as_root("FROM x\nUSER app\n", "rm -f /a")
+    assert out.startswith("FROM x\nUSER app\nUSER 0:0\nCOPY --from=auton-tracer-")
+    assert '"sh", "-c", "rm -f /a; rm -f /.auton-ablate/busybox"' in out
+    assert out.endswith("USER app\n"), "the recipe's user is restored"
 
 
 def test_a_system_directory_is_too_broad_to_ablate():

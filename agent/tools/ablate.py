@@ -80,15 +80,15 @@ def removal(capability: str, probe_spec: dict) -> str | tuple[str, str]:
     if kind in NOT_REMOVABLE:
         return ("not-ablatable", NOT_REMOVABLE[kind])
     if kind == "lib":
-        return (f"RUN find / -xdev -name {shlex.quote(name)} "
+        return (f"find / -xdev -name {shlex.quote(name)} "
                 f"\\( -type f -o -type l \\) -exec rm -f {{}} +")
     if kind == "path":
         if name.rstrip("/") in TOO_BROAD:
             return ("not-ablatable", f"{name} is too broad: removing it removes the system, "
                                      f"so a failing probe would prove nothing about it")
-        return f"RUN rm -rf {shlex.quote(name)}"
+        return f"rm -rf {shlex.quote(name)}"
     if kind == "exec":
-        return (f"RUN for d in /bin /sbin /usr/bin /usr/sbin /usr/local/bin; do "
+        return (f"for d in /bin /sbin /usr/bin /usr/sbin /usr/local/bin; do "
                 f"rm -f \"$d\"/{shlex.quote(name)}; done")
     if kind == "listen":
         port = name.rsplit("/", 1)[-1]
@@ -121,11 +121,23 @@ def _drop(tag: str | None) -> None:
         subprocess.run(["docker", "rmi", "-f", tag], capture_output=True)
 
 
-def _as_root(recipe: str, line: str) -> str:
+ABLATE_SHELL = "/.auton-ablate/busybox"
+
+
+def _as_root(recipe: str, command: str) -> str:
     """Append a removal as root, then restore the recipe's final USER: a
-    non-root final user would make every `rm` fail and every step unprobeable."""
+    non-root final user would make every `rm` fail and every step unprobeable.
+
+    The removal runs under a static busybox copied in for the step and deleted
+    by the same step, in exec form: a `scratch` image has no /bin/sh, and a
+    `RUN rm` there could not even start (w22 whoami). The ablated image keeps
+    no shell it did not have."""
+    from observe_sandbox import tracer_tag
     users = re.findall(r"^\s*USER\s+(\S+)", recipe, re.I | re.M)
-    tail = f"USER root\n{line}\n" + (f"USER {users[-1]}\n" if users else "")
+    run = json.dumps([ABLATE_SHELL, "sh", "-c", f"{command}; rm -f {ABLATE_SHELL}"])
+    # USER 0:0, not root or 0: with no /etc/passwd (scratch) BuildKit resolves neither.
+    tail = (f"USER 0:0\nCOPY --from={tracer_tag()} /bin/busybox {ABLATE_SHELL}\n"
+            f"RUN {run}\n" + (f"USER {users[-1]}\n" if users else ""))
     return recipe.rstrip("\n") + "\n" + tail
 
 
@@ -150,6 +162,9 @@ def ablate(ws: Path, probe_path: Path, manifest_path: Path | None = None,
     score = Score()
     started = time.monotonic()
 
+    from observe_sandbox import TRACER_RECIPE, tracer_tag
+    subprocess.run(["docker", "build", "-q", "-t", tracer_tag(), "-"], input=TRACER_RECIPE,
+                   text=True, capture_output=True, check=True)
     tag, err = _build(ws, recipe)
     if tag is None:
         raise ProbeError(f"the unablated package does not build: {err}")
