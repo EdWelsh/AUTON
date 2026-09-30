@@ -104,3 +104,51 @@ the same model, subject, goal and budget.
   edit a script a run is executing.
 
 Run 4 is a fresh run on `a3b2acc`, with the same model, subject, goal and budget.
+
+## Run 4 (block-YAML example, check_record): a record passes the gate
+
+**2026-09-29 22:39Z → 00:35Z**, paused by its own 2 h budget (`PAUSED`, exit 75). Archive:
+`.artifacts/authorship/2026-09-29-analyst-run4/`. Loop `e3763e3`, run from a pinned copy of the
+wrapper, with a wall-clock watchdog.
+
+- **The format problem is gone.** The model wrote block YAML with single-quoted quotes, as the
+  new example shows.
+- **check_record worked.** Five calls. Each returned the gate's exact refusal (a line past the
+  end of the file; `app.py:19 reads 'if __name__…'`), and the model corrected against it. The
+  one refusal that reached round 1 was a line number; round 2 fixed it.
+- **The final record passes every mechanical check:** valid YAML, every name in the index,
+  every quote on its cited line (`app.run(...)` at `app.py:20`; `ssl.OPENSSL_VERSION` at `:16`).
+  **This is the first agent-written artifact record to pass the gate.** A4's pre-registered
+  gate (no invented capability reaches review) held on every run. The budget ended before a
+  reviewer model read the record.
+- **It over-claims massively: 36 facts for a 20-line application.** Twenty-six of them are
+  libraries or programs "inferred" from `FROM python:3.12-slim`, despite the prompt saying a
+  base image containing a library is not a reason to need it. Every quote is true, so the quote
+  check cannot catch it; the capability names are real, so the index cannot either.
+
+### What the pipeline does with an over-claiming record
+
+`scripts/app_to_env.py` was run on run 4's record with the human reference recipe
+(`.artifacts/authorship/2026-09-29-analyst-run4/pipeline/`). It stopped at the package gate:
+the manifest requires `libcurl.so.4`, `libjpeg.so.62`, `libxml2.so.2`, `git`, `curl` and others
+that the application never uses and the base does not contain.
+
+That is the gate working, and it shows where the design's weight sits:
+
+- An over-claim of something **present** reaches ablation, which proves it unneeded. The fixture
+  runs showed this for `libsqlite3` and `/etc/ssl/certs`.
+- An over-claim of something **absent** forces a bloated package or stops at the gate. Ablation
+  never sees it.
+
+So the **reviewer** is the stage that must reject "needed because the base image has it". It
+reads evidence, and a line saying `FROM python:3.12-slim` is not evidence for `libjpeg`. The next
+Analyst run should reach review; its verdict on this pattern is the finding to watch.
+
+## Summary across four runs
+
+| Run | Reached | Harness defect found and fixed |
+|---|---|---|
+| 1 | planning | tool lists were advisory; the manager wrote the record (`4a7b964`) |
+| 2 | design (stopped) | kernel design ran for analysis tasks (`70a6485`) |
+| 3 | gate × 2, refused | the prompt's example led to invalid YAML; no early check (`a3b2acc`); timeout shim ignored system sleep (`3f85080`) |
+| 4 | **gate passed** | none; the remaining problem is the model's over-claiming |
