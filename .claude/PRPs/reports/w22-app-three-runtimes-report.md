@@ -128,9 +128,19 @@ first `facts:` list, the correct one, would have vanished without a word. **Fixe
 validated records against the raw clone while agents cite the staged export. The agent's
 `tree_hash` was right; the driver's comparison was wrong.
 
-### Fallback: human record, agent Packager
+### Fallback, Packager attempt 1: stopped at `packager`, budget
 
-Running on `520cba2`.
+10:24Z → 12:24Z, three rounds, every refusal by the gate.
+- **Round 1 was right:** `FROM golang:1-alpine` is not the pinned builder.
+- **The Packager then deleted its builder stage instead of pinning it.** Rounds 2 and 3 refused
+  `--from=builder` correctly, since no such stage existed. But the refusal repeated six times and
+  never said how to fix it.
+- **Fixed** (`7f3d2f6`): one refusal that names the listed builder to declare, and the
+  Packager's task now lists the builders a build stage may use.
+
+### Fallback, Packager attempt 2
+
+Running on `7f3d2f6`.
 
 ## Findings so far
 
