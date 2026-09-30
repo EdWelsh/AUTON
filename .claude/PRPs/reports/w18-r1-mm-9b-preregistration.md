@@ -55,3 +55,8 @@ would be better than attempt 1's whole run.
 
 Driver: `scripts/generation_run.py` (sessions with `--resume`, then every gate in order,
 archived in the run directory's `RESULT.json`).
+
+**Qualification, recorded before session 1** (2026-09-30 15:11Z): `qwen3.5:27b-coding-mxfp8`
+passed all four checks. Tool call 28.6 s; fidelity 22.5 s; long prompt 445 s (it quotes the
+spec's `boot_mmap_t` signature; 9b took 617 s); second turn 7.3 s. Session 1 started
+15:20:09Z. Run directory: `.artifacts/authorship/2026-09-30-r1-mm-attempt2/`.
