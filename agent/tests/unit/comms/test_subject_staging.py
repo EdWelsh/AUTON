@@ -336,3 +336,9 @@ def test_agents_cannot_write_anything_the_engine_keeps(ws, path):
     ws._seen.add(path)
     with pytest.raises(WorkspaceError, match="engine"):
         ws.write_file(path, "{}")
+
+
+def test_the_hash_ignores_history(tmp_path, subject):
+    before = tree_hash(subject)
+    _git(subject, "init", "-q")
+    assert tree_hash(subject) == before, "a .git directory is not part of the subject"

@@ -60,6 +60,26 @@ class ArtifactError(Exception):
     """A record that cannot be read at all. Always says what is missing."""
 
 
+class _StrictLoader(yaml.SafeLoader):
+    """SafeLoader that refuses a duplicate key. PyYAML keeps the last one
+    silently: w22's whoami record had two `facts:` sections, and its good
+    facts would have vanished without a word."""
+
+
+def _no_duplicates(loader, node, deep=False):
+    seen = set()
+    for key_node, _ in node.value:
+        key = loader.construct_object(key_node, deep=deep)
+        if key in seen:
+            raise ArtifactError(f"duplicate key {key!r} at line {key_node.start_mark.line + 1}: "
+                                f"merge the two sections into one")
+        seen.add(key)
+    return loader.construct_mapping(node, deep=deep)
+
+
+_StrictLoader.add_constructor(yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG, _no_duplicates)
+
+
 # --------------------------------------------------------------------------- #
 # The index
 # --------------------------------------------------------------------------- #
@@ -210,7 +230,7 @@ def load(path: str | Path) -> Artifact:
     are `problems`, so an Analyst sees every one at once."""
     path = Path(path)
     try:
-        data = yaml.safe_load(path.read_text())
+        data = yaml.load(path.read_text(), Loader=_StrictLoader)  # noqa: S506 — SafeLoader subclass
     except FileNotFoundError:
         raise ArtifactError(f"{path}: no such file") from None
     except yaml.YAMLError as exc:

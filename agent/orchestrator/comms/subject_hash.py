@@ -29,6 +29,9 @@ def manifest(root: Path) -> dict[str, str]:
     root = Path(root)
     entries: dict[str, str] = {}
     for dirpath, dirnames, filenames in os.walk(root, followlinks=False):
+        # History is not the subject: staging exports without .git, so a hash
+        # of the source must not include it either (w22 whoami).
+        dirnames[:] = [d for d in dirnames if d != ".git"]
         base = Path(dirpath)
         # os.walk lists a symlink to a directory under dirnames; hash it as a
         # link and do not descend (followlinks=False already stops descent).

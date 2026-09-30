@@ -341,3 +341,13 @@ def test_a_non_string_capability_is_a_problem_not_a_crash(tmp_path):
 def test_the_cli_says_when_quotes_were_not_checked(capsys):
     assert artifact_spec.main(["--validate", str(VALID)]) == 0
     assert "NOT checked" in capsys.readouterr().out
+
+
+def test_a_duplicate_section_is_refused_not_silently_dropped(tmp_path):
+    """w22 whoami: two `facts:` keys; PyYAML kept the last and the first list —
+    the good facts — would have vanished."""
+    text = VALID.read_text() + "facts:\n  - {capability: 'lib:libz.so.1', source: unknown, looked_at: [x]}\n"
+    p = tmp_path / "dup.artifact.yaml"
+    p.write_text(text)
+    with pytest.raises(ArtifactError, match="duplicate key 'facts'"):
+        validate(p)

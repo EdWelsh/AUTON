@@ -89,6 +89,24 @@ def main(argv: list[str] | None = None) -> int:
     st = Stages(out)
     config = Path(args.config).resolve()
 
+    # One exported copy of the subject, used by every stage: the Analyst's
+    # workspace, the quote checks, the builds. A record's tree_hash is of the
+    # export (no .git, HEAD only), so validating against the raw clone refused
+    # correct records (w22 whoami).
+    staged = out / "subject"
+    if not staged.exists():
+        if (subject / ".git").exists():
+            archive = subprocess.run(["git", "-C", str(subject), "archive", "--format=tar",
+                                      "HEAD"], check=True, capture_output=True).stdout
+            staged.mkdir()
+            import io
+            import tarfile
+            with tarfile.open(fileobj=io.BytesIO(archive)) as tar:
+                tar.extractall(staged, filter="data")
+        else:
+            shutil.copytree(subject, staged, symlinks=True, ignore=shutil.ignore_patterns(".git"))
+    subject = staged
+
     # 1 analyst
     t = time.monotonic()
     ws_a = out / "ws-analyst"
