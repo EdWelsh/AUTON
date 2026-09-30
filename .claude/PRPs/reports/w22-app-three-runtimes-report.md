@@ -61,6 +61,21 @@ Attempt 2 of the Packager stage runs on that gate, labelled as a new attempt.
 - **Counting.** This is a full pipeline pass with a human-written record. It counts toward "the
   pipeline works on a real repository", not toward the PRD's agent-only metric.
 
+## Subject 2 — heroku/node-js-getting-started (Node)
+
+### Attempt 1, fully agent-driven: stopped at `analyst`, no output
+
+04:18Z → 05:05Z. The Analyst read every file in the subject (`index.js`, `package.json`,
+`Procfile`, `.env`, `README`, the licence, and more), then ended its turn **without writing a
+record**. It never called `check_record`. The engine failed the task at once: a branch identical
+to main was terminal, with no feedback and no second round. A *refused* record gets three
+rounds with the reason attached.
+
+**Fixed** (`fix(engine): an empty result is feedback`): an empty result now goes back to the
+author, "you produced no change: this task must write <produces>", within the same round
+limit, and is still never shown to a reviewer. Attempt 2 runs on that loop, labelled as a new
+attempt.
+
 ## Findings so far
 
 1. **The index needs a kind for language packages** (`pypi:`, `npm:`). Without one, an
