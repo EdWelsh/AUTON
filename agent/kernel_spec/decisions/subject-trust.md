@@ -3,7 +3,7 @@
 **Status: decided 2026-09-29 — (a) untrusted, sandboxed.** It governs phase A5 (`observe.py`) of
 [`auton-application-to-environment.prd.md`](../../../.claude/PRPs/prds/auton-application-to-environment.prd.md),
 and changes how A3 (the Analyst) frames what it reads. Everything before A5 can be built without
-an answer. Plan: [`w19-app-observe`](../../../.claude/PRPs/plans/w19-app-observe.plan.md).
+an answer. Plan: [`w19-app-observe`](../../../.claude/PRPs/plans/completed/w19-app-observe.plan.md).
 
 ## Why this is a decision and not a task
 
@@ -25,7 +25,7 @@ much of it to accept.
 - The subject is staged **read-only** at `.auton/subject/`; the file tools refuse writes there,
   the files are mode `0444`, and a tree hash taken at staging is re-checked before the Analyst's
   record is accepted, so a changed subject is detected whatever changed it
-  ([`w17-app-subject-staging`](../../../.claude/PRPs/plans/w17-app-subject-staging.plan.md)).
+  ([`w17-app-subject-staging`](../../../.claude/PRPs/plans/completed/w17-app-subject-staging.plan.md)).
 - The Analyst has **no `shell`** tool.
 - Its only accepted output is a record whose capability names come from a **closed index**, and
   whose every quote must appear at its cited line in the staged subject. A successful injection

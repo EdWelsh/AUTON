@@ -24,6 +24,7 @@ input, 4 inconclusive: the frame changes as much by itself as after the keys.
 from __future__ import annotations
 
 import json
+import os
 import socket
 import sys
 import time
@@ -31,11 +32,14 @@ from pathlib import Path
 
 # Escape opens Doom's menu from the title screen and during the demo, so the
 # key is visible whatever state the game is in.
-KEYS = ["esc"]
+KEYS = [k for k in os.environ.get("QMP_PROBE_KEYS", "esc").split(",") if k]
 IDLE_SECONDS = 1
 SETTLE_SECONDS = 1
 MARGIN = 2.0          # the key-driven change must be at least twice the idle change
-MIN_EXTRA = 0.01      # ...and at least one more percent of the frame
+# ...and at least this much more of the frame. Calibrated live (2026-09-30) on
+# GRUB's menu under QEMU: Escape removed the countdown line, 0.5% of the frame
+# against ~0.03% idle; a 1% floor called that real input "inconclusive".
+MIN_EXTRA = 0.002
 
 
 class Monitor:

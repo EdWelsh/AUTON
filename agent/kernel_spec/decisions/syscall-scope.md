@@ -2,7 +2,7 @@
 
 **Status: decided 2026-09-29 — (b) report only.** `observe.py` records syscalls as evidence;
 the `syscalls:` capability kind stays disabled, and no seccomp profile is produced. Plan:
-[`w19-app-observe`](../../../.claude/PRPs/plans/w19-app-observe.plan.md).
+[`w19-app-observe`](../../../.claude/PRPs/plans/completed/w19-app-observe.plan.md).
 
 ## Why this is a decision and not a task
 

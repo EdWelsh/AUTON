@@ -2,8 +2,8 @@
 
 **Status: decided 2026-09-29 — both, container first.** It governs A8 (the Packager builds a
 recipe for *some* substrate) and shapes A5's sandbox. A1–A4 and A6 are substrate-agnostic. Plans:
-[`w20-app-packager`](../../../.claude/PRPs/plans/w20-app-packager.plan.md),
-[`w19-app-observe`](../../../.claude/PRPs/plans/w19-app-observe.plan.md).
+[`w20-app-packager`](../../../.claude/PRPs/plans/completed/w20-app-packager.plan.md),
+[`w19-app-observe`](../../../.claude/PRPs/plans/completed/w19-app-observe.plan.md).
 
 ## Why this is a decision and not a task
 
