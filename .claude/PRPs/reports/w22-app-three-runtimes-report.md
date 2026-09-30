@@ -76,6 +76,23 @@ author, "you produced no change: this task must write <produces>", within the sa
 limit, and is still never shown to a reviewer. Attempt 2 runs on that loop, labelled as a new
 attempt.
 
+### Attempt 2 (empty-result feedback): stopped at `analyst` again
+
+05:08Z → 06:45Z. Three rounds of read, read, read; no record, and no `check_record` call. The
+model's final replies were not logged, so *why* it stops is unknown. **Fixed for next time**:
+every task's final reply is now logged (`f2aae8c`).
+
+### Fallback (human record, agent Packager): stopped before the Packager
+
+06:46Z → 07:10Z. The **manager** answered in prose and planned zero tasks (`Failed to parse
+tasks`), so the Packager was never asked. This is the same failure as the first live Analyst
+run.
+
+**Fixed structurally** (`fix(engine): an application run's one task is seeded`). An
+application run's plan is fixed, so the engine now seeds it through the A7 seed mechanism
+instead of depending on a model to plan one task. A model-planned task for the same role is
+dropped. The fallback is re-run on that loop.
+
 ## Findings so far
 
 1. **The index needs a kind for language packages** (`pypi:`, `npm:`). Without one, an
