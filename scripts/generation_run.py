@@ -41,7 +41,7 @@ def now() -> str:
 
 
 def config(template: Path, out: Path, model: str, ws: Path, iterations: int,
-           request_timeout: int) -> Path:
+           request_timeout: int, context: int) -> Path:
     lines = []
     for line in template.read_text().splitlines():
         if line.startswith("model ="):
@@ -51,7 +51,7 @@ def config(template: Path, out: Path, model: str, ws: Path, iterations: int,
         elif line.startswith("max_iterations ="):
             line = f"max_iterations = {iterations}"
         elif line.startswith("request_timeout ="):
-            line = f"request_timeout = {float(request_timeout)}"
+            line = f"request_timeout = {float(request_timeout)}\ncontext_length = {context}"
         lines.append(line)
     cfg = out / "auton.toml"
     cfg.write_text("\n".join(lines) + "\n")
@@ -106,6 +106,8 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--session-seconds", type=int, default=18000)
     ap.add_argument("--iterations", type=int, default=30)
     ap.add_argument("--request-timeout", type=int, default=1800)
+    ap.add_argument("--context", type=int, default=32768,
+                    help="the local model's context window (Ollama num_ctx); its default can exhaust memory")
     ap.add_argument("--base-rev", default="kernel-base-v5")
     ap.add_argument("--out", help="default: .artifacts/authorship/<date>-<run>")
     ap.add_argument("--gates-only", action="store_true", help="re-run the gates on an existing run")
@@ -128,7 +130,7 @@ def main(argv: list[str] | None = None) -> int:
             subprocess.run(["bash", str(ROOT / "scripts/kernel-base.sh"), str(ws), "--git",
                             "--rev", args.base_rev], check=True, capture_output=True)
         cfg = config(ROOT / "agent/config/auton.toml", out, args.model, ws, args.iterations,
-                     args.request_timeout)
+                     args.request_timeout, args.context)
         wrapper = pinned_wrapper(out)
         done = len(result["sessions"])
         for n in range(done + 1, args.sessions + 1):

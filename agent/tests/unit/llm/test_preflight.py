@@ -145,3 +145,22 @@ def test_ollama_chat_uses_the_ollama_endpoint():
     # silently probe and call the default host instead of the configured one.
     config = ProviderConfig(endpoints={"ollama": "http://gpu-box:11434"})
     assert config.get_base_url("ollama_chat/gemma4:latest") == "http://gpu-box:11434"
+
+
+def test_a_local_model_gets_the_configured_context_window(monkeypatch):
+    """w18 R1: without num_ctx, Ollama loaded qwen3.5 at its 262,144-token
+    default (42 GB) and the host ran out of memory."""
+    import asyncio
+    from orchestrator.llm import client as client_mod
+    seen = {}
+
+    async def fake(**kw):
+        seen.update(kw)
+        raise RuntimeError("stop")
+    monkeypatch.setattr(client_mod.litellm, "acompletion", fake)
+    c = client_mod.LLMClient(model="ollama_chat/qwen", preflight=False, context_length=32768)
+    try:
+        asyncio.run(c.send_message("a", "s", [{"role": "user", "content": "x"}]))
+    except Exception:
+        pass
+    assert seen.get("num_ctx") == 32768

@@ -218,8 +218,13 @@ class LLMClient:
         preflight: bool = True,
         request_timeout: float = DEFAULT_REQUEST_TIMEOUT,
         max_tool_turns: int = DEFAULT_MAX_TOOL_TURNS,
+        context_length: int | None = None,
     ):
         self.model = model
+        # A local model's context window, when set. Ollama otherwise allocates
+        # the model's full default (262,144 tokens for qwen3.5): 42 GB loaded
+        # instead of 29, and the host ran out of memory (w18 R1, 2026-09-30).
+        self.context_length = context_length
         self.max_tool_turns = max_tool_turns
         self.max_tokens = max_tokens
         self.provider_config = provider_config or ProviderConfig()
@@ -275,6 +280,8 @@ class LLMClient:
             if tools:
                 kwargs["tools"] = tools
                 kwargs["tool_choice"] = "auto"
+            if self.context_length and model.startswith(("ollama/", "ollama_chat/")):
+                kwargs["num_ctx"] = self.context_length
 
             api_key = self.provider_config.get_api_key(model)
             if api_key:

@@ -153,6 +153,7 @@ class OrchestrationEngine:
             cost_tracker=self.cost_tracker,
             request_timeout=float(llm_config.get("request_timeout", DEFAULT_REQUEST_TIMEOUT)),
             max_tool_turns=int(llm_config.get("max_tool_turns", DEFAULT_MAX_TOOL_TURNS)),
+            context_length=llm_config.get("context_length"),
         )
         self.workspace = GitWorkspace(
             workspace_path=workspace_path,
