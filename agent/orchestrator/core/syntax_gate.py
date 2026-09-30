@@ -102,7 +102,8 @@ def artifact_errors(tree: Path, changed: list[str]) -> list[str]:
     return errors
 
 
-def package_errors(tree: Path, changed: list[str], manifest: dict | None = None) -> list[str]:
+def package_errors(tree: Path, changed: list[str], manifest: dict | None = None,
+                   probe: Path | None = None) -> list[str]:
     """package_gate's refusals when a Packager changed the recipe (A8): the
     base, the build, the inventory and the start, before any reviewer."""
     if "package/Dockerfile" not in changed:
@@ -122,18 +123,36 @@ def package_errors(tree: Path, changed: list[str], manifest: dict | None = None)
     except (OSError, subprocess.SubprocessError) as exc:
         return [f"package/Dockerfile: the package gate could not run ({exc}); a recipe "
                 f"nothing built is not approved"]
+    problems = list(report.problems)
+    # The operator's probe, when there is one, before any reviewer: "it starts"
+    # is not "it works". w22's js_example started, passed an in-container
+    # exercise, and refused every connection from outside (flask run binds
+    # 127.0.0.1). The probe is what says so, and saying so here lets the
+    # Packager fix it.
+    if report.ok and probe is not None:
+        from app_probe import ProbeError, load_probe, probe as run_probe
+        try:
+            verdict = run_probe(report.image, load_probe(Path(probe)))
+            if verdict.code != 0:
+                problems.append(f"the external probe, from outside the container: "
+                                f"{verdict.line.strip()}")
+                report.ok = False
+        except ProbeError as exc:
+            problems.append(f"the external probe could not run: {exc}")
+            report.ok = False
+    report.problems = problems
     out = tree / REPORT
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(asdict(report), indent=2) + "\n")
-    return [f"package/Dockerfile: {p}" for p in report.problems]
+    return [f"package/Dockerfile: {p}" for p in problems]
 
 
 def check(tree: Path, changed: list[str], cc: str | None = None,
-          manifest: dict | None = None) -> str | None:
+          manifest: dict | None = None, probe: Path | None = None) -> str | None:
     """None when every changed C file compiles and every changed driver or
     artifact record validates; otherwise the errors, trimmed."""
     rec_errors = (record_errors(tree, changed) + artifact_errors(tree, changed)
-                  + package_errors(tree, changed, manifest))
+                  + package_errors(tree, changed, manifest, probe))
     c_errors = _c_errors(tree, changed, cc)
     errors = rec_errors + c_errors
     if not errors:

@@ -42,7 +42,7 @@ def test_a_name_outside_the_index_is_reported_not_stamped():
 def test_the_flask_app_needs_what_it_actually_loaded():
     facts = observe_text(FLASK).facts
     assert {"lib:libssl.so.3", "lib:libcrypto.so.3", "listen:tcp/8000"} <= set(facts)
-    assert facts["listen:tcp/8000"]["detail"] == "bound and listening"
+    assert facts["listen:tcp/8000"]["detail"] == "bound and listening on 0.0.0.0"
 
 
 def test_a_failed_open_is_still_a_need():
@@ -92,3 +92,13 @@ def test_a_listen_on_another_thread_and_a_reused_fd():
     facts = observe_text(text).facts
     assert "listen:tcp/9000" in facts, "socket on one thread, listen on another"
     assert facts["dial:udp/10.0.0.9:5432"]["detail"] == "attempted", "fd 3 is udp now"
+
+
+def test_a_loopback_only_listener_is_flagged():
+    """w22 js_example: `flask run` bound 127.0.0.1:5000; everything inside the
+    container worked and nothing outside could connect."""
+    text = ('1 socket(AF_INET, SOCK_STREAM, IPPROTO_IP) = 3\n'
+            '1 bind(3, {sa_family=AF_INET, sin_port=htons(5000), sin_addr=inet_addr("127.0.0.1")}, 16) = 0\n'
+            '1 listen(3, 128) = 0\n')
+    assert "LOOPBACK ONLY" in observe_text(text).facts["listen:tcp/5000"]["detail"]
+    assert "on 0.0.0.0" in observe_text(FLASK).facts["listen:tcp/8000"]["detail"]

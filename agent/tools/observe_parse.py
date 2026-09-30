@@ -112,6 +112,7 @@ def observe_text(text: str, index: Index | None = None) -> Observed:
     # Cleared on close(), so a reused fd number is not the old socket.
     sockets: dict[str, str] = {}        # fd -> "tcp"/"udp"
     bound: dict[str, str] = {}          # fd -> port
+    bound_addr: dict[str, str] = {}     # fd -> address it was bound to
 
     def add(cap: str, detail: str) -> None:
         if index.refusal(cap) is None:
@@ -155,12 +156,19 @@ def observe_text(text: str, index: Index | None = None) -> Observed:
             fd = c.args.split(",", 1)[0].strip()
             if (p := PORT.search(c.args)) and int(p.group(1)):
                 bound[fd] = p.group(1)
+                a = ADDR.search(c.args)
+                bound_addr[fd] = (a.group(1) or a.group(2)) if a else "?"
                 if sockets.get(fd) == "udp":
                     add(f"listen:udp/{p.group(1)}", "bound datagram socket")
         elif c.name == "listen" and c.ret == 0:
             fd = c.args.split(",", 1)[0].strip()
             if port := bound.get(fd):
-                add(f"listen:tcp/{port}", "bound and listening")
+                addr = bound_addr.get(fd, "?")
+                # A listener on loopback answers only inside its own container:
+                # `flask run` does this by default (w22, js_example).
+                where = ("LOOPBACK ONLY — unreachable from outside"
+                         if addr.startswith(LOOPBACK[:2]) else f"on {addr}")
+                add(f"listen:tcp/{port}", f"bound and listening {where}")
         elif c.name == "connect":
             fd = c.args.split(",", 1)[0].strip()
             p, a = PORT.search(c.args), ADDR.search(c.args)

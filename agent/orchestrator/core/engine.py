@@ -839,7 +839,8 @@ class OrchestrationEngine:
             # The manifest from memory, not from .auton/: the gate must not
             # read its standard from a file an agent could have rewritten.
             return syntax_gate.check(self.workspace.path, changed,
-                                     manifest=getattr(self, "manifest", None) or None)
+                                     manifest=getattr(self, "manifest", None) or None,
+                                     probe=getattr(self, "probe_path", None))
         finally:
             self.workspace.checkout_main()
 

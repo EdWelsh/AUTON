@@ -136,3 +136,51 @@ async def test_an_unlisted_base_is_refused_by_the_gate_then_the_fix_merges(works
     report = json.loads((workspace / ".auton" / "package-report.json").read_text())
     assert report["ok"] and report["missing"] == [] and report["started"] == "running"
     assert len(report["extras"]) > 0, "extras are measured and reported"
+
+
+LOOPBACK = """FROM {base}
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+COPY app.py .
+CMD ["python", "-c", "import app; app.app.run(host='127.0.0.1', port=8000)"]
+"""
+
+
+class LoopbackFirst(Model):
+    """w22 js_example: the recipe started, and refused every outside connection."""
+
+    async def __call__(self, agent_id, system, messages, tools, tool_executor, **kw):
+        if agent_id.startswith("packager"):
+            from package_gate import load_bases
+            prompt = messages[0]["content"]
+            self.packager_prompts.append(prompt)
+            retry = "Review feedback" in prompt
+            recipe = (RECIPE if retry else LOOPBACK).format(base=load_bases()["runtime:python-3.12"])
+            if retry:
+                await tool_executor("read_file", {"path": "package/Dockerfile"})
+                await tool_executor("read_file", {"path": "package/PROVENANCE.json"})
+            await tool_executor("write_file", {"path": "package/Dockerfile", "content": recipe})
+            await tool_executor("write_file", {"path": "package/PROVENANCE.json", "content": "[]\n"})
+            return _say("wrote the recipe")
+        return await super().__call__(agent_id, system, messages, tools, tool_executor, **kw)
+
+
+@pytest.mark.skipif(not _docker_ok(), reason="no Docker daemon")
+async def test_the_gate_runs_the_operators_probe_before_review(workspace, monkeypatch):
+    eng = OrchestrationEngine(
+        workspace_path=workspace, kernel_spec_path=AGENT / "kernel_spec", subject_path=SUBJECT,
+        manifest=_manifest(), probe_path=AGENT / "tests/fixtures/probes/flask-hello.yaml",
+        config={"llm": {"model": "anthropic/scripted"},
+                "orchestrator": {"max_iterations": 8, "max_review_rounds": 3},
+                "agents": {"developer_count": 1, "reviewer_count": 1, "tester_count": 1},
+                "validation": {"composition_checks": False}})
+    model = LoopbackFirst()
+    monkeypatch.setattr(eng.client, "send_with_tools", model)
+    await eng.run("package the application")
+
+    node = eng.task_graph.get_task("pkg-001")
+    assert node.state is TaskState.MERGED, node.data.get("failure_reason")
+    first = node.data["review_feedback"][0]["summary"]
+    assert "external probe" in first and "Connection refused" in first
+    assert model.reviewed == 1, "the reviewer saw only the recipe that works from outside"
