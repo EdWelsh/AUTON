@@ -56,7 +56,14 @@ def orchestrate(ws: Path, config: Path, goal: str, timeout: int, log: Path, *ext
     local.write_text("\n".join(lines) + "\n")
     env = {**os.environ, "ORCH_TIMEOUT": str(timeout), "ORCH_CONFIG": str(local),
            "ORCH_LOG": str(log)}
-    r = subprocess.run(["bash", str(ROOT / "scripts/orchestrate-native.sh"), goal, *extra],
+    # A pinned copy: bash reads a script as it runs, so an edit to the repo's
+    # copy mid-run breaks the run (w18 live run 3).
+    script = ws.parent / "orchestrate-native.sh"
+    if not script.exists():
+        text = (ROOT / "scripts/orchestrate-native.sh").read_text()
+        script.write_text(text.replace('ROOT="$(cd "$(dirname "$0")/.." && pwd)"',
+                                       f'ROOT="{ROOT}"', 1))
+    r = subprocess.run(["bash", str(script), goal, *extra],
                        env=env, capture_output=True, text=True)
     (log.parent / f"{log.stem}.out").write_text(r.stdout + r.stderr)
     return r.returncode
