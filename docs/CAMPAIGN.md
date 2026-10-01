@@ -10,9 +10,9 @@ Plan: [`w18-generation-campaign`](../.claude/PRPs/plans/w18-generation-campaign.
 
 | Step | Run | Model | Budget | Gates, in order | Unblocks |
 |---|---|---|---|---|---|
-| 0 | qualify | `qwen3.5:27b-coding-mxfp8` (the largest that fits ~42 GB; 9b/27b-int4 retired 2026-09-30) | — | `scripts/model-probe.py`, 4/4 required | every run |
-| 1 | **R1 memory manager, attempt 2** | 27b-coding-mxfp8 | 4 × 5 h sessions | `run_mm_test.sh` → `run_vmm_test.sh` → `[MM]` boot line | R2, R10, R11, R12 |
-| 2 | R8 VirtIO console | 27b-coding-mxfp8 | 2 sessions | `run_virtio_console_gate_test.sh` (29) | — (runs while R1 is reviewed) |
+| 0 | qualify | `qwen3.5:27b-q8_0` (27B at 8-bit, GGUF: its context is bounded; the MLX coding build grew to 42 GB and was retired 2026-10-01) | — | `scripts/model-probe.py`, 4/4 required | every run |
+| 1 | **R1 memory manager, attempt 2** | 27b-q8_0 | 4 × 5 h sessions | `run_mm_test.sh` → `run_vmm_test.sh` → `[MM]` boot line | R2, R10, R11, R12 |
+| 2 | R8 VirtIO console | 27b-q8_0 | 2 sessions | `run_virtio_console_gate_test.sh` (29) | — (runs while R1 is reviewed) |
 | 3 | **R2 storage** | R1's winner | 4 sessions | `run_virtio_blk_test.sh` → `run_fat32_test.sh` → `run-storage-acceptance.sh` | R3–R7 |
 | 4 | R3 file server | winner | 2 | `run_fileserver_test.sh` → `--service fileserver` | — |
 | 5 | R6 repo server | winner | 2 | `run_host_repo_test.sh --clone` → `run-intent-probe.sh host-repo` | scenario C2 |
@@ -24,7 +24,7 @@ Plan: [`w18-generation-campaign`](../.claude/PRPs/plans/w18-generation-campaign.
 | 11 | R10 F00F | winner | 1 | the mitigation's `verify`, steps 1–2 (step 3 needs a family-5 Pentium) | — |
 | 12 | R9 aarch64 | winner | 3 | `run_dtb_test.sh` tree mode → `[gate: hal]` → `e2e.sh --arch aarch64` | — |
 
-**Model (amended 2026-09-30).** Every run uses `qwen3.5:27b-coding-mxfp8`; the reasoning below is kept for the record. **Why 9b first (superseded).** R1 attempt 1 on 27b closed one task of six in five hours. Throughput, not
+**Model (amended 2026-09-30).** Every run uses `qwen3.5:27b-q8_0`; the reasoning below is kept for the record. **Why 9b first (superseded).** R1 attempt 1 on 27b closed one task of six in five hours. Throughput, not
 capability, was the binding constraint. 9b qualifies 4/4 at about twice the speed. If 9b's
 output is *generated wrong* where 27b's was closer, R2 onward runs on 27b.
 

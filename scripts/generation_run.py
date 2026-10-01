@@ -151,7 +151,7 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--base-rev", default="kernel-base-v5")
     ap.add_argument("--out", help="default: .artifacts/authorship/<date>-<run>")
     ap.add_argument("--gates-only", action="store_true", help="re-run the gates on an existing run")
-    ap.add_argument("--memory-floor", type=int, default=12,
+    ap.add_argument("--memory-floor", type=int, default=15,
                     help="pause the run below this percent of free memory, resume when it recovers")
     args = ap.parse_args(argv)
 
@@ -187,7 +187,12 @@ def main(argv: list[str] | None = None) -> int:
                   f"{' (memory guard)' if s['memory_paused'] else ''} — {' | '.join(s['tail'])}",
                   flush=True)
             if s["memory_paused"]:
-                # Not the run's budget spent: the host's. Wait for memory, then go on.
+                # Not the run's budget spent: the host's. Unload the model — it
+                # stays resident otherwise, and w18 R1's driver was reaped while
+                # waiting beside a 41 GB model — then wait for memory, then go on.
+                if args.model.startswith(("ollama/", "ollama_chat/")):
+                    subprocess.run(["ollama", "stop", args.model.split("/", 1)[1]],
+                                   capture_output=True)
                 guard_pauses += 1
                 if guard_pauses > 10:
                     print("memory guard fired 10 times; stopping the run", flush=True)

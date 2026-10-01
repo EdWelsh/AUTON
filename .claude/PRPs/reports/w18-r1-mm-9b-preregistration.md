@@ -60,3 +60,24 @@ archived in the run directory's `RESULT.json`).
 passed all four checks. Tool call 28.6 s; fidelity 22.5 s; long prompt 445 s (it quotes the
 spec's `boot_mmap_t` signature; 9b took 617 s); second turn 7.3 s. Session 1 started
 15:20:09Z. Run directory: `.artifacts/authorship/2026-09-30-r1-mm-attempt2/`.
+
+## Amendment 2, before any development task ran: the model, again
+
+**Written 2026-10-01.** R1 attempt 2 on `qwen3.5:27b-coding-mxfp8` was **aborted during the
+design phase, twice.** The system killed it under memory pressure. Under Ollama's MLX engine the
+model's context cache grows with the conversation and ignores `num_ctx`: it was 41–42 GB
+resident on a 48 GB machine, with swap exhausted. The memory guard (`6381eef`) paused it
+cleanly the second time, and the driver was then reaped while it waited. No development task
+had started; only architect designs were committed. The run is archived, unscored, at
+`.artifacts/authorship/2026-09-30-r1-mm-attempt2-mxfp8-aborted/`.
+
+With the owner's agreement the model is now **`ollama_chat/qwen3.5:27b-q8_0`**: the same 27B at
+8-bit, in GGUF under llama.cpp, where `num_ctx` is honoured. At a 32K context it is about 34 GB,
+fixed for the run. It is the general model, not the coding fine-tune; there is no 8-bit coding
+build in GGUF.
+
+R1 attempt 2 starts **fresh** on it. A resume refuses a model change by design, and this is a
+different experiment from the aborted one. Goal, gates, budget (4 × 5 h) and stop rules are
+unchanged. Qualification (`model-probe.py`, 4/4) is recorded before session 1. When the
+memory guard fires, the driver now also unloads the model while it waits, and its floor is
+15% free.
