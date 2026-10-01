@@ -41,6 +41,27 @@ def _all_tool_names() -> set[str]:
             and "name" in v["function"]}
 
 
+# A spec longer than this comes back as an outline plus its opening (w18 R1).
+SPEC_FULL_CHARS = 24000
+
+
+def _spec_section(text: str, section: str, name: str) -> str:
+    """The section whose heading contains `section`, down to the next heading
+    of the same or higher level."""
+    lines = text.splitlines()
+    for i, line in enumerate(lines):
+        if line.startswith("#") and section.lower() in line.lower():
+            level = len(line) - len(line.lstrip("#"))
+            out = [line]
+            for nxt in lines[i + 1:]:
+                if nxt.startswith("#") and len(nxt) - len(nxt.lstrip("#")) <= level:
+                    break
+                out.append(nxt)
+            return "\n".join(out)
+    heads = ", ".join(ln.lstrip("# ").strip() for ln in lines if ln.startswith("#"))
+    return f"No section matching {section!r} in {name}. Sections: {heads}"
+
+
 class AgentRole(str, Enum):
     MANAGER = "manager"
     ARCHITECT = "architect"
@@ -280,7 +301,10 @@ class Agent:
                     return diff if diff else "No changes."
 
                 case "read_spec":
-                    return self._read_spec(tool_input["subsystem"])
+                    return self._read_spec(tool_input["subsystem"], tool_input.get("section"))
+
+                case "create_task":
+                    return self._create_task(tool_input)
 
                 case "check_record":
                     return self._check_record(tool_input["path"])
@@ -405,7 +429,20 @@ class Agent:
              "--manifest", str(self.workspace.path / ".auton" / "manifest.json"),
              "--manifest-sha256", hashlib.sha256(text).hexdigest()], timeout=7200)
 
-    def _read_spec(self, subsystem: str) -> str:
+    def _create_task(self, task: dict) -> str:
+        """Collect one planned task (the manager's create_task)."""
+        missing = [k for k in ("task_id", "title", "subsystem", "assigned_to",
+                               "description", "produces") if not task.get(k)]
+        if missing:
+            return f"Refused: create_task needs {', '.join(missing)}"
+        planned = getattr(self, "planned_tasks", None)
+        if planned is None:
+            planned = self.planned_tasks = []
+        planned[:] = [t for t in planned if t["task_id"] != task["task_id"]]
+        planned.append(dict(task))
+        return f"Created {task['task_id']} ({len(planned)} task(s) planned so far)"
+
+    def _read_spec(self, subsystem: str, section: str | None = None) -> str:
         """Read a kernel specification document.
 
         `architecture`, `hal`, a subsystem name (`mm`), or `<kind>/<name>` for
@@ -432,7 +469,19 @@ class Agent:
             return f"Specification path {subsystem!r} refused: outside the spec directory"
         if not resolved.exists():
             return f"Specification not found: {subsystem}"
-        return resolved.read_text(encoding="utf-8")
+        text = resolved.read_text(encoding="utf-8")
+        if section:
+            return _spec_section(text, section, subsystem)
+        if len(text) <= SPEC_FULL_CHARS:
+            return text
+        # A 58K-character spec in a 32K-token window pushes the task's own
+        # instructions out (w18 R1). Long specs come back as an outline plus
+        # their opening; sections are read on request.
+        headings = [ln for ln in text.splitlines() if ln.startswith("#")]
+        return (text[: SPEC_FULL_CHARS // 2]
+                + f"\n\n[... {len(text)} characters in all; this spec is long. Its sections:\n"
+                + "\n".join(headings)
+                + "\nRead one with read_spec(subsystem, section='<heading text>').]")
 
     async def _run_build(self, target: str) -> str:
         """Run the kernel build. Delegates to the build system."""

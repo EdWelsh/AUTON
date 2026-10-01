@@ -379,3 +379,40 @@ class TestWorkIsNeverOrphaned:
 
         assert eng._reviewer.agent.review_branch.await_count == 1, \
             "the work exists; it must reach review rather than be called no output"
+
+
+class TestLongSpecsFitTheWindow:
+    """w18 R1: arch/x86_64 is 58K characters; read whole into a 32K-token window
+    it pushed the manager's instructions out, and the run planned nothing."""
+
+    @pytest.fixture
+    def agent(self):
+        from orchestrator.agents.base_agent import Agent
+        a = MagicMock()
+        a.kernel_spec_path = Path(__file__).resolve().parents[3] / "kernel_spec"
+        a._read_spec = Agent._read_spec.__get__(a)
+        return a
+
+    def test_a_long_spec_returns_an_outline(self, agent):
+        out = agent._read_spec("arch/x86_64")
+        assert len(out) < 30000 and "this spec is long" in out and "section=" in out
+
+    def test_a_section_is_returned_whole(self, agent):
+        out = agent._read_spec("fs", "FAT32")
+        assert out.lstrip().startswith("#") and "FAT32" in out.splitlines()[0]
+
+    def test_an_unknown_section_lists_the_real_ones(self, agent):
+        assert "Sections:" in agent._read_spec("mm", "no such heading")
+
+
+class TestCreateTask:
+    def test_the_manager_can_file_tasks_structurally(self):
+        from orchestrator.agents.base_agent import Agent
+        a = MagicMock()
+        a.planned_tasks = []
+        a._create_task = Agent._create_task.__get__(a)
+        ok = a._create_task({"task_id": "mm-001", "title": "t", "subsystem": "mm",
+                             "assigned_to": "developer", "description": "d",
+                             "produces": ["kernel/mm/pmm.c"]})
+        assert ok.startswith("Created mm-001") and a.planned_tasks[0]["task_id"] == "mm-001"
+        assert a._create_task({"task_id": "x"}).startswith("Refused")

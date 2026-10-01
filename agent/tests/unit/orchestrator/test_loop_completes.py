@@ -106,3 +106,36 @@ async def test_a_two_task_chain_completes_through_one_rejection(workspace, monke
     # than `failed: unknown`.
     assert result["success"] is False
     assert "build failed" in result["error"]
+
+
+async def test_a_manager_that_plans_only_through_create_task(workspace, monkeypatch):
+    """w18 R1: the manager reached for a create_task tool that did not exist,
+    and its JSON reply was lost. Planning through the tool alone now works."""
+    async def no_sleep(_):
+        return None
+    monkeypatch.setattr(engine_module.asyncio, "sleep", no_sleep)
+    specs = Path(__file__).resolve().parents[3] / "kernel_spec"
+    eng = OrchestrationEngine(
+        workspace_path=workspace, kernel_spec_path=specs,
+        config={"llm": {"model": "anthropic/scripted"},
+                "orchestrator": {"max_iterations": 6, "max_review_rounds": 3},
+                "agents": {"developer_count": 1, "reviewer_count": 1, "tester_count": 1},
+                "validation": {"composition_checks": False}})
+
+    async def model(agent_id, system, messages, tools, tool_executor, **_):
+        prompt = messages[0]["content"]
+        if agent_id.startswith("manager") and "Decompose" in prompt:
+            await tool_executor("create_task", {
+                "task_id": "k-001", "title": "add a", "subsystem": "lib",
+                "assigned_to": "developer", "description": "write a",
+                "produces": ["kernel/lib/a.c"]})
+            return [{"role": "assistant", "content": "Planned one task."}]
+        if agent_id.startswith("dev"):
+            await tool_executor("write_file", {"path": "kernel/lib/a.c", "content": "int a;\n"})
+            return [{"role": "assistant", "content": "done"}]
+        return [{"role": "assistant", "content": json.dumps(
+            {"verdict": "approve", "summary": "ok", "issues": [], "success": True})}]
+    monkeypatch.setattr(eng.client, "send_with_tools", model)
+    await eng.run("write a")
+    node = eng.task_graph.get_task("k-001")
+    assert node is not None and node.state is TaskState.MERGED

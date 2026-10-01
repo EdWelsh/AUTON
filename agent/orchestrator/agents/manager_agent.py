@@ -141,7 +141,8 @@ class ManagerAgent(Agent):
    create or change at least one file, listed in `produces`; a task that
    produces nothing will be dropped.
 {notes}
-Return the tasks as a JSON array. Each task must have:
+File each task by calling create_task once per task (preferred). If you cannot,
+return the tasks as a JSON array instead. Each task must have:
 - task_id: unique identifier (e.g., "boot-001")
 - title: short description
 - subsystem: which kernel subsystem
@@ -156,6 +157,7 @@ Return the tasks as a JSON array. Each task must have:
 Return ONLY the JSON array, no other text."""
 
         messages = [{"role": "user", "content": prompt}]
+        self.planned_tasks = []
         result_messages = await self.client.send_with_tools(
             agent_id=self.agent_id,
             system=self.system_prompt,
@@ -164,9 +166,13 @@ Return ONLY the JSON array, no other text."""
             tool_executor=self._execute_tool,
         )
 
-        # Parse tasks from the response
-        tasks = merge_seeds(drop_undeliverable(self._parse_tasks(result_messages)),
-                            seed_tasks)
+        # Tasks filed through create_task come first; a JSON array in the reply
+        # is still accepted, and fills in any id the tool calls did not.
+        planned = list(self.planned_tasks)
+        ids = {t["task_id"] for t in planned}
+        parsed = self._parse_tasks(result_messages) if not planned else \
+            [t for t in self._parse_tasks_quiet(result_messages) if t.get("task_id") not in ids]
+        tasks = merge_seeds(drop_undeliverable(planned + parsed), seed_tasks)
         self.state = AgentState.DONE
 
         # Save task metadata
@@ -232,6 +238,15 @@ Return a JSON object with these fields:
 
         self.state = AgentState.DONE
         return self._parse_json_response(result_messages)
+
+    def _parse_tasks_quiet(self, messages: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        """As _parse_tasks, without logging an error: used when create_task
+        already planned the work and a JSON array is optional."""
+        text = self._extract_final_text(messages)
+        try:
+            return json.loads(text[text.index("["):text.rindex("]") + 1])
+        except (ValueError, json.JSONDecodeError):
+            return []
 
     def _parse_tasks(self, messages: list[dict[str, Any]]) -> list[dict[str, Any]]:
         """Extract task list from Claude's response."""

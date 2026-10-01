@@ -87,3 +87,25 @@ memory guard fires, the driver now also unloads the model while it waits, and it
 context it is **35 GB, bounded** (`ollama ps` reports a context of 32768, which the MLX build
 never honoured). Free memory with the model resident: 19%; the guard floor is 15%. The run
 directory is `.artifacts/campaign/r1-mm-attempt2/`, driven by `scripts/campaign.py`.
+
+## Amendment 3: the first q8_0 session was not an attempt
+
+**2026-10-01, before the restart.** The first session on `27b-q8_0` (14:45Z–16:04Z) ended with
+**0 tasks planned**, so the model was never asked to write code. That makes it a harness failure,
+not an attempt, under the same reasoning that voided w11's runs.
+- **The manager invented a tool.** It called `create_task` twenty times, and each call was
+  refused as unknown.
+- **It lost its instructions.** It then read `arch/x86_64` (58K characters) into a 32K-token
+  window. Ollama dropped the oldest messages, the task's instructions among them, and the final
+  reply was not the JSON array.
+
+It and R8's first session are archived at `.artifacts/campaign-invalid-2026-10-01/`.
+
+**Fixed before the restart:**
+- `create_task` is now a real manager tool, so planning is structured calls and the JSON array
+  is the fallback.
+- A spec longer than 24,000 characters returns its outline, and `read_spec(..., section=...)`
+  reads one section.
+- With a context window set, a tool result is capped at a fifth of it, with a truncation note.
+
+R1 attempt 2 restarts fresh with the goal, gates and budget unchanged.

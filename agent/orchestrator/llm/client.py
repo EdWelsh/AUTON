@@ -365,10 +365,19 @@ class LLMClient:
                 # the transcript could not say what the 20 calls were.
                 logger.info("[%s] %s(%s) -> %s", agent_id, tc.name,
                             _summarise_args(tc.arguments), _summarise_result(result))
+                content = str(result)
+                if self.context_length:
+                    # One result may use at most a fifth of the window. Past it,
+                    # Ollama drops the oldest messages — the task's instructions
+                    # first — silently (w18 R1).
+                    cap = self.context_length * 4 // 5
+                    if len(content) > cap:
+                        content = (content[:cap] + f"\n[... truncated: {len(content)} characters, "
+                                   f"{cap} shown. Ask for a narrower part.]")
                 messages.append({
                     "role": "tool",
                     "tool_call_id": tc.id,
-                    "content": str(result),
+                    "content": content,
                 })
         else:
             logger.warning(

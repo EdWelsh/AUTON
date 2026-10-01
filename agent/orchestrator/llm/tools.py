@@ -227,6 +227,10 @@ TOOL_READ_SPEC = {
                     "type": "string",
                     "description": "A subsystem name ('architecture', 'boot', 'mm', 'sched', 'ipc', 'dev', 'slm', 'drivers', 'fs', 'net', 'pkg', 'sys', 'hal'), or <kind>/<name> for services/<name>, drivers/<name>, mitigations/<name>, targets/<name>, arch/<x86_64|aarch64|riscv64>.",
                 },
+                "section": {
+                    "type": "string",
+                    "description": "Optional: return only the section whose heading contains this text (e.g. 'FAT32'). Without it, a long spec returns its outline and the first part.",
+                },
             },
             "required": ["subsystem"],
         },
@@ -534,7 +538,36 @@ TOOL_INTEGRATE_SLM = {
 }
 
 # Tool sets by agent role
-MANAGER_TOOLS = [TOOL_READ_SPEC, TOOL_LIST_FILES, TOOL_READ_FILE, TOOL_SEARCH_CODE]
+# Planning as structured calls, not JSON in prose. w18 R1's manager invented
+# `create_task` and called it twenty times; with no such tool, its final JSON
+# reply was lost and the run planned nothing.
+TOOL_CREATE_TASK = {
+    "type": "function",
+    "function": {
+        "name": "create_task",
+        "description": "Add one task to the plan. Call once per task.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "task_id": {"type": "string", "description": "unique, e.g. mm-001"},
+                "title": {"type": "string"},
+                "subsystem": {"type": "string"},
+                "assigned_to": {"type": "string", "description": "the role that does it"},
+                "dependencies": {"type": "array", "items": {"type": "string"}},
+                "priority": {"type": "integer", "description": "1 (highest) to 5"},
+                "spec_reference": {"type": "string"},
+                "description": {"type": "string"},
+                "acceptance_criteria": {"type": "array", "items": {"type": "string"}},
+                "produces": {"type": "array", "items": {"type": "string"},
+                             "description": "files this task creates or changes (at least one)"},
+            },
+            "required": ["task_id", "title", "subsystem", "assigned_to", "description", "produces"],
+        },
+    },
+}
+
+MANAGER_TOOLS = [TOOL_READ_SPEC, TOOL_LIST_FILES, TOOL_READ_FILE, TOOL_SEARCH_CODE,
+                 TOOL_CREATE_TASK]
 
 ARCHITECT_TOOLS = [
     TOOL_READ_SPEC,
