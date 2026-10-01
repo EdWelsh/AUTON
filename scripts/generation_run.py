@@ -121,6 +121,35 @@ def run_session(n: int, out: Path, wrapper: Path, cfg: Path, goal: str, resume: 
             "memory_paused": guard.fired}
 
 
+def make_base(ws: Path, rev: str, tree: str | None, seeds: list[str]) -> None:
+    """The workspace a run starts from: a kernel-base tag, or an earlier run's
+    resulting tree (its main), plus seeded files, committed as the base."""
+    import shutil
+    if tree:
+        subprocess.run(["git", "clone", "-q", "--branch", "main", "--no-hardlinks", str(tree),
+                        str(ws)], check=True, capture_output=True)
+        subprocess.run(["git", "-C", str(ws), "remote", "remove", "origin"], capture_output=True)
+    else:
+        subprocess.run(["bash", str(ROOT / "scripts/kernel-base.sh"), str(ws), "--git",
+                        "--rev", rev], check=True, capture_output=True)
+    if not seeds:
+        return
+    for spec in seeds:
+        dest, _, src = spec.partition("=")
+        src_path, dst_path = (ROOT / src).resolve(), ws / dest
+        dst_path.parent.mkdir(parents=True, exist_ok=True)
+        if src_path.is_dir():
+            shutil.copytree(src_path, dst_path, ignore=shutil.ignore_patterns(".git"),
+                            dirs_exist_ok=True)
+        else:
+            shutil.copy2(src_path, dst_path)
+    git = ["git", "-C", str(ws), "-c", "user.email=auton@local", "-c", "user.name=AUTON base"]
+    subprocess.run(git + ["add", "-A", "-f", "--", *[s.partition("=")[0] for s in seeds]],
+                   check=True, capture_output=True)
+    subprocess.run(git + ["commit", "-q", "-m", "seed: " + ", ".join(
+        s.partition("=")[0] for s in seeds)], check=True, capture_output=True)
+
+
 def run_gate(cmd: str, ws: Path, out: Path, n: int) -> dict:
     env = {**os.environ, "KERNEL_TREE": str(ws)}
     t0 = time.monotonic()
@@ -149,6 +178,10 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--context", type=int, default=32768,
                     help="the local model's context window (Ollama num_ctx); its default can exhaust memory")
     ap.add_argument("--base-rev", default="kernel-base-v5")
+    ap.add_argument("--base-tree", help="start from this tree's main (an earlier run's workspace) "
+                                        "instead of a kernel-base tag")
+    ap.add_argument("--seed", action="append", default=[], metavar="DEST=SRC",
+                    help="copy SRC (file or directory) to DEST in the workspace before session 1")
     ap.add_argument("--out", help="default: .artifacts/authorship/<date>-<run>")
     ap.add_argument("--gates-only", action="store_true", help="re-run the gates on an existing run")
     ap.add_argument("--memory-floor", type=int, default=15,
@@ -169,8 +202,9 @@ def main(argv: list[str] | None = None) -> int:
 
     if not args.gates_only:
         if not ws.exists():
-            subprocess.run(["bash", str(ROOT / "scripts/kernel-base.sh"), str(ws), "--git",
-                            "--rev", args.base_rev], check=True, capture_output=True)
+            make_base(ws, args.base_rev, args.base_tree, args.seed)
+            result["base"] = args.base_tree or args.base_rev
+            result["seed"] = args.seed
         cfg = config(ROOT / "agent/config/auton.toml", out, args.model, ws, args.iterations,
                      args.request_timeout, args.context)
         wrapper = pinned_wrapper(out)

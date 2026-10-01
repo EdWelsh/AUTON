@@ -59,4 +59,4 @@ its injected-bug score if it did.
 | R1 attempt 2 | pre-registered | [preregistration](../.claude/PRPs/reports/w18-r1-mm-9b-preregistration.md) |
 | R2–R12 | queued, in the order above | — |
 
-All runs are driven by `scripts/generation_run.py`: sessions with `--resume` from a pinned wrapper, then every gate in its pre-registered order, archived in the run's `RESULT.json`.
+**The campaign as data:** [`campaign/runs.yaml`](campaign/runs.yaml) and [`campaign/goals/`](campaign/goals/) — every run's goal, base, seeds and gates, committed before any of them started. `scripts/campaign.py` runs them in order unattended (dependencies on the last good tree, two attempts, resumable). All runs are driven by `scripts/generation_run.py`: sessions with `--resume` from a pinned wrapper, then every gate in its pre-registered order, archived in the run's `RESULT.json`.

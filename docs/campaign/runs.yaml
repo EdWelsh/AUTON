@@ -1,0 +1,132 @@
+# The generation campaign as data (docs/CAMPAIGN.md), read by scripts/campaign.py.
+# Pre-registration: this file and goals/*.txt are committed before any run in
+# them starts, and are not edited afterwards except by a dated amendment line.
+#
+#   base:   a kernel-base tag, or `run:<name>` — that run's resulting tree (its
+#           workspace's main), so R2 builds on R1's memory manager.
+#   seed:   files copied into the workspace before session 1, committed as part
+#           of the base: frozen interfaces the agent implements against, and
+#           local-only inputs (doomgeneric, the WAD) that never enter the repo.
+#   gates:  in order; each runs from the repo root with KERNEL_TREE=<workspace>.
+#           exit 0 pass, 1 generated wrong, 2 not generated.
+#   fallback: what replaces a phase that fails both attempts (stop rules 2, 3),
+#           labelled `authorship: human`; `none` leaves the phase failed and
+#           its dependants run on the last good tree.
+
+model: ollama_chat/qwen3.5:27b-q8_0
+session_seconds: 18000
+context: 32768
+
+runs:
+  - name: r1-mm
+    attempt: 2                       # attempt 1 was w15; this is the last
+    base: kernel-base-v5
+    sessions: 4
+    goal: goals/r1-mm.txt
+    gates:
+      - tests/kernel/run_mm_test.sh
+      - tests/kernel/run_vmm_test.sh
+      - make -C "$KERNEL_TREE" iso >/dev/null 2>&1 && scripts/e2e.sh --target "$KERNEL_TREE" 2>&1 | grep -E "^\[MM\] PMM initialized"
+    fallback: none
+
+  - name: r8-virtio-console
+    base: kernel-base-v5
+    sessions: 2
+    goal: goals/r8-virtio-console.txt
+    seed:
+      tests/kernel/virtio_console_gate/include: tests/kernel/virtio_console_gate/include
+      tests/kernel/virtio_reference/include: tests/kernel/virtio_reference/include
+    gates:
+      - tests/kernel/run_virtio_console_gate_test.sh
+    fallback: none
+
+  - name: r2-storage
+    base: run:r1-mm
+    sessions: 4
+    goal: goals/r2-storage.txt
+    gates:
+      - tests/kernel/run_virtio_blk_test.sh
+      - tests/kernel/run_fat32_test.sh
+      - scripts/run-storage-acceptance.sh "$KERNEL_TREE"
+    fallback: none
+
+  - name: r3-fileserver
+    base: run:r2-storage
+    sessions: 2
+    goal: goals/r3-fileserver.txt
+    gates:
+      - tests/kernel/run_fileserver_test.sh
+      - scripts/run-storage-acceptance.sh "$KERNEL_TREE" --service fileserver
+    fallback: none
+
+  - name: r6-host-repo
+    base: run:r2-storage
+    sessions: 2
+    goal: goals/r6-host-repo.txt
+    gates:
+      - tests/kernel/run_host_repo_test.sh
+      - tests/kernel/run_host_repo_test.sh --clone
+    fallback: none
+
+  - name: r5-smtp
+    base: run:r2-storage
+    sessions: 2
+    goal: goals/r5-smtp.txt
+    gates:
+      - tests/kernel/run_smtp_test.sh
+      - scripts/run-storage-acceptance.sh "$KERNEL_TREE" --service smtp
+    fallback: none
+
+  - name: r4-kvstore
+    base: run:r2-storage
+    sessions: 2
+    goal: goals/r4-kvstore.txt
+    gates:
+      - tests/kernel/run_kvstore_test.sh
+      - scripts/run-storage-acceptance.sh "$KERNEL_TREE" --service kvstore
+    fallback: none
+
+  - name: r7-ssh
+    base: run:r2-storage
+    sessions: 3
+    goal: goals/r7-ssh.txt
+    gates:
+      - tests/kernel/run_ssh_test.sh
+    fallback: none
+
+  - name: r12-doom
+    base: run:r1-mm
+    sessions: 3
+    goal: goals/r12-doom.txt
+    seed:
+      third_party/doomgeneric: .cache/third_party/doomgeneric
+      assets/doom.wad: .cache/assets/DOOM1.WAD
+    gates:
+      - tests/kernel/run_play_doom_test.sh
+      - make -C "$KERNEL_TREE" iso
+      - mkdir -p "$KERNEL_TREE/build/assets" && cp "$KERNEL_TREE/assets/doom.wad" "$KERNEL_TREE/build/assets/doom.wad" && scripts/run-intent-probe.sh doom "$KERNEL_TREE/build"
+    fallback: none
+
+  - name: r11-conformance
+    base: run:r1-mm
+    sessions: 2
+    goal: goals/r11-conformance.txt
+    gates:
+      - tests/kernel/run_fault_harness_test.sh
+    fallback: none
+
+  - name: r10-f00f
+    base: run:r1-mm
+    sessions: 1
+    goal: goals/r10-f00f.txt
+    gates:
+      - make -C "$KERNEL_TREE" iso >/dev/null 2>&1 && scripts/e2e.sh --target "$KERNEL_TREE" 2>&1 | grep -E "F00F.*(applied|verified)"
+    fallback: none
+
+  - name: r9-aarch64
+    base: kernel-base-v5
+    sessions: 3
+    goal: goals/r9-aarch64.txt
+    gates:
+      - tests/kernel/run_dtb_test.sh
+    fallback: none
