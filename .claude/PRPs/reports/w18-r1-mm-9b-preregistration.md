@@ -81,3 +81,9 @@ different experiment from the aborted one. Goal, gates, budget (4 × 5 h) and st
 unchanged. Qualification (`model-probe.py`, 4/4) is recorded before session 1. When the
 memory guard fires, the driver now also unloads the model while it waits, and its floor is
 15% free.
+
+**Qualification on `qwen3.5:27b-q8_0`, recorded before session 1** (2026-10-01): 4/4. Tool call
+32.8 s; fidelity 41.1 s (byte-exact); long prompt 602 s; second turn 12.3 s. Loaded at a 32K
+context it is **35 GB, bounded** (`ollama ps` reports a context of 32768, which the MLX build
+never honoured). Free memory with the model resident: 19%; the guard floor is 15%. The run
+directory is `.artifacts/campaign/r1-mm-attempt2/`, driven by `scripts/campaign.py`.
