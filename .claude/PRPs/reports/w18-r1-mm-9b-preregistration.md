@@ -109,3 +109,21 @@ It and R8's first session are archived at `.artifacts/campaign-invalid-2026-10-0
 - With a context window set, a tool result is capped at a fifth of it, with a truncation note.
 
 R1 attempt 2 restarts fresh with the goal, gates and budget unchanged.
+
+## Amendment 4: the restarted run was not an attempt either
+
+**2026-10-02.** The restart on the `create_task` loop planned 8 tasks, then spent all four
+sessions in **design**, and development never started. The gates exited 2, 2, 2. Two harness
+defects caused it:
+1. **Design was checkpointed only as a whole phase.** Each architect design takes hours on this
+   model, so every pause landed inside design, and every resume restarted it from the first
+   subsystem. The history shows `arch` adopted twice and `mm` never reached. **Fixed:** each
+   subsystem is checkpointed once its design is adopted, and a resume skips it.
+2. **The Mac slept.** Sessions 3 and 4 spanned 5 h of wall clock and only 83 and 20 minutes of
+   awake time; `pmset` shows sleep on battery. **Fixed:** the campaign runs under
+   `caffeinate -ims`.
+
+Archived at `.artifacts/campaign-invalid-2026-10-02/`. R1 attempt 2 starts fresh a third time,
+with the goal, gates and budget unchanged. The model has now planned twice and designed for
+hours, but has not yet been asked to write the memory manager. This attempt is the first that
+can measure that.

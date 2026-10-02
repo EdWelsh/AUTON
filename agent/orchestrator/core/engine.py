@@ -600,9 +600,18 @@ class OrchestrationEngine:
                                 if t.get("subsystem")
                                 and (t.get("assigned_to") or "developer") in KERNEL_ROLES))
         for subsystem in subsystems:
+            # Checkpointed per subsystem: a design takes hours on a local model,
+            # and with only the whole phase recorded, every resume restarted it
+            # from the first subsystem — w18 R1 spent four sessions designing
+            # arch and boot again and again and never reached mm.
+            if subsystem in self.state.designed:
+                logger.info("Design for %s already done; skipped on resume", subsystem)
+                continue
             design = await architect.design_subsystem(subsystem)
             self.workspace.checkout_main()
             self._adopt_design(design.get("branch"))
+            self.state.designed = [*self.state.designed, subsystem]
+            self._checkpoint(state_path)
         self.state.design_adopted = True
         self._checkpoint(state_path)
 

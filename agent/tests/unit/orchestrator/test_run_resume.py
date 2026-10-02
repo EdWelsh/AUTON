@@ -281,3 +281,42 @@ async def test_a_pause_that_cannot_commit_still_saves_and_says_so(workspace, mon
     assert result.get("paused") is True
     assert "index.lock" in result["pause_warning"]
     assert OrchestratorState.load(workspace / ".auton" / "state.json").phase == "paused"
+
+
+async def test_a_resume_skips_subsystems_already_designed(workspace, monkeypatch):
+    """w18 R1: design was recorded only as a whole phase, so a pause inside it
+    restarted every subsystem's design on resume, four sessions running."""
+    tasks = [dict(t) for t in TASKS] + [
+        {"task_id": "k-003", "title": "add c", "subsystem": "mm", "assigned_to": "developer",
+         "dependencies": [], "produces": ["kernel/mm/c.c"], "description": "write c"}]
+    eng = _engine(workspace)
+    designed = []
+
+    async def model(agent_id, system, messages, tools, tool_executor, **_):
+        prompt = messages[0]["content"]
+        if agent_id.startswith("manager"):
+            return _say(json.dumps(tasks) if "ecompose" in prompt else "{}")
+        if agent_id.startswith("architect"):
+            designed.append(prompt)
+            if len(designed) == 2:          # pause inside the second subsystem's design
+                eng.request_pause()
+                await asyncio.Event().wait()
+            return _say("designed")
+        return _say(json.dumps({"verdict": "approve", "summary": "ok", "issues": []}))
+    monkeypatch.setattr(eng.client, "send_with_tools", model)
+    result = await eng.run(GOAL)
+    assert result.get("paused")
+    first = OrchestratorState.load(workspace / ".auton" / "state.json").designed
+    assert len(first) == 1, first
+
+    eng2 = _engine(workspace)
+    again = []
+
+    async def model2(agent_id, system, messages, tools, tool_executor, **_):
+        if agent_id.startswith("architect"):
+            again.append(messages[0]["content"])
+        return await Model()(agent_id, system, messages, tools, tool_executor)
+    monkeypatch.setattr(eng2.client, "send_with_tools", model2)
+    await eng2.run(GOAL, resume=True)
+    assert len(again) == 1, "only the subsystem not yet designed is designed again"
+    assert first[0] not in again[0]
