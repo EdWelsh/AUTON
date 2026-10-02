@@ -13,9 +13,13 @@
 #           labelled `authorship: human`; `none` leaves the phase failed and
 #           its dependants run on the last good tree.
 
-model: ollama_chat/qwen3.5:27b-q8_0
+# Amended 2026-10-02 (owner's decision): every run moves to Claude Sonnet 5.5 through the
+# owner's subscription (claude -p; agent/orchestrator/llm/claude_cli.py), qualified 4/4 by
+# scripts/model-probe.py, slowest call 21 s. Was ollama_chat/qwen3.5:27b-q8_0 at context 32768.
+# Goals, bases, seeds, gates, sessions and stop rules are unchanged.
+model: claude-cli/claude-sonnet-5-5
 session_seconds: 18000
-context: 32768
+context: 200000
 
 runs:
   - name: r1-mm

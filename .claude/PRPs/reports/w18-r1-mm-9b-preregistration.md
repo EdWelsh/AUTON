@@ -127,3 +127,25 @@ Archived at `.artifacts/campaign-invalid-2026-10-02/`. R1 attempt 2 starts fresh
 with the goal, gates and budget unchanged. The model has now planned twice and designed for
 hours, but has not yet been asked to write the memory manager. This attempt is the first that
 can measure that.
+
+## Amendment 5: the model changes to Claude Sonnet 5.5 (owner's decision)
+
+**2026-10-02, before attempt 2 restarts.** On the third start, `qwen3.5:27b-q8_0` finished design
+and began development, but at about 90 s per model call `mm-001` was still open after 10 hours.
+The owner chose to run the campaign on their Claude subscription.
+- **Model:** `claude-cli/claude-sonnet-5-5`. Claude Code headless (`claude -p`) runs as a pure
+  model, with every built-in tool off and no settings, hooks or MCP servers loaded.
+  Tool calls go through a JSON reply protocol (`agent/orchestrator/llm/claude_cli.py`).
+  The orchestrator's tools, sandbox, review and gates are unchanged.
+- **Qualification:** `scripts/model-probe.py` passed 4/4 (tool call 2.9 s, fidelity 2.7 s,
+  long prompt 20.8 s, second turn 2.2 s).
+- **Context:** 200,000 tokens; the window was 32,768 for the local model.
+- **The q8_0 run is abandoned, unscored.** It's archived at
+  `.artifacts/campaign-abandoned-2026-10-02/r1-mm-attempt2-qwen27b-q8`: design was complete,
+  `mm-001` was in development, and nothing had merged.
+- **Unchanged:** the goal, the gates and their order, 4 sessions × 5 h, and the stop rules.
+  CAMPAIGN.md's stop rule 1 allows attempt 2 to change the model.
+
+**What a result means now.** A pass or fail measures the swarm on a frontier model, not a local
+one. The local-model question stays open, with w15 and the archived runs as its evidence so far.
+The model is the only change.

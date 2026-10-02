@@ -24,6 +24,8 @@ Plan: [`w18-generation-campaign`](../.claude/PRPs/plans/w18-generation-campaign.
 | 11 | R10 F00F | winner | 1 | the mitigation's `verify`, steps 1–2 (step 3 needs a family-5 Pentium) | — |
 | 12 | R9 aarch64 | winner | 3 | `run_dtb_test.sh` tree mode → `[gate: hal]` → `e2e.sh --arch aarch64` | — |
 
+**Model (amended 2026-10-02, owner's decision).** Every run uses **Claude Sonnet 5.5 through the owner's Claude subscription** (`claude-cli/claude-sonnet-5-5`: `claude -p` as a pure model, every Claude Code tool disabled, the orchestrator's own tools, sandbox and gates unchanged). Qualified 4/4, slowest call 21 s against qwen q8_0's 602 s. The rows above that name a qwen model are superseded by this line. The q8_0 R1 run was abandoned at the owner's request, unscored.
+
 **Model (amended 2026-09-30).** Every run uses `qwen3.5:27b-q8_0`; the reasoning below is kept for the record. **Why 9b first (superseded).** R1 attempt 1 on 27b closed one task of six in five hours. Throughput, not
 capability, was the binding constraint. 9b qualifies 4/4 at about twice the speed. If 9b's
 output is *generated wrong* where 27b's was closer, R2 onward runs on 27b.

@@ -27,6 +27,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 import time
 from pathlib import Path
 
@@ -69,7 +70,26 @@ class Result:
         return f"  {self.name:<14} {mark}  {self.seconds:6.1f}s  {self.detail[:96]}"
 
 
+def _claude_cli_call(model: str, messages: list[dict], tools: bool, timeout: int) -> object:
+    """The orchestrator's claude-cli backend (the owner's subscription), shaped
+    like a LiteLLM response so the four checks are unchanged."""
+    import asyncio
+    from types import SimpleNamespace
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "agent"))
+    from orchestrator.llm import claude_cli
+    system = next((m["content"] for m in messages if m["role"] == "system"), "")
+    rest = [m for m in messages if m["role"] != "system"]
+    r = asyncio.run(claude_cli.complete(model, system, rest, [WRITE_FILE] if tools else None,
+                                        timeout))
+    calls = [SimpleNamespace(id=c.id, function=SimpleNamespace(
+        name=c.name, arguments=json.dumps(c.arguments))) for c in r.tool_calls]
+    msg = SimpleNamespace(content=r.text, tool_calls=calls or None)
+    return SimpleNamespace(choices=[SimpleNamespace(message=msg)])
+
+
 def call(model: str, messages: list[dict], tools: bool = True, timeout: int = 900) -> object:
+    if model.startswith("claude-cli/"):
+        return _claude_cli_call(model, messages, tools, timeout)
     kwargs: dict = {"model": model, "messages": messages, "temperature": 0,
                     "timeout": timeout, "api_base": OLLAMA}
     if tools:

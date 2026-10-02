@@ -14,6 +14,7 @@ from typing import Any
 
 import litellm
 
+from orchestrator.llm import claude_cli
 from orchestrator.llm.response import LLMResponse
 
 logger = logging.getLogger(__name__)
@@ -166,6 +167,12 @@ def preflight_model(model: str, provider_config: ProviderConfig) -> None:
     :mod:`orchestrator.cli`, which is not duplicated here.
     """
     provider = model.split("/")[0] if "/" in model else ""
+    if provider == "claude-cli":
+        if not claude_cli.available():
+            raise ModelUnavailableError(
+                f"Model {model!r} runs through Claude Code headless, and `claude` is not on "
+                f"PATH. Install Claude Code and log in with the subscription.")
+        return
     if provider not in ("ollama", "ollama_chat"):
         return
 
@@ -261,6 +268,11 @@ class LLMClient:
         self.cost_tracker.check_budget()
 
         model = model_override or self.model
+        if model.startswith(claude_cli.PREFIX):
+            # The owner's subscription through Claude Code headless; see
+            # claude_cli.py. No LiteLLM, no API key, no per-call cost here.
+            return await claude_cli.complete(model, system, messages, tools,
+                                             self.request_timeout, agent_id)
 
         async with self._semaphore:
             now = time.monotonic()

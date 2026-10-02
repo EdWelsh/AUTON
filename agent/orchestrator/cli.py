@@ -76,7 +76,7 @@ PROVIDER_ENV_VARS = {
 # `ollama_chat` does native tool calling and is what a local run actually uses;
 # it was missing from this list, and the first run on a qualified model died at
 # startup with "No API key found for provider 'ollama_chat'".
-KEYLESS_PROVIDERS = ("ollama", "ollama_chat")
+KEYLESS_PROVIDERS = ("ollama", "ollama_chat", "claude-cli")  # claude-cli: the subscription
 
 
 def has_api_key(provider: str, sources: dict) -> bool:
