@@ -53,7 +53,9 @@ object and nothing else — no prose around it, no code fences:
   One or more calls; results come back in the next message, in order.
 - When the task is finished: {"final": "<your summary or answer>"}
 
-Use only the tools listed below, with arguments matching their schemas.
+Use only the tools listed below, with arguments matching their schemas. (A tool call written
+in the <invoke name="..."><parameter name="...">...</parameter></invoke> format is also
+accepted.) Prose with no tool call ends your turn, so never describe a call: make it.
 
 ## Tools
 """
@@ -138,7 +140,38 @@ def _first_json_object(text: str) -> dict | None:
     return None
 
 
+_INVOKE = re.compile(r'<invoke\s+name="([^"]+)"\s*>(.*?)</invoke>', re.S)
+_PARAM = re.compile(r'<parameter\s+name="([^"]+)"\s*>(.*?)</parameter>', re.S)
+
+
+def _param_value(raw: str) -> Any:
+    """A parameter's text: JSON when it is a number, bool, list or object; else the string."""
+    stripped = raw.strip()
+    if stripped[:1] in "[{" or stripped in ("true", "false", "null") or re.fullmatch(r"-?\d+(\.\d+)?", stripped):
+        try:
+            return json.loads(stripped)
+        except json.JSONDecodeError:
+            pass
+    return raw
+
+
+def _invoke_calls(text: str) -> list[ToolCall]:
+    """Tool calls written in Claude's native <invoke> format.
+
+    Asked for JSON, Claude drifts back to the format it was trained on after a
+    few turns (w18 R1 on Sonnet 5.5: three replies of <invoke> blocks were read
+    as final answers, and mm-001 failed with no output). Both are accepted.
+    """
+    stamp = int(time.time() * 1000)
+    return [ToolCall(id=f"call_{stamp}_{n}", name=name,
+                     arguments={k: _param_value(v) for k, v in _PARAM.findall(body)})
+            for n, (name, body) in enumerate(_INVOKE.findall(text))]
+
+
 def parse(result: str, model: str) -> LLMResponse:
+    invoked = _invoke_calls(result or "")
+    if invoked:
+        return LLMResponse(text=None, tool_calls=invoked, finish_reason="tool_calls", model=model)
     obj = _first_json_object(result or "")
     if isinstance(obj, dict) and isinstance(obj.get("tool_calls"), list) and obj["tool_calls"]:
         calls = []

@@ -149,3 +149,15 @@ The owner chose to run the campaign on their Claude subscription.
 **What a result means now.** A pass or fail measures the swarm on a frontier model, not a local
 one. The local-model question stays open, with w15 and the archived runs as its evidence so far.
 The model is the only change.
+
+## Amendment 6: the first Sonnet session was a harness defect
+
+**2026-10-02, 23:46–23:55Z.** The session planned 6 tasks in about a minute. Then `mm-001` failed
+three times with no output, and the campaign moved through R8, R2 and R3 the same way.
+- **Cause:** after a few turns, Sonnet stopped answering in the JSON reply protocol and fell back
+  to Claude's native `<invoke name=…>` tool-call format. `claude_cli.parse` read those replies as
+  final answers, so no tool ran and no file was written.
+- **Fix:** both formats are now parsed as tool calls (tested on the replies from this run).
+
+No run produced output, so none is an attempt. All of them are archived at
+`.artifacts/campaign-invalid-2026-10-02b/`.

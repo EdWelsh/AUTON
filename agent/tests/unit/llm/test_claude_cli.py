@@ -52,3 +52,21 @@ def test_a_usage_limit_notice_waits_for_its_reset():
     wait = claude_cli._limit_reset(f"Claude AI usage limit reached|{reset}")
     assert 3600 <= wait <= 3700
     assert claude_cli._limit_reset("All done.") is None
+
+
+def test_native_invoke_blocks_are_tool_calls():
+    """w18 R1 on Sonnet: <invoke> replies were read as final answers; mm-001 failed."""
+    reply = ('<invoke name="shell">\n<parameter name="command">git status --short</parameter>\n'
+             '<parameter name="timeout">120</parameter>\n</invoke>\n</tool_calls>\n'
+             'Correction, I will proceed. <invoke name="edit_file"><parameter name="path">a.h</parameter>'
+             '<parameter name="old">/* x */</parameter><parameter name="new">/* y { } */</parameter></invoke>')
+    r = claude_cli.parse(reply, "m")
+    assert [c.name for c in r.tool_calls] == ["shell", "edit_file"]
+    assert r.tool_calls[0].arguments == {"command": "git status --short", "timeout": 120}
+    assert r.tool_calls[1].arguments["new"] == "/* y { } */"
+
+
+def test_invoke_values_keep_strings_that_only_look_like_json():
+    r = claude_cli.parse('<invoke name="list_files"><parameter name="path">kernel</parameter>'
+                         '<parameter name="recursive">true</parameter></invoke>', "m")
+    assert r.tool_calls[0].arguments == {"path": "kernel", "recursive": True}
