@@ -161,3 +161,19 @@ three times with no output, and the campaign moved through R8, R2 and R3 the sam
 
 No run produced output, so none is an attempt. All of them are archived at
 `.artifacts/campaign-invalid-2026-10-02b/`.
+
+## Amendment 7: claude -p refused a native tool call
+
+**2026-10-03, 00:02Z.** The session merged `mm-001` (MMU HAL primitives and linker symbols) five
+minutes in. Then `mm-002` failed on an error from Claude Code itself: "The model's tool call
+could not be parsed". The model had emitted a native tool call into a session with no native
+tools. The run ended at 374 s, every gate "not generated".
+- **Cause, in part the harness:** the protocol text had told the model that `<invoke>` was
+  accepted, which invited exactly this.
+- **Fixes:**
+  - The protocol now says there are no native tools.
+  - A refused call is retried up to three times, each with a corrective note.
+  - `campaign.py` stops, rather than continuing, when a run ends "not generated" on every gate
+    within 30 minutes; the earlier defects raced through four runs' attempts this way.
+
+Archived at `.artifacts/campaign-invalid-2026-10-03/`. Not an attempt.

@@ -41,6 +41,12 @@ logger = logging.getLogger(__name__)
 PREFIX = "claude-cli/"
 LIMIT_WAIT_SECONDS = 15 * 60
 MAX_LIMIT_WAITS = 24
+MAX_PARSE_RETRIES = 3
+# Claude Code's own error when the model emits a native tool call in a session
+# with no tools (w18 R1 on Sonnet: it failed mm-002 and ended the run).
+UNPARSED_CALL = "tool call could not be parsed"
+NUDGE = ("\n\n[harness] Your previous reply was a native tool call, which this session cannot "
+         "run. Reply again with ONE JSON object as text: {\"tool_calls\": [...]} or {\"final\": ...}.")
 
 PROTOCOL = """
 
@@ -53,9 +59,9 @@ object and nothing else — no prose around it, no code fences:
   One or more calls; results come back in the next message, in order.
 - When the task is finished: {"final": "<your summary or answer>"}
 
-Use only the tools listed below, with arguments matching their schemas. (A tool call written
-in the <invoke name="..."><parameter name="...">...</parameter></invoke> format is also
-accepted.) Prose with no tool call ends your turn, so never describe a call: make it.
+Use only the tools listed below, with arguments matching their schemas. You have no native
+tools in this session: write every call as the JSON text above, never as a native tool call.
+Prose with no tool call ends your turn, so never describe a call: make it.
 
 ## Tools
 """
@@ -207,7 +213,8 @@ async def complete(model: str, system: str, messages: list[dict[str, Any]],
     argv = ["claude", "-p", "--output-format", "json", "--model", name, "--tools", "",
             "--system-prompt", sys_prompt, "--no-session-persistence",
             "--setting-sources", "", "--strict-mcp-config"]
-    for attempt in range(MAX_LIMIT_WAITS + 1):
+    parse_retries = 0
+    for attempt in range(MAX_LIMIT_WAITS + MAX_PARSE_RETRIES + 1):
         proc = await asyncio.create_subprocess_exec(
             *argv, stdin=asyncio.subprocess.PIPE, stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE, cwd=_cwd())
@@ -225,6 +232,12 @@ async def complete(model: str, system: str, messages: list[dict[str, Any]],
                                f"{(text or err.decode('utf-8', 'replace'))[:400]}") from None
         result = str(data.get("result", ""))
         if data.get("is_error") or proc.returncode != 0:
+            if UNPARSED_CALL in result and parse_retries < MAX_PARSE_RETRIES:
+                parse_retries += 1
+                logger.warning("[%s] native tool call refused by claude -p; retry %d/%d with a nudge",
+                               agent_id, parse_retries, MAX_PARSE_RETRIES)
+                prompt = prompt + NUDGE
+                continue
             wait = _limit_reset(result)
             if wait is not None and attempt < MAX_LIMIT_WAITS:
                 logger.warning("[%s] subscription usage limit; waiting %.0f min (%s)",

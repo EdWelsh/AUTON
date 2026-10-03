@@ -35,6 +35,16 @@ ROOT = Path(__file__).resolve().parents[1]
 SPEC = ROOT / "docs/campaign/runs.yaml"
 OUT = ROOT / ".artifacts/campaign"
 MAX_ATTEMPTS = 2
+# A run that ends "not generated" on every gate this quickly did not fail on
+# the model's merits: the harness broke (w18: a parse defect raced the campaign
+# through R1, R8, R2 and R3 in minutes, spending their attempts). Stop instead.
+HARNESS_SUSPECT_SECONDS = 1800
+
+
+def harness_suspect(r: dict) -> bool:
+    gates = r.get("gates") or []
+    spent = sum(s.get("seconds", 0) for s in r.get("sessions", []))
+    return bool(gates) and all(g["rc"] == 2 for g in gates) and spent < HARNESS_SUSPECT_SECONDS
 
 
 def log(msg: str) -> None:
@@ -109,6 +119,11 @@ def run_one(run: dict, runs: dict[str, dict], spec: dict) -> None:
                 log(f"{run['name']}: {d.name} stopped without a result; rerun the campaign to resume it")
                 raise SystemExit(1)
         verdicts = ", ".join(f"{g['rc']}" for g in r.get("gates", []))
+        if harness_suspect(r):
+            log(f"{run['name']}: {d.name} STOPPED — not generated on every gate after "
+                f"{sum(s.get('seconds', 0) for s in r.get('sessions', []))} s: a harness failure, "
+                f"not a result. Investigate, archive the directory, and rerun.")
+            raise SystemExit(3)
         if passed(r):
             log(f"{run['name']}: {d.name} PASSED every gate ({verdicts})")
             return

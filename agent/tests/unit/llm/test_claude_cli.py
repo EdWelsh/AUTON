@@ -70,3 +70,27 @@ def test_invoke_values_keep_strings_that_only_look_like_json():
     r = claude_cli.parse('<invoke name="list_files"><parameter name="path">kernel</parameter>'
                          '<parameter name="recursive">true</parameter></invoke>', "m")
     assert r.tool_calls[0].arguments == {"path": "kernel", "recursive": True}
+
+
+async def test_a_refused_native_call_is_retried_with_a_nudge(monkeypatch):
+    """w18 R1: claude -p's 'tool call could not be parsed' failed mm-002 and ended the run."""
+    replies = [{"is_error": True, "result": "The model's tool call could not be parsed (retry also failed)."},
+               {"is_error": False, "result": '{"final": "ok"}'}]
+    prompts = []
+
+    class Proc:
+        returncode = 0
+
+        def __init__(self, reply):
+            self.reply = reply
+            self.returncode = 1 if reply["is_error"] else 0
+
+        async def communicate(self, data):
+            prompts.append(data.decode())
+            return json.dumps(self.reply).encode(), b""
+
+    async def spawn(*a, **k):
+        return Proc(replies.pop(0))
+    monkeypatch.setattr(claude_cli.asyncio, "create_subprocess_exec", spawn)
+    r = await claude_cli.complete("claude-cli/m", "sys", [{"role": "user", "content": "go"}], TOOLS, 60)
+    assert r.text == "ok" and "[harness]" in prompts[1] and "[harness]" not in prompts[0]
