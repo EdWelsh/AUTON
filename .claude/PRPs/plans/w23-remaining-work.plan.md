@@ -89,6 +89,16 @@ Distribution stays blocked on D1. Building and probing locally is not.
 | D3 | Push `feat/prd-completion`, about 60 commits, so CI runs the new suites (the Doom self-test and injected score, the Docker integration tests) | — |
 | X1–X4 | Intel NIC and generation spec updates; an x86 machine; Proxmox, Windows 11, bare metal | `docs/ACQUIRE.md`, one command each |
 
+## Found on the w18 campaign (2026-10-03)
+
+| ID | Item | Evidence |
+|---|---|---|
+| G1 | The mm suite misses two injected bugs, before and after the repair: an absorbed double free (its header claims to catch it; testing an abort needs a fork) and an off-by-one at the end of RAM in `pmm_alloc_contiguous` | [R1 report](../reports/w18-r1-mm-report.md) |
+| G2 | The host mm suite can't model `dma_alloc` zeroing through its identity-mapped physical return. Decide whether the suite maps it, or the spec requires zeroing via `phys_to_virt` | R1 diagnostic |
+| G3 | `scripts/e2e.sh`'s parity stage fails on `kernel-base-v5`: the current SLM model doesn't load in the base kernel's runtime. Every e2e-based check is blind until this is fixed | R1 gate defect 1 |
+| G4 | The swarm's reviewer and tester never run the frozen suites that judge a run. R1's two deviations were one line each, and mm.md's hook paragraph names them | R1 reading |
+| G5 | Subscription spend limits: R1 waited about 6.25 h of its 6.7 h on them. Report wait time separately from work time in RESULT.json | R1 metrics |
+
 ## Suggested order
 
 1. **A1 → A2** (hours). Does the larger model analyse?
