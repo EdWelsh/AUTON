@@ -94,3 +94,8 @@ async def test_a_refused_native_call_is_retried_with_a_nudge(monkeypatch):
     monkeypatch.setattr(claude_cli.asyncio, "create_subprocess_exec", spawn)
     r = await claude_cli.complete("claude-cli/m", "sys", [{"role": "user", "content": "go"}], TOOLS, 60)
     assert r.text == "ok" and "[harness]" in prompts[1] and "[harness]" not in prompts[0]
+
+
+def test_a_structured_final_is_serialised_as_json():
+    r = claude_cli.parse('{"final": [{"task_id": "mm-001"}]}', "m")
+    assert json.loads(r.text) == [{"task_id": "mm-001"}]

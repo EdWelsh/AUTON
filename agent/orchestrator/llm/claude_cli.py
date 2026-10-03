@@ -190,7 +190,8 @@ def parse(result: str, model: str) -> LLMResponse:
         if calls:
             return LLMResponse(text=None, tool_calls=calls, finish_reason="tool_calls", model=model)
     if isinstance(obj, dict) and "final" in obj:
-        return LLMResponse(text=str(obj["final"]), model=model)
+        final = obj["final"]
+        return LLMResponse(text=final if isinstance(final, str) else json.dumps(final), model=model)
     return LLMResponse(text=result, model=model)
 
 

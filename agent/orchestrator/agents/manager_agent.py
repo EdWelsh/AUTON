@@ -73,6 +73,26 @@ def merge_seeds(tasks: list[dict[str, Any]],
     return [dict(s) for s in seeds] + [t for t in tasks if t["task_id"] not in seed_ids]
 
 
+def tasks_from_text(text: str) -> list[dict[str, Any]]:
+    """The first JSON array of task objects anywhere in ``text``.
+
+    Decodes from each '[' in turn rather than slicing first '[' to last ']',
+    which broke on prose or a second bracket after the array.
+    """
+    decoder = json.JSONDecoder()
+    start = text.find("[")
+    while start != -1:
+        try:
+            value, _ = decoder.raw_decode(text, start)
+        except json.JSONDecodeError:
+            value = None
+        if isinstance(value, list) and value and all(
+                isinstance(t, dict) and "task_id" in t for t in value):
+            return value
+        start = text.find("[", start + 1)
+    return []
+
+
 class ManagerAgent(Agent):
     """The Manager decomposes high-level goals into tasks and coordinates agents.
 
@@ -154,7 +174,8 @@ return the tasks as a JSON array instead. Each task must have:
 - description: detailed instructions for the agent
 - produces: list of file paths this task creates or changes (at least one)
 
-Return ONLY the JSON array, no other text."""
+When every task is filed, reply with a one-line summary. Only if you did not use
+create_task, reply with the JSON array and nothing else."""
 
         messages = [{"role": "user", "content": prompt}]
         self.planned_tasks = []
@@ -168,10 +189,19 @@ Return ONLY the JSON array, no other text."""
 
         # Tasks filed through create_task come first; a JSON array in the reply
         # is still accepted, and fills in any id the tool calls did not.
-        planned = list(self.planned_tasks)
-        ids = {t["task_id"] for t in planned}
-        parsed = self._parse_tasks(result_messages) if not planned else \
-            [t for t in self._parse_tasks_quiet(result_messages) if t.get("task_id") not in ids]
+        planned, parsed = self._collect(result_messages)
+        if not planned and not parsed:
+            # One retry with the reason (w18 R1 on Sonnet: a 9 KB JSON array
+            # that did not parse ended the run before any code was written).
+            logger.warning("[%s] No tasks could be read; asking once more", self.agent_id)
+            retry = [*result_messages, {"role": "user", "content": (
+                "Your plan could not be read: no create_task call was made and the reply "
+                "held no valid JSON array of tasks. File each task now by calling "
+                "create_task once per task.")}]
+            result_messages = await self.client.send_with_tools(
+                agent_id=self.agent_id, system=self.system_prompt, messages=retry,
+                tools=self.tools, tool_executor=self._execute_tool)
+            planned, parsed = self._collect(result_messages)
         tasks = merge_seeds(drop_undeliverable(planned + parsed), seed_tasks)
         self.state = AgentState.DONE
 
@@ -239,27 +269,25 @@ Return a JSON object with these fields:
         self.state = AgentState.DONE
         return self._parse_json_response(result_messages)
 
+    def _collect(self, messages: list[dict[str, Any]]) -> tuple[list, list]:
+        """Tasks filed through create_task, then any JSON-array tasks not among them."""
+        planned = list(self.planned_tasks)
+        ids = {t["task_id"] for t in planned}
+        parsed = [t for t in self._parse_tasks_quiet(messages) if t.get("task_id") not in ids]
+        if not planned and not parsed:
+            logger.error("[%s] Failed to parse tasks from the reply", self.agent_id)
+        return planned, parsed
+
     def _parse_tasks_quiet(self, messages: list[dict[str, Any]]) -> list[dict[str, Any]]:
-        """As _parse_tasks, without logging an error: used when create_task
-        already planned the work and a JSON array is optional."""
-        text = self._extract_final_text(messages)
-        try:
-            return json.loads(text[text.index("["):text.rindex("]") + 1])
-        except (ValueError, json.JSONDecodeError):
-            return []
+        """The first JSON array of task objects in the final reply, or []."""
+        return tasks_from_text(self._extract_final_text(messages))
 
     def _parse_tasks(self, messages: list[dict[str, Any]]) -> list[dict[str, Any]]:
-        """Extract task list from Claude's response."""
-        text = self._extract_final_text(messages)
-        # Try to find JSON in the response
-        try:
-            # Look for JSON array in the text
-            start = text.index("[")
-            end = text.rindex("]") + 1
-            return json.loads(text[start:end])
-        except (ValueError, json.JSONDecodeError) as e:
-            logger.error("[%s] Failed to parse tasks: %s", self.agent_id, e)
-            return []
+        """Extract task list from the model's response."""
+        tasks = self._parse_tasks_quiet(messages)
+        if not tasks:
+            logger.error("[%s] Failed to parse tasks", self.agent_id)
+        return tasks
 
     def _parse_json_response(self, messages: list[dict[str, Any]]) -> dict[str, Any]:
         """Extract JSON object from Claude's response."""

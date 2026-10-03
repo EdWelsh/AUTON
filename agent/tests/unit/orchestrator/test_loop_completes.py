@@ -139,3 +139,39 @@ async def test_a_manager_that_plans_only_through_create_task(workspace, monkeypa
     await eng.run("write a")
     node = eng.task_graph.get_task("k-001")
     assert node is not None and node.state is TaskState.MERGED
+
+
+async def test_an_unreadable_plan_gets_one_retry(workspace, monkeypatch):
+    """w18 R1 on Sonnet: a malformed JSON plan ended the run; one retry with the reason now follows."""
+    async def no_sleep(_):
+        return None
+    monkeypatch.setattr(engine_module.asyncio, "sleep", no_sleep)
+    specs = Path(__file__).resolve().parents[3] / "kernel_spec"
+    eng = OrchestrationEngine(
+        workspace_path=workspace, kernel_spec_path=specs,
+        config={"llm": {"model": "anthropic/scripted"},
+                "orchestrator": {"max_iterations": 6, "max_review_rounds": 3},
+                "agents": {"developer_count": 1, "reviewer_count": 1, "tester_count": 1},
+                "validation": {"composition_checks": False}})
+    planning = []
+
+    async def model(agent_id, system, messages, tools, tool_executor, **_):
+        prompt = messages[0]["content"]
+        if agent_id.startswith("manager") and "Decompose" in prompt:
+            planning.append(len(messages))
+            if len(planning) == 1:
+                return [*messages, {"role": "assistant", "content": '[{"task_id": "k-001",, broken'}]
+            await tool_executor("create_task", {
+                "task_id": "k-001", "title": "add a", "subsystem": "lib",
+                "assigned_to": "developer", "description": "write a",
+                "produces": ["kernel/lib/a.c"]})
+            return [*messages, {"role": "assistant", "content": "Filed."}]
+        if agent_id.startswith("dev"):
+            await tool_executor("write_file", {"path": "kernel/lib/a.c", "content": "int a;\n"})
+            return [{"role": "assistant", "content": "done"}]
+        return [{"role": "assistant", "content": json.dumps(
+            {"verdict": "approve", "summary": "ok", "issues": [], "success": True})}]
+    monkeypatch.setattr(eng.client, "send_with_tools", model)
+    await eng.run("write a")
+    assert len(planning) == 2 and planning[1] > planning[0]
+    assert eng.task_graph.get_task("k-001").state is TaskState.MERGED

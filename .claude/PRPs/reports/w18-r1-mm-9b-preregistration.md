@@ -177,3 +177,16 @@ tools. The run ended at 374 s, every gate "not generated".
     within 30 minutes; the earlier defects raced through four runs' attempts this way.
 
 Archived at `.artifacts/campaign-invalid-2026-10-03/`. Not an attempt.
+
+**2026-10-03, 00:05Z, the same amendment.** The next start planned 0 tasks in 52 s, and the new
+stop rule halted the campaign as intended.
+- **Cause:** the manager returned a 9 KB JSON array instead of calling `create_task`. The array
+  failed to parse at character 9,056.
+- **The prompt contradicted itself:** it said `create_task` was preferred, then ended with
+  "Return ONLY the JSON array".
+- **Fixes:**
+  - The prompt now ends with a summary request.
+  - The parser decodes the first valid task array anywhere in the reply.
+  - A plan that can't be read gets one retry, with the reason.
+
+Archived as `r1-mm-attempt2-b`. Not an attempt.
