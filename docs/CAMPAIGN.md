@@ -32,6 +32,19 @@ output is *generated wrong* where 27b's was closer, R2 onward runs on 27b.
 
 **Why R6 and R5 before R4.** They close validation scenarios C2 and C3; R4 closes none.
 
+## Budget counts work (amended 2026-10-03)
+
+A run's budget is `sessions × 5 h` of **work**: each session's wall clock less the time it spent
+waiting on the model provider's usage limits, which `claude_cli` logs and `generation_run.py`
+reads back. That's the same principle as the memory guard: a pause for the host's reasons, or
+the provider's, isn't the run's budget spent. Without it, R2's first 5-hour session held 15
+minutes of work.
+
+Each `RESULT.json` reports `work_seconds` and `limit_wait_seconds`. Sessions are capped at six
+times the pre-registered count, so a provider that never allows work still ends the run.
+
+R1 isn't affected: it ended terminal, with every task merged, after about 30 minutes of work.
+
 ## Stop rules, the same for every run
 
 1. **At most two attempts per R phase.** Attempt 2 may change the model or the budget, never the

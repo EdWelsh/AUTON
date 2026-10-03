@@ -10,8 +10,11 @@ The Generation Experiment Protocol (docs/GENERATION-QUEUE.md), as a program:
 1. A fresh kernel base (`scripts/kernel-base.sh --git`) is the workspace,
    unless the run directory already has one (then this is a resume of it).
 2. Session 1 starts the goal; each later session is `--resume`, until the
-   run reaches a terminal phase or the session budget is spent. A session
+   run reaches a terminal phase or the work budget is spent. A session
    ends PAUSED at its wall-clock budget with its work committed (w17).
+   The budget is *work*: sessions x session-seconds, less the time each
+   session spent waiting on the model provider's usage limits (amended
+   2026-10-03: R1 on the owner's subscription spent 6.25 h of 6.7 waiting).
 3. The gates run in their pre-registered order, every one, whatever the
    earlier ones said, each with KERNEL_TREE=<workspace>: exit 0 pass,
    1 generated wrong, 2 not generated. Nothing is merged into "failed".
@@ -28,6 +31,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 import subprocess
 import threading
 import time
@@ -103,6 +107,28 @@ class MemoryGuard(threading.Thread):
         self._stop.set()
 
 
+# claude_cli logs "subscription usage limit; waiting N min" before each wait.
+LIMIT_WAIT = re.compile(r"waiting (\d+) min")
+MIN_SESSION_SECONDS = 600       # less work budget than this left: not worth a session
+MAX_SESSIONS_FACTOR = 6         # a provider that never lets work happen still ends
+
+
+def limit_wait_seconds(out: Path, n: int, seconds: int) -> int:
+    """Seconds session ``n`` spent waiting on usage limits, from its transcript."""
+    log = out / f"transcript-{n}.log"
+    if not log.exists():
+        return 0
+    waited = sum(int(m) * 60 for m in LIMIT_WAIT.findall(log.read_text(errors="replace")))
+    return min(waited, seconds)
+
+
+def work_seconds(s: dict) -> int:
+    """A session's work: its wall clock less its waits; a memory pause is none."""
+    if s.get("memory_paused"):
+        return 0
+    return max(0, s["seconds"] - s.get("limit_wait_seconds", 0))
+
+
 def run_session(n: int, out: Path, wrapper: Path, cfg: Path, goal: str, resume: bool,
                 seconds: int, floor: int) -> dict:
     log = out / f"session-{n}.log"
@@ -116,9 +142,11 @@ def run_session(n: int, out: Path, wrapper: Path, cfg: Path, goal: str, resume: 
     guard.stop()
     log.write_text(r.stdout + r.stderr)
     tail = (r.stdout + r.stderr).strip().splitlines()[-3:]
+    elapsed = round(time.monotonic() - t0)
     return {"session": n, "resume": resume, "started": started, "finished": now(),
-            "seconds": round(time.monotonic() - t0), "rc": r.returncode, "tail": tail,
-            "memory_paused": guard.fired}
+            "seconds": elapsed, "rc": r.returncode, "tail": tail,
+            "memory_paused": guard.fired,
+            "limit_wait_seconds": limit_wait_seconds(out, n, elapsed)}
 
 
 def make_base(ws: Path, rev: str, tree: str | None, seeds: list[str]) -> None:
@@ -208,16 +236,25 @@ def main(argv: list[str] | None = None) -> int:
         cfg = config(ROOT / "agent/config/auton.toml", out, args.model, ws, args.iterations,
                      args.request_timeout, args.context)
         wrapper = pinned_wrapper(out)
-        counted = sum(1 for s in result["sessions"] if not s.get("memory_paused"))
+        for old in result["sessions"]:      # recorded before waits were measured
+            old.setdefault("limit_wait_seconds", limit_wait_seconds(out, old["session"], old["seconds"]))
+        budget = args.sessions * args.session_seconds
         guard_pauses = sum(1 for s in result["sessions"] if s.get("memory_paused"))
-        while counted < args.sessions:
+        while True:
+            work = sum(work_seconds(s) for s in result["sessions"])
+            remaining = budget - work
+            if remaining < MIN_SESSION_SECONDS:
+                break
+            if len(result["sessions"]) >= args.sessions * MAX_SESSIONS_FACTOR:
+                print("session cap reached: the provider's limits left no time for work", flush=True)
+                break
             n = len(result["sessions"]) + 1
             resume = n > 1 or (ws / ".auton/state.json").exists()
-            s = run_session(n, out, wrapper, cfg, goal, resume, args.session_seconds,
-                            args.memory_floor)
+            s = run_session(n, out, wrapper, cfg, goal, resume,
+                            min(args.session_seconds, remaining), args.memory_floor)
             result["sessions"].append(s)
             result_path.write_text(json.dumps(result, indent=2) + "\n")
-            print(f"session {n}: rc {s['rc']} after {s['seconds']}s"
+            print(f"session {n}: rc {s['rc']} after {s['seconds']}s (waited {s['limit_wait_seconds']}s on limits)"
                   f"{' (memory guard)' if s['memory_paused'] else ''} — {' | '.join(s['tail'])}",
                   flush=True)
             if s["memory_paused"]:
@@ -234,7 +271,6 @@ def main(argv: list[str] | None = None) -> int:
                 while (memory_free() or 100) < 30:
                     time.sleep(60)
                 continue
-            counted += 1
             if s["rc"] != 75 and s["rc"] != 1:
                 break              # terminal (0) or refused (2): no further session helps
 
@@ -242,6 +278,8 @@ def main(argv: list[str] | None = None) -> int:
         # A re-grade (stop rule 5: a gate defect fixed) keeps what it replaces.
         result["gate_history"] = [*result.get("gate_history", []),
                                   {"finished": result.get("finished"), "gates": result["gates"]}]
+    result["work_seconds"] = sum(work_seconds(s) for s in result["sessions"])
+    result["limit_wait_seconds"] = sum(s.get("limit_wait_seconds", 0) for s in result["sessions"])
     result["gates"] = [run_gate(cmd, ws, out, i) for i, cmd in enumerate(args.gate, 1)]
     result["finished"] = now()
     result_path.write_text(json.dumps(result, indent=2) + "\n")
