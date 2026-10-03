@@ -149,10 +149,14 @@ def main(argv: list[str] | None = None) -> int:
             print(f"{r['name']:20} {state:13} {d.name if d else '-':28} gates {gates}")
         return 0
 
-    for r in spec["runs"]:
-        if args.only and r["name"] != args.only:
+    for name in [r["name"] for r in spec["runs"]]:
+        if args.only and name != args.only:
             continue
-        run_one(r, runs, spec)
+        # Re-read before each run: a dated amendment to a later run's gate
+        # (stop rule 5) takes effect without stopping the run in progress.
+        spec = yaml.safe_load(SPEC.read_text())
+        runs = {r["name"]: r for r in spec["runs"]}
+        run_one(runs[name], runs, spec)
     log("campaign: every run has a verdict")
     return 0
 

@@ -30,7 +30,9 @@ runs:
     gates:
       - tests/kernel/run_mm_test.sh
       - tests/kernel/run_vmm_test.sh
-      - make -C "$KERNEL_TREE" iso >/dev/null 2>&1 && scripts/e2e.sh --target "$KERNEL_TREE" 2>&1 | grep -E "^\[MM\] PMM initialized"
+      # Amended 2026-10-03 (stop rule 5): e2e.sh trains and checks SLM parity before it boots,
+      # and parity fails on the untouched base tree, so this gate never booted anything.
+      - scripts/boot-marker.sh "$KERNEL_TREE" '^\[MM\] PMM initialized'
     fallback: none
 
   - name: r8-virtio-console
@@ -124,7 +126,7 @@ runs:
     sessions: 1
     goal: goals/r10-f00f.txt
     gates:
-      - make -C "$KERNEL_TREE" iso >/dev/null 2>&1 && scripts/e2e.sh --target "$KERNEL_TREE" 2>&1 | grep -E "F00F.*(applied|verified)"
+      - scripts/boot-marker.sh "$KERNEL_TREE" 'F00F.*(applied|verified)'   # amended 2026-10-03, as R1
     fallback: none
 
   - name: r9-aarch64

@@ -22,7 +22,7 @@ if [ "${1:-}" = "--self-test" ]; then
 	echo "self-test: reference implementation (tests/kernel/mm_reference/)"
 	clang -O1 -g -fsanitize=address,undefined \
 		-I"$HERE/mm_reference/include" \
-		"$HERE/mm_test.c" "$HERE/mm_reference/pmm.c" -o "$OUT" || exit 1
+		"$HERE/mm_test.c" "$HERE/mm_host_env.c" "$HERE/mm_reference/pmm.c" -o "$OUT" || exit 1
 	exec "$OUT"
 fi
 
@@ -65,9 +65,21 @@ if [ ! -f "$KERNEL_TREE/kernel/include/boot.h" ]; then
 fi
 
 SOURCES=""
-for candidate in kernel/mm/pmm.c kernel/mm/slab.c kernel/mm/vmm.c kernel/lib/phys.c; do
+# vmm.c is not linked here: it has its own suite (run_vmm_test.sh), which
+# supplies the HAL hooks it calls; this suite does not, so including it made
+# any tree with a VMM fail to link (w18 R1).
+for candidate in kernel/mm/pmm.c kernel/mm/slab.c kernel/lib/phys.c; do
 	[ -f "$KERNEL_TREE/$candidate" ] && SOURCES="$SOURCES $KERNEL_TREE/$candidate"
 done
+# The seed's phys.c is the bump allocator a PMM replaces. A tree whose PMM
+# defines dma_alloc retires it from its build (it stays on disk, unmodified);
+# linking it here anyway is a duplicate symbol the kernel never has (w18 R1).
+# A definition line ends without ';' — a prototype does not.
+if grep -qsE '^[A-Za-z_][A-Za-z_0-9 *]*[ *]dma_alloc[[:space:]]*\([^;]*$' \
+		"$KERNEL_TREE"/kernel/mm/*.c; then
+	SOURCES="${SOURCES/ $KERNEL_TREE\/kernel\/lib\/phys.c/}"
+	echo "note: the tree's PMM defines dma_alloc; kernel/lib/phys.c is retired, not linked" >&2
+fi
 if [ -z "$SOURCES" ]; then
 	echo "mm.h is present but no allocator sources are (looked for kernel/mm/*.c," >&2
 	echo "kernel/lib/phys.c) — the interface exists with nothing behind it." >&2
@@ -77,7 +89,7 @@ fi
 # shellcheck disable=SC2086
 clang -O1 -g -fsanitize=address,undefined \
 	-I"$KERNEL_TREE/kernel/include" $BOOT_INCLUDE \
-	"$HERE/mm_test.c" $SOURCES \
+	"$HERE/mm_test.c" "$HERE/mm_host_env.c" $SOURCES \
 	-o "$OUT" || {
 		echo "compile failed — the generated allocator does not match mm.md's interface" >&2
 		exit 1

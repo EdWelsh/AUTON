@@ -238,6 +238,10 @@ def main(argv: list[str] | None = None) -> int:
             if s["rc"] != 75 and s["rc"] != 1:
                 break              # terminal (0) or refused (2): no further session helps
 
+    if args.gates_only and result.get("gates"):
+        # A re-grade (stop rule 5: a gate defect fixed) keeps what it replaces.
+        result["gate_history"] = [*result.get("gate_history", []),
+                                  {"finished": result.get("finished"), "gates": result["gates"]}]
     result["gates"] = [run_gate(cmd, ws, out, i) for i, cmd in enumerate(args.gate, 1)]
     result["finished"] = now()
     result_path.write_text(json.dumps(result, indent=2) + "\n")
