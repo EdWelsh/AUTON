@@ -42,6 +42,20 @@ PREFIX = "claude-cli/"
 LIMIT_WAIT_SECONDS = 15 * 60
 MAX_LIMIT_WAITS = 24
 MAX_PARSE_RETRIES = 3
+# Errors that say nothing about the request: the host slept, the network
+# dropped, the service was busy. Retried with backoff, never a task failure
+# (w18 R2: "Your computer went to sleep mid-response" failed fs-004, blocked
+# three tasks behind it and ended a run with 18 of its 20 work hours unspent).
+TRANSIENT = ("went to sleep", "overloaded", "connection", "network", "timed out",
+             "timeout", "econnreset", "socket", "internal server error", "503", "502",
+             "529", "500", "api error: terminated")
+MAX_TRANSIENT_RETRIES = 6
+TRANSIENT_BACKOFF_SECONDS = (15, 30, 60, 120, 240, 480)
+
+
+def _transient(result: str) -> bool:
+    low = (result or "").lower()
+    return any(t in low for t in TRANSIENT)
 # Claude Code's own error when the model emits a native tool call in a session
 # with no tools (w18 R1 on Sonnet: it failed mm-002 and ended the run).
 UNPARSED_CALL = "tool call could not be parsed"
@@ -214,8 +228,8 @@ async def complete(model: str, system: str, messages: list[dict[str, Any]],
     argv = ["claude", "-p", "--output-format", "json", "--model", name, "--tools", "",
             "--system-prompt", sys_prompt, "--no-session-persistence",
             "--setting-sources", "", "--strict-mcp-config"]
-    parse_retries = 0
-    for attempt in range(MAX_LIMIT_WAITS + MAX_PARSE_RETRIES + 1):
+    parse_retries = transient_retries = 0
+    for attempt in range(MAX_LIMIT_WAITS + MAX_PARSE_RETRIES + MAX_TRANSIENT_RETRIES + 1):
         proc = await asyncio.create_subprocess_exec(
             *argv, stdin=asyncio.subprocess.PIPE, stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE, cwd=_cwd())
@@ -238,6 +252,14 @@ async def complete(model: str, system: str, messages: list[dict[str, Any]],
                 logger.warning("[%s] native tool call refused by claude -p; retry %d/%d with a nudge",
                                agent_id, parse_retries, MAX_PARSE_RETRIES)
                 prompt = prompt + NUDGE
+                continue
+            if _transient(result) and _limit_reset(result) is None \
+                    and transient_retries < MAX_TRANSIENT_RETRIES:
+                delay = TRANSIENT_BACKOFF_SECONDS[transient_retries]
+                transient_retries += 1
+                logger.warning("[%s] transient API error; retry %d/%d in %ds (%s)", agent_id,
+                               transient_retries, MAX_TRANSIENT_RETRIES, delay, result[:120])
+                await asyncio.sleep(delay)
                 continue
             wait = _limit_reset(result)
             if wait is not None and attempt < MAX_LIMIT_WAITS:

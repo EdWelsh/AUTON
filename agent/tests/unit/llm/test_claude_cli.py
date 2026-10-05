@@ -99,3 +99,32 @@ async def test_a_refused_native_call_is_retried_with_a_nudge(monkeypatch):
 def test_a_structured_final_is_serialised_as_json():
     r = claude_cli.parse('{"final": [{"task_id": "mm-001"}]}', "m")
     assert json.loads(r.text) == [{"task_id": "mm-001"}]
+
+
+async def test_a_transient_api_error_is_retried_not_a_task_failure(monkeypatch):
+    """w18 R2: 'Your computer went to sleep mid-response' failed fs-004 and ended the run."""
+    replies = [{"is_error": True, "result": "API Error: Your computer went to sleep mid-response. "
+                                            "The response above may be incomplete."},
+               {"is_error": False, "result": '{"final": "ok"}'}]
+
+    class Proc:
+        def __init__(self, reply):
+            self.reply, self.returncode = reply, (1 if reply["is_error"] else 0)
+
+        async def communicate(self, data):
+            return json.dumps(self.reply).encode(), b""
+
+    async def spawn(*a, **k):
+        return Proc(replies.pop(0))
+
+    async def no_sleep(_):
+        return None
+    monkeypatch.setattr(claude_cli.asyncio, "create_subprocess_exec", spawn)
+    monkeypatch.setattr(claude_cli.asyncio, "sleep", no_sleep)
+    r = await claude_cli.complete("claude-cli/m", "sys", [{"role": "user", "content": "go"}], TOOLS, 60)
+    assert r.text == "ok"
+
+
+def test_a_usage_limit_is_not_mistaken_for_a_transient_error():
+    assert claude_cli._limit_reset("You've hit your usage limit · resets 5pm") is not None
+    assert claude_cli._transient("API Error: Your computer went to sleep mid-response")
