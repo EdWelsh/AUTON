@@ -199,6 +199,9 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--model", required=True)
     ap.add_argument("--gate", action="append", default=[],
                     help="a gate command, run from the repo root with KERNEL_TREE set; repeat, in order")
+    ap.add_argument("--advisory", action="append", default=[],
+                    help="a gate that is run and recorded but decides nothing (a dated "
+                         "amendment: it judges against something the goal and spec never named)")
     ap.add_argument("--sessions", type=int, default=4)
     ap.add_argument("--session-seconds", type=int, default=18000)
     ap.add_argument("--iterations", type=int, default=30)
@@ -281,6 +284,7 @@ def main(argv: list[str] | None = None) -> int:
     result["work_seconds"] = sum(work_seconds(s) for s in result["sessions"])
     result["limit_wait_seconds"] = sum(s.get("limit_wait_seconds", 0) for s in result["sessions"])
     result["gates"] = [run_gate(cmd, ws, out, i) for i, cmd in enumerate(args.gate, 1)]
+    result["advisory"] = [run_gate(cmd, ws, out, 100 + i) for i, cmd in enumerate(args.advisory, 1)]
     result["finished"] = now()
     result_path.write_text(json.dumps(result, indent=2) + "\n")
     for g in result["gates"]:

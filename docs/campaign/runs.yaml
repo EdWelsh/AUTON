@@ -51,9 +51,14 @@ runs:
     sessions: 4
     goal: goals/r2-storage.txt
     gates:
-      - tests/kernel/run_virtio_blk_test.sh
       - tests/kernel/run_fat32_test.sh
       - scripts/run-storage-acceptance.sh "$KERNEL_TREE"
+    # Amended 2026-10-05 (stop rule 5): the ring suite links the driver against the vnr_* API
+    # of tests/kernel/virtio_reference/include/virtio_ref.h, which neither drivers.md nor this
+    # goal names, and R2 was not seeded with it (R8 was). Recorded, not deciding; the boot
+    # acceptance gate judges the driver end to end. w23: drivers.md to name the API normative.
+    advisory:
+      - tests/kernel/run_virtio_blk_test.sh
     fallback: none
 
   - name: r3-fileserver

@@ -113,6 +113,8 @@ def run_one(run: dict, runs: dict[str, dict], spec: dict) -> None:
                 cmd += ["--seed", f"{dest}={src}"]
             for gate in run["gates"]:
                 cmd += ["--gate", gate]
+            for gate in run.get("advisory") or []:
+                cmd += ["--advisory", gate]
             subprocess.run(cmd, cwd=ROOT)
             r = result_of(d)
             if r is None:

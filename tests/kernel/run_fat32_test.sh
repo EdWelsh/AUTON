@@ -18,6 +18,7 @@ PATH="$PATH:/opt/homebrew/sbin:/usr/sbin:/sbin"
 for t in mformat mcopy mtype mmd mdel mdir; do
 	command -v "$t" >/dev/null || { echo "SKIP: $t not found (install mtools)" >&2; exit 2; }
 done
+NORMATIVE_INC=()
 echo "oracle: $(mtools --version 2>&1 | head -1)"
 
 if [ "${1:-}" = "--self-test" ]; then
@@ -33,6 +34,15 @@ else
 		exit 2
 	fi
 	INC="$KERNEL_TREE/kernel/include"
+	# fs.md makes tests/kernel/fat32_reference/include/fat32.h normative but
+	# never says where a tree keeps it, and the R2 goal asks for fs.h. When the
+	# tree has no fat32.h the normative header stands in, after the tree's own
+	# includes, as the mm suite does for boot.h (w18 R2, stop rule 5). A tree
+	# whose functions do not match that interface still fails to compile.
+	if [ ! -f "$INC/fat32.h" ]; then
+		NORMATIVE_INC=(-I"$HERE/fat32_reference/include")
+		echo "note: no kernel/include/fat32.h; using fs.md's normative header" >&2
+	fi
 	SRCS=("$KERNEL_TREE/kernel/fs/fat32.c")
 	[ -f "$KERNEL_TREE/kernel/fs/fat32_write.c" ] && SRCS+=("$KERNEL_TREE/kernel/fs/fat32_write.c")
 fi
@@ -40,7 +50,7 @@ fi
 W="$(mktemp -d)"
 trap 'rm -rf "$W"' EXIT
 OUT="$W/fat32_test"
-"$CC" "${FLAGS[@]}" -I"$INC" "$HERE/fat32_test.c" "${SRCS[@]}" -o "$OUT" || {
+"$CC" "${FLAGS[@]}" -I"$INC" ${NORMATIVE_INC[@]+"${NORMATIVE_INC[@]}"} "$HERE/fat32_test.c" "${SRCS[@]}" -o "$OUT" || {
 	echo "compile failed: the FAT32 under test does not match fs.md's interface" >&2
 	exit 1
 }

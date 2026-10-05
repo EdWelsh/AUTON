@@ -97,6 +97,8 @@ Distribution stays blocked on D1. Building and probing locally is not.
 | G2 | The host mm suite can't model `dma_alloc` zeroing through its identity-mapped physical return. Decide whether the suite maps it, or the spec requires zeroing via `phys_to_virt` | R1 diagnostic |
 | G3 | `scripts/e2e.sh`'s parity stage fails on `kernel-base-v5`: the current SLM model doesn't load in the base kernel's runtime. Every e2e-based check is blind until this is fixed | R1 gate defect 1 |
 | G4 | The swarm's reviewer and tester never run the frozen suites that judge a run. R1's two deviations were one line each, and mm.md's hook paragraph names them | R1 reading |
+| G6 | drivers.md must name `tests/kernel/virtio_reference/include/virtio_ref.h`'s `vnr_*` ring API as normative (fs.md does that for `fat32.h`), and goals that build a VirtIO driver should seed it, as R8's did. Until then the ring suite is advisory for R2 | R2 gate review, 2026-10-05 |
+| G7 | Host sleep: `caffeinate -s` can't hold off sleep on battery, and a sleep mid-call failed a task. Transient errors are now retried, but long unattended runs need AC power, which `campaign.py` could check and log | R2 `fs-004` |
 | G5 | Subscription spend limits: R1 waited about 6.25 h of its 6.7 h on them. Report wait time separately from work time in RESULT.json | R1 metrics |
 
 ## Suggested order
