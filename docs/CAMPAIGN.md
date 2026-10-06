@@ -73,6 +73,8 @@ its injected-bug score if it did.
 | R1 attempt 1 | cut off at 5 h: mm exit 1, vmm exit 2 | [w15-mm-qwen](../.claude/PRPs/reports/w15-mm-qwen-report.md) |
 | R1 attempt 2 | **generated wrong (1, 1, 0)**: all 6 tasks merged, boots with a working PMM; suites fail on an inline `phys_to_virt` and x86 asm in portable code. Phase failed (rule 3) | [report](../.claude/PRPs/reports/w18-r1-mm-report.md) |
 | R8 VirtIO console | **PASSED** (0): one 575 s session | `.artifacts/campaign/r8-virtio-console-attempt1` |
-| R2–R7, R9–R12 | running in order on `kernel-base-v5` (R1 did not pass) | — |
+| R2 storage | **generated wrong**: attempt 2 passes storage acceptance end to end; both fail the FAT32 interface suite. Phase failed | [report](../.claude/PRPs/reports/w18-r2-storage-report.md) |
+| R3 file server | attempt 1: generated wrong (1, 2); attempt 2 running | — |
+| R4–R7, R9–R12 | queued, on `kernel-base-v5` | — |
 
 **The campaign as data:** [`campaign/runs.yaml`](campaign/runs.yaml) and [`campaign/goals/`](campaign/goals/) — every run's goal, base, seeds and gates, committed before any of them started. `scripts/campaign.py` runs them in order unattended (dependencies on the last good tree, two attempts, resumable). All runs are driven by `scripts/generation_run.py`: sessions with `--resume` from a pinned wrapper, then every gate in its pre-registered order, archived in the run's `RESULT.json`.
