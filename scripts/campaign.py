@@ -93,6 +93,15 @@ def base_for(run: dict, runs: dict[str, dict]) -> tuple[list[str], str]:
     d, r = final(dep)
     if passed(r):
         return ["--base-tree", str(d / "ws")], f"{dep['name']} (passed)"
+    fallback = str(dep.get("fallback") or "none")
+    if r is not None and fallback.startswith("tree:"):
+        # Stop rules 2-3: a failed phase is replaced so its dependants test what
+        # their goals assume exists. Here the replacement is the phase's own
+        # attempt whose end-to-end gate passed (amended 2026-10-06), labelled.
+        tree = OUT / fallback[5:] / "ws"
+        if tree.is_dir():
+            return ["--base-tree", str(tree)], (f"{dep['name']} fallback {fallback[5:]} "
+                                                f"(failed its suites, passed end to end)")
     args, note = base_for(dep, runs)
     return args, f"{note} — {dep['name']} did not pass, so its own base"
 

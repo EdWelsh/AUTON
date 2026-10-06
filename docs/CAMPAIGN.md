@@ -45,6 +45,25 @@ times the pre-registered count, so a provider that never allows work still ends 
 
 R1 isn't affected: it ended terminal, with every task merged, after about 30 minutes of work.
 
+## Fallback trees (amended 2026-10-06)
+
+Stop rules 2 and 3 replace a failed phase so its dependants test what their goals assume
+exists. `runs.yaml` had `fallback: none` everywhere. R3's goal says to serve files "through the
+existing fs API in kernel/include/fs.h", but it ran on `kernel-base-v5`, which has no such file,
+so neither R3 attempt tested what was pre-registered. Both are void.
+
+A failed phase whose **end-to-end gate passed** is now its dependants' base, labelled in their
+`RESULT.json`:
+
+| Phase | Fallback tree | Evidence |
+|---|---|---|
+| R1 | `r1-mm-attempt2` | boots: `[MM] PMM initialized: 65504 pages total…`; fails the mm/vmm interface suites |
+| R2 | `r2-storage-attempt2` | storage acceptance passes (mount, read, write, host read-back); fails the FAT32 interface suite |
+
+**This departs from the rule's "human-authored" fallback:** these trees are agent-written. That
+is stated here and in each dependant's report. R2's own attempts ran on `kernel-base-v5`, as its
+goal (`dma_alloc` from `phys.h`) assumed, and stand.
+
 ## Stop rules, the same for every run
 
 1. **At most two attempts per R phase.** Attempt 2 may change the model or the budget, never the

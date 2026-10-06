@@ -12,6 +12,10 @@
 #   fallback: what replaces a phase that fails both attempts (stop rules 2, 3),
 #           labelled `authorship: human`; `none` leaves the phase failed and
 #           its dependants run on the last good tree.
+#           `tree:<attempt>` (amended 2026-10-06): that attempt's tree, which
+#           failed its suites but passed its end-to-end gate, is the base its
+#           dependants build on. `none` left R3 on a tree with no fs.h, which its
+#           goal says exists: neither R3 attempt tested what was pre-registered.
 
 # Amended 2026-10-02 (owner's decision): every run moves to Claude Sonnet 5.5 through the
 # owner's subscription (claude -p; agent/orchestrator/llm/claude_cli.py), qualified 4/4 by
@@ -33,7 +37,7 @@ runs:
       # Amended 2026-10-03 (stop rule 5): e2e.sh trains and checks SLM parity before it boots,
       # and parity fails on the untouched base tree, so this gate never booted anything.
       - scripts/boot-marker.sh "$KERNEL_TREE" '^\[MM\] PMM initialized'
-    fallback: none
+    fallback: tree:r1-mm-attempt2      # boot gate passed: [MM] PMM initialized
 
   - name: r8-virtio-console
     base: kernel-base-v5
@@ -59,7 +63,7 @@ runs:
     # acceptance gate judges the driver end to end. w23: drivers.md to name the API normative.
     advisory:
       - tests/kernel/run_virtio_blk_test.sh
-    fallback: none
+    fallback: tree:r2-storage-attempt2 # storage acceptance passed end to end
 
   - name: r3-fileserver
     base: run:r2-storage
