@@ -128,3 +128,36 @@ async def test_a_transient_api_error_is_retried_not_a_task_failure(monkeypatch):
 def test_a_usage_limit_is_not_mistaken_for_a_transient_error():
     assert claude_cli._limit_reset("You've hit your usage limit · resets 5pm") is not None
     assert claude_cli._transient("API Error: Your computer went to sleep mid-response")
+
+
+def test_a_tool_named_by_a_name_parameter_is_a_call():
+    """w18 R3: <tool_calls><parameter name="name">search_code</parameter>... ended fs-002."""
+    r = claude_cli.parse('<tool_calls> <parameter name="name">search_code</parameter> '
+                         '<parameter name="pattern">vfs_mount|fat32</parameter> </parameter> </invoke>', "m")
+    assert [(c.name, c.arguments) for c in r.tool_calls] == [("search_code", {"pattern": "vfs_mount|fat32"})]
+
+
+async def test_an_unparseable_call_is_re_asked_not_final(monkeypatch):
+    replies = [{"is_error": False, "result": "<tool_calls> </tool_calls> <invoke> </invoke>"},
+               {"is_error": False, "result": '{"final": "ok"}'}]
+    prompts = []
+
+    class Proc:
+        returncode = 0
+
+        def __init__(self, reply):
+            self.reply = reply
+
+        async def communicate(self, data):
+            prompts.append(data.decode())
+            return json.dumps(self.reply).encode(), b""
+
+    async def spawn(*a, **k):
+        return Proc(replies.pop(0))
+    monkeypatch.setattr(claude_cli.asyncio, "create_subprocess_exec", spawn)
+    r = await claude_cli.complete("claude-cli/m", "sys", [{"role": "user", "content": "go"}], TOOLS, 60)
+    assert r.text == "ok" and "could not be read" in prompts[1]
+
+
+def test_plain_prose_is_still_a_final_answer():
+    assert not claude_cli.attempted_call("The task is done; all files are written.")

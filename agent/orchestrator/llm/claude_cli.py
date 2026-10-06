@@ -42,6 +42,10 @@ PREFIX = "claude-cli/"
 LIMIT_WAIT_SECONDS = 15 * 60
 MAX_LIMIT_WAITS = 24
 MAX_PARSE_RETRIES = 3
+MALFORMED_NUDGE = ("\n\n[harness] Your previous reply tried to call a tool but could not be read. "
+                   "Reply again with ONE JSON object as text and nothing else: "
+                   "{\"tool_calls\": [{\"name\": \"<tool>\", \"arguments\": {...}}]} "
+                   "or {\"final\": \"...\"}.")
 # Errors that say nothing about the request: the host slept, the network
 # dropped, the service was busy. Retried with backoff, never a task failure
 # (w18 R2: "Your computer went to sleep mid-response" failed fs-004, blocked
@@ -183,9 +187,30 @@ def _invoke_calls(text: str) -> list[ToolCall]:
     as final answers, and mm-001 failed with no output). Both are accepted.
     """
     stamp = int(time.time() * 1000)
-    return [ToolCall(id=f"call_{stamp}_{n}", name=name,
-                     arguments={k: _param_value(v) for k, v in _PARAM.findall(body)})
-            for n, (name, body) in enumerate(_INVOKE.findall(text))]
+    calls = [ToolCall(id=f"call_{stamp}_{n}", name=name,
+                      arguments={k: _param_value(v) for k, v in _PARAM.findall(body)})
+             for n, (name, body) in enumerate(_INVOKE.findall(text))]
+    if calls:
+        return calls
+    # A mangled variant (w18 R3): <tool_calls><parameter name="name">tool</parameter>
+    # <parameter name="pattern">...</parameter>... — the tool named by a "name"
+    # parameter, the rest its arguments. Only a single, complete call is taken.
+    params = _PARAM.findall(text)
+    names = [v.strip() for k, v in params if k == "name" and v.strip()]
+    if len(names) == 1 and re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", names[0]):
+        args = {k: _param_value(v) for k, v in params if k != "name"}
+        return [ToolCall(id=f"call_{stamp}_0", name=names[0], arguments=args)]
+    return []
+
+
+# Signs a reply meant to call a tool. One that does and still parses to no
+# call is re-asked, never taken as the final answer (w18 R1, R3: such replies
+# ended tasks with "no output" three times running).
+_ATTEMPT_MARKERS = ("<invoke", "<tool_calls", "<parameter", '"tool_calls"', "<function_calls")
+
+
+def attempted_call(text: str) -> bool:
+    return any(m in (text or "") for m in _ATTEMPT_MARKERS)
 
 
 def parse(result: str, model: str) -> LLMResponse:
@@ -268,5 +293,12 @@ async def complete(model: str, system: str, messages: list[dict[str, Any]],
                 await asyncio.sleep(wait)
                 continue
             raise RuntimeError(f"claude -p failed (exit {proc.returncode}): {result[:400]}")
-        return parse(result, name)
+        response = parse(result, name)
+        if not response.tool_calls and attempted_call(result) and parse_retries < MAX_PARSE_RETRIES:
+            parse_retries += 1
+            logger.warning("[%s] unparseable tool call; retry %d/%d with a nudge",
+                           agent_id, parse_retries, MAX_PARSE_RETRIES)
+            prompt = prompt + MALFORMED_NUDGE
+            continue
+        return response
     raise RuntimeError("claude -p: usage limit did not reset after repeated waits")
