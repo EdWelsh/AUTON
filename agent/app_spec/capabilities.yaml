@@ -76,6 +76,23 @@ kinds:
       - libjpeg.so.62
       - libpng16.so.16
 
+  pypi:
+    description: a Python distribution the application imports, by its PEP 503 normalised name
+    # Lower case, digits and single `-`/`_`/`.` separators: the normalised form pip
+    # resolves. Narrow on purpose; the name reaches a shell line in ablation.
+    pattern: '^[a-z0-9]([a-z0-9]|[._-](?![._-])){0,98}[a-z0-9]$'
+    example: pypi:flask
+
+  npm:
+    description: a Node package the application requires, optionally scoped
+    pattern: '^(@[a-z0-9][a-z0-9._-]{0,99}/)?[a-z0-9][a-z0-9._-]{0,99}$'
+    example: npm:express
+
+  gomod:
+    description: a Go module compiled into the binary (not removable after the build)
+    pattern: '^[a-z0-9][a-z0-9.-]*\.[a-z]{2,}(/[A-Za-z0-9._~-]+)*$'
+    example: gomod:github.com/gin-gonic/gin
+
   exec:
     description: a program the application executes as a subprocess
     names:

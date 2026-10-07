@@ -50,6 +50,7 @@ NOT_REMOVABLE = {
     "dial": "an outbound need; the probe's network has no route out to remove",
     "device": "device nodes are supplied by the container runtime, not the image",
     "env": "an environment variable is supplied at run time, not by the image",
+    "gomod": "compiled into the binary at build time; there is nothing left in the image to remove",
 }
 
 
@@ -73,6 +74,19 @@ class Score:
                  "probe exercises. Probe coverage is the limit of this claim.")
 
 
+def pypi_removal(name: str, root: str = "/") -> str:
+    """Delete a distribution the way pip would: every file its RECORD lists,
+    then the dist-info. Deleting only `name/` misses distributions whose import
+    package differs from their name (pyyaml -> yaml), which would score a real
+    dependency as over-claimed. `[-_.]` matches any separator the dist-info
+    spelling may use; `name` is index-validated, and quoted anyway."""
+    glob = re.sub(r"[-_.]+", "[-_.]", name) + "-*.dist-info"
+    return (f"for d in $(find {shlex.quote(root)} -xdev -type d -iname {shlex.quote(glob)}); do "
+            f"b=$(dirname \"$d\"); "
+            f"cut -d, -f1 \"$d/RECORD\" | while read -r f; do rm -f \"$b/$f\"; done; "
+            f"rm -rf \"$d\"; done")
+
+
 def removal(capability: str, probe_spec: dict) -> str | tuple[str, str]:
     """The Dockerfile line that removes `capability`, or (outcome, why) when it
     cannot be removed by recipe. Pure: tested without Docker."""
@@ -87,6 +101,11 @@ def removal(capability: str, probe_spec: dict) -> str | tuple[str, str]:
             return ("not-ablatable", f"{name} is too broad: removing it removes the system, "
                                      f"so a failing probe would prove nothing about it")
         return f"rm -rf {shlex.quote(name)}"
+    if kind == "pypi":
+        return pypi_removal(name)
+    if kind == "npm":
+        return (f"find / -xdev -type d -path {shlex.quote('*/node_modules/' + name)} "
+                f"-prune -exec rm -rf {{}} +")
     if kind == "exec":
         return (f"for d in /bin /sbin /usr/bin /usr/sbin /usr/local/bin; do "
                 f"rm -f \"$d\"/{shlex.quote(name)}; done")

@@ -107,3 +107,55 @@ def test_removal_as_root_restores_the_final_user():
 
 def test_a_system_directory_is_too_broad_to_ablate():
     assert removal("path:/etc", PROBE)[0] == "not-ablatable"
+
+
+# --- language packages (w23 C1) ------------------------------------------------
+
+def test_a_pypi_distribution_is_removed_by_its_record(tmp_path):
+    """Run the generated line against a real tree: pyyaml imports as `yaml`, so
+    removing a directory named after the distribution would miss it."""
+    import subprocess
+    from ablate import pypi_removal
+    site = tmp_path / "site-packages"
+    (site / "yaml").mkdir(parents=True)
+    (site / "yaml" / "__init__.py").write_text("")
+    (site / "other").mkdir()
+    (site / "other" / "__init__.py").write_text("")
+    di = site / "PyYAML-6.0.dist-info"
+    di.mkdir()
+    (di / "RECORD").write_text("yaml/__init__.py,sha256=x,1\nPyYAML-6.0.dist-info/RECORD,,\n")
+    subprocess.run(["sh", "-c", pypi_removal("pyyaml", str(tmp_path))], check=True)
+    assert not (site / "yaml" / "__init__.py").exists() and not di.exists()
+    assert (site / "other" / "__init__.py").exists()
+
+
+def test_a_pypi_name_with_separators_matches_any_spelling():
+    from ablate import pypi_removal
+    assert "[-_.]" in pypi_removal("typing-extensions")
+
+
+def test_an_npm_package_is_removed_from_every_node_modules():
+    line = removal("npm:express", PROBE)
+    assert "*/node_modules/express" in line and "-prune" in line
+    assert "*/node_modules/@scope/pkg" in removal("npm:@scope/pkg", PROBE)
+
+
+def test_a_go_module_cannot_be_ablated_and_says_why():
+    outcome, why = removal("gomod:github.com/gin-gonic/gin", PROBE)
+    assert outcome == "not-ablatable" and "binary" in why
+
+
+@pytest.mark.parametrize("cap", ["pypi:flask", "pypi:typing-extensions", "pypi:zope.interface",
+                                 "npm:express", "npm:@types/node",
+                                 "gomod:github.com/gin-gonic/gin"])
+def test_package_capabilities_are_in_the_index(cap):
+    from artifact_spec import load_index
+    assert load_index().refusal(cap) is None
+
+
+@pytest.mark.parametrize("cap", ["pypi:Flask", "pypi:fla sk", "pypi:a;rm -rf /", "pypi:a--b",
+                                 "pypi:flask\n", "npm:../x", "npm:a b", "npm:@a/b/c",
+                                 "gomod:flask", "gomod:x.com/a b", "pypi:"])
+def test_a_package_name_that_could_reach_a_shell_is_refused(cap):
+    from artifact_spec import load_index
+    assert load_index().refusal(cap)
