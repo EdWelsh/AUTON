@@ -22,6 +22,11 @@ Nothing here is blocked on something unnamed. Three kinds of blocker:
 
 ## run
 
+**State 2026-10-07** (`scripts/campaign.py --status` is the source of truth): R8 passed. R1, R2
+and R3 failed both attempts and their dependants continued on the last good tree; R6 attempt 2 is
+running. R4, R5, R7 and R9–R12 have not started. The table below lists what each run is and the
+gate that decides it, not whether it has run.
+
 Generation works: on 2026-09-22 `qwen3.5:27b` wrote a 430-line TFTP server that passes all 31
 checks of a suite it never saw (`.claude/PRPs/reports/w14-f6-qwen-report.md`). Each row below is
 the same shape of task, and each is one command.
@@ -102,4 +107,5 @@ suite (`tftp.md` ACK rule 4).
 | SSH wire (F12) | 28 checks | 8/8 |
 | VirtIO console (V8) | 29 checks | 8/8 |
 | Device tree (D2) | 21 checks | 9/9 |
+| Allocator (R1) | 29 checks, incl. double free and end-of-RAM | 9/9 |
 | Conformance (H10) | 28 clause-cited entries, SoftFloat oracle | 23/23 match bit-for-bit |

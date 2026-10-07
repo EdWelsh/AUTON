@@ -21,6 +21,33 @@ before execution.
 
 ---
 
+## Status 2026-10-07 — what the code can close is closed
+
+Closed this session (commits on `feat/prd-completion`, each with its test):
+
+| Item | Result |
+|---|---|
+| **C1** language packages | `pypi`, `npm`, `gomod` kinds in `capabilities.yaml`. pypi is removed by its RECORD (so `pyyaml` → `yaml` is found), npm from every `node_modules`, gomod is `not-ablatable` (compiled in). Names that could reach a shell are refused. **Not yet run on the live fixture**: that ablation needs Docker and disk |
+| **C4** leftovers | SIGINT handlers restored to what `asyncio.run` installed; `observe.merge` keeps the original source as `static_source`; an application run no longer asks the integrator to build a kernel (the final check is skipped, and says so) |
+| **G1** mm suite misses | double free (via `fork`) and the end-of-RAM run are now checked; `run_mm_test.sh --inject` scores **9/9** and runs in CI. 29 checks |
+| **G2** `dma_alloc` zeroing | decided in `mm.md`: a physical address is dereferenced only through `phys_to_virt()`; `dma_alloc` need not zero |
+| **G3** parity | the cause was not a load failure. The e2e smoke checkpoint (200 steps) is degenerate; the kernel's guard refuses it, and parity read the refusal as failure. A degenerate reference plus a declining kernel is now a **WEAK** pass, counted and reported |
+| **G4** frozen suites | `run_gate` for the reviewer and tester: the operator's gates, no arguments, offered only when the run declares gates (`AUTON_GATES`, set by `generation_run.py`) |
+| **G5** wait vs work | already built (`limit_wait_seconds` and `work_seconds` in `RESULT.json`) |
+| **G6** ring API | `drivers.md` names `virtio_ref.h` normative, in its own section |
+| **G7** power | `campaign.py` logs a warning when a run starts on battery |
+
+**Still open, and why code cannot close it:** A1–A3 (a model run; A2 decides C2), B1–B3 and
+R12.2–R12.4 (the campaign: `r2`, `r3`, `r6-attempt1` have failed, `r6-attempt2` is running;
+`r4`, `r5`, `r7`, `r9`–`r12` have not started), C3 (a microVM needs a Linux guest and KVM, which
+this Mac lacks), D1–D3 and X1–X4 (yours).
+
+**Two things to know about the running campaign.** A campaign was running while these changes
+landed (`r6-host-repo-attempt2`). Its `--resume` sessions import the repository's current code:
+the new tool is withheld when no gates are declared, which is the case for the process already
+started, so nothing in its prompts changed. A run started after this takes `run_gate` and is a
+slightly different experiment from earlier ones; label it as one.
+
 ## A. The larger model
 
 The w22 finding: on this machine `qwen3.5:9b` *packages* reliably (three of three) and does not
@@ -75,10 +102,10 @@ Distribution stays blocked on D1. Building and probing locally is not.
 
 | # | Task | Gate |
 |---|---|---|
-| C1 | **A capability kind for language packages** (`pypi:`, `npm:`, `go:` modules) in `capabilities.yaml`, with an ablation removal (uninstall, then probe). It is the first thing an Analyst reaches for (`lib:flask`, refused in w22). A reviewed vocabulary edit, not an experiment variable | validator refusal/acceptance tests; one ablation on the fixture |
+| C1 | **DONE 2026-10-07** — **A capability kind for language packages** (`pypi:`, `npm:`, `go:` modules) in `capabilities.yaml`, with an ablation removal (uninstall, then probe). It is the first thing an Analyst reaches for (`lib:flask`, refused in w22). A reviewed vocabulary edit, not an experiment variable | validator refusal/acceptance tests; one ablation on the fixture |
 | C2 | Analyst prompt: say that a line proves only what it says (no "needed because the base has it"), and cap rewrites. Or measure first with A2 and change only what A2 shows | A2's record |
 | C3 | **The microVM substrate** (D-A1: "both, container first"): a Packager recipe for Firecracker or QEMU `microvm`, and `app_probe` over the guest's network | the fixture WORKED on a microVM, and ablation runs there too |
-| C4 | Leftover review items, LOW: SIGINT handler restoration after `run()` (the asyncio Runner's), `observe.merge` upgrading `declared` → `observed` without keeping the original source, the integrator agent spending 60 turns on `git log` in application runs | a test each |
+| C4 | **DONE 2026-10-07** — Leftover review items, LOW: SIGINT handler restoration after `run()` (the asyncio Runner's), `observe.merge` upgrading `declared` → `observed` without keeping the original source, the integrator agent spending 60 turns on `git log` in application runs | a test each |
 
 ## D. Yours (the owner's)
 
@@ -93,13 +120,13 @@ Distribution stays blocked on D1. Building and probing locally is not.
 
 | ID | Item | Evidence |
 |---|---|---|
-| G1 | The mm suite misses two injected bugs, before and after the repair: an absorbed double free (its header claims to catch it; testing an abort needs a fork) and an off-by-one at the end of RAM in `pmm_alloc_contiguous` | [R1 report](../reports/w18-r1-mm-report.md) |
-| G2 | The host mm suite can't model `dma_alloc` zeroing through its identity-mapped physical return. Decide whether the suite maps it, or the spec requires zeroing via `phys_to_virt` | R1 diagnostic |
-| G3 | `scripts/e2e.sh`'s parity stage fails on `kernel-base-v5`: the current SLM model doesn't load in the base kernel's runtime. Every e2e-based check is blind until this is fixed | R1 gate defect 1 |
-| G4 | The swarm's reviewer and tester never run the frozen suites that judge a run. R1's two deviations were one line each, and mm.md's hook paragraph names them | R1 reading |
-| G6 | drivers.md must name `tests/kernel/virtio_reference/include/virtio_ref.h`'s `vnr_*` ring API as normative (fs.md does that for `fat32.h`), and goals that build a VirtIO driver should seed it, as R8's did. Until then the ring suite is advisory for R2 | R2 gate review, 2026-10-05 |
-| G7 | Host sleep: `caffeinate -s` can't hold off sleep on battery, and a sleep mid-call failed a task. Transient errors are now retried, but long unattended runs need AC power, which `campaign.py` could check and log | R2 `fs-004` |
-| G5 | Subscription spend limits: R1 waited about 6.25 h of its 6.7 h on them. Report wait time separately from work time in RESULT.json | R1 metrics |
+| G1 | **DONE 2026-10-07** — The mm suite misses two injected bugs, before and after the repair: an absorbed double free (its header claims to catch it; testing an abort needs a fork) and an off-by-one at the end of RAM in `pmm_alloc_contiguous` | [R1 report](../reports/w18-r1-mm-report.md) |
+| G2 | **DONE 2026-10-07** — The host mm suite can't model `dma_alloc` zeroing through its identity-mapped physical return. Decide whether the suite maps it, or the spec requires zeroing via `phys_to_virt` | R1 diagnostic |
+| G3 | **DONE 2026-10-07** — `scripts/e2e.sh`'s parity stage fails on `kernel-base-v5`: the current SLM model doesn't load in the base kernel's runtime. Every e2e-based check is blind until this is fixed | R1 gate defect 1 |
+| G4 | **DONE 2026-10-07** — The swarm's reviewer and tester never run the frozen suites that judge a run. R1's two deviations were one line each, and mm.md's hook paragraph names them | R1 reading |
+| G6 | **DONE 2026-10-07** — drivers.md must name `tests/kernel/virtio_reference/include/virtio_ref.h`'s `vnr_*` ring API as normative (fs.md does that for `fat32.h`), and goals that build a VirtIO driver should seed it, as R8's did. Until then the ring suite is advisory for R2 | R2 gate review, 2026-10-05 |
+| G7 | **DONE 2026-10-07** — Host sleep: `caffeinate -s` can't hold off sleep on battery, and a sleep mid-call failed a task. Transient errors are now retried, but long unattended runs need AC power, which `campaign.py` could check and log | R2 `fs-004` |
+| G5 | **DONE 2026-10-07** — Subscription spend limits: R1 waited about 6.25 h of its 6.7 h on them. Report wait time separately from work time in RESULT.json | R1 metrics |
 
 ## Suggested order
 

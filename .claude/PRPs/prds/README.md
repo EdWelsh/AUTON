@@ -24,6 +24,21 @@ deterministic tools adjudicate it.** A table cannot read an unfamiliar repositor
 cannot be trusted to name a capability — that failure is measured at 5 phantom hardware
 citations per 50 turns.
 
+### Status 2026-10-07: the code gaps in w23 are closed; what is left needs a run, a decision or a machine
+
+Of w23's items, **C1, C4 and G1–G7 are done** (see its status block). What remains is not code:
+
+| Open | Waiting on | State |
+|---|---|---|
+| R1–R12, the campaign | model time and the subscription | R8 passed; R1, R2, R3 each failed both attempts with their dependants continuing on the last good tree; R6 attempt 2 is running; R4, R5, R7, R9–R12 not started |
+| A1–A3, the larger model, and C2 | a local model run (A2 decides C2) | not started |
+| C3, the microVM substrate | a Linux guest and KVM | not possible on this Mac |
+| D1, D2, D3, X1–X4 | the owner, or hardware | unchanged |
+
+Two PRD claims were wrong and are corrected in w23: G3 was not "the model doesn't load" (it
+loads; the smoke checkpoint is degenerate and the kernel correctly refuses it), and an
+application run's final phase was asking an agent to build a kernel that does not exist.
+
 ### Status 2026-09-30: w17–w22 done; what is left is [w23](../plans/w23-remaining-work.plan.md)
 
 Eleven of twelve plans are complete and in `plans/completed/`. Application-to-environment
