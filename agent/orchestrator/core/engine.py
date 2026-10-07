@@ -201,6 +201,14 @@ class OrchestrationEngine:
             arch_profile=self.arch_profile,
         )
 
+    def _give_gates(self, agent: Any) -> None:
+        """Hand an agent the operator's gate suites, or withdraw `run_gate`: a
+        tool that can only refuse costs a turn to learn that, on every run that
+        declares no gates."""
+        agent.gate_commands = self.gate_commands
+        if not self.gate_commands:
+            agent.tools = [t for t in agent.tools if t["function"]["name"] != "run_gate"]
+
     def _init_agents(self) -> None:
         """Create all agent instances and register them with the scheduler."""
         agent_config = self.config.get("agents", {})
@@ -236,7 +244,7 @@ class OrchestrationEngine:
             agent = self._create_agent(
                 f"reviewer-{i+1:02d}", AgentRole.REVIEWER, ReviewerAgent
             )
-            agent.gate_commands = self.gate_commands
+            self._give_gates(agent)
             self._agents[f"reviewer-{i+1:02d}"] = agent
             self.scheduler.register_agent("reviewer", agent)
 
@@ -246,7 +254,7 @@ class OrchestrationEngine:
                 f"tester-{i+1:02d}", AgentRole.TESTER, TesterAgent
             )
             agent.probe_path = getattr(self, "probe_path", None)
-            agent.gate_commands = self.gate_commands
+            self._give_gates(agent)
             agent.manifest = getattr(self, "manifest", None) or {}
             self._agents[f"tester-{i+1:02d}"] = agent
             self.scheduler.register_agent("tester", agent)

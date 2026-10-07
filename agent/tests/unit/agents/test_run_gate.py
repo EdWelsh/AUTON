@@ -80,3 +80,15 @@ def test_the_engine_hands_the_declared_gates_to_reviewers_and_testers(tmp_path):
     eng._init_agents()
     holders = [a for k, a in eng._agents.items() if k.startswith(("reviewer", "tester"))]
     assert holders and all(a.gate_commands == ["tests/kernel/run_mm_test.sh"] for a in holders)
+
+
+def test_a_run_with_no_gates_does_not_offer_the_tool(tmp_path):
+    from orchestrator.core.engine import OrchestrationEngine
+    eng = OrchestrationEngine(workspace_path=tmp_path, kernel_spec_path=tmp_path,
+                              config={"llm": {"model": "anthropic/x"}, "agents": {}})
+    eng._init_agents()
+    for key, agent in eng._agents.items():
+        if key.startswith(("reviewer", "tester")):
+            assert "run_gate" not in _names(agent.tools), key
+    # the module-level lists are shared by every agent: withdrawing must copy
+    assert "run_gate" in _names(TESTER_TOOLS) and "run_gate" in _names(REVIEWER_TOOLS)
