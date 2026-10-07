@@ -60,7 +60,8 @@ runs:
     # Amended 2026-10-05 (stop rule 5): the ring suite links the driver against the vnr_* API
     # of tests/kernel/virtio_reference/include/virtio_ref.h, which neither drivers.md nor this
     # goal names, and R2 was not seeded with it (R8 was). Recorded, not deciding; the boot
-    # acceptance gate judges the driver end to end. w23: drivers.md to name the API normative.
+    # acceptance gate judges the driver end to end. Done (w23 G6): drivers.md now names the API
+    # normative, so a later run that seeds the header can make this suite a gate.
     advisory:
       - tests/kernel/run_virtio_blk_test.sh
     fallback: tree:r2-storage-attempt2 # storage acceptance passed end to end
