@@ -225,3 +225,19 @@ async def test_a_manager_that_plans_nothing_still_gets_the_analysis_done(workspa
     await eng.run("analyse the staged application")
     node = eng.task_graph.get_task("analysis-001")
     assert node is not None and node.state is TaskState.MERGED, node and node.data
+
+
+# --------------------------------------------------------------------------- #
+# An application run has no kernel to integrate (w23 C4)
+# --------------------------------------------------------------------------- #
+
+async def test_an_application_run_does_not_ask_the_integrator_to_build_a_kernel(
+        workspace, monkeypatch):
+    eng = _engine(workspace)
+    model = Model()
+    monkeypatch.setattr(eng.client, "send_with_tools", model)
+    result = await eng.run("analyse the staged application")
+
+    assert "integrator" not in model.prompts, "no model turn is spent on a kernel check"
+    assert result["success"] is True
+    assert result["build_ok"] is None and result["final_check"]["skipped"]

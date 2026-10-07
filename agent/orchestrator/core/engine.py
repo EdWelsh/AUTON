@@ -466,6 +466,13 @@ class OrchestrationEngine:
             self._checkpoint(state_path)
             logger.info("--- Phase 4: Final Integration ---")
 
+            if self._is_application_run():
+                # There is no kernel to build or boot. The integrator's task
+                # reads "build the kernel", and in w22 it spent its turns on
+                # `git log` looking for one. The application's own gates (the
+                # evidence and package gates) ran per task; completion is theirs.
+                return self._application_result(run_id)
+
             integrator = self._agents["integrator"]
             final_check = await integrator.full_integration_check()
 
@@ -521,6 +528,29 @@ class OrchestrationEngine:
             self.state.phase = "error"
             self.state.save(state_path)
             return {"success": False, "error": str(e), "cost": self.cost_tracker.total_cost_usd}
+
+    def _is_application_run(self) -> bool:
+        """A run over an existing application (analysing or packaging it), not
+        one that generates kernel code."""
+        return self.subject_path is not None or bool(
+            (getattr(self, "manifest", None) or {}).get("application"))
+
+    def _application_result(self, run_id: str) -> dict[str, Any]:
+        self.state.phase = "done"
+        self._checkpoint(self.workspace_path / ".auton" / "state.json")
+        success = self.task_graph.is_complete
+        return {
+            "success": success,
+            "error": None if success else "the task graph did not complete",
+            "run_id": run_id,
+            "progress": self.task_graph.progress,
+            "total_cost_usd": self.cost_tracker.total_cost_usd,
+            "iterations": self.state.iteration,
+            "final_check": {"success": success, "skipped": "application run: no kernel"},
+            "build_ok": None,
+            "test_ok": None,
+            "composition_ok": None,
+        }
 
     # ------------------------------------------------------------------ #
     # Planning and design (phases 1 and 2)
@@ -643,6 +673,9 @@ class OrchestrationEngine:
         the previous handlers."""
         sigs = [signal.SIGTERM, signal.SIGINT]
         loop = asyncio.get_running_loop()
+        # asyncio.run's Runner installs its own SIGINT handler; remove_signal_handler
+        # would leave the default one, so put back exactly what was there.
+        before = {sig: signal.getsignal(sig) for sig in sigs}
         try:
             for sig in sigs:
                 loop.add_signal_handler(sig, self.request_pause)
@@ -672,6 +705,11 @@ class OrchestrationEngine:
         def restore_loop() -> None:
             for sig in sigs:
                 loop.remove_signal_handler(sig)
+                if before[sig] is not None:         # None: not installed from Python
+                    try:
+                        signal.signal(sig, before[sig])
+                    except ValueError:              # not the main thread
+                        pass
         return restore_loop
 
     def _pause(self, state_path: Path) -> dict[str, Any]:

@@ -67,8 +67,9 @@ def observation_record(obs: Observed, *, trace: str, subject: Path, image: str,
 
 def merge(record_path: Path, observation: dict) -> dict:
     """Add observed facts to a record. An observed fact supersedes a declared or
-    inferred one for the same capability, keeping its evidence: the static
-    reading and the run agree, and the record says both."""
+    inferred one for the same capability, keeping its evidence and the source it
+    held (`static_source`): the static reading and the run agree, and the record
+    says both. A second merge keeps the first static source, not "observed"."""
     data = yaml.safe_load(record_path.read_text())
     by_cap = {f.get("capability"): f for f in data.get("facts") or []}
     for fact in observation["facts"]:
@@ -77,6 +78,8 @@ def merge(record_path: Path, observation: dict) -> dict:
             continue
         existing = by_cap.get(cap)
         if existing is not None:
+            if existing.get("source") != "observed":
+                existing.setdefault("static_source", existing.get("source"))
             existing["source"] = "observed"
             existing["observation"] = observation["id"]
             existing.pop("looked_at", None)
