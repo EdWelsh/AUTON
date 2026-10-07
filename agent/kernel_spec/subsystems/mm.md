@@ -194,6 +194,15 @@ void *dma_alloc(unsigned long size, unsigned long align);
 void dma_free(void *ptr);
 ```
 
+**Physical addresses are dereferenced only through `phys_to_virt()` (REQUIRED).** `dma_alloc`
+returns an identity-mapped physical address, and on the target that is also a valid pointer. In a
+host process it is not: the host suite's RAM is an arena reached through the `phys_to_virt` hook
+(`tests/kernel/mm_host_env.c`). So an allocator that touches the memory it hands out, to zero a
+DMA block or to place its bitmap, does so through `phys_to_virt(phys)` and never by casting the
+address. `dma_alloc` is not required to zero its block; callers that need zeroed memory zero it
+(as `kmalloc` and `kzalloc` divide the same duty). Decided in w23 G2 after R1's allocator zeroed
+through the raw address: the suite maps the hook, and the spec now says which door to use.
+
 ### Reserved Regions (REQUIRED)
 
 A frame in any of these must never be returned by `pmm_alloc_page`,

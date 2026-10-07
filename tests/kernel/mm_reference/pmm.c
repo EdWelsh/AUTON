@@ -15,6 +15,10 @@
 #include <stdio.h>
 #include "mm.h"
 
+/* Injected defects for `run_mm_test.sh --inject` (-DBUG_n). Each is one mistake a
+ * plausible allocator ships with; the suite must fail on every one. A suite that
+ * cannot fail is not evidence. Not compiled unless a BUG_n is defined. */
+
 #define MAX_FRAMES (1u << 20)          /* 4 GiB of 4 KiB frames */
 
 static uint8_t  bitmap[MAX_FRAMES / 8];
@@ -64,7 +68,9 @@ void pmm_init(const boot_mmap_t *mmap)
 
 	/* Frame 0 is never allocatable: NULL must be distinguishable from a
 	 * valid allocation. */
+#ifndef BUG_1   /* BUG_1: frame 0 is allocatable */
 	if (total_frames && !test_bit(0)) { set_bit(0); reserved_frames++; }
+#endif
 }
 
 void pmm_mark_used(uint64_t phys_start, uint64_t size)
@@ -72,7 +78,11 @@ void pmm_mark_used(uint64_t phys_start, uint64_t size)
 	/* Round start down and end up: a region beginning mid-frame must reserve
 	 * the whole frame, or the other half is handed out. */
 	uint64_t first = phys_start / PAGE_SIZE;
+#ifdef BUG_2    /* BUG_2: the end of a region rounds down, not up */
+	uint64_t last = (phys_start + size) / PAGE_SIZE;
+#else
 	uint64_t last = (phys_start + size + PAGE_SIZE - 1) / PAGE_SIZE;
+#endif
 	for (uint64_t f = first; f < last && f < total_frames; f++)
 		if (!test_bit(f)) { set_bit(f); reserved_frames++; }
 }
@@ -92,7 +102,11 @@ void *pmm_alloc_page(void)
 void *pmm_alloc_contiguous(uint32_t page_count)
 {
 	if (!page_count) return NULL;
+#ifdef BUG_3    /* BUG_3: off-by-one, the run ending at the last frame is never found */
+	for (uint64_t f = 0; f + page_count < total_frames; f++) {
+#else
 	for (uint64_t f = 0; f + page_count <= total_frames; f++) {
+#endif
 		uint32_t n = 0;
 		while (n < page_count && !test_bit(f + n)) n++;
 		if (n == page_count) {
@@ -118,10 +132,15 @@ void pmm_free_page(void *phys_addr)
 	 * frame that was never allocated is the same class of bug as a double
 	 * free and is treated the same way. */
 	if (!test_bit(f)) {
+#ifdef BUG_4    /* BUG_4: a double free is absorbed rather than caught */
+		return;
+#endif
 		fprintf(stderr, "pmm_free_page: double free of %p\n", phys_addr);
 		abort();
 	}
+#ifndef BUG_9   /* BUG_9: a freed frame is counted free but its bit stays set */
 	clr_bit(f);
+#endif
 	used_frames--;
 }
 
@@ -149,7 +168,11 @@ void *dma_alloc(unsigned long size, unsigned long align)
 	if (!run) return NULL;
 
 	uintptr_t phys = (uintptr_t)run;
+#ifdef BUG_5    /* BUG_5: the requested alignment is ignored (page alignment only) */
+	uintptr_t aligned = phys;
+#else
 	uintptr_t aligned = (phys + align - 1) & ~(uintptr_t)(align - 1);
+#endif
 	for (int i = 0; i < DMA_MAX; i++) {
 		if (!dma_blocks[i].base) {
 			dma_blocks[i].base = run;
@@ -194,7 +217,11 @@ static int class_for(size_t size)
 
 void *kmalloc(size_t size)
 {
+#ifndef BUG_6   /* BUG_6: kmalloc(0) returns a pointer */
 	if (size == 0) return NULL;          /* mm.md: kmalloc(0) is NULL */
+#else
+	if (size == 0) size = 1;
+#endif
 	int c = class_for(size);
 	if (c < 0) {
 		uint32_t pages = (uint32_t)((size + PAGE_SIZE - 1) / PAGE_SIZE);
@@ -224,7 +251,9 @@ void *kmalloc(size_t size)
 void *kzalloc(size_t size)
 {
 	void *p = kmalloc(size);
+#ifndef BUG_7   /* BUG_7: kzalloc does not zero */
 	if (p) memset(p, 0, size);
+#endif
 	return p;
 }
 
@@ -240,6 +269,9 @@ void kfree(void *ptr)
 			return;
 		}
 	}
+#ifdef BUG_8    /* BUG_8: a kfree of a double-freed or foreign pointer is ignored */
+	return;
+#endif
 	fprintf(stderr, "kfree: %p was never returned by kmalloc, or is a double free\n", ptr);
 	abort();
 }

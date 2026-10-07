@@ -17,6 +17,8 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/wait.h>
+#include <unistd.h>
 
 #include "mm.h"
 #include "boot.h"
@@ -62,6 +64,50 @@ static boot_mmap_t make_map(void)
 	m.entries[0].length = MEM_BYTES;
 	m.entries[0].type = 1;              /* usable */
 	return m;
+}
+
+/* Run `fn` in a child and say whether it ended abnormally (a signal, or a
+ * non-zero exit). mm.md requires a double free to panic, and a panic ends the
+ * host process (arch_halt aborts); an allocator that absorbs it returns and the
+ * child exits 0. Testing an abort needs a process to lose. */
+static int dies(void (*fn)(void))
+{
+	fflush(stdout);
+	pid_t pid = fork();
+	if (pid < 0) return 0;
+	if (pid == 0) {
+		freopen("/dev/null", "w", stderr);
+		fn();
+		_exit(0);
+	}
+	int st = 0;
+	waitpid(pid, &st, 0);
+	return WIFSIGNALED(st) || (WIFEXITED(st) && WEXITSTATUS(st) != 0);
+}
+
+static boot_mmap_t g_map;
+
+static void pmm_double_free(void)
+{
+	pmm_init(&g_map);
+	void *f = pmm_alloc_page();
+	pmm_free_page(f);
+	pmm_free_page(f);                       /* must panic */
+}
+
+static void kfree_twice(void)
+{
+	slab_init();
+	void *k = kmalloc(64);
+	kfree(k);
+	kfree(k);                               /* must panic */
+}
+
+static void kfree_foreign(void)
+{
+	slab_init();
+	static char not_ours[64];
+	kfree(not_ours);                        /* must panic */
 }
 
 static int in_range(uint64_t p, uint64_t base, uint64_t len)
@@ -130,6 +176,20 @@ int main(void)
 	void *again = pmm_alloc_page();
 	ok("reallocates the freed frame", again != NULL, NULL);
 
+	/* The end of RAM. Everything is allocated, so free the last four frames
+	 * and ask for exactly four: a scan that stops one frame early never finds
+	 * the run that ends at the last frame, and neither a run of five (which
+	 * does not exist) nor any lower-RAM check would notice. */
+	void *top = (void *)(uintptr_t)(MEM_BYTES - 4 * PAGE_SIZE);
+	pmm_free_page((void *)(uintptr_t)(MEM_BYTES - PAGE_SIZE));     /* `again` */
+	for (int i = 0; i < 3; i++)
+		pmm_free_page((void *)(uintptr_t)(MEM_BYTES - (4 - i) * PAGE_SIZE));
+	ok("no run of five exists at the top of RAM",
+	   pmm_alloc_contiguous(5) == NULL, "only four frames are free");
+	void *last_run = pmm_alloc_contiguous(4);
+	ok("a run ending at the last frame is found", last_run == top,
+	   "off-by-one at the end of RAM");
+
 	/* Rebuild for the contiguity and alignment checks. */
 	pmm_init(&map);
 	pmm_mark_used(KERNEL_BASE, KERNEL_LEN);
@@ -146,7 +206,9 @@ int main(void)
 
 	/* dma_alloc is the preserved contract: drivers depend on both guarantees,
 	 * and losing either produces corruption that presents as a driver bug. */
-	static const unsigned long aligns[] = {8, 16, 64, 256, 4096};
+	/* Past the page size too: a page-aligned run satisfies every smaller power of
+	 * two by accident, so only a larger one shows whether alignment is honoured. */
+	static const unsigned long aligns[] = {8, 16, 64, 256, 4096, 65536};
 	int align_ok = 1, dma_reserved_ok = 1;
 	for (unsigned i = 0; i < sizeof aligns / sizeof aligns[0]; i++) {
 		void *d = dma_alloc(3000, aligns[i]);
@@ -181,6 +243,13 @@ int main(void)
 
 	void *reuse = kmalloc(64);
 	ok("freed slab memory is reusable", reuse != NULL, NULL);
+
+	/* mm.md: a double free and a foreign pointer must panic, not be absorbed. */
+	g_map = map;
+	ok("a double pmm_free_page panics", dies(pmm_double_free),
+	   "absorbing it hides a use-after-free");
+	ok("a double kfree panics", dies(kfree_twice), NULL);
+	ok("kfree of a pointer kmalloc never returned panics", dies(kfree_foreign), NULL);
 
 	printf(fails ? "\nMM: FAILURES\n" : "\nMM: ALL PASS\n");
 	return fails;

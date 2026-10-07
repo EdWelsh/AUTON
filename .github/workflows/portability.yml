@@ -71,7 +71,9 @@ jobs:
         run: tests/kernel/run_identity_test.sh --self-test
 
       - name: Allocator suite
-        run: tests/kernel/run_mm_test.sh --self-test
+        run: |
+          tests/kernel/run_mm_test.sh --self-test
+          tests/kernel/run_mm_test.sh --inject
 
       - name: VMM suite
         run: tests/kernel/run_vmm_test.sh --self-test

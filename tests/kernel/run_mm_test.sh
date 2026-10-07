@@ -26,6 +26,32 @@ if [ "${1:-}" = "--self-test" ]; then
 	exec "$OUT"
 fi
 
+# --inject scores the suite: each BUG_n in the reference is one defect a plausible
+# allocator ships with, and the suite must fail on every one. A suite that cannot
+# fail is not evidence (w23 G1: it once missed an absorbed double free and an
+# off-by-one at the end of RAM, and nobody could tell until a run was scored).
+if [ "${1:-}" = "--inject" ]; then
+	BUGS=9
+	caught=0
+	for n in $(seq 1 "$BUGS"); do
+		clang -O1 -g -fsanitize=address,undefined -DBUG_$n \
+			-I"$HERE/mm_reference/include" \
+			"$HERE/mm_test.c" "$HERE/mm_host_env.c" "$HERE/mm_reference/pmm.c" \
+			-o "$OUT.bug$n" 2>/dev/null \
+			|| { echo "BUG_$n: did not compile — a broken bug is not a caught one"; continue; }
+		if "$OUT.bug$n" >/dev/null 2>&1; then
+			echo "BUG_$n: MISSED"
+		else
+			echo "BUG_$n: caught"
+			caught=$((caught + 1))
+		fi
+		rm -f "$OUT.bug$n"
+	done
+	echo "injected-bug score: $caught/$BUGS"
+	[ "$caught" -eq "$BUGS" ]
+	exit $?
+fi
+
 if [ ! -d "$KERNEL_TREE/kernel" ]; then
 	echo "no kernel tree at $KERNEL_TREE — nothing to verify." >&2
 	exit 2
