@@ -213,6 +213,10 @@ def _summarise_result(result: Any) -> str:
     return text if len(text) <= 100 else text[:100] + f"... ({len(str(result))} chars)"
 
 
+DEFAULT_FALLBACK_MODEL = "ollama_chat/qwen3.5:27b-q8_0"   # qualified 4/4 by model-probe.py
+DEFAULT_FALLBACK_CONTEXT = 32768    # an unset window is 262,144 tokens: 42 GB, not 29
+
+
 class LLMClient:
     """Async LLM client using LiteLLM for multi-provider support."""
 
@@ -226,8 +230,16 @@ class LLMClient:
         request_timeout: float = DEFAULT_REQUEST_TIMEOUT,
         max_tool_turns: int = DEFAULT_MAX_TOOL_TURNS,
         context_length: int | None = None,
+        fallback_model: str | None = None,
+        fallback_context: int = DEFAULT_FALLBACK_CONTEXT,
     ):
         self.model = model
+        # When the Claude subscription's limit is reached, calls go to this local
+        # model until the limit resets, rather than the run waiting hours. Only
+        # meaningful for a claude-cli primary; the switch is logged, never silent.
+        self.fallback_model = fallback_model
+        self.fallback_context = fallback_context
+        self._claude_blocked_until = 0.0
         # A local model's context window, when set. Ollama otherwise allocates
         # the model's full default (262,144 tokens for qwen3.5): 42 GB loaded
         # instead of 29, and the host ran out of memory (w18 R1, 2026-09-30).
@@ -242,6 +254,12 @@ class LLMClient:
         self.request_timeout = request_timeout
         if preflight:
             preflight_model(self.model, self.provider_config)
+            if self.fallback_model:
+                try:
+                    preflight_model(self.fallback_model, self.provider_config)
+                except ModelUnavailableError as exc:
+                    logger.warning("fallback model disabled: %s", exc)
+                    self.fallback_model = None
 
     async def _complete(self, kwargs: dict[str, Any], agent_id: str) -> Any:
         """One model call, bounded. LiteLLM's own `timeout` is passed, and
@@ -268,11 +286,24 @@ class LLMClient:
         self.cost_tracker.check_budget()
 
         model = model_override or self.model
+        context_length = self.context_length
         if model.startswith(claude_cli.PREFIX):
             # The owner's subscription through Claude Code headless; see
             # claude_cli.py. No LiteLLM, no API key, no per-call cost here.
-            return await claude_cli.complete(model, system, messages, tools,
-                                             self.request_timeout, agent_id)
+            if not self.fallback_model:
+                return await claude_cli.complete(model, system, messages, tools,
+                                                 self.request_timeout, agent_id)
+            if time.time() >= self._claude_blocked_until:
+                try:
+                    return await claude_cli.complete(model, system, messages, tools,
+                                                     self.request_timeout, agent_id,
+                                                     raise_on_limit=True)
+                except claude_cli.UsageLimit as limit:
+                    self._claude_blocked_until = time.time() + limit.wait
+                    logger.warning("[%s] %s; continuing on %s until it resets", agent_id,
+                                   limit, self.fallback_model)
+            model = self.fallback_model
+            context_length = self.fallback_context
 
         async with self._semaphore:
             now = time.monotonic()
@@ -292,8 +323,8 @@ class LLMClient:
             if tools:
                 kwargs["tools"] = tools
                 kwargs["tool_choice"] = "auto"
-            if self.context_length and model.startswith(("ollama/", "ollama_chat/")):
-                kwargs["num_ctx"] = self.context_length
+            if context_length and model.startswith(("ollama/", "ollama_chat/")):
+                kwargs["num_ctx"] = context_length
 
             api_key = self.provider_config.get_api_key(model)
             if api_key:

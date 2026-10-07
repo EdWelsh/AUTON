@@ -31,6 +31,8 @@ from orchestrator.core.task_graph import TaskGraph, TaskState
 from orchestrator.arch_registry import ArchProfile, get_arch_profile
 from orchestrator.llm.client import (
     DEFAULT_MAX_TOOL_TURNS,
+    DEFAULT_FALLBACK_CONTEXT,
+    DEFAULT_FALLBACK_MODEL,
     DEFAULT_REQUEST_TIMEOUT,
     CostTracker,
     LLMClient,
@@ -158,6 +160,10 @@ class OrchestrationEngine:
             request_timeout=float(llm_config.get("request_timeout", DEFAULT_REQUEST_TIMEOUT)),
             max_tool_turns=int(llm_config.get("max_tool_turns", DEFAULT_MAX_TOOL_TURNS)),
             context_length=llm_config.get("context_length"),
+            fallback_model=llm_config.get("fallback_model", DEFAULT_FALLBACK_MODEL
+                                          if str(llm_config.get("model", "")).startswith("claude-cli/")
+                                          else None),
+            fallback_context=int(llm_config.get("fallback_context", DEFAULT_FALLBACK_CONTEXT)),
         )
         self.workspace = GitWorkspace(
             workspace_path=workspace_path,

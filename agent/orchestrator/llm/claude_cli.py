@@ -57,6 +57,15 @@ MAX_TRANSIENT_RETRIES = 6
 TRANSIENT_BACKOFF_SECONDS = (15, 30, 60, 120, 240, 480)
 
 
+class UsageLimit(RuntimeError):
+    """The subscription's usage limit is reached. `wait` is seconds until it
+    resets; raised instead of waiting when the caller has somewhere else to go."""
+
+    def __init__(self, wait: float, detail: str = ""):
+        super().__init__(f"claude usage limit; resets in {wait / 60:.0f} min ({detail[:120]})")
+        self.wait = wait
+
+
 def _transient(result: str) -> bool:
     low = (result or "").lower()
     return any(t in low for t in TRANSIENT)
@@ -247,7 +256,7 @@ def _limit_reset(result: str) -> float | None:
 
 async def complete(model: str, system: str, messages: list[dict[str, Any]],
                    tools: list[dict[str, Any]] | None, timeout: float,
-                   agent_id: str = "") -> LLMResponse:
+                   agent_id: str = "", raise_on_limit: bool = False) -> LLMResponse:
     name = model[len(PREFIX):]
     sys_prompt, prompt = render(system, messages, tools)
     argv = ["claude", "-p", "--output-format", "json", "--model", name, "--tools", "",
@@ -287,6 +296,8 @@ async def complete(model: str, system: str, messages: list[dict[str, Any]],
                 await asyncio.sleep(delay)
                 continue
             wait = _limit_reset(result)
+            if wait is not None and raise_on_limit:
+                raise UsageLimit(wait, result)
             if wait is not None and attempt < MAX_LIMIT_WAITS:
                 logger.warning("[%s] subscription usage limit; waiting %.0f min (%s)",
                                agent_id, wait / 60, result[:120])
