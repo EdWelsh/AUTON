@@ -103,6 +103,7 @@ class OrchestrationEngine:
         seed_tasks: list[dict[str, Any]] | None = None,
         manifest: dict[str, Any] | None = None,
         probe_path: Path | None = None,
+        gate_commands: list[str] | None = None,
     ):
         self.workspace_path = workspace_path
         self.kernel_spec_path = kernel_spec_path
@@ -119,6 +120,9 @@ class OrchestrationEngine:
         # The operator's probe declaration (A10); kept outside the workspace,
         # where no agent can rewrite what "works" means.
         self.probe_path = Path(probe_path).resolve() if probe_path else None
+        # The operator's frozen gate suites (w23 G4): reviewers and testers may
+        # run them, and may not name or change them.
+        self.gate_commands = list(gate_commands or [])
 
         # Load architecture profile
         kernel_config = config.get("kernel", {})
@@ -232,6 +236,7 @@ class OrchestrationEngine:
             agent = self._create_agent(
                 f"reviewer-{i+1:02d}", AgentRole.REVIEWER, ReviewerAgent
             )
+            agent.gate_commands = self.gate_commands
             self._agents[f"reviewer-{i+1:02d}"] = agent
             self.scheduler.register_agent("reviewer", agent)
 
@@ -241,6 +246,7 @@ class OrchestrationEngine:
                 f"tester-{i+1:02d}", AgentRole.TESTER, TesterAgent
             )
             agent.probe_path = getattr(self, "probe_path", None)
+            agent.gate_commands = self.gate_commands
             agent.manifest = getattr(self, "manifest", None) or {}
             self._agents[f"tester-{i+1:02d}"] = agent
             self.scheduler.register_agent("tester", agent)

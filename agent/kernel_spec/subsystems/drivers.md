@@ -291,7 +291,16 @@ is not restated here.
 The driver satisfies the block interface defined under *Driver Interfaces* below — `blk_read`,
 `blk_write`, `blk_get_info` — which already names virtio-blk as one of its three implementations.
 
-**Ring interface.** `tests/kernel/virtio_reference/include/virtio_ref.h` is normative for every
+**Markers**, asserted by `kernel_spec/drivers/virtio-blk.md`:
+
+```
+[BLK] virtio-blk up
+[BLK] capacity 1048576 sectors
+```
+
+### VirtIO Ring Interface (shared)
+
+`tests/kernel/virtio_reference/include/virtio_ref.h` is normative for every
 VirtIO driver in this document, as `fat32.h` is for FAT32 (*Filesystem*): a driver builds and
 reclaims its descriptor chains through `vnr_queue_init`, `vnr_add_chain`, `vnr_add_chain_mixed`
 and `vnr_free_chain`, and indexes its rings with `vnr_ring_slot`. The header, not this prose, is
@@ -299,13 +308,6 @@ the contract. A driver that re-derives the ring arithmetic privately may be corr
 ring suites (`run_virtio_blk_test.sh`, `run_virtio_net_test.sh`) link against that API and cannot
 judge it. A goal that builds a VirtIO driver must seed the header into the workspace
 (`tests/kernel/virtio_reference/include`), as R8's did.
-
-**Markers**, asserted by `kernel_spec/drivers/virtio-blk.md`:
-
-```
-[BLK] virtio-blk up
-[BLK] capacity 1048576 sectors
-```
 
 ### SLM-Managed Driver: VirtIO Network
 

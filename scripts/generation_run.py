@@ -130,10 +130,14 @@ def work_seconds(s: dict) -> int:
 
 
 def run_session(n: int, out: Path, wrapper: Path, cfg: Path, goal: str, resume: bool,
-                seconds: int, floor: int) -> dict:
+                seconds: int, floor: int, gates: list[str] | None = None) -> dict:
     log = out / f"session-{n}.log"
+    # The deciding gates, for the swarm's reviewer and tester to run (w23 G4). By
+    # environment, not argument: a pinned wrapper from an earlier session of the
+    # same run rejects an argument it predates.
     env = {**os.environ, "ORCH_TIMEOUT": str(seconds), "ORCH_CONFIG": str(cfg),
-           "ORCH_LOG": str(out / f"transcript-{n}.log")}
+           "ORCH_LOG": str(out / f"transcript-{n}.log"),
+           "AUTON_GATES": json.dumps(gates or [])}
     args = ["bash", str(wrapper)] + (["--resume"] if resume else [goal])
     started, t0 = now(), time.monotonic()
     guard = MemoryGuard(cfg, floor)
@@ -254,7 +258,7 @@ def main(argv: list[str] | None = None) -> int:
             n = len(result["sessions"]) + 1
             resume = n > 1 or (ws / ".auton/state.json").exists()
             s = run_session(n, out, wrapper, cfg, goal, resume,
-                            min(args.session_seconds, remaining), args.memory_floor)
+                            min(args.session_seconds, remaining), args.memory_floor, args.gate)
             result["sessions"].append(s)
             result_path.write_text(json.dumps(result, indent=2) + "\n")
             print(f"session {n}: rc {s['rc']} after {s['seconds']}s (waited {s['limit_wait_seconds']}s on limits)"

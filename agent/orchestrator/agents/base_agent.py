@@ -312,6 +312,9 @@ class Agent:
                 case "run_ablation":
                     return await self._run_ablation()
 
+                case "run_gate":
+                    return await self._run_gate()
+
                 case "shell":
                     return await self._run_allowlisted(
                         tool_input["command"],
@@ -428,6 +431,44 @@ class Agent:
              str(self.workspace.path), "--probe", str(probe),
              "--manifest", str(self.workspace.path / ".auton" / "manifest.json"),
              "--manifest-sha256", hashlib.sha256(text).hexdigest()], timeout=7200)
+
+    GATE_TIMEOUT = 1800
+    GATE_TAIL_LINES = 40
+    GATE_MEANING = {0: "pass", 1: "generated wrong", 2: "not generated"}
+
+    async def _run_gate(self) -> str:
+        """The operator's frozen suites, run by a tool (w23 G4).
+
+        R1's two deviations were one line each and its reviewer and tester both
+        approved: neither ever ran the suites that judged the run. The commands
+        are the operator's (`--gate`, set by the engine), run exactly as the
+        campaign runs them — from the repo root, KERNEL_TREE the workspace — and
+        the agent cannot add, change or skip one.
+        """
+        gates = getattr(self, "gate_commands", None)
+        if not gates:
+            return "Refused: no gate suites were declared for this run; there is nothing to run"
+        import os
+        repo = Path(__file__).resolve().parents[3]
+        env = {**os.environ, "KERNEL_TREE": str(self.workspace.path)}
+        report = []
+        for cmd in gates:
+            try:
+                proc = await asyncio.create_subprocess_exec(
+                    "bash", "-c", cmd, cwd=str(repo), env=env,
+                    stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.STDOUT)
+                out, _ = await communicate(proc, self.GATE_TIMEOUT)
+            except asyncio.TimeoutError:
+                report.append(f"$ {cmd}\n[timed out after {self.GATE_TIMEOUT}s]")
+                continue
+            except OSError as exc:
+                report.append(f"$ {cmd}\n[could not run: {exc}]")
+                continue
+            tail = out.decode("utf-8", errors="replace").strip().splitlines()[-self.GATE_TAIL_LINES:]
+            rc = proc.returncode
+            report.append(f"$ {cmd}\n" + "\n".join(tail)
+                          + f"\n[exit {rc}: {self.GATE_MEANING.get(rc, 'failed')}]")
+        return "\n\n".join(report)
 
     def _create_task(self, task: dict) -> str:
         """Collect one planned task (the manager's create_task)."""

@@ -282,6 +282,21 @@ TOOL_RUN_ABLATION = {
     },
 }
 
+TOOL_RUN_GATE = {
+    "type": "function",
+    "function": {
+        "name": "run_gate",
+        "description": (
+            "Run the operator's frozen gate suites against this workspace, the same commands "
+            "that decide whether the run passed, and report each one's exit code: 0 pass, "
+            "1 generated wrong, 2 not generated. Takes no arguments: the suites are fixed by "
+            "the run and cannot be chosen or changed. Run it before approving or reporting "
+            "done; a run is judged by these, not by your own reading."
+        ),
+        "parameters": {"type": "object", "properties": {}},
+    },
+}
+
 TOOL_SHELL = {
     "type": "function",
     "function": {
@@ -593,6 +608,7 @@ DEVELOPER_TOOLS = [
 ]
 
 REVIEWER_TOOLS = [
+    TOOL_RUN_GATE,
     TOOL_READ_FILE,
     TOOL_LIST_FILES,
     TOOL_SEARCH_CODE,
@@ -601,6 +617,7 @@ REVIEWER_TOOLS = [
 ]
 
 TESTER_TOOLS = [
+    TOOL_RUN_GATE,
     TOOL_RUN_ABLATION,
     TOOL_READ_FILE,
     TOOL_WRITE_FILE,
