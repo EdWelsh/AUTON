@@ -25,3 +25,28 @@ def test_not_generated_after_real_work_is_a_result():
 
 def test_generated_wrong_quickly_is_still_a_result():
     assert not campaign.harness_suspect(_result(300, [1, 2]))
+
+
+def _pmset(monkeypatch, stdout=None, raises=None):
+    def fake(*_a, **_k):
+        if raises:
+            raise raises
+        return type("R", (), {"stdout": stdout})()
+    monkeypatch.setattr(campaign.subprocess, "run", fake)
+
+
+def test_battery_power_is_reported(monkeypatch):
+    _pmset(monkeypatch, "Now drawing from 'Battery Power'\n -InternalBattery-0 80%")
+    assert campaign.on_battery() is True
+
+
+def test_ac_power_is_not_battery(monkeypatch):
+    _pmset(monkeypatch, "Now drawing from 'AC Power'\n")
+    assert campaign.on_battery() is False
+
+
+def test_no_pmset_means_unknown_not_a_warning(monkeypatch):
+    _pmset(monkeypatch, raises=FileNotFoundError())
+    assert campaign.on_battery() is None
+    _pmset(monkeypatch, "garbage")
+    assert campaign.on_battery() is None

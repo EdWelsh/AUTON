@@ -47,6 +47,22 @@ def harness_suspect(r: dict) -> bool:
     return bool(gates) and all(g["rc"] == 2 for g in gates) and spent < HARNESS_SUSPECT_SECONDS
 
 
+def on_battery() -> bool | None:
+    """True on battery power, False on AC, None when it cannot be known.
+
+    `caffeinate -s` holds off sleep only on AC; on battery the Mac sleeps
+    mid-call, which failed R2's fs-004 (w23 G7). The campaign cannot fix that,
+    so it says so at the start of a run and again in the log a reader checks."""
+    try:
+        out = subprocess.run(["pmset", "-g", "batt"], capture_output=True, text=True,
+                             timeout=10).stdout
+    except (OSError, subprocess.SubprocessError):
+        return None
+    if "Battery Power" in out:
+        return True
+    return False if "AC Power" in out else None
+
+
 def log(msg: str) -> None:
     OUT.mkdir(parents=True, exist_ok=True)
     line = f"{datetime.now(timezone.utc):%Y-%m-%dT%H:%M:%SZ} {msg}"
@@ -112,6 +128,9 @@ def run_one(run: dict, runs: dict[str, dict], spec: dict) -> None:
         if r is None:
             base_args, note = base_for(run, runs)
             log(f"{run['name']}: {d.name} starting on {note}")
+            if on_battery():
+                log(f"{run['name']}: WARNING on battery power — the Mac will sleep through "
+                    f"`caffeinate -s` and fail a call in flight; plug in")
             cmd = [sys.executable, str(ROOT / "scripts/generation_run.py"),
                    "--run", d.name, "--out", str(d),
                    "--goal", str(ROOT / "docs/campaign" / run["goal"]),
