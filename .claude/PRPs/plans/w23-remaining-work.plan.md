@@ -38,10 +38,9 @@ Closed this session (commits on `feat/prd-completion`, each with its test):
 | **G7** power | `campaign.py` logs a warning when a run starts on battery |
 
 **Model policy (owner, 2026-10-07):** Claude through the subscription is the primary. When its
-usage limit is reached, calls continue on `ollama_chat/qwen3.5:27b-q8_0` (window 32,768) until the
+usage limit is reached, calls continue on `ollama_chat/qwen3.5:27b-coding-mxfp8` (window 32,768) until the
 limit resets, then return to Claude (`LLMClient` fallback; a log line marks each switch). A run
-that crosses a switch is mixed-model and must be reported as such. The 27b-coding-mxfp8 model of
-A1 is not installed, so A1–A3 wait for it or are re-registered on the installed model.
+that crosses a switch is mixed-model and must be reported as such. A1 is done: that model was pulled and qualified 4/4 on 2026-10-08 (slowest call 458 s); `27b-q8_0` was removed.
 
 **Still open, and why code cannot close it:** A1–A3 (a model run; A2 decides C2), B1–B3 and
 R12.2–R12.4 (the campaign: `r2`, `r3`, `r6-attempt1` have failed, `r6-attempt2` is running;

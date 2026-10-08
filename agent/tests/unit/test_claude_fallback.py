@@ -11,7 +11,7 @@ from orchestrator.llm.client import LLMClient
 from orchestrator.llm.response import LLMResponse
 
 PRIMARY = "claude-cli/claude-sonnet-5-5"
-LOCAL = "ollama_chat/qwen3.5:27b-q8_0"
+LOCAL = "ollama_chat/qwen3.5:27b-coding-mxfp8"
 
 
 class Calls:

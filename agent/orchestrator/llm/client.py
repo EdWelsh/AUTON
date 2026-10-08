@@ -213,7 +213,7 @@ def _summarise_result(result: Any) -> str:
     return text if len(text) <= 100 else text[:100] + f"... ({len(str(result))} chars)"
 
 
-DEFAULT_FALLBACK_MODEL = "ollama_chat/qwen3.5:27b-q8_0"   # qualified 4/4 by model-probe.py
+DEFAULT_FALLBACK_MODEL = "ollama_chat/qwen3.5:27b-coding-mxfp8"   # qualified 4/4 by model-probe.py, 2026-10-08
 DEFAULT_FALLBACK_CONTEXT = 32768    # an unset window is 262,144 tokens: 42 GB, not 29
 
 
