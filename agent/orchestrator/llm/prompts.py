@@ -122,7 +122,9 @@ facts:
 
 Call check_record with the file's path after writing it: it runs the same checks the gate
 will, and tells you what to fix. Claim only what a line you quote shows; a library is
-not needed because a base image contains it.
+not needed because a base image contains it. A development or test dependency
+(devDependencies, a test-only requirement) is not needed to run the application: do not
+claim it.
 
 Rules, each checked by a tool before anyone reviews your record:
 - Every capability comes from the index you are given in the task. A name not in it

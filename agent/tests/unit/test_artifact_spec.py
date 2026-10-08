@@ -351,3 +351,17 @@ def test_a_duplicate_section_is_refused_not_silently_dropped(tmp_path):
     p.write_text(text)
     with pytest.raises(ArtifactError, match="duplicate key 'facts'"):
         validate(p)
+
+
+def test_every_runtime_the_index_names_has_a_base_the_packager_may_use():
+    """A record naming a runtime with no base is valid and unbuildable (w23 A3:
+    js-example stopped at the packager on `runtime:python-3.10`)."""
+    from package_gate import load_bases
+    bases = load_bases()
+    missing = [f"runtime:{n}" for n in known("runtime") if f"runtime:{n}" not in bases]
+    assert not missing, f"index runtimes without a base in bases.yaml: {missing}"
+
+
+def test_the_analyst_is_told_dev_dependencies_are_not_requirements():
+    from orchestrator.llm.prompts import build_analyst_prompt
+    assert "development or test dependency" in build_analyst_prompt(None)

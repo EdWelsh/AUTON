@@ -64,7 +64,7 @@ available for a model.
 |---|---|---|
 | A1 | `qwen3.5:27b-coding-mxfp8` (MLX, 30 GB, coding-tuned 27B dense at 8-bit; chosen as the largest that leaves ~12 GB for context). Downloaded 2026-09-30; the older models were removed at the owner's request. | `scripts/model-probe.py`, 4/4 |
 | A2 | The fixture Analyst run again: flask-hello, same goal and budget, a pre-registered new experiment | a record merges, and the reviewer, not only the tool, reads it. Watch whether it rejects "needed because the base has it" (run 4's pattern) |
-| A3 | **w22 fully agent-driven, again** on A1's model: the three pinned subjects and their frozen probes, no human record | the PRD headline: applications compiled to a running minimal environment, *fully agent-driven*. Today 0 of 3 |
+| A3 | **RUN 2026-10-08: 1 of 3 fully agent-driven** ([report](../reports/w23-a3-fully-agent-driven-report.md)) —  **w22 fully agent-driven, again** on A1's model: the three pinned subjects and their frozen probes, no human record | the PRD headline: applications compiled to a running minimal environment, *fully agent-driven*. Today 0 of 3 |
 
 **If A3 is still 0 of 3,** that answers whether local models on this machine can do the
 analysis at all. The report says so, and the next lever is the prompt and vocabulary (C1, C2),
@@ -110,6 +110,7 @@ Distribution stays blocked on D1. Building and probing locally is not.
 | C1 | **DONE 2026-10-07** — **A capability kind for language packages** (`pypi:`, `npm:`, `go:` modules) in `capabilities.yaml`, with an ablation removal (uninstall, then probe). It is the first thing an Analyst reaches for (`lib:flask`, refused in w22). A reviewed vocabulary edit, not an experiment variable | validator refusal/acceptance tests; one ablation on the fixture |
 | C2 | Analyst prompt: say that a line proves only what it says (no "needed because the base has it"), and cap rewrites. Or measure first with A2 and change only what A2 shows | A2's record |
 | C3 | **The microVM substrate** (D-A1: "both, container first"): a Packager recipe for Firecracker or QEMU `microvm`, and `app_probe` over the guest's network | the fixture WORKED on a microVM, and ablation runs there too |
+| C5 | **NEW (from A3).** `capabilities.yaml` names `runtime:python-3.10`/`3.11` but `bases.yaml` has no base for them, so a valid record can be unbuildable (js-example stopped at the packager). Make the two agree, test that every runtime has a base. Also: tell the Analyst that development dependencies (`npm:jest`) are not requirements | a test that fails on a runtime without a base; re-run js-example from the analyst's record |
 | C4 | **DONE 2026-10-07** — Leftover review items, LOW: SIGINT handler restoration after `run()` (the asyncio Runner's), `observe.merge` upgrading `declared` → `observed` without keeping the original source, the integrator agent spending 60 turns on `git log` in application runs | a test each |
 
 ## D. Yours (the owner's)
