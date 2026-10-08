@@ -64,7 +64,7 @@ available for a model.
 |---|---|---|
 | A1 | `qwen3.5:27b-coding-mxfp8` (MLX, 30 GB, coding-tuned 27B dense at 8-bit; chosen as the largest that leaves ~12 GB for context). Downloaded 2026-09-30; the older models were removed at the owner's request. | `scripts/model-probe.py`, 4/4 |
 | A2 | The fixture Analyst run again: flask-hello, same goal and budget, a pre-registered new experiment | a record merges, and the reviewer, not only the tool, reads it. Watch whether it rejects "needed because the base has it" (run 4's pattern) |
-| A3 | **RUN 2026-10-08: 1 of 3 fully agent-driven** ([report](../reports/w23-a3-fully-agent-driven-report.md)) —  **w22 fully agent-driven, again** on A1's model: the three pinned subjects and their frozen probes, no human record | the PRD headline: applications compiled to a running minimal environment, *fully agent-driven*. Today 0 of 3 |
+| A3 | **RUN 2026-10-08: 1 of 3 fully agent-driven; 2 of 3 with a 4 h analyst budget (whoami, [A3b](../reports/w23-a3b-whoami-long-report.md))** ([report](../reports/w23-a3-fully-agent-driven-report.md)) —  **w22 fully agent-driven, again** on A1's model: the three pinned subjects and their frozen probes, no human record | the PRD headline: applications compiled to a running minimal environment, *fully agent-driven*. Today 0 of 3 |
 
 **If A3 is still 0 of 3,** that answers whether local models on this machine can do the
 analysis at all. The report says so, and the next lever is the prompt and vocabulary (C1, C2),
