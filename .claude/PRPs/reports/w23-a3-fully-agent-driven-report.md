@@ -36,3 +36,15 @@ model closes part of it.
 The answer to "can local models on this machine do the analysis" is **partly yes**: one real
 subject end to end, one blocked by a fixable index gap, one by time. The next levers are C5 and the
 prompt (finding 2), and a longer whoami budget as a labelled experiment.
+
+## Continuation: js-example after C5 (2026-10-08, labelled; from the Analyst's own record)
+
+With bases for every indexed runtime, the Packager got past the base gate and wrote a recipe, which
+failed the build gate: it `COPY`ed only `js_example/`, and `pip install .` needs the
+`pyproject.toml`'s README. That is an agent recipe error, correctly refused by the build gate, not a
+gate or vocabulary gap. The subject still ends at `packager`, so **A3 stays at 1 of 3**.
+
+The record itself was weaker than the fixture's: it cites `dependencies = ["flask"]` as the evidence
+for `runtime:python-3.10`, which the line does not show. The evidence gate checks that a quote
+exists at its line, not that it supports the claim; that is the reviewer's job, and here it passed.
+Both are inputs to a prompt-and-reviewer question, not a vocabulary one.
