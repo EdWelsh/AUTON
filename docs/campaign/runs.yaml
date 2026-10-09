@@ -118,6 +118,10 @@ runs:
     fallback: none
 
   - name: r12-doom
+    # Amended 2026-10-09 (stop rule 5), attempt 1 failed 'platform_pure.c does not match the host-test
+    # interface': the spec placed all six DG_* in dg_platform.c while the frozen suite links DG_GetKey
+    # from platform_pure.c; and the engine's libc needs were unspecified (now measured:
+    # reference/doom-surface.yaml). Both are spec clarifications, applied to attempt 2 and labelled.
     base: run:r1-mm
     sessions: 3
     goal: goals/r12-doom.txt

@@ -231,7 +231,7 @@ rather than failing.
 |---|---|
 | `kernel/services/play_doom/serve.c` | `play_doom_serve`, the WAD lookup, the markers |
 | `kernel/services/play_doom/platform_pure.c` | the key queue, translation, blit and WAD read (*Host-test interface*) |
-| `kernel/services/play_doom/dg_platform.c` | the six `DG_*` functions |
+| `kernel/services/play_doom/dg_platform.c` | five of the six `DG_*` functions (`DG_Init`, `DG_DrawFrame`, `DG_SleepMs`, `DG_GetTicksMs`, `DG_SetWindowTitle`); **`DG_GetKey` is defined in `platform_pure.c`**, because the frozen host suite calls it there |
 | `kernel/services/play_doom/w_file_module.c` | the memory-backed `wad_file_class_t` |
 | `kernel/services/play_doom/libc_min.c` | the libc functions the engine calls (*Engine surface*), and nothing else |
 | `kernel/include/play_doom.h` | the interface above |
