@@ -1,0 +1,22 @@
+# A Linux host for the HOST-MATRIX rows, run inside Rancher (w23 X4 stand-in).
+#   docker build --platform linux/arm64 -f tests/hosts/Dockerfile.linux -t auton-host-linux-arm64 .
+#   docker build --platform linux/amd64 -f tests/hosts/Dockerfile.linux -t auton-host-linux-amd64 .
+# The package list is the one the `linux-e2e` CI job installs. No /dev/kvm in Rancher on
+# Apple Silicon, so the accelerator the probe selects is tcg: what this proves is the
+# toolchain and boot path on that distro and architecture, not KVM timing.
+FROM ubuntu:24.04
+ENV DEBIAN_FRONTEND=noninteractive
+ARG TARGETARCH
+# grub-pc-bin and grub-efi-amd64-bin exist only on amd64 (ubuntu's arm64 archive lacks
+# them), so an arm64 host builds the aarch64 path and an amd64 host builds both.
+RUN apt-get update -q && apt-get install -yq --no-install-recommends \
+      gcc clang make binutils nasm qemu-system-x86 qemu-system-arm qemu-utils \
+      xorriso ovmf mtools grub-common \
+      gcc-aarch64-linux-gnu binutils-aarch64-linux-gnu \
+      python3 python3-venv python3-pip git ca-certificates bash curl \
+ && if [ "$TARGETARCH" = "amd64" ]; then apt-get install -yq grub-pc-bin grub-efi-amd64-bin; fi \
+ && rm -rf /var/lib/apt/lists/*
+WORKDIR /work
+# Python deps the host scripts need (conformance, e2e-expect); torch is left out.
+RUN python3 -m venv /opt/venv && /opt/venv/bin/pip install -q numpy pyyaml pytest
+ENV PY=/opt/venv/bin/python PYTHON=/opt/venv/bin/python

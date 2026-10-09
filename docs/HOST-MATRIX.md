@@ -13,8 +13,8 @@ looks uniformly verified when most of it is untested is worse than no matrix.
 |---|---|---|---|
 | **macOS, Apple Silicon** (arm64) | Homebrew: `x86_64-elf-gcc`, `i686-elf-grub`, `qemu` — `scripts/lib/toolchain.sh` | **`tcg` only.** HVF accelerates guests of the host's own architecture; `qemu-system-x86_64` on arm64 lists nothing else | **Yes** — M4 Pro, QEMU 11.1.1, 2026-09-21 |
 | **macOS, Intel** (x86_64) | Homebrew, as above | `hvf` → `tcg` | **No.** Written from QEMU's documentation |
-| **Linux x86_64** | distro packages, the list in the `linux-e2e` CI job: `gcc clang grub-pc-bin grub-common xorriso qemu-system-x86 mtools` + CPU torch | `kvm` → `tcg`. `kvm` requires `/dev/kvm` readable **and** writable by the user, not just listed by QEMU | **Wired, not yet observed.** The `linux-e2e` job (A1) runs preflight, the e2e spine on `kernel-base-v5` checked against `docs/E2E-EXPECTED.yaml`, and times the same ISO under kvm and tcg (B1). It has not run: this branch has not been pushed |
-| **Linux arm64** | distro cross gcc | `tcg` (same reason as Apple Silicon) | **No** |
+| **Linux x86_64** | distro packages, the list in the `linux-e2e` CI job: `gcc clang grub-pc-bin grub-common xorriso qemu-system-x86 mtools` + CPU torch | `kvm` → `tcg`. `kvm` requires `/dev/kvm` readable **and** writable by the user, not just listed by QEMU | **Wired, not yet observed.** The `linux-e2e` job (A1) runs preflight, the e2e spine on `kernel-base-v5` checked against `docs/E2E-EXPECTED.yaml`, and times the same ISO under kvm and tcg (B1). It has not run: this branch has not been pushed **In a container only (2026-10-08, `scripts/host-run.sh amd64`, emulated CPU):** preflight passes and the kernel base builds and reaches long mode under tcg; **no real x86 Linux host has run it** |
+| **Linux arm64** | distro cross gcc | `tcg` (same reason as Apple Silicon) | **No** **In a container (2026-10-08, `scripts/host-run.sh arm64`):** preflight and `run_aarch64_smoke.sh` pass under tcg; not a bare Linux arm64 machine |
 | **Windows (native, MSYS2/MINGW)** | not established | `whpx` → `tcg` | **No.** No Windows host has run any AUTON script |
 | **Windows, WSL2** | as Linux x86_64 | `kvm` if nested virtualisation exposes `/dev/kvm`, else `tcg`. `uname -s` reports `Linux`, so it takes the Linux branch | **No** |
 
@@ -123,3 +123,13 @@ not be reported as it. B1 needs the same ISO timed under KVM on an x86 Linux hos
 The ISO was built from the tagged reference tree extracted outside the repo
 (`git archive kernel-reference-v1 kernels/x86_64`). This project does not contain a kernel, and
 the measurement did not put one back.
+
+
+## Stand-in hosts inside Rancher (2026-10-08)
+
+`scripts/host-run.sh <arm64|amd64> <command>` runs a command on an Ubuntu 24.04 container
+(`tests/hosts/Dockerfile.linux`, the `linux-e2e` package list). Tested by
+`agent/tests/integration/test_linux_hosts.py`. They stand in for the Linux rows until real
+machines exist; they do **not** close X3 or X4. In particular the amd64 container is an
+emulated CPU: `/proc/cpuinfo` shows no x86 vendor, preflight says so, and
+`tests/conformance/run_conformance.sh` prints SKIPPED rather than publish the emulator's answer.

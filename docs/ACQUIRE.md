@@ -40,6 +40,9 @@ documents land in `.cache/vendor/`, which is gitignored, and only the records de
 | **Proves it landed** | the native venues print a verdict instead of `SKIP`. Exit 0 pass, 1 **divergence** (a finding: see the disclosure pipeline), 2 harness broken |
 | **Step 3 of R10 (F00F)** | needs a family-5 Pentium specifically; any other x86 machine closes X3 but not that step |
 
+> Until a real machine exists, `scripts/host-run.sh` runs the Linux procedures in a container (see
+> [`HOST-MATRIX.md`](HOST-MATRIX.md)); that rehearses the steps and proves the toolchain, not silicon.
+
 ## X4 — Proxmox, WSL2, bare metal (was 0, A3, B1, B4, B5, C2)
 
 Each host's row in [`HOST-MATRIX.md`](HOST-MATRIX.md) says what it would newly prove. The

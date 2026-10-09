@@ -93,10 +93,20 @@ echo "IDENTITY ${VENDOR:+$VENDOR }${FMS:+$FMS }$(uname -m) $BRAND" >>"$BUILD/ver
 
 "$CC" -O1 -g "$HERE/native_semantic.c" -o "$BUILD/native_semantic" || exit 2
 "$CC" -O1 -g "$HERE/native_fault.c" -o "$BUILD/native_fault" || exit 2
-"$BUILD/native_semantic" "$BUILD/operands.txt" "$BUILD/oracle.txt" >>"$BUILD/verdicts.txt"
-sem=$?
-"$BUILD/native_fault" "$BUILD/faults.txt" >>"$BUILD/verdicts.txt"
-flt=$?
+# An x86-64 userland on a machine that is not one (a container under emulation, as in
+# Docker on Apple Silicon) executes the instructions and answers, but the answer is the
+# emulator's, not a chip's. That is exactly what this harness exists to tell apart, so
+# it refuses to publish a verdict from it. /proc/cpuinfo names an x86 vendor only on x86.
+if [ "$(uname -m)" = "x86_64" ] && [ -r /proc/cpuinfo ] && ! grep -q '^vendor_id' /proc/cpuinfo; then
+	echo "SKIP semantic: x86-64 userland on an emulated CPU; an emulator's answer is not silicon's." >>"$BUILD/verdicts.txt"
+	echo "SKIP fault: x86-64 userland on an emulated CPU; an emulator's answer is not silicon's." >>"$BUILD/verdicts.txt"
+	sem=0 flt=0
+else
+	"$BUILD/native_semantic" "$BUILD/operands.txt" "$BUILD/oracle.txt" >>"$BUILD/verdicts.txt"
+	sem=$?
+	"$BUILD/native_fault" "$BUILD/faults.txt" >>"$BUILD/verdicts.txt"
+	flt=$?
+fi
 
 echo "== verdicts"
 "$PY" "$ROOT/agent/tools/conformance.py" --summarise "$BUILD/verdicts.txt"

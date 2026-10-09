@@ -138,7 +138,12 @@ rm -f "$accel_err"
 HOST_ARCH="$(uname -m)"
 case "$HOST_ARCH" in
 	x86_64|amd64)
-		pass "host arch ($HOST_ARCH) — silicon identity can be cross-checked live"
+		if [ -r /proc/cpuinfo ] && ! grep -q '^vendor_id' /proc/cpuinfo; then
+			echo "NOTE  host arch ($HOST_ARCH) is emulated (no x86 vendor in /proc/cpuinfo)"
+			echo "      -> the live CPUID cross-check would read the emulator, not a chip."
+		else
+			pass "host arch ($HOST_ARCH) — silicon identity can be cross-checked live"
+		fi
 		;;
 	*)
 		echo "NOTE  host arch ($HOST_ARCH) cannot run x86 CPUID"
