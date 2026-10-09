@@ -1,6 +1,6 @@
 """Probe a running image through QEMU's monitor, not through its own logs.
 
-    python scripts/qmp_probe.py <qmp socket> <work dir>
+    python scripts/qmp_probe.py <qmp unix socket | host:port> <work dir>
 
 Used by `run-intent-probe.sh doom`. Two questions, both answered from outside
 the guest:
@@ -42,13 +42,26 @@ MARGIN = 2.0          # the key-driven change must be at least twice the idle ch
 MIN_EXTRA = 0.002
 
 
+def parse_address(addr: str) -> tuple[str | None, int]:
+    """`host:port` is TCP; anything else is a unix socket path. Pure."""
+    if "/" not in addr and ":" in addr:
+        host, _, port = addr.rpartition(":")
+        if port.isdigit():
+            return host, int(port)
+    return None, 0
+
+
 class Monitor:
     """The smallest QMP client that can ask these two questions."""
 
     def __init__(self, path: str) -> None:
-        self.sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-        self.sock.settimeout(30)
-        self.sock.connect(path)
+        host, port = parse_address(path)
+        if host is None:
+            self.sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+            self.sock.settimeout(30)
+            self.sock.connect(path)
+        else:   # an AUTON container's published QMP port (scripts/auton-container.sh)
+            self.sock = socket.create_connection((host, port), timeout=30)
         self.buf = b""
         self._read()                      # the greeting
         self.command("qmp_capabilities")
