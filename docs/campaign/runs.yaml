@@ -106,6 +106,13 @@ runs:
     base: run:r2-storage
     sessions: 3
     goal: goals/r7-ssh.txt
+    # Amended 2026-10-09 (stop rule 5): attempt 1 was invalid — the goal says to use Monocypher
+    # and BearSSL, vendored unmodified, and the session had no copy of either (the reviewer
+    # rejected a header-only change three times). Staged by tests/crypto/fetch_sources.sh
+    # (already judged by tests/crypto/run_crypto_gate.sh) and seeded, like R12's assets.
+    seed:
+      third_party/monocypher: .cache/vendor/crypto/Monocypher-4.0.2
+      third_party/bearssl: .cache/vendor/crypto/bearssl
     gates:
       - tests/kernel/run_ssh_test.sh
     fallback: none
