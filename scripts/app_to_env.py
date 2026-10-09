@@ -81,6 +81,8 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--record", help="skip stage 1: use this artifact record")
     ap.add_argument("--recipe", help="skip the Packager: a HUMAN-written Dockerfile, gated "
                                      "the same way and labelled human in STAGES.json")
+    ap.add_argument("--substrate", default="docker", choices=("docker", "vm"),
+                    help="where stages 6-7 run the package; vm boots it under QEMU (w23 C3)")
     args = ap.parse_args(argv)
 
     subject, probe = Path(args.subject).resolve(), Path(args.probe).resolve()
@@ -215,7 +217,10 @@ def main(argv: list[str] | None = None) -> int:
 
     # 6 probe
     t = time.monotonic()
-    from app_probe import probe as run_probe, load_probe
+    from app_probe import probe as container_probe, load_probe
+    run_probe = container_probe
+    if args.substrate == "vm":
+        from vm_probe import probe_vm as run_probe
     v = run_probe(rep.image, load_probe(probe))
     if not st.record("probe", v.code == 0, v.line.strip(), t, verdict=v.line.split()[0]):
         return 1
@@ -223,7 +228,7 @@ def main(argv: list[str] | None = None) -> int:
     # 7 ablate
     t = time.monotonic()
     from ablate import ablate
-    score = ablate(ws_p, probe)
+    score = ablate(ws_p, probe, substrate=args.substrate)
     shutil.copy(ws_p / "package" / "ABLATION.json", out / "ABLATION.json")
     st.record("ablate", True, f"{score.load_bearing} of {score.ablated} load-bearing; "
               f"over-claimed: {', '.join(score.over_claimed) or 'none'}", t)

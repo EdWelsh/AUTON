@@ -38,7 +38,8 @@ def _docker_ok() -> bool:
 pytestmark = pytest.mark.skipif(not _docker_ok(), reason="no Docker daemon")
 
 
-def test_the_score_sees_a_seeded_over_claim_and_a_real_one(tmp_path):
+@pytest.mark.parametrize("substrate", ["docker", "vm"])
+def test_the_score_sees_a_seeded_over_claim_and_a_real_one(tmp_path, substrate):
     from ablate import ablate
     from artifact_manifest import build_from_artifact
 
@@ -54,7 +55,7 @@ def test_the_score_sees_a_seeded_over_claim_and_a_real_one(tmp_path):
         "COPY requirements.txt .\nRUN pip install --no-cache-dir -r requirements.txt\n"
         'COPY app.py .\nCMD ["python", "app.py"]\n')
 
-    score = ablate(ws, PROBE)
+    score = ablate(ws, PROBE, substrate=substrate)
     by_cap = {s.capability: s for s in score.steps}
 
     assert score.baseline.startswith("WORKED")
@@ -64,4 +65,4 @@ def test_the_score_sees_a_seeded_over_claim_and_a_real_one(tmp_path):
     assert by_cap["path:/etc/ssl/certs"].outcome == "over-claimed", "a real one"
     assert score.load_bearing < score.ablated, "N of N here would mean it cannot see over-claim"
     assert (ws / "package" / "ABLATION.json").is_file()
-    assert all(s.seconds < 300 for s in score.steps), "cost per step is measured"
+    assert all(s.seconds < (1800 if substrate == "vm" else 300) for s in score.steps), "cost per step is measured"

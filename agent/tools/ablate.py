@@ -118,6 +118,16 @@ def removal(capability: str, probe_spec: dict) -> str | tuple[str, str]:
     return ("not-ablatable", f"no removal defined for kind {kind!r}")
 
 
+def _prober(substrate: str):
+    """The probe for a substrate: the container one, or the VM one (w23 C3)."""
+    if substrate == "docker":
+        return probe
+    if substrate == "vm":
+        from vm_probe import probe_vm
+        return probe_vm
+    raise ProbeError(f"no probe for substrate {substrate!r}")
+
+
 def _build(ws: Path, recipe: str) -> tuple[str | None, str]:
     tag = "auton-ablate-" + hashlib.sha256(recipe.encode()).hexdigest()[:12]
     df = ws / ".auton" / f"{tag}.Dockerfile"
@@ -161,12 +171,13 @@ def _as_root(recipe: str, command: str) -> str:
 
 
 def ablate(ws: Path, probe_path: Path, manifest_path: Path | None = None,
-           manifest_sha256: str | None = None) -> Score:
+           manifest_sha256: str | None = None, substrate: str = "docker") -> Score:
     """`manifest_sha256`, when given (the engine gives it), must match: the
     manifest is read from disk here, and a manifest someone rewrote is refused
     rather than scored (w18 review H1)."""
     ws = Path(ws)
     spec = load_probe(probe_path)
+    probe = _prober(substrate)
     raw = Path(manifest_path or ws / MANIFEST).read_bytes()
     if manifest_sha256 and hashlib.sha256(raw).hexdigest() != manifest_sha256:
         raise ProbeError("the manifest changed after the engine wrote it; refusing to score it")
@@ -228,10 +239,13 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--probe", required=True)
     ap.add_argument("--manifest", help="default: <workspace>/.auton/manifest.json")
     ap.add_argument("--manifest-sha256", help="refuse the manifest unless it hashes to this")
+    ap.add_argument("--substrate", default="docker", choices=("docker", "vm"),
+                    help="where the probe runs the package (vm: w23 C3)")
     args = ap.parse_args(argv)
     try:
         s = ablate(Path(args.workspace), Path(args.probe),
-                   Path(args.manifest) if args.manifest else None, args.manifest_sha256)
+                   Path(args.manifest) if args.manifest else None, args.manifest_sha256,
+                   substrate=args.substrate)
     except (ProbeError, OSError, subprocess.SubprocessError) as exc:
         print(f"UNPROBEABLE: {exc}", file=sys.stderr)
         return 2
