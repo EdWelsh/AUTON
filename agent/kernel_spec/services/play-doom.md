@@ -182,6 +182,31 @@ The engine reads its WAD through `w_file.h`'s `wad_file_class_t`. This image pro
 The module range is already reserved from the PMM (`boot.md` §*Boot-module tags*), so the WAD is
 never handed out as free memory. The engine only reads it.
 
+### Engine surface (measured)
+
+The engine is built for a hosted C library, and this image has none. What it needs was
+**measured, not read from documentation**: `scripts/doom_surface.py` compiles every engine unit
+and lists the symbols no engine unit defines; the result is
+[`reference/doom-surface.yaml`](../reference/doom-surface.yaml) (49 names, six of them the `DG_*`
+functions). `libc_min.c` provides exactly the non-`DG_` names, built on the kernel's allocator
+and `kprintf`, and no more: a symbol not in that file's list is not provided.
+
+- **Memory and strings** (`malloc` family, `mem*`, `str*`, `*casecmp`, `bzero`, `atoi`, `atof`,
+  `toupper`) and **formatting** (`printf`, `snprintf`, `vsnprintf`, `vfprintf`, `fprintf`,
+  `sscanf`, `puts`, `putchar`): real implementations; `printf`-family output goes to the serial
+  console, `stdout` and `stderr` being handles to it.
+- **Files** (`fopen` … `system`): this image excludes `fs`, so these **fail closed**: `fopen`
+  returns `NULL`, `mkdir`/`remove`/`rename`/`system` return -1, `fread`/`fwrite` on the two
+  console handles only. The engine copes: no config file means defaults, no savegame directory
+  means no saves. They are never implemented to succeed, which would be an `fs` the image does
+  not have. The WAD does not come through them (*WAD access*).
+- **Sound**: leave `FEATURE_SOUND` undefined. The engine's own `dummy.c` then supplies the
+  `I_*Sound`/`I_*Music` functions, so nothing in `i_sound.c` links against a mixer.
+- `exit` logs and halts. `errno` is one integer.
+
+A build that needs a name beyond the measured list is a finding about the measurement, not a
+licence to grow the file.
+
 ### Timing
 
 `DG_GetTicksMs` returns milliseconds since boot from the `timer` capability. `DG_SleepMs` halts
@@ -208,6 +233,7 @@ rather than failing.
 | `kernel/services/play_doom/platform_pure.c` | the key queue, translation, blit and WAD read (*Host-test interface*) |
 | `kernel/services/play_doom/dg_platform.c` | the six `DG_*` functions |
 | `kernel/services/play_doom/w_file_module.c` | the memory-backed `wad_file_class_t` |
+| `kernel/services/play_doom/libc_min.c` | the libc functions the engine calls (*Engine surface*), and nothing else |
 | `kernel/include/play_doom.h` | the interface above |
 | `third_party/doomgeneric/` | the engine. **Not in this repo.** See *Licence* |
 

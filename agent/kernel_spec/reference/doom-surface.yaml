@@ -1,0 +1,68 @@
+engine: doomgeneric (not committed; .cache/third_party/doomgeneric)
+measured_by: scripts/doom_surface.py
+units_not_compiled_on_the_measuring_host: []
+folded_host_artefacts:
+  __error: errno
+  __stack_chk_fail: null
+  __stack_chk_guard: null
+  __stderrp: stderr
+  __stdoutp: stdout
+  __toupper: toupper
+  memset_pattern16: memset
+needs:
+  platform (the six DG_* functions):
+  - DG_DrawFrame
+  - DG_GetKey
+  - DG_GetTicksMs
+  - DG_Init
+  - DG_SetWindowTitle
+  - DG_SleepMs
+  memory:
+  - calloc
+  - free
+  - malloc
+  - realloc
+  string and memory ops:
+  - bzero
+  - memchr
+  - memcpy
+  - memset
+  - strcasecmp
+  - strcmp
+  - strdup
+  - strlen
+  - strncasecmp
+  - strncmp
+  - strncpy
+  - strrchr
+  - strstr
+  formatting:
+  - atof
+  - atoi
+  - fprintf
+  - printf
+  - putchar
+  - puts
+  - snprintf
+  - sscanf
+  - toupper
+  - vfprintf
+  - vsnprintf
+  stdio and files (fs is excluded from play-doom):
+  - fclose
+  - fflush
+  - fopen
+  - fread
+  - fseek
+  - ftell
+  - fwrite
+  - mkdir
+  - remove
+  - rename
+  - stderr
+  - stdout
+  - system
+  process:
+  - errno
+  - exit
+count: 49
