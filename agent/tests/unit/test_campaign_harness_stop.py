@@ -50,3 +50,9 @@ def test_no_pmset_means_unknown_not_a_warning(monkeypatch):
     assert campaign.on_battery() is None
     _pmset(monkeypatch, "garbage")
     assert campaign.on_battery() is None
+
+
+def test_a_tree_where_every_gate_said_not_generated_is_not_a_base():
+    assert not campaign.generated_something({"gates": [{"rc": 2}, {"rc": 2}]})
+    assert campaign.generated_something({"gates": [{"rc": 2}, {"rc": 1}]})
+    assert not campaign.generated_something(None)

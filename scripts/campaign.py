@@ -100,6 +100,13 @@ def final(run: dict) -> tuple[Path | None, dict | None]:
     return last
 
 
+def generated_something(result: dict | None) -> bool:
+    """False when every gate said "not generated" (exit 2): a tree with nothing in it is not
+    a base for a goal that extends it. The R1 re-run ended that way and R2 started on it (w24)."""
+    gates = (result or {}).get("gates") or []
+    return any(g.get("rc") != 2 for g in gates)
+
+
 def base_for(run: dict, runs: dict[str, dict]) -> tuple[list[str], str]:
     """generation_run arguments for the run's base, and a note on how chosen."""
     base = run["base"]
@@ -115,7 +122,7 @@ def base_for(run: dict, runs: dict[str, dict]) -> tuple[list[str], str]:
         # their goals assume exists. Here the replacement is the phase's own
         # attempt whose end-to-end gate passed (amended 2026-10-06), labelled.
         tree = OUT / fallback[5:] / "ws"
-        if tree.is_dir():
+        if tree.is_dir() and generated_something(result_of(OUT / fallback[5:])):
             return ["--base-tree", str(tree)], (f"{dep['name']} fallback {fallback[5:]} "
                                                 f"(failed its suites, passed end to end)")
     args, note = base_for(dep, runs)

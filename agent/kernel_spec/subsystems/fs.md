@@ -427,6 +427,14 @@ list, and the FAT accessor (read half); mount-rw, unmount, create, mkdir, append
 (write half); named negative error codes. It sits on the block interface in
 `subsystems/drivers.md` and calls nothing else below it.
 
+**Link contract (REQUIRED).** `fat32.c` and `fat32_write.c` are linked by the host suite
+with the suite and nothing else. They include only `<stdint.h>`, `<stddef.h>`, `fat32.h` and
+`blk.h`, call only the block functions `blk.h` declares plus `memcpy`, `memset` and `memcmp`,
+and call no kernel symbol: no `kprintf`, no `kmemset`, no `vfs_*`. A build that fails to link on
+`vfs_register_fs` or `kprintf` is this rule broken (R2's first attempt, 2026-10-10). Registering
+FAT32 with the VFS is a separate file, `kernel/fs/fat32_vfs.c`, which the host suite does not
+compile.
+
 ### Rules (REQUIRED)
 
 | Rule | fatgen103 | Why | Test |

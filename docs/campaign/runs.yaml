@@ -39,6 +39,7 @@ runs:
     # Amended 2026-10-10 (stop rule 5): see the header comment 'Frozen interfaces'.
     seed:
       tests/kernel/mm_reference/include: tests/kernel/mm_reference/include
+      tests/kernel/vmm_reference/include: tests/kernel/vmm_reference/include
     gates:
       - tests/kernel/run_mm_test.sh
       - tests/kernel/run_vmm_test.sh
