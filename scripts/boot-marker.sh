@@ -27,8 +27,12 @@ source "$ROOT/scripts/lib/toolchain.sh"
 auton_accel "${AUTON_ACCEL:-}" >/dev/null || exit 2
 
 [ -d "$TREE/kernel" ] || { echo "no kernel tree at $TREE" >&2; exit 2; }
-if ! make -C "$TREE" iso >"$TREE/.boot-marker-build.log" 2>&1; then
-	tail -20 "$TREE/.boot-marker-build.log"
+# The log is outside the tree: a file written into a generated workspace is untracked
+# debris there, and git refuses the next checkout over it (w23: R10).
+BUILD_LOG="$(mktemp "${TMPDIR:-/tmp}/boot-marker-build.XXXXXX")"
+trap 'rm -f "$BUILD_LOG"' EXIT
+if ! make -C "$TREE" iso >"$BUILD_LOG" 2>&1; then
+	tail -20 "$BUILD_LOG"
 	echo "boot-marker: the ISO did not build"
 	exit 1
 fi

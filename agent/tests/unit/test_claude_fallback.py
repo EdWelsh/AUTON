@@ -40,7 +40,7 @@ def wired(monkeypatch):
     calls = Calls()
     monkeypatch.setattr(claude_cli, "complete", calls.claude_complete)
     client = LLMClient(model=PRIMARY, preflight=False, fallback_model=LOCAL, fallback_context=4096)
-    monkeypatch.setattr(client, "_complete", lambda kwargs, agent_id: calls.litellm(**kwargs))
+    monkeypatch.setattr(client, "_complete", lambda kwargs, agent_id, timeout=None: calls.litellm(**kwargs))
     return client, calls
 
 
@@ -77,3 +77,8 @@ async def test_without_a_fallback_the_old_waiting_path_is_used(monkeypatch):
     client = LLMClient(model=PRIMARY, preflight=False)
     await client.send_message("a", "s", [{"role": "user", "content": "x"}])
     assert seen["raise_on_limit"] is False
+
+
+def test_the_local_fallback_is_given_longer_than_a_cloud_call():
+    from orchestrator.llm.client import FALLBACK_REQUEST_TIMEOUT
+    assert FALLBACK_REQUEST_TIMEOUT > 1800, "R5 and R7 lost tasks to 1800 s local calls"

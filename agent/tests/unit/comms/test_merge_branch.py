@@ -83,3 +83,16 @@ def test_engine_state_is_never_committed_and_never_blocks_leaving_a_branch(tmp_p
     ws.checkout_main()
     assert ws.repo.active_branch.name == "main"
     assert branch != "main"
+
+
+def test_untracked_debris_does_not_block_a_checkout_either(tmp_path):
+    """R10: a gate left .boot-marker-build.log in the tree; the next branch checkout was refused."""
+    ws = _repo(tmp_path)
+    _git(tmp_path, "checkout", "-b", "agent/z")
+    (tmp_path / "x.log").write_text("tracked on the branch")
+    _git(tmp_path, "add", "x.log")
+    _git(tmp_path, "commit", "-m", "log")
+    _git(tmp_path, "checkout", "main")
+    (tmp_path / "x.log").write_text("debris")
+    ws._checkout_discarding_engine_state("agent/z")
+    assert ws.repo.active_branch.name == "agent/z"

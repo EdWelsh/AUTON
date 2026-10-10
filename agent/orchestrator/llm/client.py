@@ -214,6 +214,9 @@ def _summarise_result(result: Any) -> str:
 
 
 DEFAULT_FALLBACK_MODEL = "ollama_chat/qwen3.5:27b-coding-mxfp8"   # qualified 4/4 by model-probe.py, 2026-10-08
+# One call to the local 27b can run past the 1800 s a cloud call is given: R5 and R7 each lost a
+# task to a call that was still generating at 1800 s (w23). The fallback gets longer.
+FALLBACK_REQUEST_TIMEOUT = 3600.0
 DEFAULT_FALLBACK_CONTEXT = 32768    # an unset window is 262,144 tokens: 42 GB, not 29
 
 
@@ -261,17 +264,19 @@ class LLMClient:
                     logger.warning("fallback model disabled: %s", exc)
                     self.fallback_model = None
 
-    async def _complete(self, kwargs: dict[str, Any], agent_id: str) -> Any:
+    async def _complete(self, kwargs: dict[str, Any], agent_id: str,
+                        timeout: float | None = None) -> Any:
         """One model call, bounded. LiteLLM's own `timeout` is passed, and
         asyncio.wait_for backs it up, since not every provider path honours it."""
-        kwargs = {**kwargs, "timeout": self.request_timeout}
+        limit = timeout or self.request_timeout
+        kwargs = {**kwargs, "timeout": limit}
         try:
             return await asyncio.wait_for(litellm.acompletion(**kwargs),
-                                          timeout=self.request_timeout + TIMEOUT_BACKSTOP_MARGIN)
+                                          timeout=limit + TIMEOUT_BACKSTOP_MARGIN)
         except asyncio.TimeoutError as e:
             raise ModelTimeoutError(
                 f"{kwargs.get('model')} did not answer {agent_id} within "
-                f"{self.request_timeout:.0f}s") from e
+                f"{limit:.0f}s") from e
 
     async def send_message(
         self,
@@ -287,6 +292,7 @@ class LLMClient:
 
         model = model_override or self.model
         context_length = self.context_length
+        call_timeout: float | None = None
         if model.startswith(claude_cli.PREFIX):
             # The owner's subscription through Claude Code headless; see
             # claude_cli.py. No LiteLLM, no API key, no per-call cost here.
@@ -304,6 +310,7 @@ class LLMClient:
                                    limit, self.fallback_model)
             model = self.fallback_model
             context_length = self.fallback_context
+            call_timeout = max(self.request_timeout, FALLBACK_REQUEST_TIMEOUT)
 
         async with self._semaphore:
             now = time.monotonic()
@@ -334,16 +341,16 @@ class LLMClient:
                 kwargs["api_base"] = base_url
 
             try:
-                response = await self._complete(kwargs, agent_id)
+                response = await self._complete(kwargs, agent_id, call_timeout)
             except litellm.RateLimitError:
                 logger.warning("Rate limited, retrying in 30s for agent %s", agent_id)
                 await asyncio.sleep(30)
-                response = await self._complete(kwargs, agent_id)
+                response = await self._complete(kwargs, agent_id, call_timeout)
             except (litellm.APIConnectionError, json.JSONDecodeError) as e:
                 if "ollama" in model.lower():
                     logger.warning("Ollama JSON error, retrying with format=json: %s", e)
                     kwargs["format"] = "json"
-                    response = await self._complete(kwargs, agent_id)
+                    response = await self._complete(kwargs, agent_id, call_timeout)
                 else:
                     raise
 

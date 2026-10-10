@@ -375,10 +375,17 @@ class GitWorkspace:
         except GitCommandError as exc:
             blocking = [p for p in re.findall(r"^\s+(\S+)$", str(exc.stderr or exc), re.M)
                         if p.startswith(".auton/")]
-            if not blocking:
+            debris = untracked_blockers(str(exc.stderr or exc))
+            if not blocking and not debris:
                 raise
-            self.repo.git.checkout("--", *blocking)
-            logger.warning("Discarded engine-state changes to %d file(s) to leave the branch", len(blocking))
+            if blocking:
+                self.repo.git.checkout("--", *blocking)
+            for rel in debris:      # a log or object file a gate left behind, not work
+                target = Path(self.repo.working_tree_dir) / rel
+                if target.is_file():
+                    target.unlink()
+            logger.warning("Cleared %d engine-state file(s) and %d untracked file(s) to switch to %s",
+                           len(blocking), len(debris), branch)
             self.repo.git.checkout(branch)
 
     def read_file(self, path: str) -> str:
@@ -639,7 +646,7 @@ class GitWorkspace:
 
 def untracked_blockers(stderr: str) -> list[str]:
     """Paths git names as untracked files a merge would overwrite. Pure."""
-    m = re.search(r"untracked working tree files would be overwritten by merge:\s*\n((?:\s+\S.*\n)+)",
+    m = re.search(r"untracked working tree files would be overwritten by (?:merge|checkout):\s*\n((?:\s+\S.*\n)+)",
                   stderr)
     return [ln.strip() for ln in m.group(1).splitlines() if ln.strip()] if m else []
 
