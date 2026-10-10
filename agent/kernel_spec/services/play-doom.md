@@ -185,8 +185,8 @@ never handed out as free memory. The engine only reads it.
 ### Engine surface (measured)
 
 The engine is built for a hosted C library, and this image has none. What it needs was
-**measured, not read from documentation**: `scripts/doom_surface.py` compiles every engine unit
-and lists the symbols no engine unit defines; the result is
+**measured, not read from documentation**: every engine unit was compiled once and the symbols no
+engine unit defines were listed; the result is
 [`reference/doom-surface.yaml`](../reference/doom-surface.yaml) (49 names, six of them the `DG_*`
 functions). `libc_min.c` provides exactly the non-`DG_` names, built on the kernel's allocator
 and `kprintf`, and no more: a symbol not in that file's list is not provided.

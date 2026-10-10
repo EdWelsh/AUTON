@@ -1,5 +1,5 @@
 engine: doomgeneric (not committed; .cache/third_party/doomgeneric)
-measured_by: scripts/doom_surface.py
+measured_by: a one-time compile of every unit in doomgeneric's Makefile (clang -c, nm); no script is kept, see play-doom.md
 units_not_compiled_on_the_measuring_host: []
 folded_host_artefacts:
   __error: errno
