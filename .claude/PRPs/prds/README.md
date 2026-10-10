@@ -34,10 +34,10 @@ packaging (`scripts/auton-container.sh`), and stand-in Linux hosts in Rancher.
 
 | Open | Waiting on | State |
 |---|---|---|
-| R1–R12, the campaign | model time | R8 passed. R1, R2, R3, R4, R5, R6, R7, R12 each failed both attempts; R11 attempt 1 failed and attempt 2 is running; R9 and R10 not started. Several stops were harness faults, now fixed (crypto sources not staged for R7, a run paused before planning refused its resume, DG_GetKey placement and the libc surface in the Doom spec) |
+| R1–R12, the campaign | a decision on what to change | **Finished 2026-10-10: every run has a verdict, 1 of 12 passed (R8).** The other eleven failed both attempts under the two-attempt stop rule. R2 and R6 failed their suites but R2's storage acceptance and R1's boot gate passed end to end. Several stops were harness faults, since fixed (R7 crypto sources, resume refusal, Doom's spec gaps) |
 | X3 conformance on silicon, X4 Proxmox/WSL2/bare metal, X1/X2 documents, D1, D2 | the owner, or hardware | the Linux stand-ins rehearse the steps and prove the toolchain; they do not close these rows (an emulated CPU cannot answer a silicon question, and the conformance harness now says so) |
 
-These PRDs are **not complete**: the campaign has one pass in twelve, and an honest status says so.
+These PRDs are **not complete**: the campaign is finished and 1 of 12 passed. Re-running any run is a changed experiment and needs a pre-registration (stop rule); the next decision is what to change, not to run again.
 
 ### Status 2026-10-07: the code gaps in w23 are closed; what is left needs a run, a decision or a machine
 
