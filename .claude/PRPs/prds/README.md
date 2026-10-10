@@ -24,6 +24,21 @@ deterministic tools adjudicate it.** A table cannot read an unfamiliar repositor
 cannot be trusted to name a capability — that failure is measured at 5 phantom hardware
 citations per 50 turns.
 
+### Status 2026-10-10: every code item in w23 is done; what is left is campaign results, the owner and hardware
+
+Done since 2026-10-07: A1 (larger model, probed), A2 (passed), A3 (1 of 3 fully agent-driven; 2 of 3
+with a 4 h analyst budget, [A3b](../reports/w23-a3b-whoami-long-report.md)), C1–C5 (C3 on a QEMU
+guest: the fixture and the ablation fixture both score on VM and container), G1–G7, R12.1 (the Doom
+engine's needs measured: 49 names, so the spec gained `libc_min.c`), the AUTON-as-a-container
+packaging (`scripts/auton-container.sh`), and stand-in Linux hosts in Rancher.
+
+| Open | Waiting on | State |
+|---|---|---|
+| R1–R12, the campaign | model time | R8 passed. R1, R2, R3, R4, R5, R6, R7, R12 each failed both attempts; R11 attempt 1 failed and attempt 2 is running; R9 and R10 not started. Several stops were harness faults, now fixed (crypto sources not staged for R7, a run paused before planning refused its resume, DG_GetKey placement and the libc surface in the Doom spec) |
+| X3 conformance on silicon, X4 Proxmox/WSL2/bare metal, X1/X2 documents, D1, D2 | the owner, or hardware | the Linux stand-ins rehearse the steps and prove the toolchain; they do not close these rows (an emulated CPU cannot answer a silicon question, and the conformance harness now says so) |
+
+These PRDs are **not complete**: the campaign has one pass in twelve, and an honest status says so.
+
 ### Status 2026-10-07: the code gaps in w23 are closed; what is left needs a run, a decision or a machine
 
 Of w23's items, **C1, C4 and G1–G7 are done** (see its status block). What remains is not code:
