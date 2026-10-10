@@ -48,3 +48,38 @@ def test_a_real_conflict_returns_false_and_leaves_main_clean(tmp_path):
     _git(tmp_path, "commit", "-am", "main edit")
     assert ws.merge_branch("agent/y") is False
     assert (tmp_path / "a.txt").read_text() == "main"
+
+
+def test_commit_pending_works_when_build_is_gitignored(tmp_path):
+    """R3 died at iteration 0: `git add -A -- . :(exclude)build` exits 1 when build is ignored."""
+    ws = _repo(tmp_path)
+    (tmp_path / ".gitignore").write_text("build\n")
+    _git(tmp_path, "add", ".gitignore")
+    _git(tmp_path, "commit", "-m", "ignore build")
+    branch = ws.create_branch("dev-01", "mm", "pmm")
+    (tmp_path / "pmm.c").write_text("int x;")
+    (tmp_path / "build").mkdir()
+    (tmp_path / "build" / "o").write_text("obj")
+    assert ws.commit_pending(branch, "work") is True
+    names = subprocess.run(["git", "-C", str(tmp_path), "show", "--name-only", "--format=", "HEAD"],
+                           capture_output=True, text=True).stdout.split()
+    assert names == ["pmm.c"]
+
+
+def test_engine_state_is_never_committed_and_never_blocks_leaving_a_branch(tmp_path):
+    """R6, R10, R11, R12 died on `git checkout main`: .auton/tasks/<id>.json was tracked and dirty."""
+    ws = _repo(tmp_path)
+    branch = ws.create_branch("dev-01", "mm", "pmm")
+    (tmp_path / ".auton" / "tasks").mkdir(parents=True, exist_ok=True)
+    (tmp_path / ".auton" / "tasks" / "t1.json").write_text("{}")
+    (tmp_path / "pmm.c").write_text("int x;")
+    ws.commit("work")                                   # the unfiltered path, used to add -A
+    tracked = subprocess.run(["git", "-C", str(tmp_path), "ls-files"], capture_output=True, text=True).stdout
+    assert ".auton" not in tracked and "pmm.c" in tracked
+    # a tracked engine-state file that is dirty must not stop checkout of main
+    _git(tmp_path, "add", "-f", ".auton/tasks/t1.json")
+    _git(tmp_path, "commit", "-m", "someone tracked it")
+    (tmp_path / ".auton" / "tasks" / "t1.json").write_text('{"status": "review"}')
+    ws.checkout_main()
+    assert ws.repo.active_branch.name == "main"
+    assert branch != "main"

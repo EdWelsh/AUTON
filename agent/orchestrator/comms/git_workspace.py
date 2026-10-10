@@ -267,6 +267,7 @@ class GitWorkspace:
         # below are themselves commits — setting this afterwards would leave the
         # very first one relying on whatever the host could derive.
         self._ensure_identity()
+        self._exclude_engine_state()
 
         if created:
             # Create initial commit so branches work
@@ -282,6 +283,15 @@ class GitWorkspace:
             self._repo.index.add([".auton"])
             self._repo.index.commit("Add .auton metadata directory")
             logger.info("Initialized new workspace at %s", self.path)
+
+    def _exclude_engine_state(self) -> None:
+        """Keep `.auton/` and `build/` out of any `git add -A`, at repository scope."""
+        exclude = Path(self._repo.git_dir) / "info" / "exclude"
+        exclude.parent.mkdir(parents=True, exist_ok=True)
+        have = exclude.read_text().splitlines() if exclude.exists() else []
+        want = [e for e in (".auton/", "build/") if e not in have]
+        if want:
+            exclude.write_text("\n".join([*have, *want]) + "\n")
 
     def _ensure_identity(self) -> None:
         """Give the workspace repo its own committer identity.
@@ -349,7 +359,27 @@ class GitWorkspace:
         if current and current != main:
             if self.commit_pending(current, f"uncommitted work left on {current}"):
                 logger.info("Committed uncommitted work on %s before leaving it", current)
-        self.repo.git.checkout(main)
+        self._checkout_discarding_engine_state(main)
+
+    def _checkout_discarding_engine_state(self, branch: str) -> None:
+        """`git checkout`, tolerating tracked engine state (`.auton/...`).
+
+        Task metadata is rewritten on whatever branch is checked out; if an earlier commit
+        tracked it, the next checkout is refused as "local changes would be overwritten"
+        (R6, R10, R11 and R12 died on `.auton/tasks/<id>.json`, w23). The files are the
+        engine's own record, kept in state.json; the checkout's version is restored and
+        the switch retried. Changes to anything else still make the checkout fail loudly.
+        """
+        try:
+            self.repo.git.checkout(branch)
+        except GitCommandError as exc:
+            blocking = [p for p in re.findall(r"^\s+(\S+)$", str(exc.stderr or exc), re.M)
+                        if p.startswith(".auton/")]
+            if not blocking:
+                raise
+            self.repo.git.checkout("--", *blocking)
+            logger.warning("Discarded engine-state changes to %d file(s) to leave the branch", len(blocking))
+            self.repo.git.checkout(branch)
 
     def read_file(self, path: str) -> str:
         """Read a file from the workspace."""
@@ -461,7 +491,7 @@ class GitWorkspace:
                     return self.repo.head.commit.hexsha
             self.repo.index.add(kept)
         else:
-            self.repo.git.add("-A")
+            self._stage_work()
 
         if not self.repo.index.diff("HEAD") and not self.repo.untracked_files:
             logger.info("Nothing to commit")
@@ -474,6 +504,17 @@ class GitWorkspace:
     # Engine state and build output live inside the workspace but are not work.
     # `git add -A` would commit .auton/state.json onto an agent's branch.
     _NOT_WORK = (":(exclude).auton", ":(exclude)build")
+
+    def _stage_work(self) -> None:
+        """Stage every change that is work, and nothing that is engine state.
+
+        `git add -A -- . :(exclude)build` exits 1 ("paths are ignored") when `build` is in
+        .gitignore, as the kernel base's is: R3 died on its first commit (w23). So engine
+        state is excluded by pathspec only for `.auton`, and `build` is unstaged afterwards,
+        which git accepts whether or not it is ignored.
+        """
+        self.repo.git.add("-A", "--", ".")     # .auton/ and build/ are in info/exclude
+        self.repo.git.rm("-r", "--cached", "-q", "--ignore-unmatch", "--", "build", ".auton")
 
     def has_changes(self, branch: str) -> bool:
         """Whether `branch` carries work: commits ahead of main, or uncommitted
@@ -509,7 +550,7 @@ class GitWorkspace:
             except GitCommandError as exc:
                 logger.warning("cannot carry pending work to %s: %s", branch, exc)
                 return False
-        self.repo.git.add("-A", "--", ".", *self._NOT_WORK)
+        self._stage_work()
         if not self.repo.git.diff("--cached", "--name-only"):
             return False
         self.repo.index.commit(message)
@@ -564,7 +605,7 @@ class GitWorkspace:
         are removed and the merge retried once.
         """
         main = self._get_main_branch()
-        self.repo.git.checkout(main)
+        self._checkout_discarding_engine_state(main)
         for attempt in (1, 2):
             try:
                 self.repo.git.merge(branch, "--no-ff", "-m", f"Merge {branch}")
