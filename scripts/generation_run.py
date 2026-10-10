@@ -72,6 +72,17 @@ def pinned_wrapper(out: Path) -> Path:
     return dst
 
 
+def can_resume(ws: Path) -> bool:
+    """A saved run with a task graph. A pause before planning finished saves state but no
+    graph, and the engine refuses to resume it (w23: R7 and R11 were stopped for that);
+    nothing was lost, so such a run starts again instead. Pure but for the file read."""
+    path = ws / ".auton/state.json"
+    try:
+        return bool(json.loads(path.read_text()).get("graph"))
+    except (OSError, ValueError):
+        return False
+
+
 def memory_free() -> int | None:
     """System-wide free memory percent (macOS memory_pressure), or None."""
     try:
@@ -256,7 +267,7 @@ def main(argv: list[str] | None = None) -> int:
                 print("session cap reached: the provider's limits left no time for work", flush=True)
                 break
             n = len(result["sessions"]) + 1
-            resume = n > 1 or (ws / ".auton/state.json").exists()
+            resume = can_resume(ws)
             s = run_session(n, out, wrapper, cfg, goal, resume,
                             min(args.session_seconds, remaining), args.memory_floor, args.gate)
             result["sessions"].append(s)
