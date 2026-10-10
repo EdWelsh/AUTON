@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import logging
 import os
+import re
 import shutil
 from pathlib import Path
 
@@ -554,17 +555,38 @@ class GitWorkspace:
         return status
 
     def merge_branch(self, branch: str) -> bool:
-        """Merge a branch into main. Returns True if successful."""
+        """Merge a branch into main. Returns True if successful.
+
+        A merge can also be refused before it starts: untracked files in main's working
+        tree that the branch would add (a build log an earlier task left behind). That
+        is not a conflict, there is no merge to abort (w23: R10's orchestrator died on
+        `git merge --abort`), and the files are the orchestrator's own debris, so they
+        are removed and the merge retried once.
+        """
         main = self._get_main_branch()
         self.repo.git.checkout(main)
-        try:
-            self.repo.git.merge(branch, "--no-ff", "-m", f"Merge {branch}")
-            logger.info("Merged %s into %s", branch, main)
-            return True
-        except GitCommandError as e:
-            logger.error("Merge conflict merging %s: %s", branch, e)
-            self.repo.git.merge("--abort")
-            return False
+        for attempt in (1, 2):
+            try:
+                self.repo.git.merge(branch, "--no-ff", "-m", f"Merge {branch}")
+                logger.info("Merged %s into %s", branch, main)
+                return True
+            except GitCommandError as e:
+                blocking = untracked_blockers(str(e))
+                if blocking and attempt == 1:
+                    for rel in blocking:
+                        target = Path(self.repo.working_tree_dir) / rel
+                        if target.is_file():
+                            target.unlink()
+                    logger.warning("Removed %d untracked file(s) blocking the merge of %s",
+                                   len(blocking), branch)
+                    continue
+                logger.error("Merge conflict merging %s: %s", branch, e)
+                try:
+                    self.repo.git.merge("--abort")
+                except GitCommandError:
+                    pass        # refused before it began: nothing to abort
+                return False
+        return False
 
     def _get_main_branch(self) -> str:
         """Get the name of the main branch."""
@@ -572,6 +594,13 @@ class GitWorkspace:
             if name in [b.name for b in self.repo.branches]:
                 return name
         return "main"
+
+
+def untracked_blockers(stderr: str) -> list[str]:
+    """Paths git names as untracked files a merge would overwrite. Pure."""
+    m = re.search(r"untracked working tree files would be overwritten by merge:\s*\n((?:\s+\S.*\n)+)",
+                  stderr)
+    return [ln.strip() for ln in m.group(1).splitlines() if ln.strip()] if m else []
 
 
 def _make_read_only(root: Path) -> None:

@@ -1,1 +1,3 @@
 Implement the aarch64 device-tree reader for this tree. Read the architecture with read_spec arch/aarch64 (section on the DTB) and the HAL with read_spec hal. Write kernel/arch/aarch64/fdt.c (and its header in kernel/include) parsing the flattened device tree QEMU's virt machine passes in x0: header validation, the structure block walk, memory and the UART node, exactly as the spec's interface says.
+
+The interface the frozen host suite compiles against is in tests/kernel/dtb_reference/include (already in this workspace; do not change it). Your parser's header must declare exactly what it declares (fdt_bootargs included), with the same names, types and constants.

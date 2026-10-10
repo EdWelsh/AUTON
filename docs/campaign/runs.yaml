@@ -25,12 +25,20 @@ model: claude-cli/claude-sonnet-5-5
 session_seconds: 18000
 context: 200000
 
+# Frozen interfaces (2026-10-10). Eleven of twelve runs failed because the frozen host suite
+# uses identifiers (KV_SHUTDOWN, smtp_reset, HR_PATH_MAX, conn.status, a second phys_to_virt)
+# that the spec does not declare and the session never saw; R8, the one pass, was the one run
+# seeded with its interface header. Every run whose suite has a reference now gets
+# tests/kernel/<x>_reference/include, and its goal names it as the interface to match.
 runs:
   - name: r1-mm
     attempt: 2                       # attempt 1 was w15; this is the last
     base: kernel-base-v5
     sessions: 4
     goal: goals/r1-mm.txt
+    # Amended 2026-10-10 (stop rule 5): see the header comment 'Frozen interfaces'.
+    seed:
+      tests/kernel/mm_reference/include: tests/kernel/mm_reference/include
     gates:
       - tests/kernel/run_mm_test.sh
       - tests/kernel/run_vmm_test.sh
@@ -54,6 +62,9 @@ runs:
     base: run:r1-mm
     sessions: 4
     goal: goals/r2-storage.txt
+    # Amended 2026-10-10 (stop rule 5): see the header comment 'Frozen interfaces'.
+    seed:
+      tests/kernel/fat32_reference/include: tests/kernel/fat32_reference/include
     gates:
       - tests/kernel/run_fat32_test.sh
       - scripts/run-storage-acceptance.sh "$KERNEL_TREE"
@@ -70,6 +81,9 @@ runs:
     base: run:r2-storage
     sessions: 2
     goal: goals/r3-fileserver.txt
+    # Amended 2026-10-10 (stop rule 5): see the header comment 'Frozen interfaces'.
+    seed:
+      tests/kernel/fileserver_reference/include: tests/kernel/fileserver_reference/include
     gates:
       - tests/kernel/run_fileserver_test.sh
       - scripts/run-storage-acceptance.sh "$KERNEL_TREE" --service fileserver
@@ -79,6 +93,9 @@ runs:
     base: run:r2-storage
     sessions: 2
     goal: goals/r6-host-repo.txt
+    # Amended 2026-10-10 (stop rule 5): see the header comment 'Frozen interfaces'.
+    seed:
+      tests/kernel/host_repo_reference/include: tests/kernel/host_repo_reference/include
     gates:
       - tests/kernel/run_host_repo_test.sh
       - tests/kernel/run_host_repo_test.sh --clone
@@ -88,6 +105,9 @@ runs:
     base: run:r2-storage
     sessions: 2
     goal: goals/r5-smtp.txt
+    # Amended 2026-10-10 (stop rule 5): see the header comment 'Frozen interfaces'.
+    seed:
+      tests/kernel/smtp_reference/include: tests/kernel/smtp_reference/include
     gates:
       - tests/kernel/run_smtp_test.sh
       - scripts/run-storage-acceptance.sh "$KERNEL_TREE" --service smtp
@@ -97,6 +117,9 @@ runs:
     base: run:r2-storage
     sessions: 2
     goal: goals/r4-kvstore.txt
+    # Amended 2026-10-10 (stop rule 5): see the header comment 'Frozen interfaces'.
+    seed:
+      tests/kernel/kvstore_reference/include: tests/kernel/kvstore_reference/include
     gates:
       - tests/kernel/run_kvstore_test.sh
       - scripts/run-storage-acceptance.sh "$KERNEL_TREE" --service kvstore
@@ -111,6 +134,7 @@ runs:
     # rejected a header-only change three times). Staged by tests/crypto/fetch_sources.sh
     # (already judged by tests/crypto/run_crypto_gate.sh) and seeded, like R12's assets.
     seed:
+      tests/kernel/ssh_reference/include: tests/kernel/ssh_reference/include
       third_party/monocypher: .cache/vendor/crypto/Monocypher-4.0.2
       third_party/bearssl: .cache/vendor/crypto/bearssl
     gates:
@@ -126,11 +150,14 @@ runs:
     sessions: 3
     goal: goals/r12-doom.txt
     seed:
+      tests/kernel/play_doom_reference/include: tests/kernel/play_doom_reference/include
       third_party/doomgeneric: .cache/third_party/doomgeneric
       assets/doom.wad: .cache/assets/DOOM1.WAD
     gates:
       - tests/kernel/run_play_doom_test.sh
-      - make -C "$KERNEL_TREE" iso
+      # Amended 2026-10-10 (stop rule 5): `make iso` died with 127 (no grub-mkrescue on a Mac), a
+      # defect in the gate, not the tree. The toolchain library names the right tools.
+      - source scripts/lib/toolchain.sh && make -C "$KERNEL_TREE" iso CC="$CC" GRUB_MKRESCUE="$GRUB_MKRESCUE"
       - mkdir -p "$KERNEL_TREE/build/assets" && cp "$KERNEL_TREE/assets/doom.wad" "$KERNEL_TREE/build/assets/doom.wad" && scripts/run-intent-probe.sh doom "$KERNEL_TREE/build"
     fallback: none
 
@@ -138,6 +165,9 @@ runs:
     base: run:r1-mm
     sessions: 2
     goal: goals/r11-conformance.txt
+    # Amended 2026-10-10 (stop rule 5): see the header comment 'Frozen interfaces'.
+    seed:
+      tests/kernel/fault_harness_reference/include: tests/kernel/fault_harness_reference/include
     gates:
       - tests/kernel/run_fault_harness_test.sh
     fallback: none
@@ -154,6 +184,8 @@ runs:
     base: kernel-base-v5
     sessions: 3
     goal: goals/r9-aarch64.txt
+    seed:
+      tests/kernel/dtb_reference/include: tests/kernel/dtb_reference/include
     gates:
       - tests/kernel/run_dtb_test.sh
     fallback: none

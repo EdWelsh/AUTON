@@ -527,7 +527,7 @@ Given `pool_size` total bytes, regions are allocated as follows:
 ### Edge Cases
 
 - **Out of physical memory**: `pmm_alloc_page()` returns NULL; caller must handle gracefully
-- **Double free**: `pmm_free_page()` panics with diagnostic (address, caller return address)
+- **Double free**: `pmm_free_page()` panics with diagnostic (address, caller return address). A panic halts through the HAL's `arch_halt()` (`architecture.md`), never inline assembly: the allocator is portable code, compiled on the host by `tests/kernel/run_mm_test.sh` (where `arch_halt` aborts so the suite can see a panic), and a `cli; hlt` in `pmm.c` does not assemble there
 - **Page table allocation failure during mapping**: `vmm_map_page()` returns -1
 - **Slab large allocation**: sizes > 2048 bytes bypass slab, use direct page allocation
 - **SLM pool exhaustion**: `slm_pool_alloc()` returns NULL; SLM falls back to simpler inference or reports error
