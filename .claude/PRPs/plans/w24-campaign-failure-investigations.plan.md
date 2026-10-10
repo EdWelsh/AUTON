@@ -14,6 +14,7 @@ message is the engine's extra check and is not what decides a run (see F-8).
 
 | Run | Gate that failed | Cause class | Status |
 |---|---|---|---|
+| every run | the engine's own verdict, always failed | impossible check | FIXED |
 | R1 mm | suite compile, then (attempt 2 of the re-run) no code at all | spec gap + orchestrator crash | FIXED, VERIFY |
 | R2 storage | FAT32 suite link | spec gap (link contract) | FIXED, VERIFY |
 | R3 fileserver | suite compile; one run died at iteration 0 | interface not seen + git bug | FIXED, VERIFY |
@@ -137,18 +138,21 @@ copy; the reviewer rejected a header-only change three times. **FIXED:** sources
    (`pmm_alloc_contiguous` must serve megabytes). If R1's allocator is the empty tree the run
    starts from, R12 cannot work: it depends on R1 (below).
 
-## F-8. The engine's own "composition check failed" (R1, R2, R9, others)
+## F-8. The engine's own "composition check failed" (every run) — FIXED
 
-**Evidence.** Sessions end "Orchestration failed: composition check failed" with every task
-merged. The log gives no reason: `CompositionValidator` runs the kernel build and tests with the
-default build command, which on this Mac is not the toolchain the gates use.
+**Evidence.** Sessions ended "Orchestration failed: composition check failed" with every task
+merged. Running `CompositionValidator` by hand on an archived R9 tree: the build passed, the unit
+tests passed, and the integration step reported *"Kernel image not found:
+…/build/kernel-integration.bin"* as a **critical Frankenstein effect**.
 
-**Cause (hypothesis).** `BuildValidator` / `TestValidator` run `make`/tests without the
-cross toolchain environment. **OPEN, investigate first:** run the validator by hand against an
-archived tree and read `CompositionResult.summary`. Then either give it the same toolchain
-(`scripts/lib/toolchain.sh`) or, for campaign runs, make its failure advisory and print its
-reason. Today the message is also what a human reads first, and it points away from the real
-cause (the gates).
+**Cause.** Nothing in the repository builds `build/kernel-integration.bin` (`git grep` finds only
+the validator naming it). The check could never pass, so it failed every run's engine verdict
+whatever the code was. It was not what decided a run (the gates do), but it was the first thing a
+reader saw and it pointed away from the real causes.
+
+**Change (done).** No integration image means "integration tests not run", with the reason in
+the summary, not a failure; test in `test_composition_validator.py`. **OPEN:** decide whether an
+integration image should exist (a kernel built with the test harness) or the step be removed.
 
 ## F-9. Dependencies make one failure cascade
 

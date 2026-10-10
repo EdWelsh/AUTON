@@ -226,3 +226,18 @@ class TestCompositionValidatorInit:
         cv = CompositionValidator(workspace_path=tmp_path)
         assert cv.test_validator.qemu == "qemu-system-x86_64"
         assert cv.test_validator.timeout == 60
+
+
+async def test_no_integration_image_is_not_a_frankenstein_failure(tmp_path):
+    """w24 F-8: the missing build/kernel-integration.bin failed every run's engine verdict."""
+    from unittest.mock import AsyncMock, MagicMock
+
+    from orchestrator.validation.composition_validator import CompositionValidator
+
+    v = CompositionValidator(tmp_path)
+    v.build_validator.build = AsyncMock(return_value=MagicMock(success=True))
+    v.test_validator.run_tests = AsyncMock(return_value=MagicMock(success=True, tests=[]))
+    result = await v.validate(["mm"])
+    assert result.success and not result.issues
+    assert "not run" in result.summary
+    assert v.test_validator.run_tests.await_count == 1, "only the unit tests ran"
