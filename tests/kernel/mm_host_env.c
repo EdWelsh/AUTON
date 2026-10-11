@@ -32,6 +32,15 @@ WEAK size_t kstrlen(const char *s) { return strlen(s); }
 WEAK int kstrcmp(const char *a, const char *b) { return strcmp(a, b); }
 
 /* The slab sits on the PMM; an allocator that initialises it links these. */
+/* The boot layer's accessors, which kernel-base-v5's boot.h declares and a PMM may call to learn
+ * where the boot modules are (w24: R1's allocator did, and failed to link). A host has no
+ * modules; the suite reserves its own with pmm_mark_used. Typed loosely on purpose: this file
+ * includes no kernel header, so the stub cannot disagree with the tree's declaration. */
+static unsigned char host_boot_info[4096];
+WEAK const void *boot_get_info(void) { return host_boot_info; }
+WEAK int boot_module_reserved_range(const void *info, uint32_t i, uint64_t *start, uint64_t *end)
+{ (void)info; (void)i; (void)start; (void)end; return -1; }
+
 WEAK void slab_init(void) {}
 WEAK void *kmalloc(size_t n) { return malloc(n); }
 WEAK void *kzalloc(size_t n) { return calloc(1, n); }

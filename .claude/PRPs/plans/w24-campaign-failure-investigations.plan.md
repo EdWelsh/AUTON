@@ -65,6 +65,23 @@ exposure to any arch-specific inline asm in portable files. Add a gate step that
 `kernel/{mm,fs,net,services}/**` for `__asm__`/`asm(` and reports the file and line, so the
 failure message is "inline assembly in portable code" and not a clang error.
 
+## F-2b. R1 re-run: the host environment lacked `boot_get_info` (found 2026-10-11)
+
+**Evidence.** After F-1/F-2 the re-run's `pmm.c` compiled but did not link: `_boot_get_info`,
+`_boot_module_reserved_range` undefined. Both exist in kernel-base-v5 (`boot_mm.c`) and the
+generated allocator used them, reasonably, to find the boot modules the spec says it must not
+hand out. `mm_host_env.c` provided `kprintf`, `kmem*`, `kstr*` but not these.
+
+**Cause.** Same class as the `tftp_stub` gate defect: the suite required what lies outside the
+scope it verifies. It also **blinded the swarm**: its reviewers call `run_gate`, saw a link error
+every time, and could not see behaviour.
+
+**Change (done).** Weak stubs (no modules) in `mm_host_env.c`; self-test, 9/9 injected bugs still
+pass. With the link fixed, the archived tree shows two genuine behavioural bugs and nothing else:
+`kmalloc(0)` returns non-NULL, and `vmm_get_physical` on a 2 MiB mapping adds a 4 KiB offset
+(`virt & 0xFFF`) instead of `virt & (2 MiB - 1)`. **R1 is re-run** (pre-registered change: the
+swarm can now see behaviour through `run_gate`).
+
 ## F-3. FAT32 linked against kernel symbols (R2)
 
 **Evidence.** Link error: `_vfs_register_fs`, `_vfs_dentry_alloc`, `_kprintf`, `_kmemset`
