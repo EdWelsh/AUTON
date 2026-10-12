@@ -12,7 +12,8 @@ ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 HERE="$(cd "$(dirname "$0")" && pwd)"
 OUT="${TMPDIR:-/tmp}/auton_vmm_test"
 CC="${HOST_CC:-clang}"
-FLAGS=(-O1 -g -fsanitize=address,undefined -fno-sanitize-recover=undefined)
+source "$HERE/host_arch_defs.sh"
+FLAGS=(-O1 -g -fsanitize=address,undefined -fno-sanitize-recover=undefined "${HOST_ARCH_DEFS[@]}")
 
 if [ "${1:-}" = "--self-test" ]; then
 	echo "self-test: reference implementation (tests/kernel/vmm_reference/)"

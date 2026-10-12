@@ -113,7 +113,9 @@ if [ -z "$SOURCES" ]; then
 fi
 
 # shellcheck disable=SC2086
-clang -O1 -g -fsanitize=address,undefined \
+# shellcheck source=host_arch_defs.sh
+source "$HERE/host_arch_defs.sh"
+clang -O1 -g -fsanitize=address,undefined "${HOST_ARCH_DEFS[@]}" \
 	-I"$KERNEL_TREE/kernel/include" $BOOT_INCLUDE \
 	"$HERE/mm_test.c" "$HERE/mm_host_env.c" $SOURCES \
 	-o "$OUT" || {

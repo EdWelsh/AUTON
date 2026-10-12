@@ -80,3 +80,11 @@ WEAK void *phys_to_virt(uint64_t phys)
 /* The CPU HAL's halt (architecture.md: "CPU idle via arch_halt()"): what a
  * portable PMM calls after a panic message. In a test process, a panic ends it. */
 WEAK void arch_halt(void) { abort(); }
+/* The rest of the HAL an allocator may reasonably call (hal.h): panic ends the host process, as
+ * halt does, so the suite sees it; interrupt state is a no-op on a host (w24: R1 used arch_panic). */
+WEAK void arch_panic(const char *message) { fprintf(stderr, "arch_panic: %s\n", message); abort(); }
+WEAK void arch_enable_interrupts(void) {}
+WEAK void arch_disable_interrupts(void) {}
+WEAK uint64_t arch_save_irq_state(void) { return 0; }
+WEAK void arch_restore_irq_state(uint64_t state) { (void)state; }
+WEAK void arch_flush_tlb(uint64_t virt) { (void)virt; }

@@ -82,6 +82,27 @@ pass. With the link fixed, the archived tree shows two genuine behavioural bugs 
 (`virt & 0xFFF`) instead of `virt & (2 MiB - 1)`. **R1 is re-run** (pre-registered change: the
 swarm can now see behaviour through `run_gate`).
 
+## F-2c. R1 re-run result and two more host-environment holes (2026-10-12)
+
+The re-run took 25 h of sessions (three on Claude until its limit, two on the local 27b) and
+ended gates [1, -6, 0]. Reading its tree with the gates exposed two more things that were the
+harness, not the model, both **FIXED**:
+
+* `hal.h` has ARCH_* constants only under `#if defined(__x86_64__)`, so on this arm64 Mac a
+  portable file that includes `hal.h` (as mm.md now directs, for `arch_halt`/`arch_panic`) hits
+  `#error`. New `tests/kernel/host_arch_defs.sh` supplies the x86_64 constants to both suites.
+* The tree called `arch_panic` and the env had only `arch_halt`. Weak `arch_panic`,
+  `arch_{en,dis}able_interrupts`, `arch_{save,restore}_irq_state`, `arch_flush_tlb` added.
+
+With those, the final tree's **behavioural** failures are real model bugs: the allocator does not
+hand out exactly its free count nor report empty when drained; the VMM does not adopt the boot
+map, allocates one table where three are needed, does not free a table after a failed
+intermediate allocation, and cannot protect inside or split a 2 MiB page. Self-test and 9/9
+injected bugs still pass. **R1 is therefore a model-capability result at last**, not a harness
+one: the swarm needed to see these (it now can) and did not get the chance on this run, since the
+gates only became honest at its end. A further R1 attempt is a pre-registered change worth
+making once the rest of the ladder has run on today's gates.
+
 ## F-3. FAT32 linked against kernel symbols (R2)
 
 **Evidence.** Link error: `_vfs_register_fs`, `_vfs_dentry_alloc`, `_kprintf`, `_kmemset`
