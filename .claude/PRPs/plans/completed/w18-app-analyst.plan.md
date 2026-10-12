@@ -23,7 +23,7 @@ outside the index, any quote is not at its line, or any fact is sourced `observe
 
 ## Metadata
 - **Complexity**: Medium
-- **Source PRD**: `prds/auton-application-to-environment.prd.md`
+- **Source PRD**: `prds/completed/auton-application-to-environment.prd.md`
 - **PRD Phase**: A3 (role) and A4 (evidence discipline) — one plan because A4's gate is what makes A3's output usable
 - **Estimated Files**: 10
 - **Depends on**: `w17-app-artifact-record` (A1), `w17-app-subject-staging` (A2). D-A3 should be decided first; if it is not, the prompt framing in Task 4 is the conservative default and is labelled as such

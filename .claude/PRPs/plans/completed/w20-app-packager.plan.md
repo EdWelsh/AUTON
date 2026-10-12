@@ -21,7 +21,7 @@ gate that builds the recipe and diffs the inventory against the manifest.
 
 ## Metadata
 - **Complexity**: Large
-- **Source PRD**: `prds/auton-application-to-environment.prd.md`
+- **Source PRD**: `prds/completed/auton-application-to-environment.prd.md`
 - **PRD Phase**: A8 (settles Open Question 4: Packager is a separate role — the Integrator merges branches, and a failing package build must not block a merge)
 - **Estimated Files**: 11
 - **Depends on**: A6; **D-A1** (`first-substrate.md` verdict) decides which recipe kind is built first

@@ -35,7 +35,7 @@ hand, the exact ingest command, and the gate that proves it landed.
 |---|---|---|
 | P0 | `agent/kernel_spec/decisions/fleet-endpoint.md` | the format: status line, why it is a decision, what is already true, options |
 | P0 | `agent/kernel_spec/decisions/doom-engine-licence.md` | same, with a licence question |
-| P0 | `prds/auton-application-to-environment.prd.md` §"D-A3 deserves reading", §"On D-A2" | the substance of the new decisions |
+| P0 | `prds/completed/auton-application-to-environment.prd.md` §"D-A3 deserves reading", §"On D-A2" | the substance of the new decisions |
 | P1 | `docs/OPEN-WORK.md` §decide, §hardware | where each is referenced; links must resolve |
 | P1 | `agent/tools/vendor_fetch.py` (`--from-file`) | the X1/X2 ingest path |
 | P1 | `docs/HOST-MATRIX.md`, `agent/hardware/CONFORMANCE-HARDWARE.md` | X3/X4 "what a host would newly prove" |

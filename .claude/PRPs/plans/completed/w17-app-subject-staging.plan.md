@@ -22,7 +22,7 @@ No way to reach the subject; any write path would be an injection surface →
 
 ## Metadata
 - **Complexity**: Medium
-- **Source PRD**: `prds/auton-application-to-environment.prd.md`
+- **Source PRD**: `prds/completed/auton-application-to-environment.prd.md`
 - **PRD Phase**: A2
 - **Estimated Files**: 5
 - **Depends on**: nothing (A1's record stores the hash this produces)

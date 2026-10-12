@@ -1,7 +1,7 @@
 # PRD: Driver Selection, Synthesis and Provenance
 
 > **Closed 2026-09-23. Superseded for everything still open by**
-> [`auton-completion.prd.md`](../auton-completion.prd.md).
+> [`auton-completion.prd.md`](./auton-completion.prd.md).
 >
 > Phases V8 and V10 are carried to **R8 and X1**, each with the gate that decides it. The phases below record what was built and what it was measured against; nothing open is tracked here any more, so there is one place to look rather than five.
 

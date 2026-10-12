@@ -1,7 +1,7 @@
 # AUTON Hardware Truth: Vendor Specifications, Silicon Errata, and Fault Discovery
 
 > **Closed 2026-09-23. Superseded for everything still open by**
-> [`auton-completion.prd.md`](../auton-completion.prd.md).
+> [`auton-completion.prd.md`](./auton-completion.prd.md).
 >
 > Phases H7, H9, H10c, H10d, H10e are carried to **R10, R11, X2, D2**, each with the gate that decides it. The phases below record what was built and what it was measured against; nothing open is tracked here any more, so there is one place to look rather than five.
 

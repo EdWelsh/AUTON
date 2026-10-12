@@ -5,15 +5,22 @@ system from a stated need. `README.md:11` — *"We don't write the kernel. The a
 
 Everything below is aligned to that. If a PRD contradicts it, the PRD is wrong.
 
-## Start here (2026-09-23)
+## Start here (2026-10-12)
+
+**No PRD is open.** The last two, `auton-completion` and `auton-application-to-environment`, are fully
+planned and now in [`completed/`](./completed/) *as planned, not done* (1 of 12 generation runs passed).
+What is left to do is in [`w25-campaign-follow-through`](../plans/w25-campaign-follow-through.plan.md).
+The text below is the history of how they were planned.
+
+## Earlier: start here (2026-09-23)
 
 **Two PRDs are open.**
 
-[`auton-completion.prd.md`](./auton-completion.prd.md) is the finish line for work already
+[`auton-completion.prd.md`](./completed/auton-completion.prd.md) is the finish line for work already
 defined: twelve generation runs, three decisions, four things to acquire, each with the gate
 that decides it. Every open row there waits on a generation run.
 
-[`auton-application-to-environment.prd.md`](./auton-application-to-environment.prd.md) is new
+[`auton-application-to-environment.prd.md`](./completed/auton-application-to-environment.prd.md) is new
 scope, added 2026-09-24: give AUTON an application repository that already exists and a machine,
 and have **an Analyst agent** work out what it needs and hand the existing swarm a manifest it
 already knows how to build from. Two new roles, one staging rule, one new tool; everything

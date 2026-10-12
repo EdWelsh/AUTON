@@ -23,7 +23,7 @@ feeds both in.
 
 ## Metadata
 - **Complexity**: Medium
-- **Source PRD**: `prds/auton-application-to-environment.prd.md`
+- **Source PRD**: `prds/completed/auton-application-to-environment.prd.md`
 - **PRD Phase**: A7
 - **Estimated Files**: 7
 - **Depends on**: A6; `w17-run-resume` (generation runs exceed one session); the R-phase gates in `tests/kernel/` (already built)

@@ -1,7 +1,7 @@
 # AUTON on Windows and Linux
 
 > **Closed 2026-09-23. Superseded for everything still open by**
-> [`auton-completion.prd.md`](../auton-completion.prd.md).
+> [`auton-completion.prd.md`](./auton-completion.prd.md).
 >
 > Phases 0, A1, A3, B1, B2, B4, B5, C2, D2 are carried to **R1, R9, D3, X4**, each with the gate that decides it. The phases below record what was built and what it was measured against; nothing open is tracked here any more, so there is one place to look rather than five.
 

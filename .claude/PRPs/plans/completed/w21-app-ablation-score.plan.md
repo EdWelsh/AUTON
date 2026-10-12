@@ -22,7 +22,7 @@ entries left unexplained.
 
 ## Metadata
 - **Complexity**: Medium
-- **Source PRD**: `prds/auton-application-to-environment.prd.md`
+- **Source PRD**: `prds/completed/auton-application-to-environment.prd.md`
 - **PRD Phase**: A9 (answers Open Question 1, "is ablation affordable?", with a measurement)
 - **Estimated Files**: 6
 - **Depends on**: A8 (rebuild), A10 (probe)

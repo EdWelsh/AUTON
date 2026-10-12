@@ -186,7 +186,7 @@ Agents communicate through **git branches and file-based messaging** — no mess
 ## Application to environment
 
 A second front end for the compiler
-([PRD](../.claude/PRPs/prds/auton-application-to-environment.prd.md)): an existing application
+([PRD](../.claude/PRPs/prds/completed/auton-application-to-environment.prd.md)): an existing application
 repository in, a minimal environment out. Its rule is **agents gather evidence, deterministic
 tools adjudicate it.**
 

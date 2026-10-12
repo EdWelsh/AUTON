@@ -20,7 +20,7 @@ network-isolated with only the declared ports published, executes the probe, gra
 
 ## Metadata
 - **Complexity**: Medium
-- **Source PRD**: `prds/auton-application-to-environment.prd.md`
+- **Source PRD**: `prds/completed/auton-application-to-environment.prd.md`
 - **PRD Phase**: A10
 - **Estimated Files**: 5
 - **Depends on**: A8

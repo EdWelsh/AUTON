@@ -20,7 +20,7 @@ into the artifact record by a tool, never by an agent.
 
 ## Metadata
 - **Complexity**: Large
-- **Source PRD**: `prds/auton-application-to-environment.prd.md`
+- **Source PRD**: `prds/completed/auton-application-to-environment.prd.md`
 - **PRD Phase**: A5
 - **Estimated Files**: 9
 - **Depends on**: A1 (record format). **Hard gates**: `decisions/subject-trust.md` (D-A3) and `decisions/first-substrate.md` (D-A1) must have verdicts — this phase executes code AUTON did not write. `decisions/syscall-scope.md` (D-A2) decides whether the `syscalls` kind is recorded at all; default until decided: not recorded

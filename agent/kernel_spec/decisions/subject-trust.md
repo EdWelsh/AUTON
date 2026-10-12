@@ -1,7 +1,7 @@
 # Decision (owner): is a subject application repository trusted?
 
 **Status: decided 2026-09-29 — (a) untrusted, sandboxed.** It governs phase A5 (`observe.py`) of
-[`auton-application-to-environment.prd.md`](../../../.claude/PRPs/prds/auton-application-to-environment.prd.md),
+[`auton-application-to-environment.prd.md`](../../../.claude/PRPs/prds/completed/auton-application-to-environment.prd.md),
 and changes how A3 (the Analyst) frames what it reads. Everything before A5 can be built without
 an answer. Plan: [`w19-app-observe`](../../../.claude/PRPs/plans/completed/w19-app-observe.plan.md).
 

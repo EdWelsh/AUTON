@@ -20,7 +20,7 @@ vocabulary), an artifact record format, and a validator with a refusal per defec
 
 ## Metadata
 - **Complexity**: Medium
-- **Source PRD**: `prds/auton-application-to-environment.prd.md`
+- **Source PRD**: `prds/completed/auton-application-to-environment.prd.md`
 - **PRD Phase**: A1 (settles Open Questions 2, 3, and records a rule for 5)
 - **Estimated Files**: 6
 - **Depends on**: nothing

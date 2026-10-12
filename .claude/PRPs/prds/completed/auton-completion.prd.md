@@ -1,17 +1,25 @@
 # AUTON Completion
 
+**Status**: planned in full 2026-10-12 — moved to `completed/` as **planned, not done**. Every row has a
+plan (w17–w25), a gate, or a recorded reason it has none. The campaign finished 2026-10-10 with
+**1 of 12 passed (R8)**; the other eleven failed both attempts, and the causes are in
+[`w24`](../../plans/w24-campaign-failure-investigations.plan.md). What is left — code follow-ups,
+the next pre-registered attempt, and the owner/hardware rows (D1–D3, X1–X4; C4/C5 need a TLS PRD of
+their own) — is in [`w25-campaign-follow-through`](../../plans/w25-campaign-follow-through.plan.md)
+and [`docs/OPEN-WORK.md`](../../../../docs/OPEN-WORK.md). Read it for *why*, not for what to do next.
+
 **Status**: canonical for all remaining work **that was already defined**. New scope added
 2026-09-24 lives in
 [`auton-application-to-environment.prd.md`](./auton-application-to-environment.prd.md) —
 deriving the minimum environment for an application that already exists. It does not block, and
 is not blocked by, anything below. The five PRDs it consolidates are in
-[`completed/`](./completed/) — their phases are done, and every phase that was not is a phase
+[`completed/`](./) — their phases are done, and every phase that was not is a phase
 below, carried over with its evidence.
 
 This document exists because the project stopped being a design problem. Ninety plans are
 closed, every specification has a host suite scored by injected bugs, and on 2026-09-22 an agent
 wrote a 430-line TFTP server that passed all 31 checks of a suite it never saw
-([report](../reports/w14-f6-qwen-report.md)). What is left is **running the swarm, taking three
+([report](../../reports/w14-f6-qwen-report.md)). What is left is **running the swarm, taking three
 decisions, and acquiring four things this project does not have.**
 
 ## Problem Statement
@@ -29,8 +37,8 @@ the run happens.
 
 | Fact | Where |
 |---|---|
-| An agent-authored service passed a frozen human suite it never saw | [w14 F6 report](../reports/w14-f6-qwen-report.md) |
-| Four earlier runs on an unqualified model produced zero working lines | [w13 F6](../reports/w13-factory-f6-rerun-report.md), [mm](../reports/w13-generate-mm-report.md), [storage](../reports/w13-generate-storage-report.md), [V8](../reports/w13-driver-v8-rerun-report.md) |
+| An agent-authored service passed a frozen human suite it never saw | [w14 F6 report](../../reports/w14-f6-qwen-report.md) |
+| Four earlier runs on an unqualified model produced zero working lines | [w13 F6](../../reports/w13-factory-f6-rerun-report.md), [mm](../../reports/w13-generate-mm-report.md), [storage](../../reports/w13-generate-storage-report.md), [V8](../../reports/w13-driver-v8-rerun-report.md) |
 | The difference was measured, not assumed | `scripts/model-probe.py`, four checks a local model has actually failed |
 | Two harness defects hid a working result for a day | the TFTP stub shadowed libk; the engine orphaned uncommitted work |
 
@@ -64,13 +72,13 @@ see. A suite that cannot fail is not evidence.
 Three kinds of phase, distinguished because they fail differently: **R** runs the swarm,
 **D** needs a person to decide, **X** needs something acquired.
 
-**Plans (2026-09-29):** R1–R12 → [`w18-generation-campaign`](../plans/w18-generation-campaign.plan.md), which
-needs [`w17-run-resume`](../plans/completed/w17-run-resume.plan.md) first (R1 was cut off and lost its
-uncommitted work); D1, D2, X1–X4 → [`w17-owner-gates`](../plans/completed/w17-owner-gates.plan.md).
+**Plans (2026-09-29):** R1–R12 → [`w18-generation-campaign`](../../plans/w18-generation-campaign.plan.md), which
+needs [`w17-run-resume`](../../plans/completed/w17-run-resume.plan.md) first (R1 was cut off and lost its
+uncommitted work); D1, D2, X1–X4 → [`w17-owner-gates`](../../plans/completed/w17-owner-gates.plan.md).
 
 | # | Phase | Gate that decides it | Depends on |
 |---|---|---|---|
-| R1 | Memory manager (was F3, B2) | `run_mm_test.sh`, `run_vmm_test.sh`, the exact `[MM]` boot line | — · **run 1 cut off at the 5h timeout: mm exit 1, vmm exit 2** ([report](../reports/w15-mm-qwen-report.md)) |
+| R1 | Memory manager (was F3, B2) | `run_mm_test.sh`, `run_vmm_test.sh`, the exact `[MM]` boot line | — · **run 1 cut off at the 5h timeout: mm exit 1, vmm exit 2** ([report](../../reports/w15-mm-qwen-report.md)) |
 | R2 | Storage: virtio-blk + FAT32 (was F7) | `run_virtio_blk_test.sh`, `run_fat32_test.sh`, `run-storage-acceptance.sh` | R1 |
 | R3 | File server (was F8) | `run_fileserver_test.sh`, then `--service fileserver`: curl retrieves bytes `mcopy` put on the disk | R2 |
 | R4 | KV store (was F9) | `run_kvstore_test.sh`, then `--service kvstore`: redis-cli values survive a reboot | R2 |
@@ -85,7 +93,7 @@ uncommitted work); D1, D2, X1–X4 → [`w17-owner-gates`](../plans/completed/w1
 | D1 | The Doom engine's licence | a written verdict in `decisions/doom-engine-licence.md` | owner |
 | D2 | Where a fleet report goes, if anywhere | a written verdict in `decisions/fleet-endpoint.md` | owner |
 | D3 | Push the branch | CI runs; two workflows, five matrix legs, stop being theoretical | owner |
-| X1 | Driver ↔ erratum join (was V10) — see [`docs/ACQUIRE.md`](../../../docs/ACQUIRE.md) | `errata_join.py` finds a real pair for `e1000e` | one Intel NIC spec update |
+| X1 | Driver ↔ erratum join (was V10) — see [`docs/ACQUIRE.md`](../../../../docs/ACQUIRE.md) | `errata_join.py` finds a real pair for `e1000e` | one Intel NIC spec update |
 | X2 | Errata lineage (was H9) | `retrodict.py` scores a real cutoff against the baseline | six Intel spec updates |
 | X3 | Real-silicon conformance (was J/I6) | `run_conformance.sh` does not SKIP, on metal | an x86 machine |
 | X4 | Proxmox, WSL2, bare metal (was 0, A3, B1, B4, B5, C2) | each host's row in `HOST-MATRIX.md` stops saying "No" | those hosts |

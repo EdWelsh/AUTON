@@ -3,11 +3,11 @@
 Every piece of AUTON that is not finished, what blocks it, and the exact next step. All 90
 plans and all five original PRDs are closed (`.claude/PRPs/plans/completed/`,
 `.claude/PRPs/prds/completed/`), and
-[`auton-completion.prd.md`](../.claude/PRPs/prds/auton-completion.prd.md) carries what is left
+[`auton-completion.prd.md`](../.claude/PRPs/prds/completed/auton-completion.prd.md) carries what is left
 of that work, phase by phase, with the gate that decides each one.
 
 One PRD of **new** scope was opened on 2026-09-24:
-[`auton-application-to-environment.prd.md`](../.claude/PRPs/prds/auton-application-to-environment.prd.md)
+[`auton-application-to-environment.prd.md`](../.claude/PRPs/prds/completed/auton-application-to-environment.prd.md)
 — give AUTON an application repository that already exists and a machine, and have an Analyst
 agent work out what it needs and hand the existing swarm a manifest. Its phases are not listed
 in the blocker tables below, because they are unstarted rather than blocked: nothing stands in

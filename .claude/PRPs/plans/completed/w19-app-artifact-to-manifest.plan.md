@@ -19,7 +19,7 @@ the Manifest already has, with application-only facts carried in one new optiona
 
 ## Metadata
 - **Complexity**: Medium
-- **Source PRD**: `prds/auton-application-to-environment.prd.md`
+- **Source PRD**: `prds/completed/auton-application-to-environment.prd.md`
 - **PRD Phase**: A6
 - **Estimated Files**: 4
 - **Depends on**: A4 (records exist), A5 (`observed` facts exist)

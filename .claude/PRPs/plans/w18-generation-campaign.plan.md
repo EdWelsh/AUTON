@@ -22,7 +22,7 @@ human-authored fallback every earlier generation plan already names, labelled in
 
 ## Metadata
 - **Complexity**: Large (operator time), Small (code)
-- **Source PRD**: `prds/auton-completion.prd.md`
+- **Source PRD**: `prds/completed/auton-completion.prd.md`
 - **PRD Phase**: R1–R12, and the scenarios C1–C3 they unlock
 - **Estimated Files**: 1 CREATE (`docs/CAMPAIGN.md`), reports per run
 - **Depends on**: `w17-run-resume` (hard, for R1/R2 — both exceed five hours on this machine)
@@ -87,7 +87,7 @@ while a human reads R1's diff.
 | `.claude/PRPs/reports/w18-<run>-preregistration.md` | CREATE per run | protocol step 1 |
 | `.claude/PRPs/reports/w18-<run>-report.md` | CREATE per run | protocol step 6 |
 | `agent/tools/authorship.yaml` | UPDATE per run | who wrote what |
-| `prds/auton-completion.prd.md` | UPDATE per run | the Depends-on column carries the result |
+| `prds/completed/auton-completion.prd.md` | UPDATE per run | the Depends-on column carries the result |
 
 ## NOT Building
 - A scheduler that runs the campaign unattended. Each run's model and budget is a pre-registration, which is a human act.

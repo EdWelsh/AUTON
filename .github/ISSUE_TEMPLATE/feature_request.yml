@@ -7,7 +7,7 @@ body:
       value: |
         Please check [`docs/OPEN-WORK.md`](https://github.com/EdWelsh/AUTON/blob/main/docs/OPEN-WORK.md)
         and the open PRD
-        ([`auton-completion.prd.md`](https://github.com/EdWelsh/AUTON/blob/main/.claude/PRPs/prds/auton-completion.prd.md))
+        ([`auton-completion.prd.md`](https://github.com/EdWelsh/AUTON/blob/main/.claude/PRPs/prds/completed/auton-completion.prd.md))
         first — several large gaps are deliberate and already recorded, notably
         **TLS**, **IMAP** and **a wifi driver**. A request for one of those is
         still welcome; it just becomes a "prioritise this" rather than a "this

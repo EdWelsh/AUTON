@@ -1,6 +1,6 @@
 # Things to acquire
 
-Four rows of [`auton-completion.prd.md`](../.claude/PRPs/prds/auton-completion.prd.md) (X1–X4)
+Four rows of [`auton-completion.prd.md`](../.claude/PRPs/prds/completed/auton-completion.prd.md) (X1–X4)
 wait on something this project does not have: a document behind a download page that refuses
 scripts, or a machine. Each row below is **what to get, where a person gets it, the one command
 that brings it in, and the gate that proves it landed.** The code on the other side of each is

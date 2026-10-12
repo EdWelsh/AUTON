@@ -15,7 +15,7 @@ was necessary.
 
 ## Metadata
 - **Complexity**: Large (operator time), Small (code)
-- **Source PRD**: `prds/auton-application-to-environment.prd.md`
+- **Source PRD**: `prds/completed/auton-application-to-environment.prd.md`
 - **PRD Phase**: validation of A1–A10; closes the Success Metrics table
 - **Depends on**: every `w17-app-*` … `w21-app-*` plan; D-A1, D-A2, D-A3 verdicts
 
@@ -52,7 +52,7 @@ way.
 |---|---|
 | `.claude/PRPs/reports/w22-app-three-runtimes-preregistration.md` | CREATE |
 | `.claude/PRPs/reports/w22-app-three-runtimes-report.md` | CREATE |
-| `prds/auton-application-to-environment.prd.md` | UPDATE — "Today" column of Success Metrics becomes measured |
+| `prds/completed/auton-application-to-environment.prd.md` | UPDATE — "Today" column of Success Metrics becomes measured |
 | `docs/OPEN-WORK.md` | UPDATE |
 
 ## NOT Building

@@ -22,7 +22,7 @@ skips planning and design.
 
 ## Metadata
 - **Complexity**: Medium
-- **Source PRD**: `prds/auton-completion.prd.md`
+- **Source PRD**: `prds/completed/auton-completion.prd.md`
 - **PRD Phase**: enabling work for R1–R12 (Open Question 2 "how many turns is enough?" and 3 "is the faster model enough?")
 - **Estimated Files**: 7
 
