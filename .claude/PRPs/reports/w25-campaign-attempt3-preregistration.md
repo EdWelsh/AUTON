@@ -1,0 +1,29 @@
+# Pre-registration: campaign attempt 3, honest gates from the first iteration (w25)
+
+**Written 2026-10-13, before any run.** A *different experiment* from the 2026-10-10 re-run (w23);
+its verdicts stay as recorded. Stop rule: two attempts per run counted from this experiment, then stop.
+
+**What the last attempt showed** (w24 F-2c): R1's gates became honest only at the end of a 25 h run.
+Reading its tree with them showed real model bugs: the allocator does not hand out exactly its free
+count nor report empty when drained; the VMM does not adopt the boot map, allocates one table where
+three are needed, leaks a table after a failed intermediate allocation, and cannot protect inside or
+split a 2 MiB page. The swarm never had the chance to see them.
+
+**Change under test:** the swarm sees behaviour through `run_gate` from iteration 1 (host env supplies
+`boot_get_info`, HAL stubs and x86_64 arch constants); portable code with inline assembly is named by
+file:line (`portable_asm_check.sh`); every run seeds and names its frozen interface (enforced by
+`test_suite_interfaces_declared.py`); a dependant never starts on an empty base.
+
+**Hypothesis:** R1's earlier failure was lost feedback, not lack of capability. **Prediction:** with
+behavioural failures visible each iteration, R1's `run_mm_test.sh` passes or fails at a *behavioural*
+check inside its budget; the VMM's five listed bugs are the first things the reviewers cite.
+
+**Falsified if:** the final tree fails the same behavioural checks after the swarm was shown them
+every iteration (then it is model capability, and the next change is a larger model or a decomposed
+goal, pre-registered separately); or a compile/link/harness failure returns (then a harness defect,
+fix and record, do not count the attempt).
+
+**Order:** R1, then R2, then R3/R4/R5/R6/R7, then R9, then R10/R11/R12. A dependant runs only when its
+base run's gates are green (R8 stays passed). **Not predicted:** that all pass. A pass is a result; a
+failure at a later gate than before is progress; I will not re-run a run on a changed harness without
+a new pre-registration.

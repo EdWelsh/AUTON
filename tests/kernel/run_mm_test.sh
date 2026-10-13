@@ -115,6 +115,7 @@ fi
 # shellcheck disable=SC2086
 # shellcheck source=host_arch_defs.sh
 source "$HERE/host_arch_defs.sh"
+"$HERE/portable_asm_check.sh" "$KERNEL_TREE" || echo "(use arch_halt() from hal.h, not inline assembly — see mm.md)" >&2
 clang -O1 -g -fsanitize=address,undefined "${HOST_ARCH_DEFS[@]}" \
 	-I"$KERNEL_TREE/kernel/include" $BOOT_INCLUDE \
 	"$HERE/mm_test.c" "$HERE/mm_host_env.c" $SOURCES \

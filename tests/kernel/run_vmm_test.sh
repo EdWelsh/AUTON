@@ -24,6 +24,7 @@ fi
 
 KERNEL_TREE="${KERNEL_TREE:-$ROOT/kernels/x86_64}"
 case "$KERNEL_TREE" in /*) ;; *) KERNEL_TREE="$ROOT/$KERNEL_TREE";; esac
+"$HERE/portable_asm_check.sh" "$KERNEL_TREE" || echo "(use the HAL, not inline assembly — see mm.md)" >&2
 if [ ! -f "$KERNEL_TREE/kernel/mm/vmm.c" ]; then
 	echo "no kernel/mm/vmm.c in $KERNEL_TREE." >&2
 	echo "The VMM is specified in agent/kernel_spec/subsystems/mm.md and has not" >&2
