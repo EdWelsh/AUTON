@@ -22,6 +22,8 @@ from orchestrator.agents.model_architect_agent import ModelArchitectAgent
 from orchestrator.agents.reviewer_agent import ReviewerAgent
 from orchestrator.agents.tester_agent import TesterAgent
 from orchestrator.agents.training_agent import TrainingAgent
+from git.exc import GitCommandError
+
 from orchestrator.comms.git_workspace import GitWorkspace, WorkspaceError
 from orchestrator.comms.message_bus import MessageBus
 from orchestrator.core import syntax_gate
@@ -543,6 +545,13 @@ class OrchestrationEngine:
                 ),
             }
 
+        except GitCommandError as e:
+            # w24 F-4: workspace plumbing (a refused checkout, a stale lock) killed five runs
+            # at "Orchestration failed". The task graph is intact, so pause and let --resume retry.
+            logger.exception("Workspace git operation failed; pausing: %s", e)
+            result = self._pause(state_path)
+            result["error"] = f"paused after a git failure ({str(e).splitlines()[0][:200]}); resume with --resume"
+            return result
         except Exception as e:
             logger.exception("Orchestration failed: %s", e)
             self.state.phase = "error"

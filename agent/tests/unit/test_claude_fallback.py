@@ -82,3 +82,33 @@ async def test_without_a_fallback_the_old_waiting_path_is_used(monkeypatch):
 def test_the_local_fallback_is_given_longer_than_a_cloud_call():
     from orchestrator.llm.client import FALLBACK_REQUEST_TIMEOUT
     assert FALLBACK_REQUEST_TIMEOUT > 1800, "R5 and R7 lost tasks to 1800 s local calls"
+
+
+async def _flaky(client, calls, fail_times):
+    import litellm
+    seen = {"n": 0}
+
+    def complete(kwargs, agent_id, timeout=None):
+        seen["n"] += 1
+        if seen["n"] <= fail_times:
+            raise litellm.Timeout("timed out", model=LOCAL, llm_provider="ollama")
+        return calls.litellm(**kwargs)
+    client._complete = complete
+    return seen
+
+
+async def test_a_timed_out_call_is_retried_once(wired):
+    """w24 F-5: R5's smtp-004 and R7's ssh-002 were failed on their first timeout."""
+    client, calls = wired
+    seen = await _flaky(client, calls, 1)
+    resp = await client.send_message("a", "sys", [{"role": "user", "content": "hi"}])
+    assert seen["n"] == 2 and resp.text == "from local"
+
+
+async def test_a_second_timeout_is_raised(wired):
+    import litellm
+    client, calls = wired
+    seen = await _flaky(client, calls, 2)
+    with pytest.raises(litellm.Timeout):
+        await client.send_message("a", "sys", [{"role": "user", "content": "hi"}])
+    assert seen["n"] == 2

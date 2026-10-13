@@ -320,3 +320,26 @@ async def test_a_resume_skips_subsystems_already_designed(workspace, monkeypatch
     await eng2.run(GOAL, resume=True)
     assert len(again) == 1, "only the subsystem not yet designed is designed again"
     assert first[0] not in again[0]
+
+
+async def test_a_git_failure_pauses_a_resumable_run_instead_of_ending_it(workspace, monkeypatch):
+    """w24 F-4: five campaign runs died at 'Orchestration failed' on a refused checkout."""
+    from git.exc import GitCommandError
+
+    eng = _engine(workspace)
+    model = Model()
+    model.engine = eng
+    monkeypatch.setattr(eng.client, "send_with_tools", model)
+    real = eng.workspace.commit_pending
+    calls = {"n": 0}
+
+    def refused(*a, **k):
+        calls["n"] += 1
+        if calls["n"] == 1:
+            raise GitCommandError("checkout", 1, stderr="local changes would be overwritten")
+        return real(*a, **k)
+    monkeypatch.setattr(eng.workspace, "commit_pending", refused)
+    result = await eng.run(GOAL)
+
+    assert result.get("paused") is True and "git failure" in result["error"]
+    assert OrchestratorState.load(workspace / ".auton" / "state.json").phase == "paused"

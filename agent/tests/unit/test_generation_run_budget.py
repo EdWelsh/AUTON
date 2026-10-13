@@ -31,3 +31,14 @@ def test_work_is_wall_clock_less_waits_and_a_memory_pause_is_none():
     assert gr.work_seconds({"seconds": 18000, "limit_wait_seconds": 17100}) == 900
     assert gr.work_seconds({"seconds": 500, "memory_paused": True}) == 0
     assert gr.work_seconds({"seconds": 600}) == 600
+
+
+def test_a_memory_pause_records_how_little_was_free(tmp_path, monkeypatch):
+    """w24 F-10: sessions of 3-16 h showed memory pauses with no figure to explain them."""
+    monkeypatch.setattr(gr, "memory_free", lambda: 7)
+    killed = []
+    monkeypatch.setattr(gr.subprocess, "run", lambda *a, **k: killed.append(a))
+    guard = gr.MemoryGuard(tmp_path / "cfg.yaml", floor=10)
+    monkeypatch.setattr(guard._stop, "wait", lambda _t: False)
+    guard.run()
+    assert guard.fired and guard.free_at_fire == 7 and killed

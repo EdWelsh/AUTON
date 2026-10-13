@@ -342,6 +342,13 @@ class LLMClient:
 
             try:
                 response = await self._complete(kwargs, agent_id, call_timeout)
+            except litellm.Timeout:
+                # w24 F-5: a timeout failed R5's and R7's tasks outright; the model may have been
+                # mid-answer, so try once more before giving up. (Timeout subclasses
+                # APIConnectionError, so it must be caught first.)
+                logger.warning("Call timed out after %.0fs for agent %s; retrying once",
+                               call_timeout, agent_id)
+                response = await self._complete(kwargs, agent_id, call_timeout)
             except litellm.RateLimitError:
                 logger.warning("Rate limited, retrying in 30s for agent %s", agent_id)
                 await asyncio.sleep(30)

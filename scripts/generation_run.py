@@ -105,12 +105,14 @@ class MemoryGuard(threading.Thread):
     def __init__(self, cfg: Path, floor: int):
         super().__init__(daemon=True)
         self.cfg, self.floor, self.fired, self._stop = cfg, floor, False, threading.Event()
+        self.free_at_fire: int | None = None
 
     def run(self) -> None:
         while not self._stop.wait(30):
             free = memory_free()
             if free is not None and free < self.floor:
                 self.fired = True
+                self.free_at_fire = free       # w24 F-10: pauses were unexplained
                 subprocess.run(["pkill", "-TERM", "-f", f"orchestrator.cli --config {self.cfg}"])
                 return
 
@@ -161,6 +163,7 @@ def run_session(n: int, out: Path, wrapper: Path, cfg: Path, goal: str, resume: 
     return {"session": n, "resume": resume, "started": started, "finished": now(),
             "seconds": elapsed, "rc": r.returncode, "tail": tail,
             "memory_paused": guard.fired,
+            "memory_free_percent_at_pause": guard.free_at_fire,
             "limit_wait_seconds": limit_wait_seconds(out, n, elapsed)}
 
 
@@ -273,7 +276,7 @@ def main(argv: list[str] | None = None) -> int:
             result["sessions"].append(s)
             result_path.write_text(json.dumps(result, indent=2) + "\n")
             print(f"session {n}: rc {s['rc']} after {s['seconds']}s (waited {s['limit_wait_seconds']}s on limits)"
-                  f"{' (memory guard)' if s['memory_paused'] else ''} — {' | '.join(s['tail'])}",
+                  f"{(' (memory guard, ' + str(s.get('memory_free_percent_at_pause')) + '% free)') if s['memory_paused'] else ''} — {' | '.join(s['tail'])}",
                   flush=True)
             if s["memory_paused"]:
                 # Not the run's budget spent: the host's. Unload the model — it
