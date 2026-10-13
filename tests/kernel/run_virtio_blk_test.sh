@@ -46,7 +46,7 @@ if [ -z "$SOURCES" ]; then
 fi
 
 # shellcheck disable=SC2086
-"$CC" -O1 -g -fsanitize=address,undefined \
+"$CC" -O1 -g -fsanitize=address,undefined -include "$HERE/host_io_shim.h" \
 	-I"$KERNEL_TREE/kernel/include" -I"$HERE/virtio_reference/include" \
 	"$HERE/virtio_blk_test.c" $SOURCES -o "$OUT" || {
 		echo "compile failed — the generated driver does not match drivers.md" >&2

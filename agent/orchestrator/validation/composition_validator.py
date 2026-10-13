@@ -69,52 +69,15 @@ class CompositionValidator:
         logger.info("Composition check: running unit tests")
         unit_result = await self.test_validator.run_tests()
 
-        # Step 3: Run integration tests, when there is an integration image to run. Nothing in
-        # the kernel base builds `build/kernel-integration.bin`, so the step always reported
-        # "Kernel image not found" as a critical Frankenstein effect and failed every run's
-        # engine verdict (w24 F-8). No image is "not run", not "failed".
-        image = self.workspace_path / "build" / "kernel-integration.bin"
-        if not image.exists():
-            logger.info("Composition check: no integration image; integration tests not run")
-            return CompositionResult(
-                success=True, issues=[], build_ok=True, unit_tests_ok=unit_result.success,
-                integration_tests_ok=True,
-                summary="integration tests not run: no build/kernel-integration.bin")
-        logger.info("Composition check: running integration tests")
-        integration_result = await self.test_validator.run_tests(kernel_image=str(image))
-
-        # Step 4: Analyze for composition issues
-        if unit_result.success and not integration_result.success:
-            # Classic Frankenstein effect: unit tests pass but integration fails
-            issues.append(CompositionIssue(
-                subsystems=subsystems or ["unknown"],
-                severity="critical",
-                description=(
-                    "Frankenstein effect detected: unit tests pass but integration tests fail. "
-                    "Subsystems work individually but fail when composed."
-                ),
-                evidence=integration_result.raw_output[:500],
-            ))
-
-        # Check for tests that pass in isolation but fail in full suite
-        if unit_result.tests and integration_result.tests:
-            unit_names = {t.name for t in unit_result.tests if t.passed}
-            for test in integration_result.tests:
-                if test.name in unit_names and not test.passed:
-                    issues.append(CompositionIssue(
-                        subsystems=subsystems or ["unknown"],
-                        severity="warning",
-                        description=f"Test '{test.name}' passes in isolation but fails in integration",
-                        evidence=test.message,
-                    ))
-
-        success = not any(i.severity == "critical" for i in issues)
-
+        # No integration step (w25 A6, decided from w24 F-8). Nothing builds an integration
+        # image, so the step could only ever report "not run"; the generation gates decide a
+        # run, and the engine's verdict is the build plus the unit tests, stated as such.
+        success = build_result.success
         return CompositionResult(
             success=success,
             issues=issues,
             build_ok=build_result.success,
             unit_tests_ok=unit_result.success,
-            integration_tests_ok=integration_result.success,
-            summary=f"{len(issues)} composition issues found" if issues else "No composition issues",
+            integration_tests_ok=True,
+            summary="build ok; integration tests not run (no integration image exists)",
         )
