@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Any
 
 from orchestrator.agents.analyst_agent import AnalystAgent
+from orchestrator.agents.vendor_research_agents import SpecReaderAgent, VendorScoutAgent
 from orchestrator.agents.architect_agent import ArchitectAgent
 from orchestrator.agents.base_agent import AgentRole, TaskResult
 from orchestrator.agents.data_scientist_agent import DataScientistAgent
@@ -295,6 +296,31 @@ class OrchestrationEngine:
                 f"- The manifest's substrate is {substrate}. Packaging the application is "
                 "ONE task, assigned_to \"packager\", producing package/Dockerfile and "
                 "package/PROVENANCE.json.")
+
+        # Vendor spec research, only when the run asks for it ([hardware] research =
+        # true): advertising roles changes every planner prompt, so a kernel run's
+        # experiment is unchanged unless the operator opts in.
+        hw = self.config.get("hardware", {})
+        if hw.get("research"):
+            hosts = tuple(hw.get("fetch_hosts", ()))
+            for key, cls, role, n, blurb in (
+                ("vendor_scout", VendorScoutAgent, AgentRole.VENDOR_SCOUT,
+                 int(hw.get("scout_count", 2)),
+                 "- Finding what a hardware vendor publishes is ONE task per vendor, "
+                 "assigned_to \"vendor_scout\", producing hardware/proposals/<vendor>.yaml."),
+                ("spec_reader", SpecReaderAgent, AgentRole.SPEC_READER,
+                 int(hw.get("reader_count", 2)),
+                 "- Reading one vendor document and deriving cited records is ONE task per "
+                 "document, assigned_to \"spec_reader\", producing "
+                 "hardware/derived/<document-id>.yaml."),
+            ):
+                for i in range(n):
+                    agent = self._create_agent(f"{key.replace('_', '-')}-{i+1:02d}", role, cls)
+                    if hasattr(agent, "fetch_hosts"):
+                        agent.fetch_hosts = hosts
+                    self._agents[f"{key}-{i+1:02d}"] = agent
+                    self.scheduler.register_agent(key, agent)
+                self._agents["manager"].advertise_role(key, blurb)
 
         logger.info(
             "Initialized %d agents: 1 manager, 1 architect, %d devs, "

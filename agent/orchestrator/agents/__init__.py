@@ -10,6 +10,7 @@ from orchestrator.agents.model_architect_agent import ModelArchitectAgent
 from orchestrator.agents.reviewer_agent import ReviewerAgent
 from orchestrator.agents.tester_agent import TesterAgent
 from orchestrator.agents.training_agent import TrainingAgent
+from orchestrator.agents.vendor_research_agents import SpecReaderAgent, VendorScoutAgent
 
 __all__ = [
     "Agent",
@@ -25,4 +26,6 @@ __all__ = [
     "DataScientistAgent",
     "ModelArchitectAgent",
     "TrainingAgent",
+    "VendorScoutAgent",
+    "SpecReaderAgent",
 ]

@@ -73,6 +73,9 @@ class AgentRole(str, Enum):
     ANALYST = "analyst"
     # ...and packages what a validated manifest names (A8)
     PACKAGER = "packager"
+    # Vendor spec research: find vendor documents, derive cited records from them
+    VENDOR_SCOUT = "vendor_scout"
+    SPEC_READER = "spec_reader"
     # SLM agents
     DATA_SCIENTIST = "data_scientist"
     MODEL_ARCHITECT = "model_architect"
@@ -315,6 +318,10 @@ class Agent:
                 case "run_gate":
                     return await self._run_gate()
 
+                case ("vendor_lookup" | "vendor_queue" | "fetch_document" | "fetch_url"
+                      | "read_document" | "check_hardware_record"):
+                    return self._hardware_tool(tool_name, tool_input)
+
                 case "shell":
                     return await self._run_allowlisted(
                         tool_input["command"],
@@ -469,6 +476,49 @@ class Agent:
             report.append(f"$ {cmd}\n" + "\n".join(tail)
                           + f"\n[exit {rc}: {self.GATE_MEANING.get(rc, 'failed')}]")
         return "\n\n".join(report)
+
+    def _hardware_tool(self, name: str, args: dict) -> str:
+        """The vendor spec agents' tools: agent/tools/vendor_research.py does the work,
+        so every rule they enforce is testable without a model."""
+        tools_dir = str(Path(__file__).resolve().parents[2] / "tools")
+        if tools_dir not in sys.path:
+            sys.path.insert(0, tools_dir)
+        import vendor_research as vr
+
+        try:
+            if name == "vendor_lookup":
+                return vr.lookup(args["query"])
+            if name == "vendor_queue":
+                rows = vr.queue(int(args.get("limit") or 20))
+                return "\n".join(f"- {r['key']}: {' / '.join(r['names'])} [{', '.join(r['ids'])}]"
+                                 for r in rows) or "every registry vendor has coverage"
+            if name == "fetch_document":
+                from vendor_fetch import FetchError, fetch
+                try:
+                    prov = fetch(args["vendor"], args["doc_id"])
+                except FetchError as exc:
+                    return f"Refused: {exc}"
+                return f"fetched {args['vendor']}/{args['doc_id']} sha256 {prov.sha256}"
+            if name == "fetch_url":
+                hosts = tuple(vr.DEFAULT_HOSTS) + tuple(getattr(self, "fetch_hosts", ()) or ())
+                r = vr.fetch_url(args["url"], hosts)
+                return f"fetched {args['url']} -> ref {r['ref']} ({r['pages']} pages, sha256 {r['sha256']})"
+            if name == "read_document":
+                return vr.read_document(args["ref"], args.get("page"), args.get("query"))
+            if name == "check_hardware_record":
+                path = args["path"]
+                text = self.workspace.read_file(path)
+                if path.startswith("hardware/proposals/"):
+                    errs = vr.check_proposal(text)
+                elif path.startswith("hardware/derived/"):
+                    errs = vr.check_derived(text)
+                else:
+                    return ("Refused: a hardware record lives under hardware/proposals/ "
+                            "(inventory entries) or hardware/derived/ (cited records)")
+                return "OK" if not errs else "Problems:\n" + "\n".join(f"- {e}" for e in errs)
+        except vr.ResearchError as exc:
+            return f"Refused: {exc}"
+        return f"Unknown hardware tool {name}"
 
     def _create_task(self, task: dict) -> str:
         """Collect one planned task (the manager's create_task)."""
