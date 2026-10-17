@@ -1,3 +1,6 @@
+> **OUTDATED (2026-10-17).** Written before every PRD in this repository; it describes files
+> that do not exist (`PHASES.md`, a committed `kernels/`). Use README.md and the wiki instead.
+
 # AUTON Technology Stack
 
 ## Programming Languages

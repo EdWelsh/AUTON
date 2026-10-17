@@ -1,5 +1,11 @@
 # Data Preparation Specification
 
+> **Current state (2026-10-17): this spec predates what shipped.** The kernel loads the AUTON
+> flat format (not GGUF), tokenizes word-level with a 1,024-word vocabulary (not BPE), and its
+> model is the 6M-parameter `chat_tiny` trained on generated ground-truth pairs (not a web
+> corpus). [`SLM/DATA.md`](../../SLM/DATA.md) is authoritative where this file disagrees; the
+> drift is tracked in [`w26`](../../.claude/PRPs/plans/w26-drift-and-slm-readiness.plan.md) (A7).
+
 ## Objective
 
 Prepare high-quality tokenized datasets for training Small Language Models (SLMs) that will power the AUTON kernel's natural language interface.

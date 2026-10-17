@@ -37,7 +37,8 @@ subscription usage before it produced a result.
 | Generation runs passing every gate | TFTP (w14), **R8 VirtIO console** (campaign); 11 campaign runs failed |
 | Host gate suites | **22** in [`tests/kernel/`](tests/kernel/); `run_mm_test.sh` and `run_play_doom_test.sh` also score themselves against injected bugs (`--inject`) |
 | Agent roles | 13 roles, plus **24 specialists** (one per area of kernel creation) |
-| Hardware knowledge | **5,077 vendors**, **284 processor models** across 5 architectures, every x86 CPUID feature bit |
+| Hardware knowledge | **5,077 vendors**, **284 processor models** across 5 architectures, 46 QEMU CPU models, every x86 CPUID feature bit |
+| SLM data | kernel set **1,572 rows**, 929 of 1,024 words; 31,181 host-side reference rows; 2.8M words of fetched domain text |
 | Architectures with a full end-to-end spine | **1** (x86_64); aarch64 boots; riscv64 is specified only |
 | CI | 2 workflows, 5 matrix legs: [see below](#continuous-integration) |
 
@@ -79,6 +80,9 @@ scripts/kernel-base.sh /tmp/tree          # or --rev kernel-base-v4
 | [`agent/kernel_spec/`](agent/kernel_spec/) | the kernel specification the agents are held to |
 | [`agent/hardware/`](agent/hardware/README.md) | vendor inventory and registry, instruction-set tables, errata |
 | [`docs/CAMPAIGN.md`](docs/CAMPAIGN.md) | how a generation campaign is run, budgeted and stopped |
+| [`SLM/DATA.md`](SLM/DATA.md) | the data an in-kernel SLM needs, and what fits its tokenizer |
+| [`w26` drift plan](.claude/PRPs/plans/w26-drift-and-slm-readiness.plan.md) | where docs, specs and code disagreed, what was fixed, what is left |
+| [Wiki](https://github.com/EdWelsh/AUTON/wiki) | the same material as a guided tour (source in [`wiki/`](wiki/)) |
 
 ## Quick start
 
@@ -163,6 +167,18 @@ into `.artifacts/`.
 > **Runs cost model calls.** On a subscription, a campaign run is hours of calls.
 > `scripts/campaign.py --only <run>` runs one; stop it with Ctrl-C and resume
 > later, losing nothing.
+
+### I want to train the kernel's SLM
+
+```bash
+python SLM/tools/vocab_budget.py --together SLM/datasets/os_chat.jsonl SLM/datasets/hardware_kernel.jsonl
+.venv/bin/python scripts/slm_run.py start chat-1 --goal "Train the kernel chat model"
+.venv/bin/python scripts/slm_run.py status chat-1
+```
+
+The swarm builds the training set from ground truth, checks it fits the kernel tokenizer,
+trains, exports to the AUTON format, proves parity with the kernel's forward pass, and scores
+the chat eval. Read [`SLM/DATA.md`](SLM/DATA.md) for what data fits and why.
 
 ### I want to research hardware vendors
 
@@ -336,9 +352,10 @@ the specification, without the kernel needing to boot.
 The kernel embeds a Small Language Model as its interface. The SLM is
 **pluggable**: a rule-based engine runs on minimal hardware, and systems with
 enough resources can load a real neural model. Its training data is generated
-from ground truth, never written: `SLM/datasets/os_chat.jsonl` from what the
-kernel prints, and `SLM/datasets/hardware_reference.jsonl` (31,181 rows) from the
-hardware tables. See [`SLM/README.md`](SLM/README.md).
+from ground truth, never written, and must fit the kernel's word-level tokenizer
+(1,024 words): `os_chat.jsonl` from what the kernel prints and `hardware_kernel.jsonl`
+from the CPU every gate boots on. Facts come from lookup tables in the model file,
+not from the model. See [`SLM/DATA.md`](SLM/DATA.md).
 
 ### The Frankenstein effect
 From VibeTensor: *"Locally correct subsystems interact to yield globally

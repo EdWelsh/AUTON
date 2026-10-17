@@ -1,5 +1,11 @@
 # Kernel-SLM Integration Specification
 
+> **Current state (2026-10-17): this spec predates what shipped.** The kernel loads the AUTON
+> flat format (not GGUF), tokenizes word-level with a 1,024-word vocabulary (not BPE), and its
+> model is the 6M-parameter `chat_tiny` trained on generated ground-truth pairs (not a web
+> corpus). [`SLM/DATA.md`](../../SLM/DATA.md) is authoritative where this file disagrees; the
+> drift is tracked in [`w26`](../../.claude/PRPs/plans/w26-drift-and-slm-readiness.plan.md) (A7).
+
 ## Objective
 
 Integrate exported SLM models (GGUF format) into AUTON kernel workspaces, enabling the kernel to load and run the SLM runtime with the embedded model for natural language OS interactions.

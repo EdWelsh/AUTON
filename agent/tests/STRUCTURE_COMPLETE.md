@@ -1,3 +1,6 @@
+> **HISTORICAL.** The placeholder scaffold this describes has long been replaced: `agent/tests/`
+> holds about 2,100 real unit and integration tests. Kept as a record only.
+
 # AUTON Unit Test Structure - Implementation Complete
 
 ## Summary

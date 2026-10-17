@@ -192,16 +192,21 @@ in `.artifacts/hardware/<run>/`.
 derived record's quote must be on the page it cites in the bytes whose sha256 it names.
 See [`agent/hardware/README.md`](../agent/hardware/README.md).
 
-### SLM training agents
+### SLM agents
 
-| Agent | Role | Count |
+Created in the `slm_training` and `dual` workflow modes; `scripts/slm_run.py` runs them in
+`.artifacts/slm/<run>/` with a base kernel tree to build and boot the model in.
+
+| Agent | Role | Tools |
 |-------|------|-------|
-| **Data Scientist** | Prepares and analyzes training datasets, tokenization | 1 |
-| **Model Architect** | Designs SLM architecture, estimates FLOPs, validates configs | 1 |
-| **Training Agent** | Trains, evaluates, quantizes and exports SLM models | `training_agent_count` (2) |
+| **Data Scientist** | Generates the kernel training set from ground truth and proves it fits the kernel tokenizer's 1,024-word budget | `build_corpus`, `check_vocab_budget`, `tokenize_data`, `analyze_dataset` |
+| **Model Architect** | Chooses the config (start from `chat_tiny`, 6M), checked against the vocabulary and boot-memory budgets | `validate_architecture`, `estimate_flops` |
+| **Training Agent** ×`training_agent_count` (2) | Trains, exports to the AUTON format, proves parity with the in-kernel forward pass, scores the chat eval, tries int8 | `train_model`, `evaluate_model`, `export_auton`, `run_parity`, `run_chat_eval`, `quantize_model` |
+| **Integrator** | Places the model where `make iso-neural` boots it | `integrate_slm` |
 
-Created in the `slm_training` and `dual` workflow modes. Training data is generated from
-ground truth (see [`SLM/README.md`](../SLM/README.md)).
+The pipeline and its bars are in [`SLM/DATA.md`](../SLM/DATA.md): ground-truth data only,
+0% `<unk>` at the kernel's vocabulary, parity exit 0, then the chat eval (>=70%
+correct-or-honest, <10% garbage).
 
 ### Application-to-environment agents
 

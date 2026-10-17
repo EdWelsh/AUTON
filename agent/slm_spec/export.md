@@ -1,5 +1,11 @@
 # Model Export Specification
 
+> **Current state (2026-10-17): this spec predates what shipped.** The kernel loads the AUTON
+> flat format (not GGUF), tokenizes word-level with a 1,024-word vocabulary (not BPE), and its
+> model is the 6M-parameter `chat_tiny` trained on generated ground-truth pairs (not a web
+> corpus). [`SLM/DATA.md`](../../SLM/DATA.md) is authoritative where this file disagrees; the
+> drift is tracked in [`w26`](../../.claude/PRPs/plans/w26-drift-and-slm-readiness.plan.md) (A7).
+
 ## Objective
 
 Export quantized SLMs to GGUF and ONNX formats for integration into the AUTON kernel. Exported models must be validated for format compliance and functional correctness.

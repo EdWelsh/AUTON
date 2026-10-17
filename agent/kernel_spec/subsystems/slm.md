@@ -10,7 +10,7 @@ optional: [neural, conversation-context]
 
 ## Overview
 
-The SLM (Small Language Model) runtime is the central intelligence of the AUTON kernel. It provides a pluggable architecture with two backends: a rule engine (keyword/pattern matching and decision trees) for minimal hardware, and a neural backend (GGUF/ONNX model loading with CPU-based INT4/INT8 quantized inference) for systems with sufficient RAM. All kernel subsystems communicate with the SLM through a structured intent system. The SLM maintains a knowledge base of devices, drivers, and packages, and preserves conversation context for multi-step operations.
+The SLM (Small Language Model) runtime is the central intelligence of the AUTON kernel. It provides a pluggable architecture with two backends: a rule engine (keyword/pattern matching and decision trees) for minimal hardware, and a neural backend (the AUTON flat model format, required on every target; GGUF/ONNX are aspirational, see `MODEL_FORMAT` below; fp32 or int8 weights, CPU inference, a word-level tokenizer) for systems with at least 128 MB of RAM. All kernel subsystems communicate with the SLM through a structured intent system. The SLM maintains a knowledge base of devices, drivers, and packages, and preserves conversation context for multi-step operations.
 
 ## Data Structures
 
