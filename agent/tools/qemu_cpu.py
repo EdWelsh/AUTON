@@ -31,7 +31,16 @@ VENDORS = {"CPUID_VENDOR_AMD": "AuthenticAMD", "CPUID_VENDOR_INTEL": "GenuineInt
            "CPUID_VENDOR_HYGON": "HygonGenuine", "CPUID_VENDOR_ZHAOXIN1": "CentaurHauls",
            "CPUID_VENDOR_ZHAOXIN2": "  Shanghai  "}
 # QEMU spells a few bits differently from the names users and LLVM use.
-RENAME = {"fp87": "fpu", "pni": "sse3", "lm": "64bit"}
+RENAME = {"fp87": "fpu", "pni": "sse3", "lm": "64bit", "sse41": "sse4.1", "sse42": "sse4.2"}
+# The word part of a bit macro: CPUID_EXT2_NX, CPUID_SVM_NPT, and every leaf-named
+# word, CPUID_7_0_EBX_AVX2, CPUID_8000_0008_EBX_CLZERO, CPUID_C000_0001_EDX_XSTORE.
+_WORD_PREFIX = re.compile(r"^CPUID_(?:EXT\d?_|XSAVE_|SVM_|(?:[0-9A-F]+_){1,2}E[A-D]X_)?")
+
+
+def _strip_comments(text: str) -> str:
+    """C comments out. cpu.c records what a model lacks in them
+    (Snowridge: "/* missing: CPUID_PN CPUID_IA64 */"), which are not its bits."""
+    return re.sub(r"/\*.*?\*/|//[^\n]*", " ", text, flags=re.S)
 
 
 class QemuCpuError(Exception):
@@ -58,12 +67,11 @@ def _macros(text: str) -> dict[str, str]:
 
 def _bits(expr: str, macros: dict[str, str], depth: int = 0) -> list[str]:
     names = []
-    for tok in re.findall(r"\b[A-Z][A-Z0-9_]+\b", expr):
+    for tok in re.findall(r"\b[A-Z][A-Z0-9_]+\b", _strip_comments(expr)):
         if tok in macros and depth < 4:
             names += _bits(macros[tok], macros, depth + 1)
         elif tok.startswith("CPUID_") and not tok.startswith("CPUID_VENDOR"):
-            raw = re.sub(r"^CPUID_(?:EXT\d?_|7_\d_E[A-D]X_|XSAVE_|SVM_|6_EAX_|D_1_EAX_)?", "", tok)
-            n = raw.lower()
+            n = _WORD_PREFIX.sub("", tok).lower()
             names.append(RENAME.get(n, n))
     return names
 
@@ -75,7 +83,8 @@ def model(name: str, path: Path = SOURCE) -> dict:
         raise QemuCpuError(f"no CPU model {name!r} in {path}")
     # The match stops before the closing brace; restore the newline the last
     # field's ",\n" terminator needs, or a model ending in .features loses them.
-    body, macros = m.group(1) + "\n", _macros(text)
+    # Comments go before the fields are split: one holding ",\n" would end a span.
+    body, macros = _strip_comments(m.group(1)) + "\n", _macros(text)
 
     def num(field):
         f = re.search(r"\." + field + r"\s*=\s*(0x[0-9a-fA-F]+|\d+)", body)

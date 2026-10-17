@@ -553,6 +553,126 @@
    "description": "Reserve EDI, making it unavailable as a GPR",
    "implies": []
   },
+  "reserve-r10": {
+   "def": "FeatureReserveR10",
+   "description": "Reserve R10, making it unavailable as a GPR",
+   "implies": []
+  },
+  "reserve-r11": {
+   "def": "FeatureReserveR11",
+   "description": "Reserve R11, making it unavailable as a GPR",
+   "implies": []
+  },
+  "reserve-r12": {
+   "def": "FeatureReserveR12",
+   "description": "Reserve R12, making it unavailable as a GPR",
+   "implies": []
+  },
+  "reserve-r13": {
+   "def": "FeatureReserveR13",
+   "description": "Reserve R13, making it unavailable as a GPR",
+   "implies": []
+  },
+  "reserve-r14": {
+   "def": "FeatureReserveR14",
+   "description": "Reserve R14, making it unavailable as a GPR",
+   "implies": []
+  },
+  "reserve-r15": {
+   "def": "FeatureReserveR15",
+   "description": "Reserve R15, making it unavailable as a GPR",
+   "implies": []
+  },
+  "reserve-r16": {
+   "def": "FeatureReserveR16",
+   "description": "Reserve R16, making it unavailable as a GPR",
+   "implies": []
+  },
+  "reserve-r17": {
+   "def": "FeatureReserveR17",
+   "description": "Reserve R17, making it unavailable as a GPR",
+   "implies": []
+  },
+  "reserve-r18": {
+   "def": "FeatureReserveR18",
+   "description": "Reserve R18, making it unavailable as a GPR",
+   "implies": []
+  },
+  "reserve-r19": {
+   "def": "FeatureReserveR19",
+   "description": "Reserve R19, making it unavailable as a GPR",
+   "implies": []
+  },
+  "reserve-r20": {
+   "def": "FeatureReserveR20",
+   "description": "Reserve R20, making it unavailable as a GPR",
+   "implies": []
+  },
+  "reserve-r21": {
+   "def": "FeatureReserveR21",
+   "description": "Reserve R21, making it unavailable as a GPR",
+   "implies": []
+  },
+  "reserve-r22": {
+   "def": "FeatureReserveR22",
+   "description": "Reserve R22, making it unavailable as a GPR",
+   "implies": []
+  },
+  "reserve-r23": {
+   "def": "FeatureReserveR23",
+   "description": "Reserve R23, making it unavailable as a GPR",
+   "implies": []
+  },
+  "reserve-r24": {
+   "def": "FeatureReserveR24",
+   "description": "Reserve R24, making it unavailable as a GPR",
+   "implies": []
+  },
+  "reserve-r25": {
+   "def": "FeatureReserveR25",
+   "description": "Reserve R25, making it unavailable as a GPR",
+   "implies": []
+  },
+  "reserve-r26": {
+   "def": "FeatureReserveR26",
+   "description": "Reserve R26, making it unavailable as a GPR",
+   "implies": []
+  },
+  "reserve-r27": {
+   "def": "FeatureReserveR27",
+   "description": "Reserve R27, making it unavailable as a GPR",
+   "implies": []
+  },
+  "reserve-r28": {
+   "def": "FeatureReserveR28",
+   "description": "Reserve R28, making it unavailable as a GPR",
+   "implies": []
+  },
+  "reserve-r29": {
+   "def": "FeatureReserveR29",
+   "description": "Reserve R29, making it unavailable as a GPR",
+   "implies": []
+  },
+  "reserve-r30": {
+   "def": "FeatureReserveR30",
+   "description": "Reserve R30, making it unavailable as a GPR",
+   "implies": []
+  },
+  "reserve-r31": {
+   "def": "FeatureReserveR31",
+   "description": "Reserve R31, making it unavailable as a GPR",
+   "implies": []
+  },
+  "reserve-r8": {
+   "def": "FeatureReserveR8",
+   "description": "Reserve R8, making it unavailable as a GPR",
+   "implies": []
+  },
+  "reserve-r9": {
+   "def": "FeatureReserveR9",
+   "description": "Reserve R9, making it unavailable as a GPR",
+   "implies": []
+  },
   "retpoline": {
    "def": "FeatureRetpoline",
    "description": "Remove speculation of indirect branches from the \"\n                       \"generated code, either by avoiding them entirely or \"\n                       \"lowering them with a speculation blocking construct",
@@ -1669,30 +1789,30 @@
   "recovery": {
    "word": 2,
    "bit": 0,
-   "leaf": null,
+   "leaf": "0x80860001",
    "subleaf": null,
-   "register": null,
-   "linux_defined": true,
+   "register": "EDX",
+   "linux_defined": false,
    "cpuinfo": "recovery",
    "description": "CPU in recovery mode"
   },
   "longrun": {
    "word": 2,
    "bit": 1,
-   "leaf": null,
+   "leaf": "0x80860001",
    "subleaf": null,
-   "register": null,
-   "linux_defined": true,
+   "register": "EDX",
+   "linux_defined": false,
    "cpuinfo": "longrun",
    "description": "Longrun power control"
   },
   "lrti": {
    "word": 2,
    "bit": 3,
-   "leaf": null,
+   "leaf": "0x80860001",
    "subleaf": null,
-   "register": null,
-   "linux_defined": true,
+   "register": "EDX",
+   "linux_defined": false,
    "cpuinfo": "lrti",
    "description": "LongRun table interface"
   },
@@ -2321,7 +2441,7 @@
    "bit": 0,
    "leaf": "0xc0000001",
    "subleaf": null,
-   "register": null,
+   "register": "EDX",
    "linux_defined": false,
    "cpuinfo": "sm2",
    "description": "SM2 algorithm"
@@ -2331,7 +2451,7 @@
    "bit": 1,
    "leaf": "0xc0000001",
    "subleaf": null,
-   "register": null,
+   "register": "EDX",
    "linux_defined": false,
    "cpuinfo": "sm2_en",
    "description": "SM2 enabled"
@@ -2341,7 +2461,7 @@
    "bit": 2,
    "leaf": "0xc0000001",
    "subleaf": null,
-   "register": null,
+   "register": "EDX",
    "linux_defined": false,
    "cpuinfo": "rng",
    "description": "RNG present (xstore)"
@@ -2351,7 +2471,7 @@
    "bit": 3,
    "leaf": "0xc0000001",
    "subleaf": null,
-   "register": null,
+   "register": "EDX",
    "linux_defined": false,
    "cpuinfo": "rng_en",
    "description": "RNG enabled"
@@ -2361,7 +2481,7 @@
    "bit": 4,
    "leaf": "0xc0000001",
    "subleaf": null,
-   "register": null,
+   "register": "EDX",
    "linux_defined": false,
    "cpuinfo": "ccs",
    "description": "SM3 + SM4 instructions"
@@ -2371,7 +2491,7 @@
    "bit": 5,
    "leaf": "0xc0000001",
    "subleaf": null,
-   "register": null,
+   "register": "EDX",
    "linux_defined": false,
    "cpuinfo": "ccs_en",
    "description": "CCS enabled"
@@ -2381,7 +2501,7 @@
    "bit": 6,
    "leaf": "0xc0000001",
    "subleaf": null,
-   "register": null,
+   "register": "EDX",
    "linux_defined": false,
    "cpuinfo": "ace",
    "description": "on-CPU crypto (xcrypt)"
@@ -2391,7 +2511,7 @@
    "bit": 7,
    "leaf": "0xc0000001",
    "subleaf": null,
-   "register": null,
+   "register": "EDX",
    "linux_defined": false,
    "cpuinfo": "ace_en",
    "description": "on-CPU crypto enabled"
@@ -2401,7 +2521,7 @@
    "bit": 8,
    "leaf": "0xc0000001",
    "subleaf": null,
-   "register": null,
+   "register": "EDX",
    "linux_defined": false,
    "cpuinfo": "ace2",
    "description": "Advanced Cryptography Engine v2"
@@ -2411,7 +2531,7 @@
    "bit": 9,
    "leaf": "0xc0000001",
    "subleaf": null,
-   "register": null,
+   "register": "EDX",
    "linux_defined": false,
    "cpuinfo": "ace2_en",
    "description": "ACE v2 enabled"
@@ -2421,7 +2541,7 @@
    "bit": 10,
    "leaf": "0xc0000001",
    "subleaf": null,
-   "register": null,
+   "register": "EDX",
    "linux_defined": false,
    "cpuinfo": "phe",
    "description": "PadLock Hash Engine"
@@ -2431,7 +2551,7 @@
    "bit": 11,
    "leaf": "0xc0000001",
    "subleaf": null,
-   "register": null,
+   "register": "EDX",
    "linux_defined": false,
    "cpuinfo": "phe_en",
    "description": "PHE enabled"
@@ -2441,7 +2561,7 @@
    "bit": 12,
    "leaf": "0xc0000001",
    "subleaf": null,
-   "register": null,
+   "register": "EDX",
    "linux_defined": false,
    "cpuinfo": "pmm",
    "description": "PadLock Montgomery Multiplier"
@@ -2451,7 +2571,7 @@
    "bit": 13,
    "leaf": "0xc0000001",
    "subleaf": null,
-   "register": null,
+   "register": "EDX",
    "linux_defined": false,
    "cpuinfo": "pmm_en",
    "description": "PMM enabled"
@@ -2461,7 +2581,7 @@
    "bit": 22,
    "leaf": "0xc0000001",
    "subleaf": null,
-   "register": null,
+   "register": "EDX",
    "linux_defined": false,
    "cpuinfo": "rng2",
    "description": "RNG v2"
@@ -2471,7 +2591,7 @@
    "bit": 23,
    "leaf": "0xc0000001",
    "subleaf": null,
-   "register": null,
+   "register": "EDX",
    "linux_defined": false,
    "cpuinfo": "rng2_en",
    "description": "RNG2 enabled"
@@ -2481,7 +2601,7 @@
    "bit": 25,
    "leaf": "0xc0000001",
    "subleaf": null,
-   "register": null,
+   "register": "EDX",
    "linux_defined": false,
    "cpuinfo": "phe2",
    "description": "PadLock Hash Engine v2"
@@ -2491,7 +2611,7 @@
    "bit": 26,
    "leaf": "0xc0000001",
    "subleaf": null,
-   "register": null,
+   "register": "EDX",
    "linux_defined": false,
    "cpuinfo": "phe2_en",
    "description": "PHE2 enabled"
@@ -2501,7 +2621,7 @@
    "bit": 27,
    "leaf": "0xc0000001",
    "subleaf": null,
-   "register": null,
+   "register": "EDX",
    "linux_defined": false,
    "cpuinfo": "rsa",
    "description": "Big-number arithmetic"
@@ -2511,7 +2631,7 @@
    "bit": 28,
    "leaf": "0xc0000001",
    "subleaf": null,
-   "register": null,
+   "register": "EDX",
    "linux_defined": false,
    "cpuinfo": "rsa_en",
    "description": "RSA enabled"

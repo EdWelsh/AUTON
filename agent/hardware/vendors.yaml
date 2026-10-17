@@ -867,6 +867,15 @@ vendors:
         form: structured
         cadence: per-release
         fetch_url: https://raw.githubusercontent.com/llvm/llvm-project/main/llvm/lib/Target/RISCV/RISCVFeatures.td
+      - id: llvm-riscv-profiles-td
+        title: LLVM RISCVProfiles.td (RVA/RVB profile base feature lists)
+        kind: machine-readable-registers
+        access: public-source
+        redistributable: true
+        licence: Apache-2.0 WITH LLVM-exception
+        form: structured
+        cadence: per-release
+        fetch_url: https://raw.githubusercontent.com/llvm/llvm-project/main/llvm/lib/Target/RISCV/RISCVProfiles.td
       - id: llvm-systemz-features-td
         title: LLVM SystemZFeatures.td (IBM Z facilities)
         kind: machine-readable-registers

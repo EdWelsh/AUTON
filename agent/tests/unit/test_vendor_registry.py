@@ -51,6 +51,40 @@ def test_one_company_across_sources_is_one_entry(tmp_path):
     assert intel[0]["inventory"] == "intel"
 
 
+def test_each_id_keeps_the_name_its_source_gives(tmp_path):
+    reg = vr.build(_cache(tmp_path))
+    ibm = vr.lookup(reg, "04b3")[0]
+    assert {i["id"]: i["name"] for i in ibm["ids"]} == {"1014": "IBM", "04b3": "IBM Corp."}
+
+
+def test_a_shared_generic_word_does_not_make_one_company(tmp_path):
+    """'Graphics Microsystems' (13d4) and 'Graphics Technology (HK)' (256c) are two
+    firms; so are 'Crystal Group' and 'Crystal Semiconductor'."""
+    cache = _cache(tmp_path)
+    (cache / "pci-sig" / "pci-ids" / "pci.ids").write_text(
+        PCI + "13d4  Graphics Microsystems Inc\n256c  Graphics Technology (HK) Co., Ltd.\n"
+        "13a0  Crystal Group Inc\n")
+    (cache / "usb-if" / "usb-ids" / "usb.ids").write_text(
+        "046f  Crystal Semiconductor\n08de  ???\n18f8  [Maxxter]\n0b0b  ???\n" + USB)
+    reg = vr.build(cache)
+    assert vr.lookup(reg, "256c")[0]["names"] == ["Graphics Technology (HK) Co., Ltd."]
+    assert vr.lookup(reg, "046f")[0]["names"] == ["Crystal Semiconductor"]
+    # names with nothing to match on are never filed together under ""
+    assert all(e["key"] for e in reg["vendors"])
+    assert [i["id"] for i in vr.lookup(reg, "08de")[0]["ids"]] == ["08de"]
+    assert vr.lookup(reg, "18f8")[0]["key"] == "maxxter"
+
+
+def test_every_c_ident_in_a_file_is_read(tmp_path):
+    """cyrix.c holds two cpu_devs: CyrixInstead and the NSC Geode's own string."""
+    cache = _cache(tmp_path)
+    (cache / "linux-kernel" / "linux-x86-cpu-cyrix-c" / "cyrix.c").write_text(
+        'static const struct cpu_dev cyrix_cpu_dev = { .c_ident = { "CyrixInstead" }, };\n'
+        'static const struct cpu_dev nsc_cpu_dev = { .c_ident = { "Geode by NSC" }, };\n')
+    reg = vr.build(cache)
+    assert vr.lookup(reg, "Geode by NSC")[0]["names"] == ["National Semiconductor"]
+
+
 def test_usb_class_tables_are_not_vendors(tmp_path):
     reg = vr.build(_cache(tmp_path))
     assert not vr.lookup(reg, "00")
@@ -80,3 +114,5 @@ def test_the_committed_registry_round_trips():
     reg = json.loads(vr.OUT.read_text())
     assert reg["count"] == len(reg["vendors"]) > 4000
     assert json.loads(vr.dumps(reg)) == reg
+    assert all(e["key"] and all(i["name"] for i in e["ids"]) for e in reg["vendors"])
+    assert vr.lookup(reg, "Geode by NSC")

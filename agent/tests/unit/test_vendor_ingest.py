@@ -216,3 +216,20 @@ class TestDerivedOutput:
         lines = path.read_text().strip().splitlines()
         assert len(lines) == len(records)
         assert json.loads(lines[0])["sha256"] == prov.sha256
+
+
+def test_an_inventory_download_that_redirects_off_its_host_is_refused(tmp_path, monkeypatch):
+    """w26 review #47: the fetch_url is trusted, where it redirects is not."""
+    import vendor_fetch
+    import vendor_research
+
+    def opener(hosts):
+        assert hosts == ("raw.githubusercontent.com",)
+        def open_(u):
+            raise vendor_research.ResearchError("refused (it redirects to http://evil.example)")
+        return open_
+
+    monkeypatch.setattr(vendor_research, "_opener", opener)
+    with pytest.raises(FetchError, match="redirects"):
+        vendor_fetch._download("https://raw.githubusercontent.com/x/pci.ids", tmp_path)
+    assert not any((tmp_path / ".download").iterdir())

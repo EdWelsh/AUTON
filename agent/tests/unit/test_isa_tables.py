@@ -39,6 +39,70 @@ def test_features_are_closed_under_implication():
     assert "TuningFast" not in tg.unresolved
 
 
+ZVL = """
+def FeatureStdExtZvl32b : RISCVExtension<1, 0, "Minimum Vector Length 32", [],
+                                         "ZvlLen", "32">;
+foreach i = { 6-8 } in {
+  defvar I = !shl(1, i);
+  def FeatureStdExtZvl#I#b :
+      RISCVExtension<1, 0, "Minimum Vector Length "#I,
+                     [!cast<RISCVExtension>("FeatureStdExtZvl"#!srl(I, 1)#"b")],
+                     "ZvlLen", !cast<string>(I)>;
+}
+foreach i = {1-2} in
+  def FeatureReserveX#i : SubtargetFeature<"reserve-x"#i, "Reserved[X"#i#"]", "true",
+                                           "Reserve X"#i>;
+def VEC : RISCVProcessorModel<"vec256", M, [FeatureStdExtZvl256b]>;
+"""
+
+
+def test_foreach_loops_are_read_like_the_defs_they_stand_for():
+    """RISC-V's Zvl64b..Zvl65536b chain is a foreach; unread, every vector part
+    lost its vector-length guarantee."""
+    tg = it.TableGen([ZVL])
+    feats = {k: tg.feature(k) for k, (c, _) in tg.defs.items() if c in it.FEATURE_CLASSES}
+    procs, _ = tg.processors()
+    assert {feats[i]["name"] for f in procs["vec256"] for i in it.closure(f, feats)} == \
+        {"zvl256b", "zvl128b", "zvl64b", "zvl32b"}
+    assert feats["FeatureStdExtZvl128b"]["description"] == "Minimum Vector Length 128"
+    assert feats["FeatureReserveX2"]["name"] == "reserve-x2"
+    assert not tg.unresolved
+
+
+RV_FEATURES = """
+def Feature64Bit : SubtargetFeature<"64bit", "IsRV64", "true", "Implements RV64">;
+def FeatureStdExtI : RISCVExtension<2, 1, "Base Integer Instruction Set">;
+def FeatureStdExtM : RISCVExtension<2, 0, "Integer Multiplication and Division">;
+def FeatureStdExtV : RISCVExtension<1, 0, "Vector Extension for Application Processors">;
+"""
+RV_PROFILES = "defvar RVA23U64Features = [Feature64Bit, FeatureStdExtI, FeatureStdExtM];\n"
+RV_PROCESSORS = """
+def PART : RISCVProcessorModel<"part-x", M, !listconcat(RVA23U64Features, [FeatureStdExtV])>;
+"""
+
+
+def _riscv_cache(tmp_path: Path, profiles: str) -> Path:
+    import json
+    for doc, text in zip(it.ARCH_SOURCES["riscv"], (RV_FEATURES, profiles, RV_PROCESSORS)):
+        d = tmp_path / "llvm-project" / doc
+        d.mkdir(parents=True)
+        (d / f"{doc}.td").write_text(text)
+        (d / "provenance.json").write_text(json.dumps({"sha256": "0" * 64, "source": "t"}))
+    return tmp_path
+
+
+def test_riscv_profile_bases_are_read(tmp_path):
+    t = it.build_arch("riscv", _riscv_cache(tmp_path, RV_PROFILES))
+    assert t["processors"]["part-x"] == ["64bit", "i", "m", "v"]
+    assert "llvm-riscv-profiles-td" in [s["document"] for s in t["generated_from"]]
+
+
+def test_a_part_naming_an_undefined_list_fails_the_build(tmp_path):
+    """Without RISCVProfiles.td, part-x would be written as lacking I, M and 64bit."""
+    with pytest.raises(it.IsaError, match=r"RVA23U64Features \(used by part-x\)"):
+        it.build_arch("riscv", _riscv_cache(tmp_path, "// no profiles\n"))
+
+
 CPUFEATURES = """
 /* AMD-defined CPU features, CPUID level 0x80000001, word 1 */
 /* More extended AMD flags: CPUID level 0x80000001, ECX, word 6 */
@@ -55,8 +119,26 @@ def test_cpuid_location_comes_from_the_header():
         ("0x00000007", 0, "EBX")
 
 
+TRANSMETA_AND_CENTAUR = """
+/* Transmeta-defined CPU features, CPUID level 0x80860001, word 2 */
+#define X86_FEATURE_LONGRUN		( 2*32+ 1) /* "longrun" Longrun power control */
+/* VIA/Cyrix/Centaur-defined CPU features, CPUID level 0xC0000001, word 5 */
+#define X86_FEATURE_XSTORE		( 5*32+ 2) /* "rng" RNG present (xstore) */
+/* BUG word 2 */
+#define X86_BUG_SRSO			X86_BUG( 1*32+ 0) /* "srso" AMD SRSO bug */
+"""
+
+
+def test_the_bug_words_do_not_replace_feature_words():
+    """'/* BUG word 2 */' numbers X86_BUG(); feature word 2 is still Transmeta's."""
+    c = it.parse_cpufeatures(TRANSMETA_AND_CENTAUR)
+    assert (c["longrun"]["leaf"], c["longrun"]["register"], c["longrun"]["linux_defined"]) == \
+        ("0x80860001", "EDX", False)
+    assert (c["xstore"]["leaf"], c["xstore"]["register"]) == ("0xc0000001", "EDX")
+
+
 TABLES = {"x86": {"processors": {"haswell": ["avx", "fma"], "bdver1": ["fma4"],
-                                 "alderlake": ["avx2"]},
+                                 "alderlake": ["avx2"], "c86-4g-m7": ["avx2"]},
                   "aliases": {}}}
 
 
@@ -65,6 +147,20 @@ def test_an_exception_for_every_intel_part_does_not_touch_amd():
            "applies_to": [], "source": "s"}]
     assert it.has(TABLES, "x86", "haswell", "fma4", ex)["verdict"] == "absent: never-shipped"
     assert it.has(TABLES, "x86", "bdver1", "fma4", ex)["exceptions"] == []
+
+
+def test_hygon_parts_are_not_intel():
+    ex = [{"arch": "x86", "feature": "fma4", "vendor": "intel", "kind": "never-shipped",
+           "applies_to": [], "source": "s"}]
+    assert it.vendor_of("x86", "c86-4g-m7") == "hygon"
+    assert it.has(TABLES, "x86", "c86-4g-m7", "fma4", ex)["exceptions"] == []
+    assert it.vendor_of("x86", "a-name-llvm-adds-later") is None     # not "intel"
+
+
+def test_every_committed_x86_processor_has_a_vendor():
+    """A new LLVM part with no vendor would silently escape vendor-wide exceptions."""
+    procs = it.load_tables()["x86"]["processors"]
+    assert [p for p in procs if p not in it._X86_GENERIC and not it.vendor_of("x86", p)] == []
 
 
 def test_fused_off_means_ask_the_cpu():
@@ -95,3 +191,7 @@ def test_the_committed_tables_agree_with_known_silicon():
     assert "fma" in x86["haswell"]
     assert "vector" in t["systemz"]["processors"]["z16"]
     assert "m" in t["riscv"]["processors"]["sifive-u74"]
+    # profile-based parts keep their base ISA and their vector length
+    x60 = t["riscv"]["processors"]["spacemit-x60"]
+    assert {"i", "m", "a", "c", "64bit", "v", "zvl256b", "zvl128b"} <= set(x60)
+    assert all(not t[a]["unresolved"] for a in t)

@@ -7,6 +7,11 @@
    "source": "https://raw.githubusercontent.com/llvm/llvm-project/main/llvm/lib/Target/RISCV/RISCVFeatures.td"
   },
   {
+   "document": "llvm-riscv-profiles-td",
+   "sha256": "e4e6ff1b82f3629f6e534cfc15fec715b9dabd5098a7c96460253fcf5eccaf99",
+   "source": "https://raw.githubusercontent.com/llvm/llvm-project/main/llvm/lib/Target/RISCV/RISCVProfiles.td"
+  },
+  {
    "document": "llvm-riscv-processors-td",
    "sha256": "5918ab78ff001075f15097cb53804cda3947ca773e171b93c2b8529483683302",
    "source": "https://raw.githubusercontent.com/llvm/llvm-project/main/llvm/lib/Target/RISCV/RISCVProcessors.td"
@@ -51,6 +56,161 @@
   "relax": {
    "def": "FeatureRelax",
    "description": "Enable Linker relaxation",
+   "implies": []
+  },
+  "reserve-x1": {
+   "def": "FeatureReserveX1",
+   "description": "Reserve X1",
+   "implies": []
+  },
+  "reserve-x10": {
+   "def": "FeatureReserveX10",
+   "description": "Reserve X10",
+   "implies": []
+  },
+  "reserve-x11": {
+   "def": "FeatureReserveX11",
+   "description": "Reserve X11",
+   "implies": []
+  },
+  "reserve-x12": {
+   "def": "FeatureReserveX12",
+   "description": "Reserve X12",
+   "implies": []
+  },
+  "reserve-x13": {
+   "def": "FeatureReserveX13",
+   "description": "Reserve X13",
+   "implies": []
+  },
+  "reserve-x14": {
+   "def": "FeatureReserveX14",
+   "description": "Reserve X14",
+   "implies": []
+  },
+  "reserve-x15": {
+   "def": "FeatureReserveX15",
+   "description": "Reserve X15",
+   "implies": []
+  },
+  "reserve-x16": {
+   "def": "FeatureReserveX16",
+   "description": "Reserve X16",
+   "implies": []
+  },
+  "reserve-x17": {
+   "def": "FeatureReserveX17",
+   "description": "Reserve X17",
+   "implies": []
+  },
+  "reserve-x18": {
+   "def": "FeatureReserveX18",
+   "description": "Reserve X18",
+   "implies": []
+  },
+  "reserve-x19": {
+   "def": "FeatureReserveX19",
+   "description": "Reserve X19",
+   "implies": []
+  },
+  "reserve-x2": {
+   "def": "FeatureReserveX2",
+   "description": "Reserve X2",
+   "implies": []
+  },
+  "reserve-x20": {
+   "def": "FeatureReserveX20",
+   "description": "Reserve X20",
+   "implies": []
+  },
+  "reserve-x21": {
+   "def": "FeatureReserveX21",
+   "description": "Reserve X21",
+   "implies": []
+  },
+  "reserve-x22": {
+   "def": "FeatureReserveX22",
+   "description": "Reserve X22",
+   "implies": []
+  },
+  "reserve-x23": {
+   "def": "FeatureReserveX23",
+   "description": "Reserve X23",
+   "implies": []
+  },
+  "reserve-x24": {
+   "def": "FeatureReserveX24",
+   "description": "Reserve X24",
+   "implies": []
+  },
+  "reserve-x25": {
+   "def": "FeatureReserveX25",
+   "description": "Reserve X25",
+   "implies": []
+  },
+  "reserve-x26": {
+   "def": "FeatureReserveX26",
+   "description": "Reserve X26",
+   "implies": []
+  },
+  "reserve-x27": {
+   "def": "FeatureReserveX27",
+   "description": "Reserve X27",
+   "implies": []
+  },
+  "reserve-x28": {
+   "def": "FeatureReserveX28",
+   "description": "Reserve X28",
+   "implies": []
+  },
+  "reserve-x29": {
+   "def": "FeatureReserveX29",
+   "description": "Reserve X29",
+   "implies": []
+  },
+  "reserve-x3": {
+   "def": "FeatureReserveX3",
+   "description": "Reserve X3",
+   "implies": []
+  },
+  "reserve-x30": {
+   "def": "FeatureReserveX30",
+   "description": "Reserve X30",
+   "implies": []
+  },
+  "reserve-x31": {
+   "def": "FeatureReserveX31",
+   "description": "Reserve X31",
+   "implies": []
+  },
+  "reserve-x4": {
+   "def": "FeatureReserveX4",
+   "description": "Reserve X4",
+   "implies": []
+  },
+  "reserve-x5": {
+   "def": "FeatureReserveX5",
+   "description": "Reserve X5",
+   "implies": []
+  },
+  "reserve-x6": {
+   "def": "FeatureReserveX6",
+   "description": "Reserve X6",
+   "implies": []
+  },
+  "reserve-x7": {
+   "def": "FeatureReserveX7",
+   "description": "Reserve X7",
+   "implies": []
+  },
+  "reserve-x8": {
+   "def": "FeatureReserveX8",
+   "description": "Reserve X8",
+   "implies": []
+  },
+  "reserve-x9": {
+   "def": "FeatureReserveX9",
+   "description": "Reserve X9",
    "implies": []
   },
   "save-restore": {
@@ -499,7 +659,8 @@
    "def": "FeatureStdExtV",
    "description": "Vector Extension for Application Processors",
    "implies": [
-    "zve64d"
+    "zve64d",
+    "zvl128b"
    ]
   },
   "y": {
@@ -991,7 +1152,8 @@
    "def": "FeatureStdExtZve64x",
    "description": "Vector Extensions for Embedded Processors \"\n                     \"with maximal 64 EEW",
    "implies": [
-    "zve32x"
+    "zve32x",
+    "zvl64b"
    ]
   },
   "zvfbdota32f": {
@@ -1188,10 +1350,87 @@
    "description": "Vector Data-Independent Execution Latency",
    "implies": []
   },
+  "zvl1024b": {
+   "def": "FeatureStdExtZvl1024b",
+   "description": "Minimum Vector Length 1024",
+   "implies": [
+    "zvl512b"
+   ]
+  },
+  "zvl128b": {
+   "def": "FeatureStdExtZvl128b",
+   "description": "Minimum Vector Length 128",
+   "implies": [
+    "zvl64b"
+   ]
+  },
+  "zvl16384b": {
+   "def": "FeatureStdExtZvl16384b",
+   "description": "Minimum Vector Length 16384",
+   "implies": [
+    "zvl8192b"
+   ]
+  },
+  "zvl2048b": {
+   "def": "FeatureStdExtZvl2048b",
+   "description": "Minimum Vector Length 2048",
+   "implies": [
+    "zvl1024b"
+   ]
+  },
+  "zvl256b": {
+   "def": "FeatureStdExtZvl256b",
+   "description": "Minimum Vector Length 256",
+   "implies": [
+    "zvl128b"
+   ]
+  },
+  "zvl32768b": {
+   "def": "FeatureStdExtZvl32768b",
+   "description": "Minimum Vector Length 32768",
+   "implies": [
+    "zvl16384b"
+   ]
+  },
   "zvl32b": {
    "def": "FeatureStdExtZvl32b",
    "description": "Minimum Vector Length 32",
    "implies": []
+  },
+  "zvl4096b": {
+   "def": "FeatureStdExtZvl4096b",
+   "description": "Minimum Vector Length 4096",
+   "implies": [
+    "zvl2048b"
+   ]
+  },
+  "zvl512b": {
+   "def": "FeatureStdExtZvl512b",
+   "description": "Minimum Vector Length 512",
+   "implies": [
+    "zvl256b"
+   ]
+  },
+  "zvl64b": {
+   "def": "FeatureStdExtZvl64b",
+   "description": "Minimum Vector Length 64",
+   "implies": [
+    "zvl32b"
+   ]
+  },
+  "zvl65536b": {
+   "def": "FeatureStdExtZvl65536b",
+   "description": "Minimum Vector Length 65536",
+   "implies": [
+    "zvl32768b"
+   ]
+  },
+  "zvl8192b": {
+   "def": "FeatureStdExtZvl8192b",
+   "description": "Minimum Vector Length 8192",
+   "implies": [
+    "zvl4096b"
+   ]
   },
   "zvqwbdota16i": {
    "def": "FeatureStdExtZvqwbdota16i",
@@ -1417,14 +1656,16 @@
    "def": "FeatureVendorXSfmm128t",
    "description": "TE=128 configuration",
    "implies": [
-    "xsfmmbase"
+    "xsfmmbase",
+    "zvl512b"
    ]
   },
   "xsfmm16t": {
    "def": "FeatureVendorXSfmm16t",
    "description": "TE=16 configuration",
    "implies": [
-    "xsfmmbase"
+    "xsfmmbase",
+    "zvl64b"
    ]
   },
   "xsfmm32a": {
@@ -1471,7 +1712,8 @@
    "def": "FeatureVendorXSfmm32t",
    "description": "TE=32 configuration",
    "implies": [
-    "xsfmmbase"
+    "xsfmmbase",
+    "zvl128b"
    ]
   },
   "xsfmm64a64f": {
@@ -1486,7 +1728,8 @@
    "def": "FeatureVendorXSfmm64t",
    "description": "TE=64 configuration",
    "implies": [
-    "xsfmmbase"
+    "xsfmmbase",
+    "zvl256b"
    ]
   },
   "xsfmmbase": {
@@ -1553,21 +1796,24 @@
    "def": "FeatureVendorXSfvfwmaccqqq",
    "description": "SiFive Matrix Multiply Accumulate Instruction (4-by-4)",
    "implies": [
-    "zvfbfmin"
+    "zvfbfmin",
+    "zvl128b"
    ]
   },
   "xsfvqmaccdod": {
    "def": "FeatureVendorXSfvqmaccdod",
    "description": "SiFive Int8 Matrix Multiplication Instructions (2-by-8 and 8-by-2)",
    "implies": [
-    "zve32x"
+    "zve32x",
+    "zvl128b"
    ]
   },
   "xsfvqmaccqoq": {
    "def": "FeatureVendorXSfvqmaccqoq",
    "description": "SiFive Int8 Matrix Multiplication Instructions (4-by-8 and 8-by-4)",
    "implies": [
-    "zve32x"
+    "zve32x",
+    "zvl256b"
    ]
   },
   "xsifivecdiscarddlone": {
@@ -1843,6 +2089,41 @@
    "description": "Has vrgather.vv with LMUL*log2(LMUL) latency",
    "implies": []
   },
+  "optimized-nf2-segment-load-store": {
+   "def": "TuneOptimizedNF2SegmentLoadStore",
+   "description": "vlseg2eN.v and vsseg2eN.v are implemented as a wide memory op and shuffle",
+   "implies": []
+  },
+  "optimized-nf3-segment-load-store": {
+   "def": "TuneOptimizedNF3SegmentLoadStore",
+   "description": "vlseg3eN.v and vsseg3eN.v are implemented as a wide memory op and shuffle",
+   "implies": []
+  },
+  "optimized-nf4-segment-load-store": {
+   "def": "TuneOptimizedNF4SegmentLoadStore",
+   "description": "vlseg4eN.v and vsseg4eN.v are implemented as a wide memory op and shuffle",
+   "implies": []
+  },
+  "optimized-nf5-segment-load-store": {
+   "def": "TuneOptimizedNF5SegmentLoadStore",
+   "description": "vlseg5eN.v and vsseg5eN.v are implemented as a wide memory op and shuffle",
+   "implies": []
+  },
+  "optimized-nf6-segment-load-store": {
+   "def": "TuneOptimizedNF6SegmentLoadStore",
+   "description": "vlseg6eN.v and vsseg6eN.v are implemented as a wide memory op and shuffle",
+   "implies": []
+  },
+  "optimized-nf7-segment-load-store": {
+   "def": "TuneOptimizedNF7SegmentLoadStore",
+   "description": "vlseg7eN.v and vsseg7eN.v are implemented as a wide memory op and shuffle",
+   "implies": []
+  },
+  "optimized-nf8-segment-load-store": {
+   "def": "TuneOptimizedNF8SegmentLoadStore",
+   "description": "vlseg8eN.v and vsseg8eN.v are implemented as a wide memory op and shuffle",
+   "implies": []
+  },
   "optimized-zero-stride-load": {
    "def": "TuneOptimizedZeroStrideLoad",
    "description": "Optimized (perform fewer memory operations)\"\n                      \"zero-stride vector load",
@@ -1855,24 +2136,14 @@
   }
  },
  "aliases": {},
- "unresolved": [
-  "FeatureStdExtZvl1024b",
-  "FeatureStdExtZvl128b",
-  "FeatureStdExtZvl256b",
-  "FeatureStdExtZvl512b",
-  "FeatureStdExtZvl64b",
-  "RVA22S64Features",
-  "RVA23S64Features",
-  "RVA23U64Features",
-  "RVB23S64Features"
- ],
+ "unresolved": [],
  "processors": {
   "an-erbium": ["64bit", "c", "f", "m", "xaifet", "zca", "zicsr", "zmmul"],
   "andes-a25": ["32bit", "a", "c", "d", "f", "i", "m", "xandesperf", "zaamo", "zalrsc", "zca", "zicsr", "zifencei", "zmmul"],
   "andes-a45": ["32bit", "a", "c", "d", "f", "i", "m", "unaligned-scalar-mem", "xandesperf", "zaamo", "zalrsc", "zca", "zicsr", "zifencei", "zmmul"],
   "andes-ax25": ["64bit", "a", "c", "d", "f", "i", "m", "xandesperf", "zaamo", "zalrsc", "zca", "zicsr", "zifencei", "zmmul"],
   "andes-ax45": ["64bit", "a", "c", "d", "f", "i", "m", "unaligned-scalar-mem", "xandesperf", "zaamo", "zalrsc", "zca", "zicsr", "zifencei", "zmmul"],
-  "andes-ax45mpv": ["64bit", "a", "c", "d", "f", "i", "m", "unaligned-scalar-mem", "v", "xandesperf", "zaamo", "zalrsc", "zca", "zicsr", "zifencei", "zmmul", "zve32f", "zve32x", "zve64d", "zve64f", "zve64x", "zvl32b"],
+  "andes-ax45mpv": ["64bit", "a", "c", "d", "f", "i", "m", "unaligned-scalar-mem", "v", "xandesperf", "zaamo", "zalrsc", "zca", "zicsr", "zifencei", "zmmul", "zve32f", "zve32x", "zve64d", "zve64f", "zve64x", "zvl128b", "zvl32b", "zvl64b"],
   "andes-n45": ["32bit", "a", "c", "d", "f", "i", "m", "unaligned-scalar-mem", "xandesperf", "zaamo", "zalrsc", "zca", "zicsr", "zifencei", "zmmul"],
   "andes-nx45": ["64bit", "a", "c", "d", "f", "i", "m", "unaligned-scalar-mem", "xandesperf", "zaamo", "zalrsc", "zca", "zicsr", "zifencei", "zmmul"],
   "et-soc1": ["64bit", "c", "f", "m", "xaifet", "zca", "zicsr", "zmmul"],
@@ -1890,23 +2161,23 @@
   "sifive-e34": ["32bit", "a", "c", "f", "i", "m", "zaamo", "zalrsc", "zca", "zicsr", "zifencei", "zmmul"],
   "sifive-e76": ["32bit", "a", "c", "f", "i", "m", "zaamo", "zalrsc", "zca", "zicsr", "zifencei", "zmmul"],
   "sifive-p450": ["64bit", "a", "b", "c", "d", "f", "i", "m", "unaligned-scalar-mem", "unaligned-vector-mem", "za64rs", "zaamo", "zalrsc", "zba", "zbb", "zbs", "zca", "zfhmin", "zic64b", "zicbom", "zicbop", "zicboz", "ziccamoa", "ziccif", "zicclsm", "ziccrse", "zicsr", "zifencei", "zihintntl", "zihintpause", "zihpm", "zkt", "zmmul"],
-  "sifive-p470": ["64bit", "a", "b", "c", "d", "f", "i", "m", "unaligned-scalar-mem", "unaligned-vector-mem", "v", "xsifivecdiscarddlone", "xsifivecflushdlone", "za64rs", "zaamo", "zalrsc", "zba", "zbb", "zbs", "zca", "zfhmin", "zic64b", "zicbom", "zicbop", "zicboz", "ziccamoa", "ziccif", "zicclsm", "ziccrse", "zicsr", "zifencei", "zihintntl", "zihintpause", "zihpm", "zkt", "zmmul", "zvbb", "zvbc", "zve32f", "zve32x", "zve64d", "zve64f", "zve64x", "zvkb", "zvkg", "zvkn", "zvknc", "zvkned", "zvkng", "zvknha", "zvknhb", "zvks", "zvksc", "zvksed", "zvksg", "zvksh", "zvkt", "zvl32b"],
+  "sifive-p470": ["64bit", "a", "b", "c", "d", "f", "i", "m", "unaligned-scalar-mem", "unaligned-vector-mem", "v", "xsifivecdiscarddlone", "xsifivecflushdlone", "za64rs", "zaamo", "zalrsc", "zba", "zbb", "zbs", "zca", "zfhmin", "zic64b", "zicbom", "zicbop", "zicboz", "ziccamoa", "ziccif", "zicclsm", "ziccrse", "zicsr", "zifencei", "zihintntl", "zihintpause", "zihpm", "zkt", "zmmul", "zvbb", "zvbc", "zve32f", "zve32x", "zve64d", "zve64f", "zve64x", "zvkb", "zvkg", "zvkn", "zvknc", "zvkned", "zvkng", "zvknha", "zvknhb", "zvks", "zvksc", "zvksed", "zvksg", "zvksh", "zvkt", "zvl128b", "zvl32b", "zvl64b"],
   "sifive-p550": ["64bit", "a", "c", "d", "f", "i", "m", "zaamo", "zalrsc", "zba", "zbb", "zca", "zicsr", "zifencei", "zmmul"],
-  "sifive-p670": ["64bit", "a", "b", "c", "d", "f", "i", "m", "unaligned-scalar-mem", "unaligned-vector-mem", "v", "za64rs", "zaamo", "zalrsc", "zba", "zbb", "zbs", "zca", "zfhmin", "zic64b", "zicbom", "zicbop", "zicboz", "ziccamoa", "ziccif", "zicclsm", "ziccrse", "zicsr", "zifencei", "zihintntl", "zihintpause", "zihpm", "zkt", "zmmul", "zvbb", "zvbc", "zve32f", "zve32x", "zve64d", "zve64f", "zve64x", "zvkb", "zvkg", "zvkn", "zvknc", "zvkned", "zvkng", "zvknha", "zvknhb", "zvks", "zvksc", "zvksed", "zvksg", "zvksh", "zvkt", "zvl32b"],
-  "sifive-p870-d": ["f", "unaligned-scalar-mem", "unaligned-vector-mem", "zama16b", "zfbfmin", "zfh", "zfhmin", "zicsr", "zifencei", "zkr", "zvbc", "zve32f", "zve32x", "zve64x", "zvfbfmin", "zvfbfwma", "zvfh", "zvfhmin", "zvkb", "zvkg", "zvkn", "zvknc", "zvkned", "zvkng", "zvknha", "zvknhb", "zvks", "zvksc", "zvksed", "zvksg", "zvksh", "zvkt", "zvl32b"],
+  "sifive-p670": ["64bit", "a", "b", "c", "d", "f", "i", "m", "unaligned-scalar-mem", "unaligned-vector-mem", "v", "za64rs", "zaamo", "zalrsc", "zba", "zbb", "zbs", "zca", "zfhmin", "zic64b", "zicbom", "zicbop", "zicboz", "ziccamoa", "ziccif", "zicclsm", "ziccrse", "zicsr", "zifencei", "zihintntl", "zihintpause", "zihpm", "zkt", "zmmul", "zvbb", "zvbc", "zve32f", "zve32x", "zve64d", "zve64f", "zve64x", "zvkb", "zvkg", "zvkn", "zvknc", "zvkned", "zvkng", "zvknha", "zvknhb", "zvks", "zvksc", "zvksed", "zvksg", "zvksh", "zvkt", "zvl128b", "zvl32b", "zvl64b"],
+  "sifive-p870-d": ["64bit", "a", "b", "c", "d", "f", "i", "m", "supm", "unaligned-scalar-mem", "unaligned-vector-mem", "v", "za64rs", "zaamo", "zalrsc", "zama16b", "zawrs", "zba", "zbb", "zbs", "zca", "zcb", "zcmop", "zfa", "zfbfmin", "zfh", "zfhmin", "zic64b", "zicbom", "zicbop", "zicboz", "ziccamoa", "ziccif", "zicclsm", "ziccrse", "zicntr", "zicond", "zicsr", "zifencei", "zihintntl", "zihintpause", "zihpm", "zimop", "zkr", "zkt", "zmmul", "zvbb", "zvbc", "zve32f", "zve32x", "zve64d", "zve64f", "zve64x", "zvfbfmin", "zvfbfwma", "zvfh", "zvfhmin", "zvkb", "zvkg", "zvkn", "zvknc", "zvkned", "zvkng", "zvknha", "zvknhb", "zvks", "zvksc", "zvksed", "zvksg", "zvksh", "zvkt", "zvl128b", "zvl32b", "zvl64b"],
   "sifive-s21": ["64bit", "a", "c", "i", "m", "zaamo", "zalrsc", "zca", "zicsr", "zifencei", "zmmul"],
   "sifive-s51": ["64bit", "a", "c", "i", "m", "zaamo", "zalrsc", "zca", "zicsr", "zifencei", "zmmul"],
   "sifive-s54": ["64bit", "a", "c", "d", "f", "i", "m", "zaamo", "zalrsc", "zca", "zicsr", "zifencei", "zmmul"],
   "sifive-s76": ["64bit", "a", "c", "d", "f", "i", "m", "zaamo", "zalrsc", "zca", "zicsr", "zifencei", "zihintpause", "zmmul"],
   "sifive-u54": ["64bit", "a", "c", "d", "f", "i", "m", "zaamo", "zalrsc", "zca", "zicsr", "zifencei", "zmmul"],
   "sifive-u74": ["64bit", "a", "c", "d", "f", "i", "m", "zaamo", "zalrsc", "zca", "zicsr", "zifencei", "zmmul"],
-  "sifive-x160": ["32bit", "a", "b", "c", "f", "i", "m", "xsfcease", "zaamo", "zalrsc", "zawrs", "zba", "zbb", "zbs", "zca", "zcb", "zce", "zcf", "zcmop", "zcmp", "zcmt", "zfa", "zfbfmin", "zfh", "zfhmin", "zicbom", "zicbop", "zicboz", "zicfilp", "zicond", "zicsr", "zifencei", "zihintntl", "zihintpause", "zihpm", "zimop", "zkt", "zmmul", "zvbb", "zvdot4a8i", "zve32f", "zve32x", "zvfbfa", "zvfbfmin", "zvfbfwma", "zvfh", "zvfhmin", "zvkb", "zvkt", "zvl32b"],
-  "sifive-x180": ["64bit", "a", "b", "c", "d", "f", "i", "m", "v", "xsfcease", "xsfvfbfexp16e", "xsfvfexp16e", "xsfvfexp32e", "xsfvfexpa", "xsifivecflushdlone", "za64rs", "zaamo", "zalrsc", "zawrs", "zba", "zbb", "zbs", "zca", "zcb", "zcd", "zcmop", "zfa", "zfbfmin", "zfh", "zfhmin", "zic64b", "zicbom", "zicbop", "zicboz", "ziccamoa", "ziccif", "ziccrse", "zicfilp", "zicond", "zicsr", "zifencei", "zihintntl", "zihintpause", "zihpm", "zimop", "zkt", "zmmul", "zvbb", "zvdot4a8i", "zve32f", "zve32x", "zve64d", "zve64f", "zve64x", "zvfbfa", "zvfbfmin", "zvfbfwma", "zvfh", "zvfhmin", "zvkb", "zvkt", "zvl32b"],
-  "sifive-x280": ["64bit", "a", "c", "d", "f", "i", "m", "v", "zaamo", "zalrsc", "zba", "zbb", "zca", "zfh", "zfhmin", "zicsr", "zifencei", "zmmul", "zve32f", "zve32x", "zve64d", "zve64f", "zve64x", "zvfh", "zvfhmin", "zvl32b"],
-  "sifive-x390": ["64bit", "a", "b", "c", "d", "f", "i", "m", "v", "xsifivecdiscarddlone", "xsifivecflushdlone", "za64rs", "zaamo", "zalrsc", "zawrs", "zba", "zbb", "zbs", "zca", "zcb", "zcmop", "zfa", "zfbfmin", "zfh", "zfhmin", "zic64b", "zicbom", "zicbop", "zicboz", "ziccamoa", "ziccif", "ziccrse", "zicfilp", "zicfiss", "zicntr", "zicond", "zicsr", "zifencei", "zihintntl", "zihintpause", "zihpm", "zimop", "zkr", "zkt", "zmmul", "zvbb", "zve32f", "zve32x", "zve64d", "zve64f", "zve64x", "zvfbfmin", "zvfbfwma", "zvfh", "zvfhmin", "zvkb", "zvkt", "zvl32b"],
-  "spacemit-a100": ["f", "smepmp", "smnpm", "smstateen", "sspm", "unaligned-scalar-mem", "xsmtvdotii", "zbc", "zbkc", "zfbfmin", "zfh", "zfhmin", "zicsr", "zvbc", "zve32f", "zve32x", "zve64x", "zvfbfmin", "zvfbfwma", "zvfh", "zvfhmin", "zvkb", "zvkg", "zvkn", "zvkned", "zvkng", "zvknha", "zvknhb", "zvks", "zvksc", "zvksed", "zvksg", "zvksh", "zvkt", "zvl32b"],
-  "spacemit-x100": ["f", "smepmp", "smnpm", "smstateen", "sspm", "unaligned-scalar-mem", "xsmtvdot", "zbc", "zbkc", "zfbfmin", "zfh", "zfhmin", "zicsr", "zvbc", "zve32f", "zve32x", "zve64x", "zvfbfmin", "zvfbfwma", "zvfh", "zvfhmin", "zvkb", "zvkg", "zvkn", "zvkned", "zvkng", "zvknha", "zvknhb", "zvks", "zvksc", "zvksed", "zvksg", "zvksh", "zvkt", "zvl32b"],
-  "spacemit-x60": ["d", "f", "sscofpmf", "sstc", "svnapot", "unaligned-scalar-mem", "v", "xsmtvdot", "zbc", "zbkc", "zfh", "zfhmin", "zicond", "zicsr", "zve32f", "zve32x", "zve64d", "zve64f", "zve64x", "zvfh", "zvfhmin", "zvkt", "zvl32b"],
+  "sifive-x160": ["32bit", "a", "b", "c", "f", "i", "m", "xsfcease", "zaamo", "zalrsc", "zawrs", "zba", "zbb", "zbs", "zca", "zcb", "zce", "zcf", "zcmop", "zcmp", "zcmt", "zfa", "zfbfmin", "zfh", "zfhmin", "zicbom", "zicbop", "zicboz", "zicfilp", "zicond", "zicsr", "zifencei", "zihintntl", "zihintpause", "zihpm", "zimop", "zkt", "zmmul", "zvbb", "zvdot4a8i", "zve32f", "zve32x", "zvfbfa", "zvfbfmin", "zvfbfwma", "zvfh", "zvfhmin", "zvkb", "zvkt", "zvl128b", "zvl32b", "zvl64b"],
+  "sifive-x180": ["64bit", "a", "b", "c", "d", "f", "i", "m", "v", "xsfcease", "xsfvfbfexp16e", "xsfvfexp16e", "xsfvfexp32e", "xsfvfexpa", "xsifivecflushdlone", "za64rs", "zaamo", "zalrsc", "zawrs", "zba", "zbb", "zbs", "zca", "zcb", "zcd", "zcmop", "zfa", "zfbfmin", "zfh", "zfhmin", "zic64b", "zicbom", "zicbop", "zicboz", "ziccamoa", "ziccif", "ziccrse", "zicfilp", "zicond", "zicsr", "zifencei", "zihintntl", "zihintpause", "zihpm", "zimop", "zkt", "zmmul", "zvbb", "zvdot4a8i", "zve32f", "zve32x", "zve64d", "zve64f", "zve64x", "zvfbfa", "zvfbfmin", "zvfbfwma", "zvfh", "zvfhmin", "zvkb", "zvkt", "zvl128b", "zvl32b", "zvl64b"],
+  "sifive-x280": ["64bit", "a", "c", "d", "f", "i", "m", "v", "zaamo", "zalrsc", "zba", "zbb", "zca", "zfh", "zfhmin", "zicsr", "zifencei", "zmmul", "zve32f", "zve32x", "zve64d", "zve64f", "zve64x", "zvfh", "zvfhmin", "zvl128b", "zvl256b", "zvl32b", "zvl512b", "zvl64b"],
+  "sifive-x390": ["64bit", "a", "b", "c", "d", "f", "i", "m", "v", "xsifivecdiscarddlone", "xsifivecflushdlone", "za64rs", "zaamo", "zalrsc", "zawrs", "zba", "zbb", "zbs", "zca", "zcb", "zcmop", "zfa", "zfbfmin", "zfh", "zfhmin", "zic64b", "zicbom", "zicbop", "zicboz", "ziccamoa", "ziccif", "ziccrse", "zicfilp", "zicfiss", "zicntr", "zicond", "zicsr", "zifencei", "zihintntl", "zihintpause", "zihpm", "zimop", "zkr", "zkt", "zmmul", "zvbb", "zve32f", "zve32x", "zve64d", "zve64f", "zve64x", "zvfbfmin", "zvfbfwma", "zvfh", "zvfhmin", "zvkb", "zvkt", "zvl1024b", "zvl128b", "zvl256b", "zvl32b", "zvl512b", "zvl64b"],
+  "spacemit-a100": ["64bit", "a", "b", "c", "d", "f", "i", "m", "smepmp", "smnpm", "smstateen", "ssccptr", "sscofpmf", "sscounterenw", "ssnpm", "sspm", "sstc", "sstvala", "sstvecd", "ssu64xl", "supm", "svade", "svbare", "svinval", "svnapot", "svpbmt", "unaligned-scalar-mem", "v", "xsmtvdotii", "za64rs", "zaamo", "zalrsc", "zawrs", "zba", "zbb", "zbc", "zbkc", "zbs", "zca", "zcb", "zcmop", "zfa", "zfbfmin", "zfh", "zfhmin", "zic64b", "zicbom", "zicbop", "zicboz", "ziccamoa", "ziccif", "zicclsm", "ziccrse", "zicntr", "zicond", "zicsr", "zifencei", "zihintntl", "zihintpause", "zihpm", "zimop", "zkt", "zmmul", "zvbb", "zvbc", "zve32f", "zve32x", "zve64d", "zve64f", "zve64x", "zvfbfmin", "zvfbfwma", "zvfh", "zvfhmin", "zvkb", "zvkg", "zvkn", "zvkned", "zvkng", "zvknha", "zvknhb", "zvks", "zvksc", "zvksed", "zvksg", "zvksh", "zvkt", "zvl1024b", "zvl128b", "zvl256b", "zvl32b", "zvl512b", "zvl64b"],
+  "spacemit-x100": ["64bit", "a", "b", "c", "d", "f", "h", "i", "m", "sha", "shcounterenw", "shgatpa", "shtvala", "shvsatpa", "shvstvala", "shvstvecd", "smepmp", "smnpm", "smstateen", "ssccptr", "sscofpmf", "sscounterenw", "ssnpm", "sspm", "ssstateen", "sstc", "sstvala", "sstvecd", "ssu64xl", "supm", "svade", "svbare", "svinval", "svnapot", "svpbmt", "unaligned-scalar-mem", "v", "xsmtvdot", "za64rs", "zaamo", "zalrsc", "zawrs", "zba", "zbb", "zbc", "zbkc", "zbs", "zca", "zcb", "zcmop", "zfa", "zfbfmin", "zfh", "zfhmin", "zic64b", "zicbom", "zicbop", "zicboz", "ziccamoa", "ziccif", "zicclsm", "ziccrse", "zicntr", "zicond", "zicsr", "zifencei", "zihintntl", "zihintpause", "zihpm", "zimop", "zkt", "zmmul", "zvbb", "zvbc", "zve32f", "zve32x", "zve64d", "zve64f", "zve64x", "zvfbfmin", "zvfbfwma", "zvfh", "zvfhmin", "zvkb", "zvkg", "zvkn", "zvkned", "zvkng", "zvknha", "zvknhb", "zvks", "zvksc", "zvksed", "zvksg", "zvksh", "zvkt", "zvl128b", "zvl256b", "zvl32b", "zvl64b"],
+  "spacemit-x60": ["64bit", "a", "b", "c", "d", "f", "i", "m", "ssccptr", "sscofpmf", "sscounterenw", "sstc", "sstvala", "sstvecd", "svade", "svbare", "svinval", "svnapot", "svpbmt", "unaligned-scalar-mem", "v", "xsmtvdot", "za64rs", "zaamo", "zalrsc", "zba", "zbb", "zbc", "zbkc", "zbs", "zca", "zfh", "zfhmin", "zic64b", "zicbom", "zicbop", "zicboz", "ziccamoa", "ziccif", "zicclsm", "ziccrse", "zicntr", "zicond", "zicsr", "zifencei", "zihintpause", "zihpm", "zkt", "zmmul", "zve32f", "zve32x", "zve64d", "zve64f", "zve64x", "zvfh", "zvfhmin", "zvkt", "zvl128b", "zvl256b", "zvl32b", "zvl64b"],
   "syntacore-scr1-base": ["32bit", "c", "i", "zca", "zicsr", "zifencei"],
   "syntacore-scr1-max": ["32bit", "c", "i", "m", "zca", "zicsr", "zifencei", "zmmul"],
   "syntacore-scr3-rv32": ["32bit", "c", "i", "m", "zca", "zicsr", "zifencei", "zmmul"],
@@ -1915,12 +2186,12 @@
   "syntacore-scr4-rv64": ["64bit", "a", "c", "d", "f", "i", "m", "zaamo", "zalrsc", "zca", "zicsr", "zifencei", "zmmul"],
   "syntacore-scr5-rv32": ["32bit", "a", "c", "d", "f", "i", "m", "zaamo", "zalrsc", "zca", "zicsr", "zifencei", "zmmul"],
   "syntacore-scr5-rv64": ["64bit", "a", "c", "d", "f", "i", "m", "zaamo", "zalrsc", "zca", "zicsr", "zifencei", "zmmul"],
-  "syntacore-scr7": ["64bit", "a", "c", "d", "f", "i", "m", "v", "zaamo", "zalrsc", "zba", "zbb", "zbc", "zbkb", "zbkc", "zbkx", "zbs", "zca", "zicsr", "zifencei", "zkn", "zknd", "zkne", "zknh", "zmmul", "zve32f", "zve32x", "zve64d", "zve64f", "zve64x", "zvl32b"],
-  "tt-ascalon-x": ["f", "smaia", "smmpm", "smnpm", "smrnmi", "smstateen", "ssaia", "ssstrict", "unaligned-scalar-mem", "unaligned-vector-mem", "zfbfmin", "zfh", "zfhmin", "zicsr", "zkr", "zvbc", "zve32f", "zve32x", "zve64x", "zvfbfmin", "zvfbfwma", "zvfh", "zvfhmin", "zvkb", "zvkg", "zvkn", "zvkned", "zvkng", "zvknha", "zvknhb", "zvkt", "zvl32b"],
-  "tt-ascalon-xg": ["f", "smaia", "smmpm", "smnpm", "smrnmi", "smstateen", "ssaia", "ssstrict", "unaligned-scalar-mem", "unaligned-vector-mem", "zfbfmin", "zfh", "zfhmin", "zicsr", "zkr", "zvbc", "zve32f", "zve32x", "zve64x", "zvfbfmin", "zvfbfwma", "zvfh", "zvfhmin", "zvl32b"],
-  "xiangshan-kunminghu": ["f", "smaia", "smcsrind", "smdbltrp", "smmpm", "smnpm", "smrnmi", "smstateen", "ssaia", "sscsrind", "ssdbltrp", "sspm", "ssstrict", "zaamo", "zacas", "zbc", "zbkb", "zbkc", "zbkx", "zfh", "zfhmin", "zicsr", "zkn", "zknd", "zkne", "zknh", "zks", "zksed", "zksh", "zve32f", "zve32x", "zvfh", "zvfhmin", "zvl32b"],
+  "syntacore-scr7": ["64bit", "a", "c", "d", "f", "i", "m", "v", "zaamo", "zalrsc", "zba", "zbb", "zbc", "zbkb", "zbkc", "zbkx", "zbs", "zca", "zicsr", "zifencei", "zkn", "zknd", "zkne", "zknh", "zmmul", "zve32f", "zve32x", "zve64d", "zve64f", "zve64x", "zvl128b", "zvl32b", "zvl64b"],
+  "tt-ascalon-x": ["64bit", "a", "b", "c", "d", "f", "h", "i", "m", "sha", "shcounterenw", "shgatpa", "shtvala", "shvsatpa", "shvstvala", "shvstvecd", "smaia", "smmpm", "smnpm", "smrnmi", "smstateen", "ssaia", "ssccptr", "sscofpmf", "sscounterenw", "ssnpm", "ssstateen", "ssstrict", "sstc", "sstvala", "sstvecd", "ssu64xl", "supm", "svade", "svbare", "svinval", "svnapot", "svpbmt", "unaligned-scalar-mem", "unaligned-vector-mem", "v", "za64rs", "zaamo", "zalrsc", "zawrs", "zba", "zbb", "zbs", "zca", "zcb", "zcmop", "zfa", "zfbfmin", "zfh", "zfhmin", "zic64b", "zicbom", "zicbop", "zicboz", "ziccamoa", "ziccif", "zicclsm", "ziccrse", "zicntr", "zicond", "zicsr", "zifencei", "zihintntl", "zihintpause", "zihpm", "zimop", "zkr", "zkt", "zmmul", "zvbb", "zvbc", "zve32f", "zve32x", "zve64d", "zve64f", "zve64x", "zvfbfmin", "zvfbfwma", "zvfh", "zvfhmin", "zvkb", "zvkg", "zvkn", "zvkned", "zvkng", "zvknha", "zvknhb", "zvkt", "zvl128b", "zvl256b", "zvl32b", "zvl64b"],
+  "tt-ascalon-xg": ["64bit", "a", "b", "c", "d", "f", "h", "i", "m", "sha", "shcounterenw", "shgatpa", "shtvala", "shvsatpa", "shvstvala", "shvstvecd", "smaia", "smmpm", "smnpm", "smrnmi", "smstateen", "ssaia", "ssccptr", "sscofpmf", "sscounterenw", "ssnpm", "ssstateen", "ssstrict", "sstc", "sstvala", "sstvecd", "ssu64xl", "supm", "svade", "svbare", "svinval", "svnapot", "svpbmt", "unaligned-scalar-mem", "unaligned-vector-mem", "v", "za64rs", "zaamo", "zalrsc", "zawrs", "zba", "zbb", "zbs", "zca", "zcb", "zcmop", "zfa", "zfbfmin", "zfh", "zfhmin", "zic64b", "zicbom", "zicbop", "zicboz", "ziccamoa", "ziccif", "zicclsm", "ziccrse", "zicntr", "zicond", "zicsr", "zifencei", "zihintntl", "zihintpause", "zihpm", "zimop", "zkr", "zkt", "zmmul", "zvbb", "zvbc", "zve32f", "zve32x", "zve64d", "zve64f", "zve64x", "zvfbfmin", "zvfbfwma", "zvfh", "zvfhmin", "zvkb", "zvkt", "zvl128b", "zvl256b", "zvl32b", "zvl64b"],
+  "xiangshan-kunminghu": ["64bit", "a", "b", "c", "d", "f", "h", "i", "m", "sha", "shcounterenw", "shgatpa", "shtvala", "shvsatpa", "shvstvala", "shvstvecd", "smaia", "smcsrind", "smdbltrp", "smmpm", "smnpm", "smrnmi", "smstateen", "ssaia", "ssccptr", "sscofpmf", "sscounterenw", "sscsrind", "ssdbltrp", "ssnpm", "sspm", "ssstateen", "ssstrict", "sstc", "sstvala", "sstvecd", "ssu64xl", "supm", "svade", "svbare", "svinval", "svnapot", "svpbmt", "v", "za64rs", "zaamo", "zacas", "zalrsc", "zawrs", "zba", "zbb", "zbc", "zbkb", "zbkc", "zbkx", "zbs", "zca", "zcb", "zcmop", "zfa", "zfh", "zfhmin", "zic64b", "zicbom", "zicbop", "zicboz", "ziccamoa", "ziccif", "zicclsm", "ziccrse", "zicntr", "zicond", "zicsr", "zifencei", "zihintntl", "zihintpause", "zihpm", "zimop", "zkn", "zknd", "zkne", "zknh", "zks", "zksed", "zksh", "zkt", "zmmul", "zvbb", "zve32f", "zve32x", "zve64d", "zve64f", "zve64x", "zvfh", "zvfhmin", "zvkb", "zvkt", "zvl128b", "zvl32b", "zvl64b"],
   "xiangshan-nanhu": ["64bit", "a", "c", "d", "f", "i", "m", "svinval", "zaamo", "zalrsc", "zba", "zbb", "zbc", "zbkb", "zbkc", "zbkx", "zbs", "zca", "zicbom", "zicboz", "zicsr", "zifencei", "zkn", "zknd", "zkne", "zknh", "zksed", "zksh", "zmmul"],
-  "xt-c910v2": ["d", "f", "unaligned-scalar-mem", "xtheadba", "xtheadbb", "xtheadbs", "xtheadcmo", "xtheadcondmov", "xtheadfmemidx", "xtheadmac", "xtheadmemidx", "xtheadmempair", "xtheadsync", "zbc", "zbkc", "zca", "zcd", "zfbfmin", "zfh", "zfhmin", "zicsr"],
-  "xt-c920v2": ["d", "f", "unaligned-scalar-mem", "v", "xtheadba", "xtheadbb", "xtheadbs", "xtheadcmo", "xtheadcondmov", "xtheadfmemidx", "xtheadmac", "xtheadmemidx", "xtheadmempair", "xtheadsync", "xtheadvdot", "zbc", "zbkc", "zca", "zcd", "zfbfmin", "zfh", "zfhmin", "zicsr", "zve32f", "zve32x", "zve64d", "zve64f", "zve64x", "zvfbfmin", "zvfbfwma", "zvfh", "zvfhmin", "zvl32b"]
+  "xt-c910v2": ["64bit", "a", "b", "c", "d", "f", "i", "m", "ssccptr", "sscofpmf", "sscounterenw", "sstc", "sstvala", "sstvecd", "ssu64xl", "svade", "svbare", "svinval", "svnapot", "svpbmt", "unaligned-scalar-mem", "xtheadba", "xtheadbb", "xtheadbs", "xtheadcmo", "xtheadcondmov", "xtheadfmemidx", "xtheadmac", "xtheadmemidx", "xtheadmempair", "xtheadsync", "za64rs", "zaamo", "zalrsc", "zawrs", "zba", "zbb", "zbc", "zbkc", "zbs", "zca", "zcb", "zcd", "zcmop", "zfa", "zfbfmin", "zfh", "zfhmin", "zic64b", "zicbom", "zicbop", "zicboz", "ziccamoa", "ziccif", "zicclsm", "ziccrse", "zicntr", "zicond", "zicsr", "zifencei", "zihintntl", "zihintpause", "zihpm", "zimop", "zkt", "zmmul"],
+  "xt-c920v2": ["64bit", "a", "b", "c", "d", "f", "i", "m", "ssccptr", "sscofpmf", "sscounterenw", "sstc", "sstvala", "sstvecd", "ssu64xl", "svade", "svbare", "svinval", "svnapot", "svpbmt", "unaligned-scalar-mem", "v", "xtheadba", "xtheadbb", "xtheadbs", "xtheadcmo", "xtheadcondmov", "xtheadfmemidx", "xtheadmac", "xtheadmemidx", "xtheadmempair", "xtheadsync", "xtheadvdot", "za64rs", "zaamo", "zalrsc", "zawrs", "zba", "zbb", "zbc", "zbkc", "zbs", "zca", "zcb", "zcd", "zcmop", "zfa", "zfbfmin", "zfh", "zfhmin", "zic64b", "zicbom", "zicbop", "zicboz", "ziccamoa", "ziccif", "ziccrse", "zicntr", "zicond", "zicsr", "zifencei", "zihintntl", "zihintpause", "zihpm", "zimop", "zkt", "zmmul", "zve32f", "zve32x", "zve64d", "zve64f", "zve64x", "zvfbfmin", "zvfbfwma", "zvfh", "zvfhmin", "zvl128b", "zvl32b", "zvl64b"]
  }
 }

@@ -48,13 +48,13 @@ SOURCES = {
 X86_VENDOR_FILES = ("intel", "amd", "centaur", "cyrix", "transmeta", "hygon", "zhaoxin",
                     "vortex")
 
-# Corporate suffixes dropped when matching the same company across sources:
-# pci.ids says "Intel Corporation", usb.ids "Intel Corp.".
-_SUFFIXES = {"inc", "incorporated", "corp", "corporation", "co", "company", "ltd",
-             "limited", "llc", "gmbh", "ag", "sa", "srl", "bv", "nv", "plc", "kk", "oy",
-             "ab", "as", "spa", "pty", "pte", "the", "group", "holdings", "international",
-             "technologies", "technology", "tech", "electronics", "semiconductor",
-             "semiconductors", "systems", "microsystems"}
+# Legal-form words dropped when matching the same company across sources:
+# pci.ids says "Intel Corporation", usb.ids "Intel Corp.". Only the legal form:
+# descriptive words tell companies apart ("Crystal Group" is not "Crystal
+# Semiconductor", "Graphics Microsystems" is not "Graphics Technology (HK)").
+_LEGAL_FORMS = {"inc", "incorporated", "corp", "corporation", "co", "company", "ltd",
+                "limited", "llc", "gmbh", "ag", "sa", "srl", "bv", "nv", "plc", "kk", "oy",
+                "ab", "as", "spa", "pty", "pte", "the"}
 
 
 class RegistryError(Exception):
@@ -62,11 +62,15 @@ class RegistryError(Exception):
 
 
 def norm(name: str) -> str:
-    """A matching key for one company's name across sources. Lossy on purpose;
-    the registry keeps every original spelling beside it."""
-    words = re.sub(r"\[.*?\]|\(.*?\)", " ", name.lower())
-    words = re.sub(r"[^a-z0-9]+", " ", words).split()
-    kept = [w for w in words if w not in _SUFFIXES]
+    """A matching key for one company's name across sources: case, punctuation,
+    legal form and bracketed notes ("[AMD/ATI]", "(Wrong ID)") ignored. The
+    registry keeps every original spelling beside it. "" when the name has no
+    letters or digits ("???"); build() never files a vendor under that."""
+    low = re.sub(r"\s+(?:and|&)\s+subsidiaries\b", " ", name.lower())
+    words = re.sub(r"[^a-z0-9]+", " ", re.sub(r"\[.*?\]|\(.*?\)", " ", low)).split()
+    if not words:                    # the whole name is a note: "[Maxxter]"
+        words = re.sub(r"[^a-z0-9]+", " ", low).split()
+    kept = [w for w in words if w not in _LEGAL_FORMS]
     return " ".join(kept or words)
 
 
@@ -95,9 +99,10 @@ def parse_id_db(text: str) -> list[tuple[str, str]]:
 
 
 def parse_x86_ident(text: str) -> list[str]:
-    """CPUID leaf-0 vendor strings from a Linux cpu_dev's `.c_ident = { ... }`."""
-    m = re.search(r"\.c_ident\s*=\s*\{([^}]*)\}", text)
-    return re.findall(r'"([^"]*)"', m.group(1)) if m else []
+    """CPUID leaf-0 vendor strings from every cpu_dev's `.c_ident = { ... }`: a
+    file can hold several (cyrix.c: "CyrixInstead", then "Geode by NSC")."""
+    return [s for m in re.finditer(r"\.c_ident\s*=\s*\{([^}]*)\}", text)
+            for s in re.findall(r'"([^"]*)"', m.group(1))]
 
 
 def parse_arm_implementers(text: str) -> list[tuple[str, str]]:
@@ -109,11 +114,15 @@ def build(cache: Path = CACHE) -> dict:
     sources, entries = [], {}
 
     def add(name: str, scheme: str, ident: str):
-        key = norm(name)
+        # A name with nothing to match on is its own vendor, never a shared "" key.
+        key = norm(name) or f"{scheme}:{ident}"
+        key = SAME_COMPANY.get(key, key)
         e = entries.setdefault(key, {"key": key, "names": [], "ids": []})
         if name not in e["names"]:
             e["names"].append(name)
-        e["ids"].append({"scheme": scheme, "id": ident})
+        # Each id keeps the name its source gives it: answer "who is 1002" with
+        # that, not with whichever spelling of the company was read first.
+        e["ids"].append({"scheme": scheme, "id": ident, "name": name})
 
     for scheme in ("pci", "usb"):
         path, prov = cached_file(SOURCES[scheme], cache)
@@ -159,6 +168,15 @@ X86_VENDOR_NAMES = {
     "  Shanghai  ": "Zhaoxin", "Vortex86 SoC": "DM&P Electronics",
 }
 
+# One company under names that normalise apart, checked by hand. Anything not
+# listed stays separate: two names that differ in more than legal form are two
+# vendors until someone shows otherwise.
+SAME_COMPANY = {
+    "nxp semiconductors": "nxp", "microchip technology": "microchip",
+    "qualcomm technologies": "qualcomm", "allwinner technology": "allwinner",
+    "loongson technology": "loongson",
+}
+
 # Registry keys that mean an inventory vendor whose short name does not normalise
 # to the same key ("amd" vs "advanced micro devices").
 INVENTORY_ALIASES = {
@@ -181,6 +199,7 @@ def dumps(reg: dict) -> str:
 
 def lookup(registry: dict, query: str) -> list[dict]:
     q, qn = query.lower(), norm(query)
+    qn = SAME_COMPANY.get(qn, qn)
     return [e for e in registry["vendors"]
             if e["key"] == qn or any(i["id"].lower() == q for i in e["ids"])]
 

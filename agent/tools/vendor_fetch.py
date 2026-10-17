@@ -1,6 +1,6 @@
 """Fetch a vendor document into the local cache, with provenance.
 
-`vendors.yaml` says 43 documents exist. This retrieves one and records where it
+`vendors.yaml` lists the documents that exist (76 today). This retrieves one and records where it
 came from, so anything derived later can cite its source. An erratum that cannot
 name its document, revision and page is a rumour, and a table of rumours is
 worse than an empty table because it will be trusted.
@@ -90,12 +90,29 @@ def _download(url: str, dest_dir: Path) -> Path:
     dest_dir.mkdir(parents=True, exist_ok=True)
     staged = dest_dir / ".download" / url.rstrip("/").rsplit("/", 1)[-1]
     staged.parent.mkdir(exist_ok=True)
-    req = urllib.request.Request(url, headers={"User-Agent": "auton-vendor-fetch/1"})
+    # The inventory's own URL is trusted; where it redirects is not. Every hop must
+    # stay https on the same host (vendor_research's handler), and the body is capped.
+    import urllib.parse
+
+    from vendor_research import MAX_BYTES, ResearchError, _opener
+
+    host = urllib.parse.urlparse(url).hostname or ""
+    if not url.startswith("https://"):
+        raise FetchError(f"{url}: fetch_url must be https")
     try:
-        with urllib.request.urlopen(req, timeout=120) as resp, open(staged, "wb") as fh:
-            shutil.copyfileobj(resp, fh)
-    except OSError as exc:
+        with _opener((host,))(url) as resp, open(staged, "wb") as fh:
+            got = 0
+            while chunk := resp.read(1 << 16):
+                got += len(chunk)
+                if got > MAX_BYTES:
+                    raise FetchError(f"{url}: over the {MAX_BYTES}-byte limit; abandoned")
+                fh.write(chunk)
+    except (OSError, ResearchError) as exc:
+        staged.unlink(missing_ok=True)
         raise FetchError(f"{url}: download failed: {exc}") from exc
+    except FetchError:
+        staged.unlink(missing_ok=True)
+        raise
     if staged.stat().st_size == 0:
         raise FetchError(f"{url}: downloaded nothing")
     return staged

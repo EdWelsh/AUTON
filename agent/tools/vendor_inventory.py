@@ -58,7 +58,7 @@ TRACKED_PREFIXES = ("agent/", "kernel/", "kernels/", "scripts/", "tests/",
 
 
 class InventoryError(Exception):
-    """Always names the vendor and the document. An inventory of 43 documents
+    """Always names the vendor and the document. An inventory of 76 documents
     is not something to bisect by hand."""
 
 

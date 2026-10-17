@@ -210,6 +210,51 @@
     "ccpp"
    ]
   },
+  "call-saved-x10": {
+   "def": "FeatureCallSavedX10",
+   "description": "Make X10 callee saved.",
+   "implies": []
+  },
+  "call-saved-x11": {
+   "def": "FeatureCallSavedX11",
+   "description": "Make X11 callee saved.",
+   "implies": []
+  },
+  "call-saved-x12": {
+   "def": "FeatureCallSavedX12",
+   "description": "Make X12 callee saved.",
+   "implies": []
+  },
+  "call-saved-x13": {
+   "def": "FeatureCallSavedX13",
+   "description": "Make X13 callee saved.",
+   "implies": []
+  },
+  "call-saved-x14": {
+   "def": "FeatureCallSavedX14",
+   "description": "Make X14 callee saved.",
+   "implies": []
+  },
+  "call-saved-x15": {
+   "def": "FeatureCallSavedX15",
+   "description": "Make X15 callee saved.",
+   "implies": []
+  },
+  "call-saved-x18": {
+   "def": "FeatureCallSavedX18",
+   "description": "Make X18 callee saved.",
+   "implies": []
+  },
+  "call-saved-x8": {
+   "def": "FeatureCallSavedX8",
+   "description": "Make X8 callee saved.",
+   "implies": []
+  },
+  "call-saved-x9": {
+   "def": "FeatureCallSavedX9",
+   "description": "Make X9 callee saved.",
+   "implies": []
+  },
   "cmp-bcc-fusion": {
    "def": "FeatureCmpBccFusion",
    "description": "CPU fuses cmp+bcc operations",
@@ -896,6 +941,126 @@
    "description": "Reserve LR for call use only",
    "implies": []
   },
+  "reserve-x1": {
+   "def": "FeatureReserveX1",
+   "description": "Reserve X1, making it unavailable as a GPR",
+   "implies": []
+  },
+  "reserve-x10": {
+   "def": "FeatureReserveX10",
+   "description": "Reserve X10, making it unavailable as a GPR",
+   "implies": []
+  },
+  "reserve-x11": {
+   "def": "FeatureReserveX11",
+   "description": "Reserve X11, making it unavailable as a GPR",
+   "implies": []
+  },
+  "reserve-x12": {
+   "def": "FeatureReserveX12",
+   "description": "Reserve X12, making it unavailable as a GPR",
+   "implies": []
+  },
+  "reserve-x13": {
+   "def": "FeatureReserveX13",
+   "description": "Reserve X13, making it unavailable as a GPR",
+   "implies": []
+  },
+  "reserve-x14": {
+   "def": "FeatureReserveX14",
+   "description": "Reserve X14, making it unavailable as a GPR",
+   "implies": []
+  },
+  "reserve-x15": {
+   "def": "FeatureReserveX15",
+   "description": "Reserve X15, making it unavailable as a GPR",
+   "implies": []
+  },
+  "reserve-x18": {
+   "def": "FeatureReserveX18",
+   "description": "Reserve X18, making it unavailable as a GPR",
+   "implies": []
+  },
+  "reserve-x2": {
+   "def": "FeatureReserveX2",
+   "description": "Reserve X2, making it unavailable as a GPR",
+   "implies": []
+  },
+  "reserve-x20": {
+   "def": "FeatureReserveX20",
+   "description": "Reserve X20, making it unavailable as a GPR",
+   "implies": []
+  },
+  "reserve-x21": {
+   "def": "FeatureReserveX21",
+   "description": "Reserve X21, making it unavailable as a GPR",
+   "implies": []
+  },
+  "reserve-x22": {
+   "def": "FeatureReserveX22",
+   "description": "Reserve X22, making it unavailable as a GPR",
+   "implies": []
+  },
+  "reserve-x23": {
+   "def": "FeatureReserveX23",
+   "description": "Reserve X23, making it unavailable as a GPR",
+   "implies": []
+  },
+  "reserve-x24": {
+   "def": "FeatureReserveX24",
+   "description": "Reserve X24, making it unavailable as a GPR",
+   "implies": []
+  },
+  "reserve-x25": {
+   "def": "FeatureReserveX25",
+   "description": "Reserve X25, making it unavailable as a GPR",
+   "implies": []
+  },
+  "reserve-x26": {
+   "def": "FeatureReserveX26",
+   "description": "Reserve X26, making it unavailable as a GPR",
+   "implies": []
+  },
+  "reserve-x27": {
+   "def": "FeatureReserveX27",
+   "description": "Reserve X27, making it unavailable as a GPR",
+   "implies": []
+  },
+  "reserve-x28": {
+   "def": "FeatureReserveX28",
+   "description": "Reserve X28, making it unavailable as a GPR",
+   "implies": []
+  },
+  "reserve-x3": {
+   "def": "FeatureReserveX3",
+   "description": "Reserve X3, making it unavailable as a GPR",
+   "implies": []
+  },
+  "reserve-x4": {
+   "def": "FeatureReserveX4",
+   "description": "Reserve X4, making it unavailable as a GPR",
+   "implies": []
+  },
+  "reserve-x5": {
+   "def": "FeatureReserveX5",
+   "description": "Reserve X5, making it unavailable as a GPR",
+   "implies": []
+  },
+  "reserve-x6": {
+   "def": "FeatureReserveX6",
+   "description": "Reserve X6, making it unavailable as a GPR",
+   "implies": []
+  },
+  "reserve-x7": {
+   "def": "FeatureReserveX7",
+   "description": "Reserve X7, making it unavailable as a GPR",
+   "implies": []
+  },
+  "reserve-x9": {
+   "def": "FeatureReserveX9",
+   "description": "Reserve X9, making it unavailable as a GPR",
+   "implies": []
+  },
   "poe2": {
    "def": "FeatureS1POE2",
    "description": "Enable Stage 1 Permission Overlays Extension 2 instructions",
@@ -1275,6 +1440,21 @@
   "tagged-globals": {
    "def": "FeatureTaggedGlobals",
    "description": "Use an instruction sequence for taking the address of a global \"\n    \"that allows a memory tag in the upper address bits",
+   "implies": []
+  },
+  "tpidr-el1": {
+   "def": "FeatureUseEL1ForTP",
+   "description": "Permit use of TPIDR_EL1 for the TLS base",
+   "implies": []
+  },
+  "tpidr-el2": {
+   "def": "FeatureUseEL2ForTP",
+   "description": "Permit use of TPIDR_EL2 for the TLS base",
+   "implies": []
+  },
+  "tpidr-el3": {
+   "def": "FeatureUseEL3ForTP",
+   "description": "Permit use of TPIDR_EL3 for the TLS base",
    "implies": []
   },
   "use-fixed-over-scalable-if-equal-cost": {
