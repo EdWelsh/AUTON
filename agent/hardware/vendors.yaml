@@ -549,6 +549,7 @@ vendors:
         licence: GPL-2.0-or-later / BSD-3-Clause
         form: flat-text
         cadence: continuous
+        fetch_url: https://raw.githubusercontent.com/usbids/usbids/master/usb.ids
 
   - vendor: pci-sig
     category: standards
@@ -569,6 +570,7 @@ vendors:
         licence: GPL-2.0-or-later / BSD-3-Clause
         form: flat-text
         cadence: continuous
+        fetch_url: https://raw.githubusercontent.com/pciutils/pciids/master/pci.ids
         notes: >-
           The registry is public even though the base spec is not. Both facts
           belong in the record: AUTON's device identification needs the
@@ -790,3 +792,176 @@ vendors:
           Pinned by commit in scripts/fetch-softfloat.sh with its SHA-256
           checked. Used by tests/conformance/ (hardware-truth H10).
         url_hint: http://www.jhauser.us/arithmetic/SoftFloat.html
+
+  # Which CPU models implement which instruction-set extensions, as data. A vendor
+  # manual says what an extension IS; it rarely says, in one place, which parts
+  # shipped it. LLVM's target definitions do, for every architecture it targets,
+  # and they are redistributable. They are nominal per microarchitecture: a part
+  # whose silicon or microcode removed an extension is an exception recorded in
+  # agent/hardware/isa/exceptions.yaml with its own source. CPUID is the runtime truth.
+  - vendor: llvm-project
+    category: isa-source
+    identity_keys: [processor_name]
+    documents:
+      - id: llvm-x86-td
+        title: LLVM X86.td processor and feature definitions
+        kind: machine-readable-registers
+        access: public-source
+        redistributable: true
+        licence: Apache-2.0 WITH LLVM-exception
+        form: structured
+        cadence: per-release
+        fetch_url: https://raw.githubusercontent.com/llvm/llvm-project/main/llvm/lib/Target/X86/X86.td
+      - id: llvm-aarch64-processors-td
+        title: LLVM AArch64Processors.td
+        kind: machine-readable-registers
+        access: public-source
+        redistributable: true
+        licence: Apache-2.0 WITH LLVM-exception
+        form: structured
+        cadence: per-release
+        fetch_url: https://raw.githubusercontent.com/llvm/llvm-project/main/llvm/lib/Target/AArch64/AArch64Processors.td
+      - id: llvm-aarch64-features-td
+        title: LLVM AArch64Features.td
+        kind: machine-readable-registers
+        access: public-source
+        redistributable: true
+        licence: Apache-2.0 WITH LLVM-exception
+        form: structured
+        cadence: per-release
+        fetch_url: https://raw.githubusercontent.com/llvm/llvm-project/main/llvm/lib/Target/AArch64/AArch64Features.td
+      - id: llvm-riscv-processors-td
+        title: LLVM RISCVProcessors.td
+        kind: machine-readable-registers
+        access: public-source
+        redistributable: true
+        licence: Apache-2.0 WITH LLVM-exception
+        form: structured
+        cadence: per-release
+        fetch_url: https://raw.githubusercontent.com/llvm/llvm-project/main/llvm/lib/Target/RISCV/RISCVProcessors.td
+      - id: llvm-ppc-td
+        title: LLVM PPC.td (IBM POWER processors)
+        kind: machine-readable-registers
+        access: public-source
+        redistributable: true
+        licence: Apache-2.0 WITH LLVM-exception
+        form: structured
+        cadence: per-release
+        fetch_url: https://raw.githubusercontent.com/llvm/llvm-project/main/llvm/lib/Target/PowerPC/PPC.td
+      - id: llvm-systemz-processors-td
+        title: LLVM SystemZProcessors.td (IBM Z)
+        kind: machine-readable-registers
+        access: public-source
+        redistributable: true
+        licence: Apache-2.0 WITH LLVM-exception
+        form: structured
+        cadence: per-release
+        fetch_url: https://raw.githubusercontent.com/llvm/llvm-project/main/llvm/lib/Target/SystemZ/SystemZProcessors.td
+
+  # CPU identity codes as the Linux kernel matches them: the strings and numbers a
+  # running CPU reports about itself (CPUID vendor string, MIDR implementer, PVR),
+  # and the CPUID feature-bit map. Facts are derived from these files; the files
+  # stay in .cache/vendor/.
+  - vendor: linux-kernel
+    category: isa-source
+    identity_keys: [cpuid_vendor, midr_implementer, pvr]
+    documents:
+      - id: linux-x86-cpufeatures-h
+        title: "Linux arch/x86/include/asm/cpufeatures.h: x86 CPUID feature bits (leaf, register, bit) by name"
+        kind: register-reference
+        access: public-source
+        redistributable: true
+        licence: GPL-2.0
+        form: c-headers
+        cadence: continuous
+        fetch_url: https://raw.githubusercontent.com/torvalds/linux/master/arch/x86/include/asm/cpufeatures.h
+      - id: linux-arm64-cputype-h
+        title: "Linux arch/arm64/include/asm/cputype.h: Arm MIDR implementer and part numbers"
+        kind: register-reference
+        access: public-source
+        redistributable: true
+        licence: GPL-2.0
+        form: c-headers
+        cadence: continuous
+        fetch_url: https://raw.githubusercontent.com/torvalds/linux/master/arch/arm64/include/asm/cputype.h
+      - id: linux-powerpc-reg-h
+        title: "Linux arch/powerpc/include/asm/reg.h: IBM POWER / PowerPC processor version (PVR) values"
+        kind: register-reference
+        access: public-source
+        redistributable: true
+        licence: GPL-2.0
+        form: c-headers
+        cadence: continuous
+        fetch_url: https://raw.githubusercontent.com/torvalds/linux/master/arch/powerpc/include/asm/reg.h
+      - id: linux-x86-cpu-intel-c
+        title: "Linux arch/x86/kernel/cpu/intel.c: x86 CPUID vendor string for intel"
+        kind: register-reference
+        access: public-source
+        redistributable: true
+        licence: GPL-2.0
+        form: c-headers
+        cadence: continuous
+        fetch_url: https://raw.githubusercontent.com/torvalds/linux/master/arch/x86/kernel/cpu/intel.c
+      - id: linux-x86-cpu-amd-c
+        title: "Linux arch/x86/kernel/cpu/amd.c: x86 CPUID vendor string for amd"
+        kind: register-reference
+        access: public-source
+        redistributable: true
+        licence: GPL-2.0
+        form: c-headers
+        cadence: continuous
+        fetch_url: https://raw.githubusercontent.com/torvalds/linux/master/arch/x86/kernel/cpu/amd.c
+      - id: linux-x86-cpu-centaur-c
+        title: "Linux arch/x86/kernel/cpu/centaur.c: x86 CPUID vendor string for centaur"
+        kind: register-reference
+        access: public-source
+        redistributable: true
+        licence: GPL-2.0
+        form: c-headers
+        cadence: continuous
+        fetch_url: https://raw.githubusercontent.com/torvalds/linux/master/arch/x86/kernel/cpu/centaur.c
+      - id: linux-x86-cpu-cyrix-c
+        title: "Linux arch/x86/kernel/cpu/cyrix.c: x86 CPUID vendor string for cyrix"
+        kind: register-reference
+        access: public-source
+        redistributable: true
+        licence: GPL-2.0
+        form: c-headers
+        cadence: continuous
+        fetch_url: https://raw.githubusercontent.com/torvalds/linux/master/arch/x86/kernel/cpu/cyrix.c
+      - id: linux-x86-cpu-transmeta-c
+        title: "Linux arch/x86/kernel/cpu/transmeta.c: x86 CPUID vendor string for transmeta"
+        kind: register-reference
+        access: public-source
+        redistributable: true
+        licence: GPL-2.0
+        form: c-headers
+        cadence: continuous
+        fetch_url: https://raw.githubusercontent.com/torvalds/linux/master/arch/x86/kernel/cpu/transmeta.c
+      - id: linux-x86-cpu-hygon-c
+        title: "Linux arch/x86/kernel/cpu/hygon.c: x86 CPUID vendor string for hygon"
+        kind: register-reference
+        access: public-source
+        redistributable: true
+        licence: GPL-2.0
+        form: c-headers
+        cadence: continuous
+        fetch_url: https://raw.githubusercontent.com/torvalds/linux/master/arch/x86/kernel/cpu/hygon.c
+      - id: linux-x86-cpu-zhaoxin-c
+        title: "Linux arch/x86/kernel/cpu/zhaoxin.c: x86 CPUID vendor string for zhaoxin"
+        kind: register-reference
+        access: public-source
+        redistributable: true
+        licence: GPL-2.0
+        form: c-headers
+        cadence: continuous
+        fetch_url: https://raw.githubusercontent.com/torvalds/linux/master/arch/x86/kernel/cpu/zhaoxin.c
+      - id: linux-x86-cpu-vortex-c
+        title: "Linux arch/x86/kernel/cpu/vortex.c: x86 CPUID vendor string for vortex"
+        kind: register-reference
+        access: public-source
+        redistributable: true
+        licence: GPL-2.0
+        form: c-headers
+        cadence: continuous
+        fetch_url: https://raw.githubusercontent.com/torvalds/linux/master/arch/x86/kernel/cpu/vortex.c

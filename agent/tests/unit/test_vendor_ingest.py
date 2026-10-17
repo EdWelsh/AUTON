@@ -117,9 +117,38 @@ class TestProvenanceIsMandatory:
 
 
 class TestFetching:
-    def test_network_fetching_says_so_rather_than_failing_obscurely(self):
-        with pytest.raises(FetchError, match="network fetching is not implemented"):
+    def test_a_document_with_no_fetch_url_says_to_download_it_by_hand(self):
+        """Intel's CDN refuses scripts, so the SDM has no fetch_url."""
+        with pytest.raises(FetchError, match="no fetch_url"):
             fetch("intel", "intel-sdm", from_file=None)
+
+    def test_a_fetch_url_is_downloaded_and_its_url_recorded(self, tmp_path, monkeypatch):
+        import vendor_fetch
+
+        def fake_download(url, dest_dir):
+            (dest_dir / ".download").mkdir(parents=True, exist_ok=True)
+            f = dest_dir / ".download" / "pci.ids"
+            f.write_text("8086  Intel Corporation\n")
+            return f
+
+        monkeypatch.setattr(vendor_fetch, "_download", fake_download)
+        prov = fetch("pci-sig", "pci-ids", from_file=None, cache=tmp_path)
+        assert prov.source.startswith("https://")
+        assert (tmp_path / "pci-sig" / "pci-ids" / "pci.ids").read_text().startswith("8086")
+
+    def test_a_non_https_fetch_url_is_refused(self, tmp_path):
+        from vendor_inventory import InventoryError, load
+        inv = tmp_path / "v.yaml"
+        inv.write_text("""vendors:
+  - vendor: x
+    category: cpu
+    identity_keys: [k]
+    documents:
+      - {id: d, title: t, kind: errata, access: public-download,
+         redistributable: true, licence: MIT, form: pdf, fetch_url: "http://x/y"}
+""")
+        with pytest.raises(InventoryError, match="https"):
+            load(inv)
 
     def test_an_unknown_document_lists_what_the_vendor_has(self):
         with pytest.raises(FetchError, match="Available"):

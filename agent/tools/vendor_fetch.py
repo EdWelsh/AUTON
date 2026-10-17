@@ -82,6 +82,25 @@ def _find(vendor: str, doc_id: str):
     return v, d
 
 
+def _download(url: str, dest_dir: Path) -> Path:
+    """Download `url` to a staging file beside the cache entry. The caller records
+    its sha256, which is the identity: the URL is only where it came from."""
+    import urllib.request
+
+    dest_dir.mkdir(parents=True, exist_ok=True)
+    staged = dest_dir / ".download" / url.rstrip("/").rsplit("/", 1)[-1]
+    staged.parent.mkdir(exist_ok=True)
+    req = urllib.request.Request(url, headers={"User-Agent": "auton-vendor-fetch/1"})
+    try:
+        with urllib.request.urlopen(req, timeout=120) as resp, open(staged, "wb") as fh:
+            shutil.copyfileobj(resp, fh)
+    except OSError as exc:
+        raise FetchError(f"{url}: download failed: {exc}") from exc
+    if staged.stat().st_size == 0:
+        raise FetchError(f"{url}: downloaded nothing")
+    return staged
+
+
 def destination(vendor: str, doc_id: str, cache: Path = CACHE) -> Path:
     return cache / vendor / doc_id
 
@@ -95,10 +114,10 @@ def fetch(
 ) -> Provenance:
     """Retrieve one document. Idempotent: an unchanged document is not re-copied.
 
-    Network fetching is not implemented here on purpose. The inventory records
-    `url_hint` as a hint rather than identity because URLs rot, and an automated
-    fetcher pointed at 43 vendor sites is a maintenance burden that produces
-    nothing the parser work needs — `--from-file` covers every test.
+    A document with a `fetch_url` is downloaded; anything else needs
+    `--from-file`. `url_hint` stays a hint: URLs rot, so the sha256 recorded in
+    provenance.json is the identity, and a vendor site that refuses scripts
+    (Intel's CDN) simply has no fetch_url.
     """
     v, d = _find(vendor, doc_id)
 
@@ -110,12 +129,16 @@ def fetch(
             f"vendor the source."
         )
 
+    source = None
     if from_file is None:
-        raise FetchError(
-            f"{doc_id!r}: no --from-file given and network fetching is not "
-            f"implemented. Download it yourself from {d.url_hint or 'the vendor'} "
-            f"and pass --from-file. URLs in the inventory are hints, not identity."
-        )
+        if not d.fetch_url:
+            raise FetchError(
+                f"{doc_id!r}: no --from-file given and the inventory has no fetch_url "
+                f"for it. Download it yourself from {d.url_hint or 'the vendor'} "
+                f"and pass --from-file. URLs in the inventory are hints, not identity."
+            )
+        from_file = str(_download(d.fetch_url, dest_dir))
+        source = d.fetch_url
 
     src = Path(from_file).expanduser()
     if not src.is_file():
@@ -136,7 +159,7 @@ def fetch(
         vendor=vendor,
         document_id=doc_id,
         title=d.title,
-        source=f"file:{src}",
+        source=source or f"file:{src}",
         retrieved_at=datetime.now(timezone.utc).isoformat(timespec="seconds"),
         sha256=digest,
         bytes=payload.stat().st_size,

@@ -45,7 +45,11 @@ ACCESS_LEVELS = {
 # (Berkeley SoftFloat, for the conformance harness). It is kept apart from
 # "crypto-source" because the question asked of each is different: one is "may
 # we port this?", the other "may we believe this answer?".
-CATEGORIES = {"cpu", "gpu", "soc", "standards", "crypto-source", "oracle-source"}
+# "isa-source" says which processors implement which instruction-set extensions
+# (LLVM's target definitions). Nominal per microarchitecture; exceptions are
+# recorded separately with their own source (agent/hardware/isa/).
+CATEGORIES = {"cpu", "gpu", "soc", "standards", "crypto-source", "oracle-source",
+              "isa-source"}
 
 # Paths git tracks. A non-redistributable document must never be fetched into
 # one of these, and this is checked rather than documented.
@@ -73,6 +77,9 @@ class Document:
     notes: str | None = None
     doc_number: str | None = None
     url_hint: str | None = None
+    # A URL a script may download from. Unlike url_hint it is identity-checked:
+    # every fetch records the sha256, so a moved or changed file is visible.
+    fetch_url: str | None = None
 
 
 @dataclass(frozen=True)
@@ -143,12 +150,17 @@ def load(path: Path = INVENTORY) -> tuple[Vendor, ...]:
                     f"{name}/{d['id']}: redistributable is true but no licence is "
                     f"named. 'We may redistribute this' needs a reason on record"
                 )
+            if d.get("fetch_url") and not str(d["fetch_url"]).startswith("https://"):
+                raise InventoryError(
+                    f"{name}/{d['id']}: fetch_url must be https, got {d['fetch_url']!r}"
+                )
             docs.append(Document(
                 id=d["id"], title=d["title"], kind=d["kind"], access=d["access"],
                 redistributable=d["redistributable"], form=d["form"], vendor=name,
                 scope=d.get("scope"), cadence=d.get("cadence"),
                 licence=d.get("licence"), notes=d.get("notes"),
                 doc_number=d.get("doc_number"), url_hint=d.get("url_hint"),
+                fetch_url=d.get("fetch_url"),
             ))
 
         gaps = tuple(raw.get("gaps") or ())
