@@ -15,39 +15,49 @@ OpenAI, Ollama, Gemini, OpenRouter, Azure.
 
 ## Status
 
-Honest version, as of 2026-09-23.
+Honest version, as of 2026-10-17.
 
 **What has been proved.** On 2026-09-22 a local model (`qwen3.5:27b`) wrote a
 430-line TFTP server that passes **all 31 checks** of a host suite written by a
-person, frozen before the run, and never present in the model's workspace.
-[The report](.claude/PRPs/reports/w14-f6-qwen-report.md) includes the two defects
-in our own harness that nearly buried the result. What made the difference was
-not a bigger model but a loop that refuses what it should — non-compiling C never
-reaches a reviewer — and a suite honest enough to be wrong out loud.
+person, frozen before the run, and never present in the model's workspace
+([report](.claude/PRPs/reports/w14-f6-qwen-report.md)). In the first full
+generation campaign (finished 2026-10-10) the VirtIO console driver (R8) passed
+its 29-check frozen gate.
 
-**What has not.** The memory manager run on 2026-09-23 hit its five-hour timeout
-having closed one task of six. Its gates returned `1` (generated wrong) and `2`
-(not generated), and
-[the report](.claude/PRPs/reports/w15-mm-qwen-report.md) says why.
+**What has not.** The same campaign passed **1 of 12** runs. Eleven failures were
+investigated one by one in
+[`w24`](.claude/PRPs/plans/w24-campaign-failure-investigations.plan.md); most were
+harness defects (suites using names no spec declared, git plumbing, timeouts),
+now fixed and tested. A third attempt at R1 (the memory manager) was
+pre-registered and started on 2026-10-17, then stopped by the owner to save
+subscription usage before it produced a result.
 
 | | |
 |---|---|
-| Services generated and passing their gate | **1 of 7** (TFTP). 8 services are specified; `dhcp` already ships in the base, leaving 7 for the swarm |
-| Host gate suites | **22**, of which **10** are scored by injected bugs |
+| Generation runs passing every gate | TFTP (w14), **R8 VirtIO console** (campaign); 11 campaign runs failed |
+| Host gate suites | **22** in [`tests/kernel/`](tests/kernel/); `run_mm_test.sh` and `run_play_doom_test.sh` also score themselves against injected bugs (`--inject`) |
+| Agent roles | 13 roles, plus **24 specialists** (one per area of kernel creation) |
+| Hardware knowledge | **5,077 vendors**, **284 processor models** across 5 architectures, every x86 CPUID feature bit |
 | Architectures with a full end-to-end spine | **1** (x86_64); aarch64 boots; riscv64 is specified only |
-| CI | 2 workflows, 5 matrix legs — [see below](#continuous-integration) |
+| CI | 2 workflows, 5 matrix legs: [see below](#continuous-integration) |
 
 There is no finished kernel, and this README will not imply otherwise. What
 exists is everything that *judges* a kernel: specifications, gates, oracles,
-acceptance harnesses, and an orchestration loop. What remains is running the
-swarm — tracked in [`docs/OPEN-WORK.md`](docs/OPEN-WORK.md) and
-[`auton-completion.prd.md`](.claude/PRPs/prds/completed/auton-completion.prd.md).
+acceptance harnesses, hardware knowledge, and an orchestration loop. What
+remains is running the swarm: see [`docs/OPEN-WORK.md`](docs/OPEN-WORK.md).
 
 ### Why there is no kernel here
 
-`kernels/` is deliberately absent from this repository — it is generated output,
+`kernels/` is deliberately absent from this repository. It is generated output,
 and it is in `.gitignore`. The premise of the project is that agents write the
 kernel, so a kernel checked in alongside them would make every gate meaningless.
+
+**This repository holds the agents that create kernels, not kernels.** Every tree
+an agent writes lives in a testing or runtime area: a campaign run's workspace is
+`.artifacts/campaign/<run>-attempt<k>/ws`, a vendor research run's is
+`.artifacts/hardware/<run>/ws`, and both are gitignored. The only kernel C code
+that is tracked is under [`tests/kernel/`](tests/kernel/): the frozen suites and
+the hand-written reference implementations they are scored against.
 
 What *is* here are **base trees**: tagged starting points an experiment can be
 seeded from, so that a gate refusal means something. `kernel-base-v5` is the
@@ -67,6 +77,8 @@ scripts/kernel-base.sh /tmp/tree          # or --rev kernel-base-v4
 | [`docs/GENERATION-QUEUE.md`](docs/GENERATION-QUEUE.md) | each generation run, its command, and the gate that decides it |
 | [`docs/HOST-MATRIX.md`](docs/HOST-MATRIX.md) | what each host can build, boot and verify — and what it cannot |
 | [`agent/kernel_spec/`](agent/kernel_spec/) | the kernel specification the agents are held to |
+| [`agent/hardware/`](agent/hardware/README.md) | vendor inventory and registry, instruction-set tables, errata |
+| [`docs/CAMPAIGN.md`](docs/CAMPAIGN.md) | how a generation campaign is run, budgeted and stopped |
 
 ## Quick start
 
@@ -130,27 +142,45 @@ layers mid-build before.
 
 ```bash
 git clone https://github.com/EdWelsh/AUTON.git
-cd AUTON/agent
-pip install -e .                          # Python >= 3.11
+cd AUTON
+python3 -m venv .venv && .venv/bin/pip install -e "agent[dev]"   # Python >= 3.11
+cp agent/config/auton.toml.example agent/config/auton.toml
 
-cp config/auton.toml.example config/auton.toml
-export ANTHROPIC_API_KEY="sk-ant-..."     # or OPENAI_API_KEY, or none for Ollama
-
-auton run "Build a bootable kernel with SLM rule engine that detects hardware via PCI scan"
+# Any LiteLLM provider (set its API key), a local Ollama model, or the Claude
+# subscription through Claude Code (`claude-cli/<model>`, no API key).
+cd agent && ../.venv/bin/auton run "Implement the memory manager specified in mm.md"
 ```
 
-`auton` has four commands: `run`, `status`, `tasks`, `agents`.
+`auton` has four commands: `run`, `status`, `tasks`, `agents`. A run's tree goes
+wherever `[workspace] path` points; the campaign and research scripts point it
+into `.artifacts/`.
 
-> **Before spending a run on a local model, qualify it.**
-> `scripts/model-probe.py` puts a model through four checks — tool calling,
+> **Before spending a run on a model, qualify it.**
+> `scripts/model-probe.py <model>` puts it through four checks: tool calling,
 > file fidelity, a 25k-character prompt, and a second turn. Four earlier runs on
-> an unqualified model produced zero working lines. Qualifying first is what
-> changed that.
+> an unqualified model produced zero working lines.
+
+> **Runs cost model calls.** On a subscription, a campaign run is hours of calls.
+> `scripts/campaign.py --only <run>` runs one; stop it with Ctrl-C and resume
+> later, losing nothing.
+
+### I want to research hardware vendors
+
+```bash
+python agent/tools/vendor_registry.py --lookup 8086          # who is this vendor?
+python agent/tools/isa_tables.py --has alderlake avx512f     # does this part have it?
+python agent/tools/isa_tables.py --cpuid fma4                # how does software detect it?
+
+# The vendor spec agents, in a testing area; then collect what passed its checks
+.venv/bin/python scripts/vendor_research.py start scout-1 \
+    --goal "Find the documentation for the 5 highest-priority vendors in vendor_queue"
+.venv/bin/python scripts/vendor_research.py collect scout-1
+```
 
 ### I want to run the tests
 
 ```bash
-pytest agent/tests/unit/                          # orchestrator unit tests
+pytest agent/tests/unit/                          # orchestrator unit tests (~2,000)
 pytest agent/tests/integration/                   # multi-component workflows
 PYTHONPATH=SLM pytest SLM/tests/                  # SLM pipeline
 cd controlplane && pytest                         # host control plane
@@ -232,16 +262,50 @@ make -C kernels/x86_64 CC="$CC" GRUB_MKRESCUE="$GRUB_MKRESCUE" \
 
 1. **Manager** reads the kernel specs and decomposes the goal into a dependency-ordered task graph
 2. **Architect** designs subsystem interfaces as C header files
-3. **Developers** (in parallel) implement on feature branches: write → build → fix → test → commit
-4. **Reviewer** checks each branch for correctness, memory safety and composition risk
-5. **Tester** validates in QEMU — boots the kernel, parses serial output
+3. **Developers and specialists** (in parallel) implement on feature branches: write → build → fix → test → commit
+4. **Reviewer** checks each branch for correctness, memory safety and composition risk, with the checklist of every specialist whose files the change touches
+5. **Tester** validates in QEMU: boots the kernel, parses serial output
 6. **Integrator** merges approved branches and runs the full suite
-7. **Composition Validator** detects the "Frankenstein effect" — subsystems that pass alone and fail together
+7. **Composition Validator** detects the "Frankenstein effect": subsystems that pass alone and fail together
 8. Loop until the tasks complete or the budget is spent
 
 A syntax gate sits in front of step 4: code that does not compile never reaches
 a reviewer. It exists because a model reviewer once approved a header with seven
 syntax errors in it.
+
+### Specialists: every aspect of kernel creation, not just the SLM
+
+[`agent/kernel_spec/specialists.yaml`](agent/kernel_spec/specialists.yaml) defines
+24 specialists, each with the specs it owns, the files it covers, what it knows
+and a review checklist: boot, CPU features and instruction use, memory,
+interrupts, timers, scheduling, SMP, locking and memory ordering, IPC, the
+user/kernel boundary, device model and PCI, network / storage / console drivers,
+filesystems, networking, hardening, silicon errata, ACPI, portability, the
+toolchain, logging and panics, the on-device SLM, and network services. The
+manager assigns work to `<id>_specialist`; `agents.specialists` turns them on
+(`"all"` in the example config).
+
+### Hardware knowledge, and the agents that grow it
+
+A kernel has to know what it is running on, and a manual is not proof:
+
+- **Vendor registry**, every vendor that has held a PCI, USB, x86 CPUID or Arm
+  MIDR identity: 5,077, derived from `pci.ids`, `usb.ids` and the Linux kernel's
+  identity tables ([`vendor_registry.py`](agent/tools/vendor_registry.py)).
+- **Instruction-set tables**, which of 284 processor models implement which
+  extensions, from LLVM's target definitions, plus each x86 feature's CPUID bit
+  from Linux ([`isa_tables.py`](agent/tools/isa_tables.py)).
+- **Exceptions**, where silicon disagrees with documents: an extension
+  announced and never shipped (Intel FMA4), dropped later (FMA4, XOP and 3DNow!
+  on Zen), fused off (AVX-512 on Alder Lake) or disabled by microcode (TSX).
+  Each row is cited ([`isa/exceptions.yaml`](agent/hardware/isa/exceptions.yaml)).
+  So the [`cpu`](agent/kernel_spec/subsystems/cpu.md) spec requires the kernel
+  to use anything beyond the baseline only after the CPU says it has it.
+- **Vendor spec agents.** The *Vendor Scout* finds what an uncovered vendor
+  publishes and proposes inventory entries; the *Spec Reader* reads a fetched
+  document and derives records whose quotes are checked against the cited page.
+  Fetched documents stay in `.cache/vendor/`; nothing an agent writes becomes a
+  fact until a person merges a record that passed its check.
 
 See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for the agent roster, the
 full system diagram and the architecture-support matrix.
@@ -257,8 +321,8 @@ the part of the project that makes a result mean something.
   `0` = pass. A suite that did not run has found nothing, and must never read as
   a pass.
 - **Suites are scored by injected bugs.** Known defects are injected into a
-  known-good implementation; every one must be caught, or the suite has a gap.
-  10 of the 22 host suites are scored this way.
+  known-good implementation; every one must be caught, or the suite has a gap
+  (`run_mm_test.sh --inject` scores 9/9).
 - **Report either way.** Failed runs get a report with the same care as
   successful ones — see the
   [memory-manager report](.claude/PRPs/reports/w15-mm-qwen-report.md).
@@ -271,7 +335,10 @@ the specification, without the kernel needing to boot.
 ### SLM-driven OS
 The kernel embeds a Small Language Model as its interface. The SLM is
 **pluggable**: a rule-based engine runs on minimal hardware, and systems with
-enough resources can load a real neural model.
+enough resources can load a real neural model. Its training data is generated
+from ground truth, never written: `SLM/datasets/os_chat.jsonl` from what the
+kernel prints, and `SLM/datasets/hardware_reference.jsonl` (31,181 rows) from the
+hardware tables. See [`SLM/README.md`](SLM/README.md).
 
 ### The Frankenstein effect
 From VibeTensor: *"Locally correct subsystems interact to yield globally

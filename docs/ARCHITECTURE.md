@@ -165,10 +165,32 @@ does not live in this repository — see
 |-------|------|-------|
 | **Manager** | Decomposes goals into tasks, tracks dependencies, detects blocked paths | 1 |
 | **Architect** | Designs subsystem interfaces, writes header files, resolves conflicts | 1 |
-| **Developer** | Writes kernel C/ASM code, builds, tests, commits on feature branches | 4 parallel |
-| **Reviewer** | Reviews diffs for correctness, memory safety, spec compliance | 1 |
+| **Developer** | Writes kernel C/ASM code, builds, tests, commits on feature branches | `developer_count` (4) |
+| **Specialists** | Developers with one area's specs, knowledge and review checklist in their prompt; the manager assigns to `<id>_specialist` | 24, with `agents.specialists = "all"` |
+| **Reviewer** | Reviews diffs for correctness, memory safety, spec compliance; gets the checklist of every specialist whose files a diff touches | 1 |
 | **Tester** | Writes tests, runs QEMU validation, detects composition failures | 1 |
 | **Integrator** | Merges approved branches, runs full integration checks | 1 |
+
+The specialists ([`specialists.yaml`](../agent/kernel_spec/specialists.yaml)) cover boot,
+CPU features and instruction use, memory, interrupts, timers, scheduling, SMP, locking and
+memory ordering, IPC, the user/kernel boundary, the device model, network / storage /
+console drivers, filesystems, networking, hardening, silicon errata, ACPI, portability, the
+toolchain, logging and panics, the SLM, and network services. Each names the specs it owns
+(a test fails if one does not exist) and the file globs it covers.
+
+### Hardware research agents
+
+Enabled per run with `[hardware] research = true`; `scripts/vendor_research.py` runs them
+in `.artifacts/hardware/<run>/`.
+
+| Agent | Role | Tools |
+|-------|------|-------|
+| **Vendor Scout** | For a vendor in the registry with no coverage, finds what it publishes and proposes `vendors.yaml` entries (or a recorded gap) | `vendor_lookup`, `vendor_queue`, `fetch_url` (https, allowed hosts, into `.cache/`), `read_document`, `check_hardware_record` |
+| **Spec Reader** | Reads a fetched document and derives records citing their page: errata, instruction exceptions, verifications | `fetch_document`, `read_document`, `check_hardware_record` |
+
+`check_hardware_record` is the gate: a proposal must load as an inventory entry, and a
+derived record's quote must be on the page it cites in the bytes whose sha256 it names.
+See [`agent/hardware/README.md`](../agent/hardware/README.md).
 
 ### SLM training agents
 
@@ -176,10 +198,14 @@ does not live in this repository — see
 |-------|------|-------|
 | **Data Scientist** | Prepares and analyzes training datasets, tokenization | 1 |
 | **Model Architect** | Designs SLM architecture, estimates FLOPs, validates configs | 1 |
-| **Training Agent** | Trains SLM models with distributed training support | 4 parallel |
-| **Evaluation Agent** | Evaluates model checkpoints, tracks metrics | 1 |
-| **Quantization Agent** | Quantizes models to INT4/INT8 for deployment | 1 |
-| **Export Agent** | Exports models to GGUF/ONNX formats | 1 |
+| **Training Agent** | Trains, evaluates, quantizes and exports SLM models | `training_agent_count` (2) |
+
+Created in the `slm_training` and `dual` workflow modes. Training data is generated from
+ground truth (see [`SLM/README.md`](../SLM/README.md)).
+
+### Application-to-environment agents
+
+**Analyst** and **Packager**, below.
 
 Agents communicate through **git branches and file-based messaging** — no message broker needed. The VibeTensor insight: treat agents as black boxes, validate only through builds and tests.
 

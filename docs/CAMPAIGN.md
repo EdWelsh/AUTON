@@ -95,5 +95,12 @@ its injected-bug score if it did.
 | R2 storage | **generated wrong**: attempt 2 passes storage acceptance end to end; both fail the FAT32 interface suite. Phase failed | [report](../.claude/PRPs/reports/w18-r2-storage-report.md) |
 | R3 file server | attempt 1: generated wrong (1, 2); attempt 2 running | — |
 | R4–R7, R9–R12 | queued, on `kernel-base-v5` | — |
+| *Campaign 2 (2026-10-10)* | **1 of 12 passed** (R8); every failure investigated | [w24](../.claude/PRPs/plans/w24-campaign-failure-investigations.plan.md) |
+| R1 attempt 3 (2026-10-17) | started on a Linux x86_64 host, **stopped by the owner** before a result; not counted | [pre-registration](../.claude/PRPs/reports/w25-campaign-attempt3-preregistration.md) |
+
+**Before the next run:** the example config now enables the 24 specialist agents
+(`agents.specialists`), so the next attempt is a different experiment from campaign 2 and
+needs a pre-registration that says so. Every run's tree stays in
+`.artifacts/campaign/<run>-attempt<k>/ws`, never in the tracked source.
 
 **The campaign as data:** [`campaign/runs.yaml`](campaign/runs.yaml) and [`campaign/goals/`](campaign/goals/) — every run's goal, base, seeds and gates, committed before any of them started. `scripts/campaign.py` runs them in order unattended (dependencies on the last good tree, two attempts, resumable). All runs are driven by `scripts/generation_run.py`: sessions with `--resume` from a pinned wrapper, then every gate in its pre-registered order, archived in the run's `RESULT.json`.

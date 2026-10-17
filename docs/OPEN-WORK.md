@@ -20,6 +20,31 @@ Nothing here is blocked on something unnamed. Three kinds of blocker:
 - **decide** — a person has to choose. The question is written down, with what it depends on.
 - **hardware** — a machine this project does not have.
 
+## State 2026-10-17
+
+- **R1 attempt 3 stopped by the owner** before a result, to save subscription usage. It ran
+  on a Linux x86_64 cloud host (amendment in
+  `reports/w25-campaign-attempt3-preregistration.md`); its directory is archived as
+  `.artifacts/campaign-stopped-by-owner-2026-10-17/`. Both R1 attempts of this experiment
+  remain unspent.
+- **Harness fixes found getting there:** `boot-marker.sh` used BSD-only `mktemp -t` (every
+  boot gate would have read "not generated" on Linux); new workspaces now start on `main`
+  whatever the host's default branch is; `campaign.py` refuses to start without the session
+  interpreter or `auton.toml` (a fresh clone spent both attempts in a minute).
+- **A changed experiment from here on.** The example config now enables the 24 specialists,
+  and `run_gate`-era prompts differ from the 2026-10-10 campaign's. The next campaign
+  attempt needs its own pre-registration saying so.
+
+New work, none of it blocked:
+
+| What | Next step | Where |
+|---|---|---|
+| Vendor coverage | 5,060 of 5,077 registry vendors have no inventory record. Run the Vendor Scout, CPU vendors first (`vendor_queue`) | `scripts/vendor_research.py start` |
+| Verify the instruction exceptions | 9 rows in `exceptions.yaml` are `verified: false`; each names the vendor document to check. Spec Reader | `agent/hardware/isa/exceptions.yaml` |
+| IBM | POWER is in the inventory (`ibm-openpower`, Power ISA); IBM Z has instruction tables (LLVM) but no inventory record. Scout both | `vendors.yaml` |
+| `cpu` subsystem | Specified (`subsystems/cpu.md`): baseline ISA only, everything else behind `cpu_has()`. Needs a frozen host suite (fake `cpuid()`), then a generation run | `tests/kernel/` |
+| Hardware reference corpus | 31,181 rows generated; mixing it into chat training is unmeasured. Measure with `eval_scope.py` before shipping a model trained on it | `SLM/datasets/hardware_reference.jsonl` |
+
 ## run
 
 **State 2026-10-07** (`scripts/campaign.py --status` is the source of truth): R8 passed. R1, R2

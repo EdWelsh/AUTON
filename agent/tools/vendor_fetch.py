@@ -155,6 +155,8 @@ def fetch(
             return Provenance(**existing)     # unchanged; no copy
 
     shutil.copy2(src, payload)
+    if source:                                   # a download: drop its staging copy
+        shutil.rmtree(dest_dir / ".download", ignore_errors=True)
     prov = Provenance(
         vendor=vendor,
         document_id=doc_id,

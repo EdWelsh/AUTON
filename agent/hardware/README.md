@@ -1,9 +1,55 @@
-# Hardware vendor inventory
+# Hardware knowledge
 
-What silicon documentation exists, per vendor: where, under what licence, at what cadence, in
-what form, and what key its errata are indexed by. [`vendors.yaml`](vendors.yaml) is the data;
-[`../tools/vendor_inventory.py`](../tools/vendor_inventory.py) validates it and reports
-coverage.
+What AUTON knows about the machines a kernel will run on, and where each fact came from.
+
+| File | What | Built by |
+|---|---|---|
+| [`vendors.yaml`](vendors.yaml) | the **inventory**: per vendor, which documents exist, where, under what licence, in what form, indexed by what key | by hand and by the Vendor Scout; validated by [`vendor_inventory.py`](../tools/vendor_inventory.py) |
+| [`registry/vendors.json`](registry/vendors.json) | the **registry**: every vendor that has held a PCI, USB, x86 CPUID or Arm MIDR identity (5,077), and whether the inventory covers it | derived by [`vendor_registry.py`](../tools/vendor_registry.py) from `pci.ids`, `usb.ids` and Linux's identity tables |
+| [`isa/<arch>.json`](isa/) | **instruction availability**: 284 processor models across x86, AArch64, RISC-V, POWER and IBM Z, each with its feature list closed under implication; for x86 also every feature's CPUID leaf, register and bit | derived by [`isa_tables.py`](../tools/isa_tables.py) from LLVM's target definitions and Linux's `cpufeatures.h` |
+| [`isa/exceptions.yaml`](isa/exceptions.yaml) | where **silicon disagrees with the documents**: never shipped, removed, fused off, disabled by microcode, undocumented | by hand and by the Spec Reader; every row cited, `verified: false` until checked against the vendor document |
+| `erratum-classes.yaml`, `lineage.yaml`, `os-mitigations.yaml` | errata classes, the per-generation Intel specification updates, OS mitigations | |
+
+```bash
+python agent/tools/vendor_registry.py --lookup 1d17         # Zhaoxin; no documents yet
+python agent/tools/vendor_registry.py --coverage            # 5,077 vendors, how many covered
+python agent/tools/isa_tables.py --has haswell fma4         # absent: never-shipped
+python agent/tools/isa_tables.py --has alderlake avx512f    # check at runtime: fused-off
+python agent/tools/isa_tables.py --cpuid avx512f            # leaf 0x7 subleaf 0, EBX bit 16
+```
+
+## A document never proves an instruction is present
+
+Vendor manuals describe extensions that were announced and never built (Intel's FMA4),
+and parts lose extensions after release, by fuse, firmware or microcode (AVX-512 on Alder
+Lake, TSX on Haswell and Skylake). The same family, model and stepping can differ by BIOS
+and microcode revision. So the tables say what *may* be there, and the kernel's
+[`cpu`](../kernel_spec/subsystems/cpu.md) spec requires it to use anything beyond the
+architecture baseline only after the running CPU reports it.
+
+## The vendor spec agents
+
+Two agents grow this directory, each in a testing-area workspace
+(`scripts/vendor_research.py start <run> --goal ...`, output in `.artifacts/hardware/<run>/`):
+
+- **Vendor Scout**: takes a registry vendor with no coverage (`vendor_queue`: CPU vendors
+  first), finds what it publishes, fetches candidates (https, allowed hosts only) and
+  proposes `vendors.yaml` entries, or a gap saying nothing is public.
+- **Spec Reader**: reads a fetched document page by page and derives records (errata,
+  instruction exceptions, verifications of `verified: false` rows), each quoting the page
+  it cites.
+
+Their checks are mechanical (`check_hardware_record`): a proposal must load as an inventory
+entry and add only new vendors and documents; a derived record's quote must be on the page
+it cites, in the bytes whose sha256 it names. Fetched text is presented as untrusted data.
+`scripts/vendor_research.py collect <run>` lists what passed; a person merges it.
+
+## Fetching
+
+Documents with a `fetch_url` are downloaded by
+[`vendor_fetch.py`](../tools/vendor_fetch.py) into `.cache/vendor/` (gitignored), with
+the sha256 recorded as identity. Intel's CDN refuses scripts, so Intel documents still
+come in with `--from-file`.
 
 ## The rule
 
@@ -81,13 +127,18 @@ errata. A coverage report that omitted them would overstate what AUTON can check
 
 ## Inventoried is not ingested
 
-Every record here says a document *exists and is reachable*. None says it has been fetched,
-parsed or normalised. `--coverage` prints both numbers and they are currently 28 and 0.
+Every inventory record says a document *exists and is reachable*; it does not say the
+document has been fetched and turned into facts. `vendor_inventory.py --coverage` prints
+the inventory (36 vendors, 74 documents). What is actually derived today:
 
-The PRD's success metric — "≥6 vendors with an ingestion pipeline" — measures the second. H2
-(Intel, AMD) and H3 (Arm, RISC-V) do that work, and both are gated on H0 (shell hardening),
-because pointing agents at externally fetched documents while they hold a shell is the
-combination that turns a vendor PDF into code execution.
+- `pci.ids` and `usb.ids`: fetched and ingested (`vendor_ingest.py`, about 42,000 device
+  records) and the source of the registry;
+- LLVM's target definitions and Linux's identity and feature headers: fetched and read by
+  `isa_tables.py` and `vendor_registry.py` (`vendor_ingest.py` reports "no parser" for
+  them, which is expected);
+- Intel's Alder Lake specification update (682436): ingested by hand in w2.
+
+Every other document is the Vendor Scout's and Spec Reader's queue.
 
 ## Refreshing
 
