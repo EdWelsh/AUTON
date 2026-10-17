@@ -1,0 +1,5466 @@
+{
+ "arch": "x86",
+ "generated_from": [
+  {
+   "document": "llvm-x86-td",
+   "sha256": "36c0cb3786cd4c7fcb58409f772a3c54cd242d6191d1da23763fdd8961043c06",
+   "source": "https://raw.githubusercontent.com/llvm/llvm-project/main/llvm/lib/Target/X86/X86.td"
+  },
+  {
+   "document": "linux-x86-cpufeatures-h",
+   "sha256": "866870012f8332dbfa277d3b651ff320eea59ab1312d77cd333e4940bd6d5a90",
+   "source": "https://raw.githubusercontent.com/torvalds/linux/master/arch/x86/include/asm/cpufeatures.h"
+  }
+ ],
+ "features": {
+  "adx": {
+   "def": "FeatureADX",
+   "description": "Support ADX instructions",
+   "implies": []
+  },
+  "aes": {
+   "def": "FeatureAES",
+   "description": "Enable AES instructions",
+   "implies": [
+    "sse2"
+   ]
+  },
+  "amx-avx512": {
+   "def": "FeatureAMXAVX512",
+   "description": "Support AMX-AVX512 instructions",
+   "implies": [
+    "amx-tile"
+   ]
+  },
+  "amx-bf16": {
+   "def": "FeatureAMXBF16",
+   "description": "Support AMX-BF16 instructions",
+   "implies": [
+    "amx-tile"
+   ]
+  },
+  "amx-complex": {
+   "def": "FeatureAMXCOMPLEX",
+   "description": "Support AMX-COMPLEX instructions",
+   "implies": [
+    "amx-tile"
+   ]
+  },
+  "amx-fp16": {
+   "def": "FeatureAMXFP16",
+   "description": "Support AMX amx-fp16 instructions",
+   "implies": [
+    "amx-tile"
+   ]
+  },
+  "amx-fp8": {
+   "def": "FeatureAMXFP8",
+   "description": "Support AMX-FP8 instructions",
+   "implies": [
+    "amx-tile"
+   ]
+  },
+  "amx-int8": {
+   "def": "FeatureAMXINT8",
+   "description": "Support AMX-INT8 instructions",
+   "implies": [
+    "amx-tile"
+   ]
+  },
+  "amx-movrs": {
+   "def": "FeatureAMXMOVRS",
+   "description": "Support AMX-MOVRS instructions",
+   "implies": [
+    "amx-tile"
+   ]
+  },
+  "amx-tile": {
+   "def": "FeatureAMXTILE",
+   "description": "Support AMX-TILE instructions",
+   "implies": []
+  },
+  "avx": {
+   "def": "FeatureAVX",
+   "description": "Enable AVX instructions",
+   "implies": [
+    "sse4.2"
+   ]
+  },
+  "avx10.1": {
+   "def": "FeatureAVX10_1",
+   "description": "Support AVX10.1 instruction",
+   "implies": [
+    "avx512bf16",
+    "avx512bitalg",
+    "avx512cd",
+    "avx512dq",
+    "avx512fp16",
+    "avx512ifma",
+    "avx512vbmi",
+    "avx512vbmi2",
+    "avx512vl",
+    "avx512vnni",
+    "avx512vpopcntdq"
+   ]
+  },
+  "avx10.1-512": {
+   "def": "FeatureAVX10_1_512",
+   "description": "Support AVX10.1 instruction",
+   "implies": [
+    "avx10.1"
+   ]
+  },
+  "avx10.2": {
+   "def": "FeatureAVX10_2",
+   "description": "Support AVX10.2 instruction",
+   "implies": [
+    "avx10.1"
+   ]
+  },
+  "avx10.2-512": {
+   "def": "FeatureAVX10_2_512",
+   "description": "Support AVX10.2 instruction",
+   "implies": [
+    "avx10.2"
+   ]
+  },
+  "avx10v2aux": {
+   "def": "FeatureAVX10_V2_AUX",
+   "description": "Support AVX10 V2 AUX instructions",
+   "implies": [
+    "avx10.1"
+   ]
+  },
+  "avx2": {
+   "def": "FeatureAVX2",
+   "description": "Enable AVX2 instructions",
+   "implies": [
+    "avx"
+   ]
+  },
+  "avx512f": {
+   "def": "FeatureAVX512",
+   "description": "Enable AVX-512 instructions",
+   "implies": [
+    "avx2",
+    "f16c",
+    "fma"
+   ]
+  },
+  "avxifma": {
+   "def": "FeatureAVXIFMA",
+   "description": "Enable AVX-IFMA",
+   "implies": [
+    "avx2"
+   ]
+  },
+  "avxneconvert": {
+   "def": "FeatureAVXNECONVERT",
+   "description": "Support AVX-NE-CONVERT instructions",
+   "implies": [
+    "avx2"
+   ]
+  },
+  "avxvnni": {
+   "def": "FeatureAVXVNNI",
+   "description": "Support AVX_VNNI encoding",
+   "implies": [
+    "avx2"
+   ]
+  },
+  "avxvnniint16": {
+   "def": "FeatureAVXVNNIINT16",
+   "description": "Enable AVX-VNNI-INT16",
+   "implies": [
+    "avx2"
+   ]
+  },
+  "avxvnniint8": {
+   "def": "FeatureAVXVNNIINT8",
+   "description": "Enable AVX-VNNI-INT8",
+   "implies": [
+    "avx2"
+   ]
+  },
+  "avx512bf16": {
+   "def": "FeatureBF16",
+   "description": "Support bfloat16 floating point",
+   "implies": [
+    "avx512bw"
+   ]
+  },
+  "avx512bitalg": {
+   "def": "FeatureBITALG",
+   "description": "Enable AVX-512 Bit Algorithms",
+   "implies": [
+    "avx512bw"
+   ]
+  },
+  "bmi": {
+   "def": "FeatureBMI",
+   "description": "Support BMI instructions",
+   "implies": []
+  },
+  "bmi2": {
+   "def": "FeatureBMI2",
+   "description": "Support BMI2 instructions",
+   "implies": []
+  },
+  "avx512bmm": {
+   "def": "FeatureBMM",
+   "description": "Enable AVX512 Bit Matrix Multiply",
+   "implies": [
+    "avx512bw"
+   ]
+  },
+  "avx512bw": {
+   "def": "FeatureBWI",
+   "description": "Enable AVX-512 Byte and Word Instructions",
+   "implies": [
+    "avx512f"
+   ]
+  },
+  "ccmp": {
+   "def": "FeatureCCMP",
+   "description": "Support conditional cmp & test instructions",
+   "implies": []
+  },
+  "avx512cd": {
+   "def": "FeatureCDI",
+   "description": "Enable AVX-512 Conflict Detection Instructions",
+   "implies": [
+    "avx512f"
+   ]
+  },
+  "cf": {
+   "def": "FeatureCF",
+   "description": "Support conditional faulting",
+   "implies": []
+  },
+  "cldemote": {
+   "def": "FeatureCLDEMOTE",
+   "description": "Enable Cache Line Demote",
+   "implies": []
+  },
+  "clflushopt": {
+   "def": "FeatureCLFLUSHOPT",
+   "description": "Flush A Cache Line Optimized",
+   "implies": []
+  },
+  "clwb": {
+   "def": "FeatureCLWB",
+   "description": "Cache Line Write Back",
+   "implies": []
+  },
+  "clzero": {
+   "def": "FeatureCLZERO",
+   "description": "Enable Cache Line Zero",
+   "implies": []
+  },
+  "cmov": {
+   "def": "FeatureCMOV",
+   "description": "Enable conditional move instructions",
+   "implies": []
+  },
+  "cmpccxadd": {
+   "def": "FeatureCMPCCXADD",
+   "description": "Support CMPCCXADD instructions",
+   "implies": []
+  },
+  "crc32": {
+   "def": "FeatureCRC32",
+   "description": "Enable SSE 4.2 CRC32 instruction (used when SSE4.2 is supported but function is GPR only)",
+   "implies": []
+  },
+  "cx16": {
+   "def": "FeatureCX16",
+   "description": "64-bit with cmpxchg16b (this is true for most x86-64 chips, but not the first AMD chips)",
+   "implies": [
+    "cx8"
+   ]
+  },
+  "cx8": {
+   "def": "FeatureCX8",
+   "description": "Support CMPXCHG8B instructions",
+   "implies": []
+  },
+  "avx512dq": {
+   "def": "FeatureDQI",
+   "description": "Enable AVX-512 Doubleword and Quadword Instructions",
+   "implies": [
+    "avx512f"
+   ]
+  },
+  "egpr": {
+   "def": "FeatureEGPR",
+   "description": "Support extended general purpose register",
+   "implies": []
+  },
+  "enqcmd": {
+   "def": "FeatureENQCMD",
+   "description": "Has ENQCMD instructions",
+   "implies": []
+  },
+  "ermsb": {
+   "def": "FeatureERMSB",
+   "description": "REP MOVS/STOS are fast",
+   "implies": []
+  },
+  "evex512": {
+   "def": "FeatureEVEX512",
+   "description": "Support ZMM and 64-bit mask instructions",
+   "implies": []
+  },
+  "f16c": {
+   "def": "FeatureF16C",
+   "description": "Support 16-bit floating point conversion instructions",
+   "implies": [
+    "avx"
+   ]
+  },
+  "fma": {
+   "def": "FeatureFMA",
+   "description": "Enable three-operand fused multiple-add",
+   "implies": [
+    "avx"
+   ]
+  },
+  "fma4": {
+   "def": "FeatureFMA4",
+   "description": "Enable four-operand fused multiple-add",
+   "implies": [
+    "avx",
+    "sse4a"
+   ]
+  },
+  "avx512fp16": {
+   "def": "FeatureFP16",
+   "description": "Support 16-bit floating point",
+   "implies": [
+    "avx512bw"
+   ]
+  },
+  "fsgsbase": {
+   "def": "FeatureFSGSBase",
+   "description": "Support FS/GS Base instructions",
+   "implies": []
+  },
+  "fsrm": {
+   "def": "FeatureFSRM",
+   "description": "REP MOVSB of short lengths is faster",
+   "implies": []
+  },
+  "fxsr": {
+   "def": "FeatureFXSR",
+   "description": "Support fxsave/fxrestore instructions",
+   "implies": []
+  },
+  "gfni": {
+   "def": "FeatureGFNI",
+   "description": "Enable Galois Field Arithmetic Instructions",
+   "implies": [
+    "sse2"
+   ]
+  },
+  "hreset": {
+   "def": "FeatureHRESET",
+   "description": "Has hreset instruction",
+   "implies": []
+  },
+  "harden-sls-ijmp": {
+   "def": "FeatureHardenSlsIJmp",
+   "description": "Harden against straight line speculation across indirect JMP instructions.",
+   "implies": []
+  },
+  "harden-sls-ret": {
+   "def": "FeatureHardenSlsRet",
+   "description": "Harden against straight line speculation across RET instructions.",
+   "implies": []
+  },
+  "avx512ifma": {
+   "def": "FeatureIFMA",
+   "description": "Enable AVX-512 Integer Fused Multiple-Add",
+   "implies": [
+    "avx512f"
+   ]
+  },
+  "invpcid": {
+   "def": "FeatureINVPCID",
+   "description": "Invalidate Process-Context Identifier",
+   "implies": []
+  },
+  "jmpabs": {
+   "def": "FeatureJMPABS",
+   "description": "Support 64-bit absolute JMP",
+   "implies": []
+  },
+  "kl": {
+   "def": "FeatureKL",
+   "description": "Support Key Locker kl Instructions",
+   "implies": [
+    "sse2"
+   ]
+  },
+  "sahf": {
+   "def": "FeatureLAHFSAHF64",
+   "description": "Support LAHF and SAHF instructions in 64-bit mode",
+   "implies": []
+  },
+  "lvi-cfi": {
+   "def": "FeatureLVIControlFlowIntegrity",
+   "description": "Prevent indirect calls/branches from using a memory operand, and \"\n          \"precede all indirect calls/branches from a register with an \"\n          \"LFENCE instruction to serialize control flow. Also decompose RET \"\n          \"instructions into a POP+LFENCE+JMP sequence.",
+   "implies": []
+  },
+  "lvi-load-hardening": {
+   "def": "FeatureLVILoadHardening",
+   "description": "Insert LFENCE instructions to prevent data speculatively injected \"\n          \"into loads from being used maliciously.",
+   "implies": []
+  },
+  "lwp": {
+   "def": "FeatureLWP",
+   "description": "Enable LWP instructions",
+   "implies": []
+  },
+  "lzcnt": {
+   "def": "FeatureLZCNT",
+   "description": "Support LZCNT instruction",
+   "implies": []
+  },
+  "mmx": {
+   "def": "FeatureMMX",
+   "description": "Enable MMX instructions",
+   "implies": []
+  },
+  "movbe": {
+   "def": "FeatureMOVBE",
+   "description": "Support MOVBE instruction",
+   "implies": []
+  },
+  "movdir64b": {
+   "def": "FeatureMOVDIR64B",
+   "description": "Support movdir64b instruction (direct store 64 bytes)",
+   "implies": []
+  },
+  "movdiri": {
+   "def": "FeatureMOVDIRI",
+   "description": "Support movdiri instruction (direct store integer)",
+   "implies": []
+  },
+  "movrs": {
+   "def": "FeatureMOVRS",
+   "description": "Enable MOVRS",
+   "implies": []
+  },
+  "mwaitx": {
+   "def": "FeatureMWAITX",
+   "description": "Enable MONITORX/MWAITX timer functionality",
+   "implies": []
+  },
+  "ndd": {
+   "def": "FeatureNDD",
+   "description": "Support non-destructive destination",
+   "implies": []
+  },
+  "nf": {
+   "def": "FeatureNF",
+   "description": "Support status flags update suppression",
+   "implies": []
+  },
+  "nopl": {
+   "def": "FeatureNOPL",
+   "description": "Enable NOPL instruction (generally pentium pro+)",
+   "implies": []
+  },
+  "pclmul": {
+   "def": "FeaturePCLMUL",
+   "description": "Enable packed carry-less multiplication instructions",
+   "implies": [
+    "sse2"
+   ]
+  },
+  "pconfig": {
+   "def": "FeaturePCONFIG",
+   "description": "platform configuration instruction",
+   "implies": []
+  },
+  "pku": {
+   "def": "FeaturePKU",
+   "description": "Enable protection keys",
+   "implies": []
+  },
+  "popcnt": {
+   "def": "FeaturePOPCNT",
+   "description": "Support POPCNT instruction",
+   "implies": []
+  },
+  "ppx": {
+   "def": "FeaturePPX",
+   "description": "Support Push-Pop Acceleration",
+   "implies": []
+  },
+  "prefetchi": {
+   "def": "FeaturePREFETCHI",
+   "description": "Prefetch instruction with T0 or T1 Hint",
+   "implies": []
+  },
+  "prfchw": {
+   "def": "FeaturePRFCHW",
+   "description": "Support PRFCHW instructions",
+   "implies": []
+  },
+  "ptwrite": {
+   "def": "FeaturePTWRITE",
+   "description": "Support ptwrite instruction",
+   "implies": []
+  },
+  "push2pop2": {
+   "def": "FeaturePush2Pop2",
+   "description": "Support PUSH2/POP2 instructions",
+   "implies": []
+  },
+  "raoint": {
+   "def": "FeatureRAOINT",
+   "description": "Support RAO-INT instructions",
+   "implies": []
+  },
+  "rdpid": {
+   "def": "FeatureRDPID",
+   "description": "Support RDPID instructions",
+   "implies": []
+  },
+  "rdpru": {
+   "def": "FeatureRDPRU",
+   "description": "Support RDPRU instructions",
+   "implies": []
+  },
+  "rdrnd": {
+   "def": "FeatureRDRAND",
+   "description": "Support RDRAND instruction",
+   "implies": []
+  },
+  "rdseed": {
+   "def": "FeatureRDSEED",
+   "description": "Support RDSEED instruction",
+   "implies": []
+  },
+  "rtm": {
+   "def": "FeatureRTM",
+   "description": "Support RTM instructions",
+   "implies": []
+  },
+  "reserve-edi": {
+   "def": "FeatureReserveEDI",
+   "description": "Reserve EDI, making it unavailable as a GPR",
+   "implies": []
+  },
+  "retpoline": {
+   "def": "FeatureRetpoline",
+   "description": "Remove speculation of indirect branches from the \"\n                       \"generated code, either by avoiding them entirely or \"\n                       \"lowering them with a speculation blocking construct",
+   "implies": [
+    "retpoline-indirect-branches",
+    "retpoline-indirect-calls"
+   ]
+  },
+  "retpoline-external-thunk": {
+   "def": "FeatureRetpolineExternalThunk",
+   "description": "When lowering an indirect call or branch using a `retpoline`, rely \"\n          \"on the specified user provided thunk rather than emitting one \"\n          \"ourselves. Only has effect when combined with some other retpoline \"\n          \"feature",
+   "implies": [
+    "retpoline-indirect-calls"
+   ]
+  },
+  "retpoline-indirect-branches": {
+   "def": "FeatureRetpolineIndirectBranches",
+   "description": "Remove speculation of indirect branches from the generated code",
+   "implies": []
+  },
+  "retpoline-indirect-calls": {
+   "def": "FeatureRetpolineIndirectCalls",
+   "description": "Remove speculation of indirect calls from the generated code",
+   "implies": []
+  },
+  "serialize": {
+   "def": "FeatureSERIALIZE",
+   "description": "Has serialize instruction",
+   "implies": []
+  },
+  "sgx": {
+   "def": "FeatureSGX",
+   "description": "Enable Software Guard Extensions",
+   "implies": []
+  },
+  "sha": {
+   "def": "FeatureSHA",
+   "description": "Enable SHA instructions",
+   "implies": [
+    "sse2"
+   ]
+  },
+  "sha512": {
+   "def": "FeatureSHA512",
+   "description": "Support SHA512 instructions",
+   "implies": [
+    "avx2"
+   ]
+  },
+  "shstk": {
+   "def": "FeatureSHSTK",
+   "description": "Support CET Shadow-Stack instructions",
+   "implies": []
+  },
+  "sm3": {
+   "def": "FeatureSM3",
+   "description": "Support SM3 instructions",
+   "implies": [
+    "avx"
+   ]
+  },
+  "sm4": {
+   "def": "FeatureSM4",
+   "description": "Support SM4 instructions",
+   "implies": [
+    "avx2"
+   ]
+  },
+  "sse": {
+   "def": "FeatureSSE1",
+   "description": "Enable SSE instructions",
+   "implies": []
+  },
+  "sse2": {
+   "def": "FeatureSSE2",
+   "description": "Enable SSE2 instructions",
+   "implies": [
+    "sse"
+   ]
+  },
+  "sse3": {
+   "def": "FeatureSSE3",
+   "description": "Enable SSE3 instructions",
+   "implies": [
+    "sse2"
+   ]
+  },
+  "sse4.1": {
+   "def": "FeatureSSE41",
+   "description": "Enable SSE 4.1 instructions",
+   "implies": [
+    "ssse3"
+   ]
+  },
+  "sse4.2": {
+   "def": "FeatureSSE42",
+   "description": "Enable SSE 4.2 instructions",
+   "implies": [
+    "sse4.1"
+   ]
+  },
+  "sse4a": {
+   "def": "FeatureSSE4A",
+   "description": "Support SSE 4a instructions",
+   "implies": [
+    "sse3"
+   ]
+  },
+  "sse-unaligned-mem": {
+   "def": "FeatureSSEUnalignedMem",
+   "description": "Allow unaligned memory operands with SSE instructions (this may require setting a configuration bit in the processor)",
+   "implies": []
+  },
+  "ssse3": {
+   "def": "FeatureSSSE3",
+   "description": "Enable SSSE3 instructions",
+   "implies": [
+    "sse3"
+   ]
+  },
+  "soft-float": {
+   "def": "FeatureSoftFloat",
+   "description": "Use software floating point features",
+   "implies": []
+  },
+  "seses": {
+   "def": "FeatureSpeculativeExecutionSideEffectSuppression",
+   "description": "Prevent speculative execution side channel timing attacks by \"\n          \"inserting a speculation barrier before memory reads, memory writes, \"\n          \"and conditional branches. Implies LVI Control Flow integrity.",
+   "implies": [
+    "lvi-cfi"
+   ]
+  },
+  "tbm": {
+   "def": "FeatureTBM",
+   "description": "Enable TBM instructions",
+   "implies": []
+  },
+  "tsxldtrk": {
+   "def": "FeatureTSXLDTRK",
+   "description": "Support TSXLDTRK instructions",
+   "implies": []
+  },
+  "tagged-globals": {
+   "def": "FeatureTaggedGlobals",
+   "description": "Use an instruction sequence for taking the address of a global \"\n          \"that allows a memory tag in the upper address bits.",
+   "implies": []
+  },
+  "uintr": {
+   "def": "FeatureUINTR",
+   "description": "Has UINTR Instructions",
+   "implies": []
+  },
+  "usermsr": {
+   "def": "FeatureUSERMSR",
+   "description": "Support USERMSR instructions",
+   "implies": []
+  },
+  "inline-asm-use-gpr32": {
+   "def": "FeatureUseGPR32InInlineAsm",
+   "description": "Enable use of GPR32 in inline assembly for APX",
+   "implies": []
+  },
+  "vaes": {
+   "def": "FeatureVAES",
+   "description": "Promote selected AES instructions to AVX512/AVX registers",
+   "implies": [
+    "aes",
+    "avx2"
+   ]
+  },
+  "avx512vbmi": {
+   "def": "FeatureVBMI",
+   "description": "Enable AVX-512 Vector Byte Manipulation Instructions",
+   "implies": [
+    "avx512bw"
+   ]
+  },
+  "avx512vbmi2": {
+   "def": "FeatureVBMI2",
+   "description": "Enable AVX-512 further Vector Byte Manipulation Instructions",
+   "implies": [
+    "avx512bw"
+   ]
+  },
+  "avx512vl": {
+   "def": "FeatureVLX",
+   "description": "Enable AVX-512 Vector Length eXtensions",
+   "implies": [
+    "avx512f"
+   ]
+  },
+  "avx512vnni": {
+   "def": "FeatureVNNI",
+   "description": "Enable AVX-512 Vector Neural Network Instructions",
+   "implies": [
+    "avx512f"
+   ]
+  },
+  "avx512vp2intersect": {
+   "def": "FeatureVP2INTERSECT",
+   "description": "Enable AVX-512 vp2intersect",
+   "implies": [
+    "avx512f"
+   ]
+  },
+  "vpclmulqdq": {
+   "def": "FeatureVPCLMULQDQ",
+   "description": "Enable vpclmulqdq instructions",
+   "implies": [
+    "avx",
+    "pclmul"
+   ]
+  },
+  "avx512vpopcntdq": {
+   "def": "FeatureVPOPCNTDQ",
+   "description": "Enable AVX-512 Population Count Instructions",
+   "implies": [
+    "avx512f"
+   ]
+  },
+  "waitpkg": {
+   "def": "FeatureWAITPKG",
+   "description": "Wait and pause enhancements",
+   "implies": []
+  },
+  "wbnoinvd": {
+   "def": "FeatureWBNOINVD",
+   "description": "Write Back No Invalidate",
+   "implies": []
+  },
+  "widekl": {
+   "def": "FeatureWIDEKL",
+   "description": "Support Key Locker wide Instructions",
+   "implies": [
+    "kl"
+   ]
+  },
+  "64bit": {
+   "def": "FeatureX86_64",
+   "description": "Support 64-bit instructions",
+   "implies": []
+  },
+  "x87": {
+   "def": "FeatureX87",
+   "description": "Enable X87 float instructions",
+   "implies": []
+  },
+  "xop": {
+   "def": "FeatureXOP",
+   "description": "Enable XOP instructions",
+   "implies": [
+    "fma4"
+   ]
+  },
+  "xsave": {
+   "def": "FeatureXSAVE",
+   "description": "Support xsave instructions",
+   "implies": []
+  },
+  "xsavec": {
+   "def": "FeatureXSAVEC",
+   "description": "Support xsavec instructions",
+   "implies": [
+    "xsave"
+   ]
+  },
+  "xsaveopt": {
+   "def": "FeatureXSAVEOPT",
+   "description": "Support xsaveopt instructions",
+   "implies": [
+    "xsave"
+   ]
+  },
+  "xsaves": {
+   "def": "FeatureXSAVES",
+   "description": "Support xsaves instructions",
+   "implies": [
+    "xsave"
+   ]
+  },
+  "zu": {
+   "def": "FeatureZU",
+   "description": "Support zero-upper SETcc/IMUL",
+   "implies": []
+  },
+  "16bit-mode": {
+   "def": "Is16Bit",
+   "description": "16-bit mode (i8086)",
+   "implies": []
+  },
+  "32bit-mode": {
+   "def": "Is32Bit",
+   "description": "32-bit mode (80386)",
+   "implies": []
+  },
+  "64bit-mode": {
+   "def": "Is64Bit",
+   "description": "64-bit mode (x86_64)",
+   "implies": []
+  },
+  "x32": {
+   "def": "IsX32",
+   "description": "64-bit with ILP32 programming model (e.g. x32 ABI)",
+   "implies": []
+  },
+  "procintelatom": {
+   "def": "ProcIntelAtom",
+   "description": "Is Intel Atom processor",
+   "implies": []
+  },
+  "allow-light-256-bit": {
+   "def": "TuningAllowLight256Bit",
+   "description": "Enable generation of 256-bit load/stores even if we prefer 128-bit",
+   "implies": []
+  },
+  "false-deps-bls": {
+   "def": "TuningBLSFalseDeps",
+   "description": "BLSR/BLSI/BLSMSK have a false dependency on dest register",
+   "implies": []
+  },
+  "branchfusion": {
+   "def": "TuningBranchFusion",
+   "description": "CMP/TEST can be fused with conditional branches",
+   "implies": []
+  },
+  "branch-hint": {
+   "def": "TuningBranchHint",
+   "description": "Target has branch hint feature",
+   "implies": []
+  },
+  "false-deps-compress": {
+   "def": "TuningCOMPRESSFalseDeps",
+   "description": "V[P]COMPRESSPD/PS/Q/D/W/B with zero-masking has a false dependency on dest register",
+   "implies": []
+  },
+  "false-deps-expand": {
+   "def": "TuningEXPANDFalseDeps",
+   "description": "V[P]EXPANDPD/PS/Q/D/W/B with zero-masking has a false dependency on dest register",
+   "implies": []
+  },
+  "fast-11bytenop": {
+   "def": "TuningFast11ByteNOP",
+   "description": "Target can quickly decode up to 11 byte NOPs",
+   "implies": []
+  },
+  "fast-15bytenop": {
+   "def": "TuningFast15ByteNOP",
+   "description": "Target can quickly decode up to 15 byte NOPs",
+   "implies": []
+  },
+  "fast-7bytenop": {
+   "def": "TuningFast7ByteNOP",
+   "description": "Target can quickly decode up to 7 byte NOPs",
+   "implies": []
+  },
+  "fast-bextr": {
+   "def": "TuningFastBEXTR",
+   "description": "Indicates that the BEXTR instruction is implemented as a single uop \"\n          \"with good throughput",
+   "implies": []
+  },
+  "fast-dpwssd": {
+   "def": "TuningFastDPWSSD",
+   "description": "Prefer vpdpwssd instruction over vpmaddwd+vpaddd instruction sequence",
+   "implies": []
+  },
+  "fast-gather": {
+   "def": "TuningFastGather",
+   "description": "Indicates if gather is reasonably fast (this is true for Skylake client and all AVX-512 CPUs)",
+   "implies": []
+  },
+  "fast-hops": {
+   "def": "TuningFastHorizontalOps",
+   "description": "Prefer horizontal vector math instructions (haddp, phsub, etc.) over \"\n        \"normal vector instructions with shuffles",
+   "implies": []
+  },
+  "fast-imm16": {
+   "def": "TuningFastImm16",
+   "description": "Prefer a i16 instruction with i16 immediate over extension to i32",
+   "implies": []
+  },
+  "tuning-fast-imm-vector-shift": {
+   "def": "TuningFastImmVectorShift",
+   "description": "Vector shifts are fast (2/cycle) as opposed to slow (1/cycle)",
+   "implies": []
+  },
+  "fast-lzcnt": {
+   "def": "TuningFastLZCNT",
+   "description": "LZCNT instructions are as fast as most simple integer ops",
+   "implies": []
+  },
+  "fast-movbe": {
+   "def": "TuningFastMOVBE",
+   "description": "Prefer a movbe over a single-use load + bswap / single-use bswap + store",
+   "implies": []
+  },
+  "fast-shld-rotate": {
+   "def": "TuningFastSHLDRotate",
+   "description": "SHLD can be used as a faster rotate",
+   "implies": []
+  },
+  "fast-scalar-fsqrt": {
+   "def": "TuningFastScalarFSQRT",
+   "description": "Scalar SQRT is fast (disable Newton-Raphson)",
+   "implies": []
+  },
+  "fast-scalar-shift-masks": {
+   "def": "TuningFastScalarShiftMasks",
+   "description": "Prefer a left/right scalar logical shift pair over a shift+and pair",
+   "implies": []
+  },
+  "fast-variable-crosslane-shuffle": {
+   "def": "TuningFastVariableCrossLaneShuffle",
+   "description": "Cross-lane shuffles with variable masks are fast",
+   "implies": []
+  },
+  "fast-variable-perlane-shuffle": {
+   "def": "TuningFastVariablePerLaneShuffle",
+   "description": "Per-lane shuffles with variable masks are fast",
+   "implies": []
+  },
+  "fast-vector-fsqrt": {
+   "def": "TuningFastVectorFSQRT",
+   "description": "Vector SQRT is fast (disable Newton-Raphson)",
+   "implies": []
+  },
+  "fast-vector-shift-masks": {
+   "def": "TuningFastVectorShiftMasks",
+   "description": "Prefer a left/right vector logical shift pair over a shift+and pair",
+   "implies": []
+  },
+  "false-deps-getmant": {
+   "def": "TuningGETMANTFalseDeps",
+   "description": "VGETMANTSS/SD/SH and VGETMANDPS/PD(memory version) has a\"\n                               \" false dependency on dest register",
+   "implies": []
+  },
+  "vzeroupper": {
+   "def": "TuningInsertVZEROUPPER",
+   "description": "Should insert vzeroupper instructions",
+   "implies": []
+  },
+  "lea-sp": {
+   "def": "TuningLEAForSP",
+   "description": "Use LEA for adjusting the stack pointer (this is an optimization for Intel Atom processors)",
+   "implies": []
+  },
+  "lea-uses-ag": {
+   "def": "TuningLEAUsesAG",
+   "description": "LEA instruction needs inputs at AG stage",
+   "implies": []
+  },
+  "false-deps-lzcnt": {
+   "def": "TuningLZCNTFalseDeps",
+   "description": "LZCNT has a false dependency on dest register",
+   "implies": []
+  },
+  "false-deps-mulc": {
+   "def": "TuningMULCFalseDeps",
+   "description": "VF[C]MULCPH/SH has a false dependency on dest register",
+   "implies": []
+  },
+  "false-deps-mullq": {
+   "def": "TuningMULLQFalseDeps",
+   "description": "VPMULLQ has a false dependency on dest register",
+   "implies": []
+  },
+  "macrofusion": {
+   "def": "TuningMacroFusion",
+   "description": "Various instructions can be fused with conditional branches",
+   "implies": []
+  },
+  "prefer-ndd-mem": {
+   "def": "TuningNDDMem",
+   "description": "Prefer NDD memory addressing",
+   "implies": []
+  },
+  "no-bypass-delay": {
+   "def": "TuningNoDomainDelay",
+   "description": "Has no bypass delay when using the 'wrong' domain",
+   "implies": []
+  },
+  "no-bypass-delay-blend": {
+   "def": "TuningNoDomainDelayBlend",
+   "description": "Has no bypass delay when using the 'wrong' blend type",
+   "implies": []
+  },
+  "no-bypass-delay-mov": {
+   "def": "TuningNoDomainDelayMov",
+   "description": "Has no bypass delay when using the 'wrong' mov type",
+   "implies": []
+  },
+  "no-bypass-delay-shuffle": {
+   "def": "TuningNoDomainDelayShuffle",
+   "description": "Has no bypass delay when using the 'wrong' shuffle type",
+   "implies": []
+  },
+  "false-deps-perm": {
+   "def": "TuningPERMFalseDeps",
+   "description": "VPERMD/Q/PS/PD has a false dependency on dest register",
+   "implies": []
+  },
+  "false-deps-popcnt": {
+   "def": "TuningPOPCNTFalseDeps",
+   "description": "POPCNT has a false dependency on dest register",
+   "implies": []
+  },
+  "pad-short-functions": {
+   "def": "TuningPadShortFunctions",
+   "description": "Pad short functions (to prevent a stall when returning too early)",
+   "implies": []
+  },
+  "prefer-128-bit": {
+   "def": "TuningPrefer128Bit",
+   "description": "Prefer 128-bit AVX instructions",
+   "implies": []
+  },
+  "prefer-256-bit": {
+   "def": "TuningPrefer256Bit",
+   "description": "Prefer 256-bit AVX instructions",
+   "implies": []
+  },
+  "prefer-legacy-setcc": {
+   "def": "TuningPreferLegacySetCC",
+   "description": "Prefer to emit legacy SetCC.",
+   "implies": []
+  },
+  "prefer-mask-registers": {
+   "def": "TuningPreferMaskRegisters",
+   "description": "Prefer AVX512 mask registers over PTEST/MOVMSK",
+   "implies": []
+  },
+  "prefer-movmsk-over-vtest": {
+   "def": "TuningPreferMovmskOverVTest",
+   "description": "Prefer movmsk over vtest instruction",
+   "implies": []
+  },
+  "prefer-no-gather": {
+   "def": "TuningPreferNoGather",
+   "description": "Prefer no gather instructions",
+   "implies": []
+  },
+  "prefer-no-scatter": {
+   "def": "TuningPreferNoScatter",
+   "description": "Prefer no scatter instructions",
+   "implies": []
+  },
+  "faster-shift-than-shuffle": {
+   "def": "TuningPreferShiftShuffle",
+   "description": "Shifts are faster (or as fast) as shuffle",
+   "implies": []
+  },
+  "false-deps-range": {
+   "def": "TuningRANGEFalseDeps",
+   "description": "VRANGEPD/PS/SD/SS has a false dependency on dest register",
+   "implies": []
+  },
+  "sbb-dep-breaking": {
+   "def": "TuningSBBDepBreaking",
+   "description": "SBB with same register has no source dependency",
+   "implies": []
+  },
+  "slow-3ops-lea": {
+   "def": "TuningSlow3OpsLEA",
+   "description": "LEA instruction with 3 ops or certain registers is slow",
+   "implies": []
+  },
+  "idivl-to-divb": {
+   "def": "TuningSlowDivide32",
+   "description": "Use 8-bit divide for positive values less than 256",
+   "implies": []
+  },
+  "idivq-to-divl": {
+   "def": "TuningSlowDivide64",
+   "description": "Use 32-bit divide for positive values less than 2^32",
+   "implies": []
+  },
+  "slow-incdec": {
+   "def": "TuningSlowIncDec",
+   "description": "INC and DEC instructions are slower than ADD and SUB",
+   "implies": []
+  },
+  "slow-indirect-call": {
+   "def": "TuningSlowIndirectCall",
+   "description": "Indirect calls from memory are slow",
+   "implies": []
+  },
+  "slow-lea": {
+   "def": "TuningSlowLEA",
+   "description": "LEA instruction with certain arguments is slow",
+   "implies": []
+  },
+  "slow-pdep": {
+   "def": "TuningSlowPDEP",
+   "description": "PDEP instruction is slow",
+   "implies": []
+  },
+  "slow-pext": {
+   "def": "TuningSlowPEXT",
+   "description": "PEXT instruction is slow",
+   "implies": []
+  },
+  "slow-pmaddwd": {
+   "def": "TuningSlowPMADDWD",
+   "description": "PMADDWD is slower than PMULLD",
+   "implies": []
+  },
+  "slow-pmulld": {
+   "def": "TuningSlowPMULLD",
+   "description": "PMULLD instruction is slow (compared to PMULLW/PMULHW and PMULUDQ)",
+   "implies": []
+  },
+  "slow-pmullq": {
+   "def": "TuningSlowPMULLQ",
+   "description": "PMULLQ instruction is slow",
+   "implies": []
+  },
+  "slow-shld": {
+   "def": "TuningSlowSHLD",
+   "description": "SHLD instruction is slow",
+   "implies": []
+  },
+  "slow-two-mem-ops": {
+   "def": "TuningSlowTwoMemOps",
+   "description": "Two memory operand instructions are slow",
+   "implies": []
+  },
+  "slow-unaligned-mem-16": {
+   "def": "TuningSlowUAMem16",
+   "description": "Slow unaligned 16-byte memory access",
+   "implies": []
+  },
+  "slow-unaligned-mem-32": {
+   "def": "TuningSlowUAMem32",
+   "description": "Slow unaligned 32-byte memory access",
+   "implies": []
+  },
+  "slow-vec-compress-store": {
+   "def": "TuningSlowVecCompressStore",
+   "description": "Vector compress store instruction is slow",
+   "implies": []
+  },
+  "slow-vec-mask-store": {
+   "def": "TuningSlowVecMaskStore",
+   "description": "Vector mask store instruction is slow",
+   "implies": []
+  },
+  "false-deps-tzcnt": {
+   "def": "TuningTZCNTFalseDeps",
+   "description": "TZCNT has a false dependency on dest register",
+   "implies": []
+  },
+  "use-glm-div-sqrt-costs": {
+   "def": "TuningUseGLMDivSqrtCosts",
+   "description": "Use Goldmont specific floating point div/sqrt costs",
+   "implies": []
+  },
+  "use-slm-arith-costs": {
+   "def": "TuningUseSLMArithCosts",
+   "description": "Use Silvermont specific arithmetic costs",
+   "implies": []
+  }
+ },
+ "aliases": {
+  "arrowlake_s": "arrowlake-s",
+  "athlon-fx": "k8",
+  "athlon-mp": "athlon-4",
+  "athlon-tbird": "athlon",
+  "athlon-xp": "athlon-4",
+  "athlon64": "k8",
+  "athlon64-sse3": "k8-sse3",
+  "atom": "bonnell",
+  "atom_sse4_2": "silvermont",
+  "barcelona": "amdfam10",
+  "c86-4g-m6": "c86-4g-m4",
+  "core-avx-i": "ivybridge",
+  "core-avx2": "haswell",
+  "core_2_duo_sse4_1": "penryn",
+  "core_2_duo_ssse3": "core2",
+  "core_2nd_gen_avx": "sandybridge",
+  "core_3rd_gen_avx": "ivybridge",
+  "core_4th_gen_avx": "haswell",
+  "core_4th_gen_avx_tsx": "haswell",
+  "core_5th_gen_avx": "broadwell",
+  "core_5th_gen_avx_tsx": "broadwell",
+  "core_aes_pclmulqdq": "westmere",
+  "core_i7_sse4_2": "nehalem",
+  "corei7": "nehalem",
+  "corei7-avx": "sandybridge",
+  "goldmont-plus": "goldmont_plus",
+  "grandridge": "sierraforest",
+  "graniterapids_d": "graniterapids-d",
+  "icelake_client": "icelake-client",
+  "icelake_server": "icelake-server",
+  "mic_avx512": "knl",
+  "opteron": "k8",
+  "opteron-sse3": "k8-sse3",
+  "pentium": "i586",
+  "pentium-m": "pentium_m",
+  "pentium3m": "pentium3",
+  "pentium4m": "pentium4",
+  "pentium_4": "pentium4",
+  "pentium_4_sse3": "prescott",
+  "pentium_ii": "pentium2",
+  "pentium_iii": "pentium3",
+  "pentium_iii_no_xmm_regs": "pentium3",
+  "pentium_mmx": "pentium-mmx",
+  "pentium_pro": "pentiumpro",
+  "skx": "skylake-avx512",
+  "skylake_avx512": "skylake-avx512",
+  "slm": "silvermont",
+  "wildcatlake": "pantherlake"
+ },
+ "unresolved": [],
+ "cpuid": {
+  "fpu": {
+   "word": 0,
+   "bit": 0,
+   "leaf": "0x00000001",
+   "subleaf": null,
+   "register": "EDX",
+   "linux_defined": false,
+   "cpuinfo": "fpu",
+   "description": "Onboard FPU"
+  },
+  "vme": {
+   "word": 0,
+   "bit": 1,
+   "leaf": "0x00000001",
+   "subleaf": null,
+   "register": "EDX",
+   "linux_defined": false,
+   "cpuinfo": "vme",
+   "description": "Virtual Mode Extensions"
+  },
+  "de": {
+   "word": 0,
+   "bit": 2,
+   "leaf": "0x00000001",
+   "subleaf": null,
+   "register": "EDX",
+   "linux_defined": false,
+   "cpuinfo": "de",
+   "description": "Debugging Extensions"
+  },
+  "pse": {
+   "word": 0,
+   "bit": 3,
+   "leaf": "0x00000001",
+   "subleaf": null,
+   "register": "EDX",
+   "linux_defined": false,
+   "cpuinfo": "pse",
+   "description": "Page Size Extensions"
+  },
+  "tsc": {
+   "word": 0,
+   "bit": 4,
+   "leaf": "0x00000001",
+   "subleaf": null,
+   "register": "EDX",
+   "linux_defined": false,
+   "cpuinfo": "tsc",
+   "description": "Time Stamp Counter"
+  },
+  "msr": {
+   "word": 0,
+   "bit": 5,
+   "leaf": "0x00000001",
+   "subleaf": null,
+   "register": "EDX",
+   "linux_defined": false,
+   "cpuinfo": "msr",
+   "description": "Model-Specific Registers"
+  },
+  "pae": {
+   "word": 0,
+   "bit": 6,
+   "leaf": "0x00000001",
+   "subleaf": null,
+   "register": "EDX",
+   "linux_defined": false,
+   "cpuinfo": "pae",
+   "description": "Physical Address Extensions"
+  },
+  "mce": {
+   "word": 0,
+   "bit": 7,
+   "leaf": "0x00000001",
+   "subleaf": null,
+   "register": "EDX",
+   "linux_defined": false,
+   "cpuinfo": "mce",
+   "description": "Machine Check Exception"
+  },
+  "cx8": {
+   "word": 0,
+   "bit": 8,
+   "leaf": "0x00000001",
+   "subleaf": null,
+   "register": "EDX",
+   "linux_defined": false,
+   "cpuinfo": "cx8",
+   "description": "CMPXCHG8 instruction"
+  },
+  "apic": {
+   "word": 0,
+   "bit": 9,
+   "leaf": "0x00000001",
+   "subleaf": null,
+   "register": "EDX",
+   "linux_defined": false,
+   "cpuinfo": "apic",
+   "description": "Onboard APIC"
+  },
+  "sep": {
+   "word": 0,
+   "bit": 11,
+   "leaf": "0x00000001",
+   "subleaf": null,
+   "register": "EDX",
+   "linux_defined": false,
+   "cpuinfo": "sep",
+   "description": "SYSENTER/SYSEXIT"
+  },
+  "mtrr": {
+   "word": 0,
+   "bit": 12,
+   "leaf": "0x00000001",
+   "subleaf": null,
+   "register": "EDX",
+   "linux_defined": false,
+   "cpuinfo": "mtrr",
+   "description": "Memory Type Range Registers"
+  },
+  "pge": {
+   "word": 0,
+   "bit": 13,
+   "leaf": "0x00000001",
+   "subleaf": null,
+   "register": "EDX",
+   "linux_defined": false,
+   "cpuinfo": "pge",
+   "description": "Page Global Enable"
+  },
+  "mca": {
+   "word": 0,
+   "bit": 14,
+   "leaf": "0x00000001",
+   "subleaf": null,
+   "register": "EDX",
+   "linux_defined": false,
+   "cpuinfo": "mca",
+   "description": "Machine Check Architecture"
+  },
+  "cmov": {
+   "word": 0,
+   "bit": 15,
+   "leaf": "0x00000001",
+   "subleaf": null,
+   "register": "EDX",
+   "linux_defined": false,
+   "cpuinfo": "cmov",
+   "description": "CMOV instructions (plus FCMOVcc, FCOMI with FPU)"
+  },
+  "pat": {
+   "word": 0,
+   "bit": 16,
+   "leaf": "0x00000001",
+   "subleaf": null,
+   "register": "EDX",
+   "linux_defined": false,
+   "cpuinfo": "pat",
+   "description": "Page Attribute Table"
+  },
+  "pse36": {
+   "word": 0,
+   "bit": 17,
+   "leaf": "0x00000001",
+   "subleaf": null,
+   "register": "EDX",
+   "linux_defined": false,
+   "cpuinfo": "pse36",
+   "description": "36-bit PSEs"
+  },
+  "pn": {
+   "word": 0,
+   "bit": 18,
+   "leaf": "0x00000001",
+   "subleaf": null,
+   "register": "EDX",
+   "linux_defined": false,
+   "cpuinfo": "pn",
+   "description": "Processor serial number"
+  },
+  "clflush": {
+   "word": 0,
+   "bit": 19,
+   "leaf": "0x00000001",
+   "subleaf": null,
+   "register": "EDX",
+   "linux_defined": false,
+   "cpuinfo": "clflush",
+   "description": "CLFLUSH instruction"
+  },
+  "ds": {
+   "word": 0,
+   "bit": 21,
+   "leaf": "0x00000001",
+   "subleaf": null,
+   "register": "EDX",
+   "linux_defined": false,
+   "cpuinfo": "dts",
+   "description": "Debug Store"
+  },
+  "acpi": {
+   "word": 0,
+   "bit": 22,
+   "leaf": "0x00000001",
+   "subleaf": null,
+   "register": "EDX",
+   "linux_defined": false,
+   "cpuinfo": "acpi",
+   "description": "ACPI via MSR"
+  },
+  "mmx": {
+   "word": 0,
+   "bit": 23,
+   "leaf": "0x00000001",
+   "subleaf": null,
+   "register": "EDX",
+   "linux_defined": false,
+   "cpuinfo": "mmx",
+   "description": "Multimedia Extensions"
+  },
+  "fxsr": {
+   "word": 0,
+   "bit": 24,
+   "leaf": "0x00000001",
+   "subleaf": null,
+   "register": "EDX",
+   "linux_defined": false,
+   "cpuinfo": "fxsr",
+   "description": "FXSAVE/FXRSTOR, CR4.OSFXSR"
+  },
+  "xmm": {
+   "word": 0,
+   "bit": 25,
+   "leaf": "0x00000001",
+   "subleaf": null,
+   "register": "EDX",
+   "linux_defined": false,
+   "cpuinfo": "sse",
+   "description": ""
+  },
+  "xmm2": {
+   "word": 0,
+   "bit": 26,
+   "leaf": "0x00000001",
+   "subleaf": null,
+   "register": "EDX",
+   "linux_defined": false,
+   "cpuinfo": "sse2",
+   "description": ""
+  },
+  "selfsnoop": {
+   "word": 0,
+   "bit": 27,
+   "leaf": "0x00000001",
+   "subleaf": null,
+   "register": "EDX",
+   "linux_defined": false,
+   "cpuinfo": "ss",
+   "description": "CPU self snoop"
+  },
+  "ht": {
+   "word": 0,
+   "bit": 28,
+   "leaf": "0x00000001",
+   "subleaf": null,
+   "register": "EDX",
+   "linux_defined": false,
+   "cpuinfo": "ht",
+   "description": "Hyper-Threading"
+  },
+  "acc": {
+   "word": 0,
+   "bit": 29,
+   "leaf": "0x00000001",
+   "subleaf": null,
+   "register": "EDX",
+   "linux_defined": false,
+   "cpuinfo": "tm",
+   "description": "Automatic clock control"
+  },
+  "ia64": {
+   "word": 0,
+   "bit": 30,
+   "leaf": "0x00000001",
+   "subleaf": null,
+   "register": "EDX",
+   "linux_defined": false,
+   "cpuinfo": "ia64",
+   "description": "IA-64 processor"
+  },
+  "pbe": {
+   "word": 0,
+   "bit": 31,
+   "leaf": "0x00000001",
+   "subleaf": null,
+   "register": "EDX",
+   "linux_defined": false,
+   "cpuinfo": "pbe",
+   "description": "Pending Break Enable"
+  },
+  "syscall": {
+   "word": 1,
+   "bit": 11,
+   "leaf": "0x80000001",
+   "subleaf": null,
+   "register": "EDX",
+   "linux_defined": false,
+   "cpuinfo": "syscall",
+   "description": "SYSCALL/SYSRET"
+  },
+  "mp": {
+   "word": 1,
+   "bit": 19,
+   "leaf": "0x80000001",
+   "subleaf": null,
+   "register": "EDX",
+   "linux_defined": false,
+   "cpuinfo": "mp",
+   "description": "MP Capable"
+  },
+  "nx": {
+   "word": 1,
+   "bit": 20,
+   "leaf": "0x80000001",
+   "subleaf": null,
+   "register": "EDX",
+   "linux_defined": false,
+   "cpuinfo": "nx",
+   "description": "Execute Disable"
+  },
+  "mmxext": {
+   "word": 1,
+   "bit": 22,
+   "leaf": "0x80000001",
+   "subleaf": null,
+   "register": "EDX",
+   "linux_defined": false,
+   "cpuinfo": "mmxext",
+   "description": "AMD MMX extensions"
+  },
+  "fxsr_opt": {
+   "word": 1,
+   "bit": 25,
+   "leaf": "0x80000001",
+   "subleaf": null,
+   "register": "EDX",
+   "linux_defined": false,
+   "cpuinfo": "fxsr_opt",
+   "description": "FXSAVE/FXRSTOR optimizations"
+  },
+  "gbpages": {
+   "word": 1,
+   "bit": 26,
+   "leaf": "0x80000001",
+   "subleaf": null,
+   "register": "EDX",
+   "linux_defined": false,
+   "cpuinfo": "pdpe1gb",
+   "description": "GB pages"
+  },
+  "rdtscp": {
+   "word": 1,
+   "bit": 27,
+   "leaf": "0x80000001",
+   "subleaf": null,
+   "register": "EDX",
+   "linux_defined": false,
+   "cpuinfo": "rdtscp",
+   "description": "RDTSCP"
+  },
+  "lm": {
+   "word": 1,
+   "bit": 29,
+   "leaf": "0x80000001",
+   "subleaf": null,
+   "register": "EDX",
+   "linux_defined": false,
+   "cpuinfo": "lm",
+   "description": "Long Mode (x86-64, 64-bit support)"
+  },
+  "3dnowext": {
+   "word": 1,
+   "bit": 30,
+   "leaf": "0x80000001",
+   "subleaf": null,
+   "register": "EDX",
+   "linux_defined": false,
+   "cpuinfo": "3dnowext",
+   "description": "AMD 3DNow extensions"
+  },
+  "3dnow": {
+   "word": 1,
+   "bit": 31,
+   "leaf": "0x80000001",
+   "subleaf": null,
+   "register": "EDX",
+   "linux_defined": false,
+   "cpuinfo": "3dnow",
+   "description": "3DNow"
+  },
+  "recovery": {
+   "word": 2,
+   "bit": 0,
+   "leaf": null,
+   "subleaf": null,
+   "register": null,
+   "linux_defined": true,
+   "cpuinfo": "recovery",
+   "description": "CPU in recovery mode"
+  },
+  "longrun": {
+   "word": 2,
+   "bit": 1,
+   "leaf": null,
+   "subleaf": null,
+   "register": null,
+   "linux_defined": true,
+   "cpuinfo": "longrun",
+   "description": "Longrun power control"
+  },
+  "lrti": {
+   "word": 2,
+   "bit": 3,
+   "leaf": null,
+   "subleaf": null,
+   "register": null,
+   "linux_defined": true,
+   "cpuinfo": "lrti",
+   "description": "LongRun table interface"
+  },
+  "cxmmx": {
+   "word": 3,
+   "bit": 0,
+   "leaf": null,
+   "subleaf": null,
+   "register": null,
+   "linux_defined": true,
+   "cpuinfo": "cxmmx",
+   "description": "Cyrix MMX extensions"
+  },
+  "k6_mtrr": {
+   "word": 3,
+   "bit": 1,
+   "leaf": null,
+   "subleaf": null,
+   "register": null,
+   "linux_defined": true,
+   "cpuinfo": "k6_mtrr",
+   "description": "AMD K6 nonstandard MTRRs"
+  },
+  "cyrix_arr": {
+   "word": 3,
+   "bit": 2,
+   "leaf": null,
+   "subleaf": null,
+   "register": null,
+   "linux_defined": true,
+   "cpuinfo": "cyrix_arr",
+   "description": "Cyrix ARRs (= MTRRs)"
+  },
+  "centaur_mcr": {
+   "word": 3,
+   "bit": 3,
+   "leaf": null,
+   "subleaf": null,
+   "register": null,
+   "linux_defined": true,
+   "cpuinfo": "centaur_mcr",
+   "description": "Centaur MCRs (= MTRRs)"
+  },
+  "k8": {
+   "word": 3,
+   "bit": 4,
+   "leaf": null,
+   "subleaf": null,
+   "register": null,
+   "linux_defined": true,
+   "cpuinfo": null,
+   "description": "Opteron, Athlon64"
+  },
+  "zen5": {
+   "word": 3,
+   "bit": 5,
+   "leaf": null,
+   "subleaf": null,
+   "register": null,
+   "linux_defined": true,
+   "cpuinfo": null,
+   "description": "CPU based on Zen5 microarchitecture"
+  },
+  "zen6": {
+   "word": 3,
+   "bit": 6,
+   "leaf": null,
+   "subleaf": null,
+   "register": null,
+   "linux_defined": true,
+   "cpuinfo": null,
+   "description": "CPU based on Zen6 microarchitecture"
+  },
+  "constant_tsc": {
+   "word": 3,
+   "bit": 8,
+   "leaf": null,
+   "subleaf": null,
+   "register": null,
+   "linux_defined": true,
+   "cpuinfo": "constant_tsc",
+   "description": "TSC ticks at a constant rate"
+  },
+  "up": {
+   "word": 3,
+   "bit": 9,
+   "leaf": null,
+   "subleaf": null,
+   "register": null,
+   "linux_defined": true,
+   "cpuinfo": null,
+   "description": ""
+  },
+  "art": {
+   "word": 3,
+   "bit": 10,
+   "leaf": null,
+   "subleaf": null,
+   "register": null,
+   "linux_defined": true,
+   "cpuinfo": "art",
+   "description": "Always running timer (ART)"
+  },
+  "arch_perfmon": {
+   "word": 3,
+   "bit": 11,
+   "leaf": null,
+   "subleaf": null,
+   "register": null,
+   "linux_defined": true,
+   "cpuinfo": "arch_perfmon",
+   "description": "Intel Architectural PerfMon"
+  },
+  "pebs": {
+   "word": 3,
+   "bit": 12,
+   "leaf": null,
+   "subleaf": null,
+   "register": null,
+   "linux_defined": true,
+   "cpuinfo": "pebs",
+   "description": "Precise-Event Based Sampling"
+  },
+  "bts": {
+   "word": 3,
+   "bit": 13,
+   "leaf": null,
+   "subleaf": null,
+   "register": null,
+   "linux_defined": true,
+   "cpuinfo": "bts",
+   "description": "Branch Trace Store"
+  },
+  "syscall32": {
+   "word": 3,
+   "bit": 14,
+   "leaf": null,
+   "subleaf": null,
+   "register": null,
+   "linux_defined": true,
+   "cpuinfo": null,
+   "description": "syscall in IA32 userspace"
+  },
+  "sysfast32": {
+   "word": 3,
+   "bit": 15,
+   "leaf": null,
+   "subleaf": null,
+   "register": null,
+   "linux_defined": true,
+   "cpuinfo": null,
+   "description": "sysenter/syscall in IA32 userspace"
+  },
+  "rep_good": {
+   "word": 3,
+   "bit": 16,
+   "leaf": null,
+   "subleaf": null,
+   "register": null,
+   "linux_defined": true,
+   "cpuinfo": "rep_good",
+   "description": "REP microcode works well"
+  },
+  "amd_lbr_v2": {
+   "word": 3,
+   "bit": 17,
+   "leaf": null,
+   "subleaf": null,
+   "register": null,
+   "linux_defined": true,
+   "cpuinfo": "amd_lbr_v2",
+   "description": "AMD Last Branch Record Extension Version 2"
+  },
+  "clear_cpu_buf": {
+   "word": 3,
+   "bit": 18,
+   "leaf": null,
+   "subleaf": null,
+   "register": null,
+   "linux_defined": true,
+   "cpuinfo": null,
+   "description": "Clear CPU buffers using VERW"
+  },
+  "acc_power": {
+   "word": 3,
+   "bit": 19,
+   "leaf": null,
+   "subleaf": null,
+   "register": null,
+   "linux_defined": true,
+   "cpuinfo": "acc_power",
+   "description": "AMD Accumulated Power Mechanism"
+  },
+  "nopl": {
+   "word": 3,
+   "bit": 20,
+   "leaf": null,
+   "subleaf": null,
+   "register": null,
+   "linux_defined": true,
+   "cpuinfo": "nopl",
+   "description": "The NOPL (0F 1F) instructions"
+  },
+  "always": {
+   "word": 3,
+   "bit": 21,
+   "leaf": null,
+   "subleaf": null,
+   "register": null,
+   "linux_defined": true,
+   "cpuinfo": null,
+   "description": "Always-present feature"
+  },
+  "xtopology": {
+   "word": 3,
+   "bit": 22,
+   "leaf": null,
+   "subleaf": null,
+   "register": null,
+   "linux_defined": true,
+   "cpuinfo": "xtopology",
+   "description": "CPU topology enum extensions"
+  },
+  "tsc_reliable": {
+   "word": 3,
+   "bit": 23,
+   "leaf": null,
+   "subleaf": null,
+   "register": null,
+   "linux_defined": true,
+   "cpuinfo": "tsc_reliable",
+   "description": "TSC is known to be reliable"
+  },
+  "nonstop_tsc": {
+   "word": 3,
+   "bit": 24,
+   "leaf": null,
+   "subleaf": null,
+   "register": null,
+   "linux_defined": true,
+   "cpuinfo": "nonstop_tsc",
+   "description": "TSC does not stop in C states"
+  },
+  "cpuid": {
+   "word": 3,
+   "bit": 25,
+   "leaf": null,
+   "subleaf": null,
+   "register": null,
+   "linux_defined": true,
+   "cpuinfo": "cpuid",
+   "description": "CPU has CPUID instruction itself"
+  },
+  "extd_apicid": {
+   "word": 3,
+   "bit": 26,
+   "leaf": null,
+   "subleaf": null,
+   "register": null,
+   "linux_defined": true,
+   "cpuinfo": "extd_apicid",
+   "description": "Extended APICID (8 bits)"
+  },
+  "amd_dcm": {
+   "word": 3,
+   "bit": 27,
+   "leaf": null,
+   "subleaf": null,
+   "register": null,
+   "linux_defined": true,
+   "cpuinfo": "amd_dcm",
+   "description": "AMD multi-node processor"
+  },
+  "aperfmperf": {
+   "word": 3,
+   "bit": 28,
+   "leaf": null,
+   "subleaf": null,
+   "register": null,
+   "linux_defined": true,
+   "cpuinfo": "aperfmperf",
+   "description": "P-State hardware coordination feedback capability (APERF/MPERF MSRs)"
+  },
+  "rapl": {
+   "word": 3,
+   "bit": 29,
+   "leaf": null,
+   "subleaf": null,
+   "register": null,
+   "linux_defined": true,
+   "cpuinfo": "rapl",
+   "description": "AMD/Hygon RAPL interface"
+  },
+  "nonstop_tsc_s3": {
+   "word": 3,
+   "bit": 30,
+   "leaf": null,
+   "subleaf": null,
+   "register": null,
+   "linux_defined": true,
+   "cpuinfo": "nonstop_tsc_s3",
+   "description": "TSC doesn't stop in S3 state"
+  },
+  "tsc_known_freq": {
+   "word": 3,
+   "bit": 31,
+   "leaf": null,
+   "subleaf": null,
+   "register": null,
+   "linux_defined": true,
+   "cpuinfo": "tsc_known_freq",
+   "description": "TSC has known frequency"
+  },
+  "xmm3": {
+   "word": 4,
+   "bit": 0,
+   "leaf": "0x00000001",
+   "subleaf": null,
+   "register": "ECX",
+   "linux_defined": false,
+   "cpuinfo": "pni",
+   "description": "SSE-3"
+  },
+  "pclmulqdq": {
+   "word": 4,
+   "bit": 1,
+   "leaf": "0x00000001",
+   "subleaf": null,
+   "register": "ECX",
+   "linux_defined": false,
+   "cpuinfo": "pclmulqdq",
+   "description": "PCLMULQDQ instruction"
+  },
+  "dtes64": {
+   "word": 4,
+   "bit": 2,
+   "leaf": "0x00000001",
+   "subleaf": null,
+   "register": "ECX",
+   "linux_defined": false,
+   "cpuinfo": "dtes64",
+   "description": "64-bit Debug Store"
+  },
+  "mwait": {
+   "word": 4,
+   "bit": 3,
+   "leaf": "0x00000001",
+   "subleaf": null,
+   "register": "ECX",
+   "linux_defined": false,
+   "cpuinfo": "monitor",
+   "description": "MONITOR/MWAIT support"
+  },
+  "dscpl": {
+   "word": 4,
+   "bit": 4,
+   "leaf": "0x00000001",
+   "subleaf": null,
+   "register": "ECX",
+   "linux_defined": false,
+   "cpuinfo": "ds_cpl",
+   "description": "CPL-qualified (filtered) Debug Store"
+  },
+  "vmx": {
+   "word": 4,
+   "bit": 5,
+   "leaf": "0x00000001",
+   "subleaf": null,
+   "register": "ECX",
+   "linux_defined": false,
+   "cpuinfo": "vmx",
+   "description": "Hardware virtualization"
+  },
+  "smx": {
+   "word": 4,
+   "bit": 6,
+   "leaf": "0x00000001",
+   "subleaf": null,
+   "register": "ECX",
+   "linux_defined": false,
+   "cpuinfo": "smx",
+   "description": "Safer Mode eXtensions"
+  },
+  "est": {
+   "word": 4,
+   "bit": 7,
+   "leaf": "0x00000001",
+   "subleaf": null,
+   "register": "ECX",
+   "linux_defined": false,
+   "cpuinfo": "est",
+   "description": "Enhanced SpeedStep"
+  },
+  "tm2": {
+   "word": 4,
+   "bit": 8,
+   "leaf": "0x00000001",
+   "subleaf": null,
+   "register": "ECX",
+   "linux_defined": false,
+   "cpuinfo": "tm2",
+   "description": "Thermal Monitor 2"
+  },
+  "ssse3": {
+   "word": 4,
+   "bit": 9,
+   "leaf": "0x00000001",
+   "subleaf": null,
+   "register": "ECX",
+   "linux_defined": false,
+   "cpuinfo": "ssse3",
+   "description": "Supplemental SSE-3"
+  },
+  "cid": {
+   "word": 4,
+   "bit": 10,
+   "leaf": "0x00000001",
+   "subleaf": null,
+   "register": "ECX",
+   "linux_defined": false,
+   "cpuinfo": "cid",
+   "description": "Context ID"
+  },
+  "sdbg": {
+   "word": 4,
+   "bit": 11,
+   "leaf": "0x00000001",
+   "subleaf": null,
+   "register": "ECX",
+   "linux_defined": false,
+   "cpuinfo": "sdbg",
+   "description": "Silicon Debug"
+  },
+  "fma": {
+   "word": 4,
+   "bit": 12,
+   "leaf": "0x00000001",
+   "subleaf": null,
+   "register": "ECX",
+   "linux_defined": false,
+   "cpuinfo": "fma",
+   "description": "Fused multiply-add"
+  },
+  "cx16": {
+   "word": 4,
+   "bit": 13,
+   "leaf": "0x00000001",
+   "subleaf": null,
+   "register": "ECX",
+   "linux_defined": false,
+   "cpuinfo": "cx16",
+   "description": "CMPXCHG16B instruction"
+  },
+  "xtpr": {
+   "word": 4,
+   "bit": 14,
+   "leaf": "0x00000001",
+   "subleaf": null,
+   "register": "ECX",
+   "linux_defined": false,
+   "cpuinfo": "xtpr",
+   "description": "Send Task Priority Messages"
+  },
+  "pdcm": {
+   "word": 4,
+   "bit": 15,
+   "leaf": "0x00000001",
+   "subleaf": null,
+   "register": "ECX",
+   "linux_defined": false,
+   "cpuinfo": "pdcm",
+   "description": "Perf/Debug Capabilities MSR"
+  },
+  "pcid": {
+   "word": 4,
+   "bit": 17,
+   "leaf": "0x00000001",
+   "subleaf": null,
+   "register": "ECX",
+   "linux_defined": false,
+   "cpuinfo": "pcid",
+   "description": "Process Context Identifiers"
+  },
+  "dca": {
+   "word": 4,
+   "bit": 18,
+   "leaf": "0x00000001",
+   "subleaf": null,
+   "register": "ECX",
+   "linux_defined": false,
+   "cpuinfo": "dca",
+   "description": "Direct Cache Access"
+  },
+  "xmm4_1": {
+   "word": 4,
+   "bit": 19,
+   "leaf": "0x00000001",
+   "subleaf": null,
+   "register": "ECX",
+   "linux_defined": false,
+   "cpuinfo": "sse4_1",
+   "description": "SSE-4.1"
+  },
+  "xmm4_2": {
+   "word": 4,
+   "bit": 20,
+   "leaf": "0x00000001",
+   "subleaf": null,
+   "register": "ECX",
+   "linux_defined": false,
+   "cpuinfo": "sse4_2",
+   "description": "SSE-4.2"
+  },
+  "x2apic": {
+   "word": 4,
+   "bit": 21,
+   "leaf": "0x00000001",
+   "subleaf": null,
+   "register": "ECX",
+   "linux_defined": false,
+   "cpuinfo": "x2apic",
+   "description": "X2APIC"
+  },
+  "movbe": {
+   "word": 4,
+   "bit": 22,
+   "leaf": "0x00000001",
+   "subleaf": null,
+   "register": "ECX",
+   "linux_defined": false,
+   "cpuinfo": "movbe",
+   "description": "MOVBE instruction"
+  },
+  "popcnt": {
+   "word": 4,
+   "bit": 23,
+   "leaf": "0x00000001",
+   "subleaf": null,
+   "register": "ECX",
+   "linux_defined": false,
+   "cpuinfo": "popcnt",
+   "description": "POPCNT instruction"
+  },
+  "tsc_deadline_timer": {
+   "word": 4,
+   "bit": 24,
+   "leaf": "0x00000001",
+   "subleaf": null,
+   "register": "ECX",
+   "linux_defined": false,
+   "cpuinfo": "tsc_deadline_timer",
+   "description": "TSC deadline timer"
+  },
+  "aes": {
+   "word": 4,
+   "bit": 25,
+   "leaf": "0x00000001",
+   "subleaf": null,
+   "register": "ECX",
+   "linux_defined": false,
+   "cpuinfo": "aes",
+   "description": "AES instructions"
+  },
+  "xsave": {
+   "word": 4,
+   "bit": 26,
+   "leaf": "0x00000001",
+   "subleaf": null,
+   "register": "ECX",
+   "linux_defined": false,
+   "cpuinfo": "xsave",
+   "description": "XSAVE/XRSTOR/XSETBV/XGETBV instructions"
+  },
+  "osxsave": {
+   "word": 4,
+   "bit": 27,
+   "leaf": "0x00000001",
+   "subleaf": null,
+   "register": "ECX",
+   "linux_defined": false,
+   "cpuinfo": null,
+   "description": "XSAVE instruction enabled in the OS"
+  },
+  "avx": {
+   "word": 4,
+   "bit": 28,
+   "leaf": "0x00000001",
+   "subleaf": null,
+   "register": "ECX",
+   "linux_defined": false,
+   "cpuinfo": "avx",
+   "description": "Advanced Vector Extensions"
+  },
+  "f16c": {
+   "word": 4,
+   "bit": 29,
+   "leaf": "0x00000001",
+   "subleaf": null,
+   "register": "ECX",
+   "linux_defined": false,
+   "cpuinfo": "f16c",
+   "description": "16-bit FP conversions"
+  },
+  "rdrand": {
+   "word": 4,
+   "bit": 30,
+   "leaf": "0x00000001",
+   "subleaf": null,
+   "register": "ECX",
+   "linux_defined": false,
+   "cpuinfo": "rdrand",
+   "description": "RDRAND instruction"
+  },
+  "hypervisor": {
+   "word": 4,
+   "bit": 31,
+   "leaf": "0x00000001",
+   "subleaf": null,
+   "register": "ECX",
+   "linux_defined": false,
+   "cpuinfo": "hypervisor",
+   "description": "Running on a hypervisor"
+  },
+  "sm2": {
+   "word": 5,
+   "bit": 0,
+   "leaf": "0xc0000001",
+   "subleaf": null,
+   "register": null,
+   "linux_defined": false,
+   "cpuinfo": "sm2",
+   "description": "SM2 algorithm"
+  },
+  "sm2_en": {
+   "word": 5,
+   "bit": 1,
+   "leaf": "0xc0000001",
+   "subleaf": null,
+   "register": null,
+   "linux_defined": false,
+   "cpuinfo": "sm2_en",
+   "description": "SM2 enabled"
+  },
+  "xstore": {
+   "word": 5,
+   "bit": 2,
+   "leaf": "0xc0000001",
+   "subleaf": null,
+   "register": null,
+   "linux_defined": false,
+   "cpuinfo": "rng",
+   "description": "RNG present (xstore)"
+  },
+  "xstore_en": {
+   "word": 5,
+   "bit": 3,
+   "leaf": "0xc0000001",
+   "subleaf": null,
+   "register": null,
+   "linux_defined": false,
+   "cpuinfo": "rng_en",
+   "description": "RNG enabled"
+  },
+  "ccs": {
+   "word": 5,
+   "bit": 4,
+   "leaf": "0xc0000001",
+   "subleaf": null,
+   "register": null,
+   "linux_defined": false,
+   "cpuinfo": "ccs",
+   "description": "SM3 + SM4 instructions"
+  },
+  "ccs_en": {
+   "word": 5,
+   "bit": 5,
+   "leaf": "0xc0000001",
+   "subleaf": null,
+   "register": null,
+   "linux_defined": false,
+   "cpuinfo": "ccs_en",
+   "description": "CCS enabled"
+  },
+  "xcrypt": {
+   "word": 5,
+   "bit": 6,
+   "leaf": "0xc0000001",
+   "subleaf": null,
+   "register": null,
+   "linux_defined": false,
+   "cpuinfo": "ace",
+   "description": "on-CPU crypto (xcrypt)"
+  },
+  "xcrypt_en": {
+   "word": 5,
+   "bit": 7,
+   "leaf": "0xc0000001",
+   "subleaf": null,
+   "register": null,
+   "linux_defined": false,
+   "cpuinfo": "ace_en",
+   "description": "on-CPU crypto enabled"
+  },
+  "ace2": {
+   "word": 5,
+   "bit": 8,
+   "leaf": "0xc0000001",
+   "subleaf": null,
+   "register": null,
+   "linux_defined": false,
+   "cpuinfo": "ace2",
+   "description": "Advanced Cryptography Engine v2"
+  },
+  "ace2_en": {
+   "word": 5,
+   "bit": 9,
+   "leaf": "0xc0000001",
+   "subleaf": null,
+   "register": null,
+   "linux_defined": false,
+   "cpuinfo": "ace2_en",
+   "description": "ACE v2 enabled"
+  },
+  "phe": {
+   "word": 5,
+   "bit": 10,
+   "leaf": "0xc0000001",
+   "subleaf": null,
+   "register": null,
+   "linux_defined": false,
+   "cpuinfo": "phe",
+   "description": "PadLock Hash Engine"
+  },
+  "phe_en": {
+   "word": 5,
+   "bit": 11,
+   "leaf": "0xc0000001",
+   "subleaf": null,
+   "register": null,
+   "linux_defined": false,
+   "cpuinfo": "phe_en",
+   "description": "PHE enabled"
+  },
+  "pmm": {
+   "word": 5,
+   "bit": 12,
+   "leaf": "0xc0000001",
+   "subleaf": null,
+   "register": null,
+   "linux_defined": false,
+   "cpuinfo": "pmm",
+   "description": "PadLock Montgomery Multiplier"
+  },
+  "pmm_en": {
+   "word": 5,
+   "bit": 13,
+   "leaf": "0xc0000001",
+   "subleaf": null,
+   "register": null,
+   "linux_defined": false,
+   "cpuinfo": "pmm_en",
+   "description": "PMM enabled"
+  },
+  "rng2": {
+   "word": 5,
+   "bit": 22,
+   "leaf": "0xc0000001",
+   "subleaf": null,
+   "register": null,
+   "linux_defined": false,
+   "cpuinfo": "rng2",
+   "description": "RNG v2"
+  },
+  "rng2_en": {
+   "word": 5,
+   "bit": 23,
+   "leaf": "0xc0000001",
+   "subleaf": null,
+   "register": null,
+   "linux_defined": false,
+   "cpuinfo": "rng2_en",
+   "description": "RNG2 enabled"
+  },
+  "phe2": {
+   "word": 5,
+   "bit": 25,
+   "leaf": "0xc0000001",
+   "subleaf": null,
+   "register": null,
+   "linux_defined": false,
+   "cpuinfo": "phe2",
+   "description": "PadLock Hash Engine v2"
+  },
+  "phe2_en": {
+   "word": 5,
+   "bit": 26,
+   "leaf": "0xc0000001",
+   "subleaf": null,
+   "register": null,
+   "linux_defined": false,
+   "cpuinfo": "phe2_en",
+   "description": "PHE2 enabled"
+  },
+  "rsa": {
+   "word": 5,
+   "bit": 27,
+   "leaf": "0xc0000001",
+   "subleaf": null,
+   "register": null,
+   "linux_defined": false,
+   "cpuinfo": "rsa",
+   "description": "Big-number arithmetic"
+  },
+  "rsa_en": {
+   "word": 5,
+   "bit": 28,
+   "leaf": "0xc0000001",
+   "subleaf": null,
+   "register": null,
+   "linux_defined": false,
+   "cpuinfo": "rsa_en",
+   "description": "RSA enabled"
+  },
+  "lahf_lm": {
+   "word": 6,
+   "bit": 0,
+   "leaf": "0x80000001",
+   "subleaf": null,
+   "register": "ECX",
+   "linux_defined": false,
+   "cpuinfo": "lahf_lm",
+   "description": "LAHF/SAHF in long mode"
+  },
+  "cmp_legacy": {
+   "word": 6,
+   "bit": 1,
+   "leaf": "0x80000001",
+   "subleaf": null,
+   "register": "ECX",
+   "linux_defined": false,
+   "cpuinfo": "cmp_legacy",
+   "description": "If yes HyperThreading not valid"
+  },
+  "svm": {
+   "word": 6,
+   "bit": 2,
+   "leaf": "0x80000001",
+   "subleaf": null,
+   "register": "ECX",
+   "linux_defined": false,
+   "cpuinfo": "svm",
+   "description": "Secure Virtual Machine"
+  },
+  "extapic": {
+   "word": 6,
+   "bit": 3,
+   "leaf": "0x80000001",
+   "subleaf": null,
+   "register": "ECX",
+   "linux_defined": false,
+   "cpuinfo": "extapic",
+   "description": "Extended APIC space"
+  },
+  "cr8_legacy": {
+   "word": 6,
+   "bit": 4,
+   "leaf": "0x80000001",
+   "subleaf": null,
+   "register": "ECX",
+   "linux_defined": false,
+   "cpuinfo": "cr8_legacy",
+   "description": "CR8 in 32-bit mode"
+  },
+  "abm": {
+   "word": 6,
+   "bit": 5,
+   "leaf": "0x80000001",
+   "subleaf": null,
+   "register": "ECX",
+   "linux_defined": false,
+   "cpuinfo": "abm",
+   "description": "Advanced bit manipulation"
+  },
+  "sse4a": {
+   "word": 6,
+   "bit": 6,
+   "leaf": "0x80000001",
+   "subleaf": null,
+   "register": "ECX",
+   "linux_defined": false,
+   "cpuinfo": "sse4a",
+   "description": "SSE-4A"
+  },
+  "misalignsse": {
+   "word": 6,
+   "bit": 7,
+   "leaf": "0x80000001",
+   "subleaf": null,
+   "register": "ECX",
+   "linux_defined": false,
+   "cpuinfo": "misalignsse",
+   "description": "Misaligned SSE mode"
+  },
+  "3dnowprefetch": {
+   "word": 6,
+   "bit": 8,
+   "leaf": "0x80000001",
+   "subleaf": null,
+   "register": "ECX",
+   "linux_defined": false,
+   "cpuinfo": "3dnowprefetch",
+   "description": "3DNow prefetch instructions"
+  },
+  "osvw": {
+   "word": 6,
+   "bit": 9,
+   "leaf": "0x80000001",
+   "subleaf": null,
+   "register": "ECX",
+   "linux_defined": false,
+   "cpuinfo": "osvw",
+   "description": "OS Visible Workaround"
+  },
+  "ibs": {
+   "word": 6,
+   "bit": 10,
+   "leaf": "0x80000001",
+   "subleaf": null,
+   "register": "ECX",
+   "linux_defined": false,
+   "cpuinfo": "ibs",
+   "description": "Instruction Based Sampling"
+  },
+  "xop": {
+   "word": 6,
+   "bit": 11,
+   "leaf": "0x80000001",
+   "subleaf": null,
+   "register": "ECX",
+   "linux_defined": false,
+   "cpuinfo": "xop",
+   "description": "Extended AVX instructions"
+  },
+  "skinit": {
+   "word": 6,
+   "bit": 12,
+   "leaf": "0x80000001",
+   "subleaf": null,
+   "register": "ECX",
+   "linux_defined": false,
+   "cpuinfo": "skinit",
+   "description": "SKINIT/STGI instructions"
+  },
+  "wdt": {
+   "word": 6,
+   "bit": 13,
+   "leaf": "0x80000001",
+   "subleaf": null,
+   "register": "ECX",
+   "linux_defined": false,
+   "cpuinfo": "wdt",
+   "description": "Watchdog timer"
+  },
+  "lwp": {
+   "word": 6,
+   "bit": 15,
+   "leaf": "0x80000001",
+   "subleaf": null,
+   "register": "ECX",
+   "linux_defined": false,
+   "cpuinfo": "lwp",
+   "description": "Light Weight Profiling"
+  },
+  "fma4": {
+   "word": 6,
+   "bit": 16,
+   "leaf": "0x80000001",
+   "subleaf": null,
+   "register": "ECX",
+   "linux_defined": false,
+   "cpuinfo": "fma4",
+   "description": "4 operands MAC instructions"
+  },
+  "tce": {
+   "word": 6,
+   "bit": 17,
+   "leaf": "0x80000001",
+   "subleaf": null,
+   "register": "ECX",
+   "linux_defined": false,
+   "cpuinfo": "tce",
+   "description": "Translation Cache Extension"
+  },
+  "nodeid_msr": {
+   "word": 6,
+   "bit": 19,
+   "leaf": "0x80000001",
+   "subleaf": null,
+   "register": "ECX",
+   "linux_defined": false,
+   "cpuinfo": "nodeid_msr",
+   "description": "NodeId MSR"
+  },
+  "tbm": {
+   "word": 6,
+   "bit": 21,
+   "leaf": "0x80000001",
+   "subleaf": null,
+   "register": "ECX",
+   "linux_defined": false,
+   "cpuinfo": "tbm",
+   "description": "Trailing Bit Manipulations"
+  },
+  "topoext": {
+   "word": 6,
+   "bit": 22,
+   "leaf": "0x80000001",
+   "subleaf": null,
+   "register": "ECX",
+   "linux_defined": false,
+   "cpuinfo": "topoext",
+   "description": "Topology extensions CPUID leafs"
+  },
+  "perfctr_core": {
+   "word": 6,
+   "bit": 23,
+   "leaf": "0x80000001",
+   "subleaf": null,
+   "register": "ECX",
+   "linux_defined": false,
+   "cpuinfo": "perfctr_core",
+   "description": "Core performance counter extensions"
+  },
+  "perfctr_nb": {
+   "word": 6,
+   "bit": 24,
+   "leaf": "0x80000001",
+   "subleaf": null,
+   "register": "ECX",
+   "linux_defined": false,
+   "cpuinfo": "perfctr_nb",
+   "description": "NB performance counter extensions"
+  },
+  "bpext": {
+   "word": 6,
+   "bit": 26,
+   "leaf": "0x80000001",
+   "subleaf": null,
+   "register": "ECX",
+   "linux_defined": false,
+   "cpuinfo": "bpext",
+   "description": "Data breakpoint extension"
+  },
+  "ptsc": {
+   "word": 6,
+   "bit": 27,
+   "leaf": "0x80000001",
+   "subleaf": null,
+   "register": "ECX",
+   "linux_defined": false,
+   "cpuinfo": "ptsc",
+   "description": "Performance time-stamp counter"
+  },
+  "perfctr_llc": {
+   "word": 6,
+   "bit": 28,
+   "leaf": "0x80000001",
+   "subleaf": null,
+   "register": "ECX",
+   "linux_defined": false,
+   "cpuinfo": "perfctr_llc",
+   "description": "Last Level Cache performance counter extensions"
+  },
+  "mwaitx": {
+   "word": 6,
+   "bit": 29,
+   "leaf": "0x80000001",
+   "subleaf": null,
+   "register": "ECX",
+   "linux_defined": false,
+   "cpuinfo": "mwaitx",
+   "description": "MWAIT extension (MONITORX/MWAITX instructions)"
+  },
+  "ring3mwait": {
+   "word": 7,
+   "bit": 0,
+   "linux_defined": true,
+   "cpuinfo": "ring3mwait",
+   "description": "Ring 3 MONITOR/MWAIT instructions"
+  },
+  "cpuid_fault": {
+   "word": 7,
+   "bit": 1,
+   "linux_defined": true,
+   "cpuinfo": "cpuid_fault",
+   "description": "Intel CPUID faulting"
+  },
+  "cpb": {
+   "word": 7,
+   "bit": 2,
+   "linux_defined": true,
+   "cpuinfo": "cpb",
+   "description": "AMD Core Performance Boost"
+  },
+  "epb": {
+   "word": 7,
+   "bit": 3,
+   "linux_defined": true,
+   "cpuinfo": "epb",
+   "description": "IA32_ENERGY_PERF_BIAS support"
+  },
+  "cat_l3": {
+   "word": 7,
+   "bit": 4,
+   "linux_defined": true,
+   "cpuinfo": "cat_l3",
+   "description": "Cache Allocation Technology L3"
+  },
+  "cat_l2": {
+   "word": 7,
+   "bit": 5,
+   "linux_defined": true,
+   "cpuinfo": "cat_l2",
+   "description": "Cache Allocation Technology L2"
+  },
+  "cdp_l3": {
+   "word": 7,
+   "bit": 6,
+   "linux_defined": true,
+   "cpuinfo": "cdp_l3",
+   "description": "Code and Data Prioritization L3"
+  },
+  "tdx_host_platform": {
+   "word": 7,
+   "bit": 7,
+   "linux_defined": true,
+   "cpuinfo": "tdx_host_platform",
+   "description": "Platform supports being a TDX host"
+  },
+  "hw_pstate": {
+   "word": 7,
+   "bit": 8,
+   "linux_defined": true,
+   "cpuinfo": "hw_pstate",
+   "description": "AMD HW-PState"
+  },
+  "proc_feedback": {
+   "word": 7,
+   "bit": 9,
+   "linux_defined": true,
+   "cpuinfo": "proc_feedback",
+   "description": "AMD ProcFeedbackInterface"
+  },
+  "xcompacted": {
+   "word": 7,
+   "bit": 10,
+   "linux_defined": true,
+   "cpuinfo": null,
+   "description": "Use compacted XSTATE (XSAVES or XSAVEC)"
+  },
+  "pti": {
+   "word": 7,
+   "bit": 11,
+   "linux_defined": true,
+   "cpuinfo": "pti",
+   "description": "Kernel Page Table Isolation enabled"
+  },
+  "kernel_ibrs": {
+   "word": 7,
+   "bit": 12,
+   "linux_defined": true,
+   "cpuinfo": null,
+   "description": "Set/clear IBRS on kernel entry/exit"
+  },
+  "rsb_vmexit": {
+   "word": 7,
+   "bit": 13,
+   "linux_defined": true,
+   "cpuinfo": null,
+   "description": "Fill RSB on VM-Exit"
+  },
+  "intel_ppin": {
+   "word": 7,
+   "bit": 14,
+   "linux_defined": true,
+   "cpuinfo": "intel_ppin",
+   "description": "Intel Processor Inventory Number"
+  },
+  "cdp_l2": {
+   "word": 7,
+   "bit": 15,
+   "linux_defined": true,
+   "cpuinfo": "cdp_l2",
+   "description": "Code and Data Prioritization L2"
+  },
+  "msr_spec_ctrl": {
+   "word": 7,
+   "bit": 16,
+   "linux_defined": true,
+   "cpuinfo": null,
+   "description": "MSR SPEC_CTRL is implemented"
+  },
+  "ssbd": {
+   "word": 7,
+   "bit": 17,
+   "linux_defined": true,
+   "cpuinfo": "ssbd",
+   "description": "Speculative Store Bypass Disable"
+  },
+  "mba": {
+   "word": 7,
+   "bit": 18,
+   "linux_defined": true,
+   "cpuinfo": "mba",
+   "description": "Memory Bandwidth Allocation"
+  },
+  "rsb_ctxsw": {
+   "word": 7,
+   "bit": 19,
+   "linux_defined": true,
+   "cpuinfo": null,
+   "description": "Fill RSB on context switches"
+  },
+  "perfmon_v2": {
+   "word": 7,
+   "bit": 20,
+   "linux_defined": true,
+   "cpuinfo": "perfmon_v2",
+   "description": "AMD Performance Monitoring Version 2"
+  },
+  "use_ibrs_fw": {
+   "word": 7,
+   "bit": 22,
+   "linux_defined": true,
+   "cpuinfo": null,
+   "description": "Use IBRS during runtime firmware calls"
+  },
+  "spec_store_bypass_disable": {
+   "word": 7,
+   "bit": 23,
+   "linux_defined": true,
+   "cpuinfo": null,
+   "description": "Disable Speculative Store Bypass."
+  },
+  "ls_cfg_ssbd": {
+   "word": 7,
+   "bit": 24,
+   "linux_defined": true,
+   "cpuinfo": null,
+   "description": "AMD SSBD implementation via LS_CFG MSR"
+  },
+  "ibrs": {
+   "word": 7,
+   "bit": 25,
+   "linux_defined": true,
+   "cpuinfo": "ibrs",
+   "description": "Indirect Branch Restricted Speculation"
+  },
+  "ibpb": {
+   "word": 7,
+   "bit": 26,
+   "linux_defined": true,
+   "cpuinfo": "ibpb",
+   "description": "Indirect Branch Prediction Barrier without a guaranteed RSB flush"
+  },
+  "stibp": {
+   "word": 7,
+   "bit": 27,
+   "linux_defined": true,
+   "cpuinfo": "stibp",
+   "description": "Single Thread Indirect Branch Predictors"
+  },
+  "zen": {
+   "word": 7,
+   "bit": 28,
+   "linux_defined": true,
+   "cpuinfo": null,
+   "description": "Generic flag for all Zen and newer"
+  },
+  "l1tf_pteinv": {
+   "word": 7,
+   "bit": 29,
+   "linux_defined": true,
+   "cpuinfo": null,
+   "description": "L1TF workaround PTE inversion"
+  },
+  "ibrs_enhanced": {
+   "word": 7,
+   "bit": 30,
+   "linux_defined": true,
+   "cpuinfo": "ibrs_enhanced",
+   "description": "Enhanced IBRS"
+  },
+  "msr_ia32_feat_ctl": {
+   "word": 7,
+   "bit": 31,
+   "linux_defined": true,
+   "cpuinfo": null,
+   "description": "MSR IA32_FEAT_CTL configured"
+  },
+  "tpr_shadow": {
+   "word": 8,
+   "bit": 0,
+   "leaf": null,
+   "subleaf": null,
+   "register": null,
+   "linux_defined": true,
+   "cpuinfo": "tpr_shadow",
+   "description": "Intel TPR Shadow"
+  },
+  "flexpriority": {
+   "word": 8,
+   "bit": 1,
+   "leaf": null,
+   "subleaf": null,
+   "register": null,
+   "linux_defined": true,
+   "cpuinfo": "flexpriority",
+   "description": "Intel FlexPriority"
+  },
+  "ept": {
+   "word": 8,
+   "bit": 2,
+   "leaf": null,
+   "subleaf": null,
+   "register": null,
+   "linux_defined": true,
+   "cpuinfo": "ept",
+   "description": "Intel Extended Page Table"
+  },
+  "vpid": {
+   "word": 8,
+   "bit": 3,
+   "leaf": null,
+   "subleaf": null,
+   "register": null,
+   "linux_defined": true,
+   "cpuinfo": "vpid",
+   "description": "Intel Virtual Processor ID"
+  },
+  "coherency_sfw_no": {
+   "word": 8,
+   "bit": 4,
+   "leaf": null,
+   "subleaf": null,
+   "register": null,
+   "linux_defined": true,
+   "cpuinfo": null,
+   "description": "SNP cache coherency software work around not needed"
+  },
+  "vmmcall": {
+   "word": 8,
+   "bit": 15,
+   "leaf": null,
+   "subleaf": null,
+   "register": null,
+   "linux_defined": true,
+   "cpuinfo": "vmmcall",
+   "description": "Prefer VMMCALL to VMCALL"
+  },
+  "xenpv": {
+   "word": 8,
+   "bit": 16,
+   "leaf": null,
+   "subleaf": null,
+   "register": null,
+   "linux_defined": true,
+   "cpuinfo": null,
+   "description": "Xen paravirtual guest"
+  },
+  "ept_ad": {
+   "word": 8,
+   "bit": 17,
+   "leaf": null,
+   "subleaf": null,
+   "register": null,
+   "linux_defined": true,
+   "cpuinfo": "ept_ad",
+   "description": "Intel Extended Page Table access-dirty bit"
+  },
+  "vmcall": {
+   "word": 8,
+   "bit": 18,
+   "leaf": null,
+   "subleaf": null,
+   "register": null,
+   "linux_defined": true,
+   "cpuinfo": null,
+   "description": "Hypervisor supports the VMCALL instruction"
+  },
+  "vmw_vmmcall": {
+   "word": 8,
+   "bit": 19,
+   "leaf": null,
+   "subleaf": null,
+   "register": null,
+   "linux_defined": true,
+   "cpuinfo": null,
+   "description": "VMware prefers VMMCALL hypercall instruction"
+  },
+  "pvunlock": {
+   "word": 8,
+   "bit": 20,
+   "leaf": null,
+   "subleaf": null,
+   "register": null,
+   "linux_defined": true,
+   "cpuinfo": null,
+   "description": "PV unlock function"
+  },
+  "vcpupreempt": {
+   "word": 8,
+   "bit": 21,
+   "leaf": null,
+   "subleaf": null,
+   "register": null,
+   "linux_defined": true,
+   "cpuinfo": null,
+   "description": "PV vcpu_is_preempted function"
+  },
+  "tdx_guest": {
+   "word": 8,
+   "bit": 22,
+   "leaf": null,
+   "subleaf": null,
+   "register": null,
+   "linux_defined": true,
+   "cpuinfo": "tdx_guest",
+   "description": "Intel Trust Domain Extensions Guest"
+  },
+  "fsgsbase": {
+   "word": 9,
+   "bit": 0,
+   "leaf": "0x00000007",
+   "subleaf": 0,
+   "register": "EBX",
+   "linux_defined": false,
+   "cpuinfo": "fsgsbase",
+   "description": "RDFSBASE, WRFSBASE, RDGSBASE, WRGSBASE instructions"
+  },
+  "tsc_adjust": {
+   "word": 9,
+   "bit": 1,
+   "leaf": "0x00000007",
+   "subleaf": 0,
+   "register": "EBX",
+   "linux_defined": false,
+   "cpuinfo": "tsc_adjust",
+   "description": "TSC adjustment MSR 0x3B"
+  },
+  "sgx": {
+   "word": 9,
+   "bit": 2,
+   "leaf": "0x00000007",
+   "subleaf": 0,
+   "register": "EBX",
+   "linux_defined": false,
+   "cpuinfo": "sgx",
+   "description": "Software Guard Extensions"
+  },
+  "bmi1": {
+   "word": 9,
+   "bit": 3,
+   "leaf": "0x00000007",
+   "subleaf": 0,
+   "register": "EBX",
+   "linux_defined": false,
+   "cpuinfo": "bmi1",
+   "description": "1st group bit manipulation extensions"
+  },
+  "hle": {
+   "word": 9,
+   "bit": 4,
+   "leaf": "0x00000007",
+   "subleaf": 0,
+   "register": "EBX",
+   "linux_defined": false,
+   "cpuinfo": "hle",
+   "description": "Hardware Lock Elision"
+  },
+  "avx2": {
+   "word": 9,
+   "bit": 5,
+   "leaf": "0x00000007",
+   "subleaf": 0,
+   "register": "EBX",
+   "linux_defined": false,
+   "cpuinfo": "avx2",
+   "description": "AVX2 instructions"
+  },
+  "fdp_excptn_only": {
+   "word": 9,
+   "bit": 6,
+   "leaf": "0x00000007",
+   "subleaf": 0,
+   "register": "EBX",
+   "linux_defined": false,
+   "cpuinfo": null,
+   "description": "FPU data pointer updated only on x87 exceptions"
+  },
+  "smep": {
+   "word": 9,
+   "bit": 7,
+   "leaf": "0x00000007",
+   "subleaf": 0,
+   "register": "EBX",
+   "linux_defined": false,
+   "cpuinfo": "smep",
+   "description": "Supervisor Mode Execution Protection"
+  },
+  "bmi2": {
+   "word": 9,
+   "bit": 8,
+   "leaf": "0x00000007",
+   "subleaf": 0,
+   "register": "EBX",
+   "linux_defined": false,
+   "cpuinfo": "bmi2",
+   "description": "2nd group bit manipulation extensions"
+  },
+  "erms": {
+   "word": 9,
+   "bit": 9,
+   "leaf": "0x00000007",
+   "subleaf": 0,
+   "register": "EBX",
+   "linux_defined": false,
+   "cpuinfo": "erms",
+   "description": "Enhanced REP MOVSB/STOSB instructions"
+  },
+  "invpcid": {
+   "word": 9,
+   "bit": 10,
+   "leaf": "0x00000007",
+   "subleaf": 0,
+   "register": "EBX",
+   "linux_defined": false,
+   "cpuinfo": "invpcid",
+   "description": "Invalidate Processor Context ID"
+  },
+  "rtm": {
+   "word": 9,
+   "bit": 11,
+   "leaf": "0x00000007",
+   "subleaf": 0,
+   "register": "EBX",
+   "linux_defined": false,
+   "cpuinfo": "rtm",
+   "description": "Restricted Transactional Memory"
+  },
+  "cqm": {
+   "word": 9,
+   "bit": 12,
+   "leaf": "0x00000007",
+   "subleaf": 0,
+   "register": "EBX",
+   "linux_defined": false,
+   "cpuinfo": "cqm",
+   "description": "Cache QoS Monitoring"
+  },
+  "zero_fcs_fds": {
+   "word": 9,
+   "bit": 13,
+   "leaf": "0x00000007",
+   "subleaf": 0,
+   "register": "EBX",
+   "linux_defined": false,
+   "cpuinfo": null,
+   "description": "Zero out FPU CS and FPU DS"
+  },
+  "mpx": {
+   "word": 9,
+   "bit": 14,
+   "leaf": "0x00000007",
+   "subleaf": 0,
+   "register": "EBX",
+   "linux_defined": false,
+   "cpuinfo": "mpx",
+   "description": "Memory Protection Extension"
+  },
+  "rdt_a": {
+   "word": 9,
+   "bit": 15,
+   "leaf": "0x00000007",
+   "subleaf": 0,
+   "register": "EBX",
+   "linux_defined": false,
+   "cpuinfo": "rdt_a",
+   "description": "Resource Director Technology Allocation"
+  },
+  "avx512f": {
+   "word": 9,
+   "bit": 16,
+   "leaf": "0x00000007",
+   "subleaf": 0,
+   "register": "EBX",
+   "linux_defined": false,
+   "cpuinfo": "avx512f",
+   "description": "AVX-512 Foundation"
+  },
+  "avx512dq": {
+   "word": 9,
+   "bit": 17,
+   "leaf": "0x00000007",
+   "subleaf": 0,
+   "register": "EBX",
+   "linux_defined": false,
+   "cpuinfo": "avx512dq",
+   "description": "AVX-512 DQ (Double/Quad granular) Instructions"
+  },
+  "rdseed": {
+   "word": 9,
+   "bit": 18,
+   "leaf": "0x00000007",
+   "subleaf": 0,
+   "register": "EBX",
+   "linux_defined": false,
+   "cpuinfo": "rdseed",
+   "description": "RDSEED instruction"
+  },
+  "adx": {
+   "word": 9,
+   "bit": 19,
+   "leaf": "0x00000007",
+   "subleaf": 0,
+   "register": "EBX",
+   "linux_defined": false,
+   "cpuinfo": "adx",
+   "description": "ADCX and ADOX instructions"
+  },
+  "smap": {
+   "word": 9,
+   "bit": 20,
+   "leaf": "0x00000007",
+   "subleaf": 0,
+   "register": "EBX",
+   "linux_defined": false,
+   "cpuinfo": "smap",
+   "description": "Supervisor Mode Access Prevention"
+  },
+  "avx512ifma": {
+   "word": 9,
+   "bit": 21,
+   "leaf": "0x00000007",
+   "subleaf": 0,
+   "register": "EBX",
+   "linux_defined": false,
+   "cpuinfo": "avx512ifma",
+   "description": "AVX-512 Integer Fused Multiply-Add instructions"
+  },
+  "clflushopt": {
+   "word": 9,
+   "bit": 23,
+   "leaf": "0x00000007",
+   "subleaf": 0,
+   "register": "EBX",
+   "linux_defined": false,
+   "cpuinfo": "clflushopt",
+   "description": "CLFLUSHOPT instruction"
+  },
+  "clwb": {
+   "word": 9,
+   "bit": 24,
+   "leaf": "0x00000007",
+   "subleaf": 0,
+   "register": "EBX",
+   "linux_defined": false,
+   "cpuinfo": "clwb",
+   "description": "CLWB instruction"
+  },
+  "intel_pt": {
+   "word": 9,
+   "bit": 25,
+   "leaf": "0x00000007",
+   "subleaf": 0,
+   "register": "EBX",
+   "linux_defined": false,
+   "cpuinfo": "intel_pt",
+   "description": "Intel Processor Trace"
+  },
+  "avx512pf": {
+   "word": 9,
+   "bit": 26,
+   "leaf": "0x00000007",
+   "subleaf": 0,
+   "register": "EBX",
+   "linux_defined": false,
+   "cpuinfo": "avx512pf",
+   "description": "AVX-512 Prefetch"
+  },
+  "avx512er": {
+   "word": 9,
+   "bit": 27,
+   "leaf": "0x00000007",
+   "subleaf": 0,
+   "register": "EBX",
+   "linux_defined": false,
+   "cpuinfo": "avx512er",
+   "description": "AVX-512 Exponential and Reciprocal"
+  },
+  "avx512cd": {
+   "word": 9,
+   "bit": 28,
+   "leaf": "0x00000007",
+   "subleaf": 0,
+   "register": "EBX",
+   "linux_defined": false,
+   "cpuinfo": "avx512cd",
+   "description": "AVX-512 Conflict Detection"
+  },
+  "sha_ni": {
+   "word": 9,
+   "bit": 29,
+   "leaf": "0x00000007",
+   "subleaf": 0,
+   "register": "EBX",
+   "linux_defined": false,
+   "cpuinfo": "sha_ni",
+   "description": "SHA1/SHA256 Instruction Extensions"
+  },
+  "avx512bw": {
+   "word": 9,
+   "bit": 30,
+   "leaf": "0x00000007",
+   "subleaf": 0,
+   "register": "EBX",
+   "linux_defined": false,
+   "cpuinfo": "avx512bw",
+   "description": "AVX-512 BW (Byte/Word granular) Instructions"
+  },
+  "avx512vl": {
+   "word": 9,
+   "bit": 31,
+   "leaf": "0x00000007",
+   "subleaf": 0,
+   "register": "EBX",
+   "linux_defined": false,
+   "cpuinfo": "avx512vl",
+   "description": "AVX-512 VL (128/256 Vector Length) Extensions"
+  },
+  "xsaveopt": {
+   "word": 10,
+   "bit": 0,
+   "leaf": "0x0000000d",
+   "subleaf": 1,
+   "register": "EAX",
+   "linux_defined": false,
+   "cpuinfo": "xsaveopt",
+   "description": "XSAVEOPT instruction"
+  },
+  "xsavec": {
+   "word": 10,
+   "bit": 1,
+   "leaf": "0x0000000d",
+   "subleaf": 1,
+   "register": "EAX",
+   "linux_defined": false,
+   "cpuinfo": "xsavec",
+   "description": "XSAVEC instruction"
+  },
+  "xgetbv1": {
+   "word": 10,
+   "bit": 2,
+   "leaf": "0x0000000d",
+   "subleaf": 1,
+   "register": "EAX",
+   "linux_defined": false,
+   "cpuinfo": "xgetbv1",
+   "description": "XGETBV with ECX = 1 instruction"
+  },
+  "xsaves": {
+   "word": 10,
+   "bit": 3,
+   "leaf": "0x0000000d",
+   "subleaf": 1,
+   "register": "EAX",
+   "linux_defined": false,
+   "cpuinfo": "xsaves",
+   "description": "XSAVES/XRSTORS instructions"
+  },
+  "xfd": {
+   "word": 10,
+   "bit": 4,
+   "leaf": "0x0000000d",
+   "subleaf": 1,
+   "register": "EAX",
+   "linux_defined": false,
+   "cpuinfo": null,
+   "description": "eXtended Feature Disabling"
+  },
+  "cqm_llc": {
+   "word": 11,
+   "bit": 0,
+   "linux_defined": true,
+   "cpuinfo": "cqm_llc",
+   "description": "LLC QoS if 1"
+  },
+  "cqm_occup_llc": {
+   "word": 11,
+   "bit": 1,
+   "linux_defined": true,
+   "cpuinfo": "cqm_occup_llc",
+   "description": "LLC occupancy monitoring"
+  },
+  "cqm_mbm_total": {
+   "word": 11,
+   "bit": 2,
+   "linux_defined": true,
+   "cpuinfo": "cqm_mbm_total",
+   "description": "LLC Total MBM monitoring"
+  },
+  "cqm_mbm_local": {
+   "word": 11,
+   "bit": 3,
+   "linux_defined": true,
+   "cpuinfo": "cqm_mbm_local",
+   "description": "LLC Local MBM monitoring"
+  },
+  "fence_swapgs_user": {
+   "word": 11,
+   "bit": 4,
+   "linux_defined": true,
+   "cpuinfo": null,
+   "description": "LFENCE in user entry SWAPGS path"
+  },
+  "fence_swapgs_kernel": {
+   "word": 11,
+   "bit": 5,
+   "linux_defined": true,
+   "cpuinfo": null,
+   "description": "LFENCE in kernel entry SWAPGS path"
+  },
+  "split_lock_detect": {
+   "word": 11,
+   "bit": 6,
+   "linux_defined": true,
+   "cpuinfo": "split_lock_detect",
+   "description": "#AC for split lock"
+  },
+  "per_thread_mba": {
+   "word": 11,
+   "bit": 7,
+   "linux_defined": true,
+   "cpuinfo": null,
+   "description": "Per-thread Memory Bandwidth Allocation"
+  },
+  "sgx1": {
+   "word": 11,
+   "bit": 8,
+   "linux_defined": true,
+   "cpuinfo": null,
+   "description": "Basic SGX"
+  },
+  "sgx2": {
+   "word": 11,
+   "bit": 9,
+   "linux_defined": true,
+   "cpuinfo": null,
+   "description": "SGX Enclave Dynamic Memory Management (EDMM)"
+  },
+  "entry_ibpb": {
+   "word": 11,
+   "bit": 10,
+   "linux_defined": true,
+   "cpuinfo": null,
+   "description": "Issue an IBPB on kernel entry"
+  },
+  "rrsba_ctrl": {
+   "word": 11,
+   "bit": 11,
+   "linux_defined": true,
+   "cpuinfo": null,
+   "description": "RET prediction control"
+  },
+  "retpoline": {
+   "word": 11,
+   "bit": 12,
+   "linux_defined": true,
+   "cpuinfo": null,
+   "description": "Generic Retpoline mitigation for Spectre variant 2"
+  },
+  "retpoline_lfence": {
+   "word": 11,
+   "bit": 13,
+   "linux_defined": true,
+   "cpuinfo": null,
+   "description": "Use LFENCE for Spectre variant 2"
+  },
+  "rethunk": {
+   "word": 11,
+   "bit": 14,
+   "linux_defined": true,
+   "cpuinfo": null,
+   "description": "Use REturn THUNK"
+  },
+  "unret": {
+   "word": 11,
+   "bit": 15,
+   "linux_defined": true,
+   "cpuinfo": null,
+   "description": "AMD BTB untrain return"
+  },
+  "use_ibpb_fw": {
+   "word": 11,
+   "bit": 16,
+   "linux_defined": true,
+   "cpuinfo": null,
+   "description": "Use IBPB during runtime firmware calls"
+  },
+  "rsb_vmexit_lite": {
+   "word": 11,
+   "bit": 17,
+   "linux_defined": true,
+   "cpuinfo": null,
+   "description": "Fill RSB on VM exit when EIBRS is enabled"
+  },
+  "sgx_edeccssa": {
+   "word": 11,
+   "bit": 18,
+   "linux_defined": true,
+   "cpuinfo": null,
+   "description": "SGX EDECCSSA user leaf function"
+  },
+  "call_depth": {
+   "word": 11,
+   "bit": 19,
+   "linux_defined": true,
+   "cpuinfo": null,
+   "description": "Call depth tracking for RSB stuffing"
+  },
+  "msr_tsx_ctrl": {
+   "word": 11,
+   "bit": 20,
+   "linux_defined": true,
+   "cpuinfo": null,
+   "description": "MSR IA32_TSX_CTRL (Intel) implemented"
+  },
+  "smba": {
+   "word": 11,
+   "bit": 21,
+   "linux_defined": true,
+   "cpuinfo": null,
+   "description": "Slow Memory Bandwidth Allocation"
+  },
+  "bmec": {
+   "word": 11,
+   "bit": 22,
+   "linux_defined": true,
+   "cpuinfo": null,
+   "description": "Bandwidth Monitoring Event Configuration"
+  },
+  "user_shstk": {
+   "word": 11,
+   "bit": 23,
+   "linux_defined": true,
+   "cpuinfo": "user_shstk",
+   "description": "Shadow stack support for user mode applications"
+  },
+  "srso": {
+   "word": 11,
+   "bit": 24,
+   "linux_defined": true,
+   "cpuinfo": null,
+   "description": "AMD BTB untrain RETs"
+  },
+  "srso_alias": {
+   "word": 11,
+   "bit": 25,
+   "linux_defined": true,
+   "cpuinfo": null,
+   "description": "AMD BTB untrain RETs through aliasing"
+  },
+  "ibpb_on_vmexit": {
+   "word": 11,
+   "bit": 26,
+   "linux_defined": true,
+   "cpuinfo": null,
+   "description": "Issue an IBPB only on VMEXIT"
+  },
+  "apic_msrs_fence": {
+   "word": 11,
+   "bit": 27,
+   "linux_defined": true,
+   "cpuinfo": null,
+   "description": "IA32_TSC_DEADLINE and X2APIC MSRs need fencing"
+  },
+  "zen2": {
+   "word": 11,
+   "bit": 28,
+   "linux_defined": true,
+   "cpuinfo": null,
+   "description": "CPU based on Zen2 microarchitecture"
+  },
+  "zen3": {
+   "word": 11,
+   "bit": 29,
+   "linux_defined": true,
+   "cpuinfo": null,
+   "description": "CPU based on Zen3 microarchitecture"
+  },
+  "zen4": {
+   "word": 11,
+   "bit": 30,
+   "linux_defined": true,
+   "cpuinfo": null,
+   "description": "CPU based on Zen4 microarchitecture"
+  },
+  "zen1": {
+   "word": 11,
+   "bit": 31,
+   "linux_defined": true,
+   "cpuinfo": null,
+   "description": "CPU based on Zen1 microarchitecture"
+  },
+  "sha512": {
+   "word": 12,
+   "bit": 0,
+   "leaf": "0x00000007",
+   "subleaf": 1,
+   "register": "EAX",
+   "linux_defined": false,
+   "cpuinfo": null,
+   "description": "SHA512 instructions"
+  },
+  "sm3": {
+   "word": 12,
+   "bit": 1,
+   "leaf": "0x00000007",
+   "subleaf": 1,
+   "register": "EAX",
+   "linux_defined": false,
+   "cpuinfo": null,
+   "description": "SM3 instructions"
+  },
+  "sm4": {
+   "word": 12,
+   "bit": 2,
+   "leaf": "0x00000007",
+   "subleaf": 1,
+   "register": "EAX",
+   "linux_defined": false,
+   "cpuinfo": null,
+   "description": "SM4 instructions"
+  },
+  "avx_vnni": {
+   "word": 12,
+   "bit": 4,
+   "leaf": "0x00000007",
+   "subleaf": 1,
+   "register": "EAX",
+   "linux_defined": false,
+   "cpuinfo": "avx_vnni",
+   "description": "AVX VNNI instructions"
+  },
+  "avx512_bf16": {
+   "word": 12,
+   "bit": 5,
+   "leaf": "0x00000007",
+   "subleaf": 1,
+   "register": "EAX",
+   "linux_defined": false,
+   "cpuinfo": "avx512_bf16",
+   "description": "AVX512 BFLOAT16 instructions"
+  },
+  "lass": {
+   "word": 12,
+   "bit": 6,
+   "leaf": "0x00000007",
+   "subleaf": 1,
+   "register": "EAX",
+   "linux_defined": false,
+   "cpuinfo": "lass",
+   "description": "Linear Address Space Separation"
+  },
+  "cmpccxadd": {
+   "word": 12,
+   "bit": 7,
+   "leaf": "0x00000007",
+   "subleaf": 1,
+   "register": "EAX",
+   "linux_defined": false,
+   "cpuinfo": null,
+   "description": "CMPccXADD instructions"
+  },
+  "arch_perfmon_ext": {
+   "word": 12,
+   "bit": 8,
+   "leaf": "0x00000007",
+   "subleaf": 1,
+   "register": "EAX",
+   "linux_defined": false,
+   "cpuinfo": null,
+   "description": "Intel Architectural PerfMon Extension"
+  },
+  "fzrm": {
+   "word": 12,
+   "bit": 10,
+   "leaf": "0x00000007",
+   "subleaf": 1,
+   "register": "EAX",
+   "linux_defined": false,
+   "cpuinfo": null,
+   "description": "Fast zero-length REP MOVSB"
+  },
+  "fsrs": {
+   "word": 12,
+   "bit": 11,
+   "leaf": "0x00000007",
+   "subleaf": 1,
+   "register": "EAX",
+   "linux_defined": false,
+   "cpuinfo": null,
+   "description": "Fast short REP STOSB"
+  },
+  "fsrc": {
+   "word": 12,
+   "bit": 12,
+   "leaf": "0x00000007",
+   "subleaf": 1,
+   "register": "EAX",
+   "linux_defined": false,
+   "cpuinfo": null,
+   "description": "Fast short REP {CMPSB,SCASB}"
+  },
+  "fred": {
+   "word": 12,
+   "bit": 17,
+   "leaf": "0x00000007",
+   "subleaf": 1,
+   "register": "EAX",
+   "linux_defined": false,
+   "cpuinfo": "fred",
+   "description": "Flexible Return and Event Delivery"
+  },
+  "lkgs": {
+   "word": 12,
+   "bit": 18,
+   "leaf": "0x00000007",
+   "subleaf": 1,
+   "register": "EAX",
+   "linux_defined": false,
+   "cpuinfo": null,
+   "description": "Like MOV_GS except MSR_KERNEL_GS_BASE = GS.base"
+  },
+  "wrmsrns": {
+   "word": 12,
+   "bit": 19,
+   "leaf": "0x00000007",
+   "subleaf": 1,
+   "register": "EAX",
+   "linux_defined": false,
+   "cpuinfo": null,
+   "description": "Non-serializing WRMSR"
+  },
+  "amx_fp16": {
+   "word": 12,
+   "bit": 21,
+   "leaf": "0x00000007",
+   "subleaf": 1,
+   "register": "EAX",
+   "linux_defined": false,
+   "cpuinfo": null,
+   "description": "AMX fp16 Support"
+  },
+  "avx_ifma": {
+   "word": 12,
+   "bit": 23,
+   "leaf": "0x00000007",
+   "subleaf": 1,
+   "register": "EAX",
+   "linux_defined": false,
+   "cpuinfo": null,
+   "description": "Support for VPMADD52[H,L]UQ"
+  },
+  "lam": {
+   "word": 12,
+   "bit": 26,
+   "leaf": "0x00000007",
+   "subleaf": 1,
+   "register": "EAX",
+   "linux_defined": false,
+   "cpuinfo": "lam",
+   "description": "Linear Address Masking"
+  },
+  "movrs": {
+   "word": 12,
+   "bit": 31,
+   "leaf": "0x00000007",
+   "subleaf": 1,
+   "register": "EAX",
+   "linux_defined": false,
+   "cpuinfo": null,
+   "description": "MOVRS instructions"
+  },
+  "clzero": {
+   "word": 13,
+   "bit": 0,
+   "leaf": "0x80000008",
+   "subleaf": null,
+   "register": "EBX",
+   "linux_defined": false,
+   "cpuinfo": "clzero",
+   "description": "CLZERO instruction"
+  },
+  "irperf": {
+   "word": 13,
+   "bit": 1,
+   "leaf": "0x80000008",
+   "subleaf": null,
+   "register": "EBX",
+   "linux_defined": false,
+   "cpuinfo": "irperf",
+   "description": "Instructions Retired Count"
+  },
+  "xsaveerptr": {
+   "word": 13,
+   "bit": 2,
+   "leaf": "0x80000008",
+   "subleaf": null,
+   "register": "EBX",
+   "linux_defined": false,
+   "cpuinfo": "xsaveerptr",
+   "description": "Always save/restore FP error pointers"
+  },
+  "invlpgb": {
+   "word": 13,
+   "bit": 3,
+   "leaf": "0x80000008",
+   "subleaf": null,
+   "register": "EBX",
+   "linux_defined": false,
+   "cpuinfo": null,
+   "description": "INVLPGB and TLBSYNC instructions supported"
+  },
+  "rdpru": {
+   "word": 13,
+   "bit": 4,
+   "leaf": "0x80000008",
+   "subleaf": null,
+   "register": "EBX",
+   "linux_defined": false,
+   "cpuinfo": "rdpru",
+   "description": "Read processor register at user level"
+  },
+  "wbnoinvd": {
+   "word": 13,
+   "bit": 9,
+   "leaf": "0x80000008",
+   "subleaf": null,
+   "register": "EBX",
+   "linux_defined": false,
+   "cpuinfo": "wbnoinvd",
+   "description": "WBNOINVD instruction"
+  },
+  "amd_ibpb": {
+   "word": 13,
+   "bit": 12,
+   "leaf": "0x80000008",
+   "subleaf": null,
+   "register": "EBX",
+   "linux_defined": false,
+   "cpuinfo": null,
+   "description": "Indirect Branch Prediction Barrier"
+  },
+  "amd_ibrs": {
+   "word": 13,
+   "bit": 14,
+   "leaf": "0x80000008",
+   "subleaf": null,
+   "register": "EBX",
+   "linux_defined": false,
+   "cpuinfo": null,
+   "description": "Indirect Branch Restricted Speculation"
+  },
+  "amd_stibp": {
+   "word": 13,
+   "bit": 15,
+   "leaf": "0x80000008",
+   "subleaf": null,
+   "register": "EBX",
+   "linux_defined": false,
+   "cpuinfo": null,
+   "description": "Single Thread Indirect Branch Predictors"
+  },
+  "amd_stibp_always_on": {
+   "word": 13,
+   "bit": 17,
+   "leaf": "0x80000008",
+   "subleaf": null,
+   "register": "EBX",
+   "linux_defined": false,
+   "cpuinfo": null,
+   "description": "Single Thread Indirect Branch Predictors always-on preferred"
+  },
+  "amd_ibrs_same_mode": {
+   "word": 13,
+   "bit": 19,
+   "leaf": "0x80000008",
+   "subleaf": null,
+   "register": "EBX",
+   "linux_defined": false,
+   "cpuinfo": null,
+   "description": "Indirect Branch Restricted Speculation same mode protection"
+  },
+  "efer_lmsle_mbz": {
+   "word": 13,
+   "bit": 20,
+   "leaf": "0x80000008",
+   "subleaf": null,
+   "register": "EBX",
+   "linux_defined": false,
+   "cpuinfo": null,
+   "description": "EFER.LMSLE must be zero"
+  },
+  "amd_ppin": {
+   "word": 13,
+   "bit": 23,
+   "leaf": "0x80000008",
+   "subleaf": null,
+   "register": "EBX",
+   "linux_defined": false,
+   "cpuinfo": "amd_ppin",
+   "description": "Protected Processor Inventory Number"
+  },
+  "amd_ssbd": {
+   "word": 13,
+   "bit": 24,
+   "leaf": "0x80000008",
+   "subleaf": null,
+   "register": "EBX",
+   "linux_defined": false,
+   "cpuinfo": null,
+   "description": "Speculative Store Bypass Disable"
+  },
+  "virt_ssbd": {
+   "word": 13,
+   "bit": 25,
+   "leaf": "0x80000008",
+   "subleaf": null,
+   "register": "EBX",
+   "linux_defined": false,
+   "cpuinfo": "virt_ssbd",
+   "description": "Virtualized Speculative Store Bypass Disable"
+  },
+  "amd_ssb_no": {
+   "word": 13,
+   "bit": 26,
+   "leaf": "0x80000008",
+   "subleaf": null,
+   "register": "EBX",
+   "linux_defined": false,
+   "cpuinfo": null,
+   "description": "Speculative Store Bypass is fixed in hardware."
+  },
+  "cppc": {
+   "word": 13,
+   "bit": 27,
+   "leaf": "0x80000008",
+   "subleaf": null,
+   "register": "EBX",
+   "linux_defined": false,
+   "cpuinfo": "cppc",
+   "description": "Collaborative Processor Performance Control"
+  },
+  "amd_psfd": {
+   "word": 13,
+   "bit": 28,
+   "leaf": "0x80000008",
+   "subleaf": null,
+   "register": "EBX",
+   "linux_defined": false,
+   "cpuinfo": null,
+   "description": "Predictive Store Forwarding Disable"
+  },
+  "btc_no": {
+   "word": 13,
+   "bit": 29,
+   "leaf": "0x80000008",
+   "subleaf": null,
+   "register": "EBX",
+   "linux_defined": false,
+   "cpuinfo": null,
+   "description": "Not vulnerable to Branch Type Confusion"
+  },
+  "amd_ibpb_ret": {
+   "word": 13,
+   "bit": 30,
+   "leaf": "0x80000008",
+   "subleaf": null,
+   "register": "EBX",
+   "linux_defined": false,
+   "cpuinfo": null,
+   "description": "IBPB clears return address predictor"
+  },
+  "brs": {
+   "word": 13,
+   "bit": 31,
+   "leaf": "0x80000008",
+   "subleaf": null,
+   "register": "EBX",
+   "linux_defined": false,
+   "cpuinfo": "brs",
+   "description": "Branch Sampling available"
+  },
+  "dtherm": {
+   "word": 14,
+   "bit": 0,
+   "leaf": "0x00000006",
+   "subleaf": null,
+   "register": "EAX",
+   "linux_defined": false,
+   "cpuinfo": "dtherm",
+   "description": "Digital Thermal Sensor"
+  },
+  "ida": {
+   "word": 14,
+   "bit": 1,
+   "leaf": "0x00000006",
+   "subleaf": null,
+   "register": "EAX",
+   "linux_defined": false,
+   "cpuinfo": "ida",
+   "description": "Intel Dynamic Acceleration"
+  },
+  "arat": {
+   "word": 14,
+   "bit": 2,
+   "leaf": "0x00000006",
+   "subleaf": null,
+   "register": "EAX",
+   "linux_defined": false,
+   "cpuinfo": "arat",
+   "description": "Always Running APIC Timer"
+  },
+  "pln": {
+   "word": 14,
+   "bit": 4,
+   "leaf": "0x00000006",
+   "subleaf": null,
+   "register": "EAX",
+   "linux_defined": false,
+   "cpuinfo": "pln",
+   "description": "Intel Power Limit Notification"
+  },
+  "pts": {
+   "word": 14,
+   "bit": 6,
+   "leaf": "0x00000006",
+   "subleaf": null,
+   "register": "EAX",
+   "linux_defined": false,
+   "cpuinfo": "pts",
+   "description": "Intel Package Thermal Status"
+  },
+  "hwp": {
+   "word": 14,
+   "bit": 7,
+   "leaf": "0x00000006",
+   "subleaf": null,
+   "register": "EAX",
+   "linux_defined": false,
+   "cpuinfo": "hwp",
+   "description": "Intel Hardware P-states"
+  },
+  "hwp_notify": {
+   "word": 14,
+   "bit": 8,
+   "leaf": "0x00000006",
+   "subleaf": null,
+   "register": "EAX",
+   "linux_defined": false,
+   "cpuinfo": "hwp_notify",
+   "description": "HWP Notification"
+  },
+  "hwp_act_window": {
+   "word": 14,
+   "bit": 9,
+   "leaf": "0x00000006",
+   "subleaf": null,
+   "register": "EAX",
+   "linux_defined": false,
+   "cpuinfo": "hwp_act_window",
+   "description": "HWP Activity Window"
+  },
+  "hwp_epp": {
+   "word": 14,
+   "bit": 10,
+   "leaf": "0x00000006",
+   "subleaf": null,
+   "register": "EAX",
+   "linux_defined": false,
+   "cpuinfo": "hwp_epp",
+   "description": "HWP Energy Perf. Preference"
+  },
+  "hwp_pkg_req": {
+   "word": 14,
+   "bit": 11,
+   "leaf": "0x00000006",
+   "subleaf": null,
+   "register": "EAX",
+   "linux_defined": false,
+   "cpuinfo": "hwp_pkg_req",
+   "description": "HWP Package Level Request"
+  },
+  "hwp_highest_perf_change": {
+   "word": 14,
+   "bit": 15,
+   "leaf": "0x00000006",
+   "subleaf": null,
+   "register": "EAX",
+   "linux_defined": false,
+   "cpuinfo": null,
+   "description": "HWP Highest perf change"
+  },
+  "hfi": {
+   "word": 14,
+   "bit": 19,
+   "leaf": "0x00000006",
+   "subleaf": null,
+   "register": "EAX",
+   "linux_defined": false,
+   "cpuinfo": "hfi",
+   "description": "Hardware Feedback Interface"
+  },
+  "dpti": {
+   "word": 14,
+   "bit": 24,
+   "leaf": "0x00000006",
+   "subleaf": null,
+   "register": "EAX",
+   "linux_defined": false,
+   "cpuinfo": null,
+   "description": "Intel Directed Package Thermal Interrupt"
+  },
+  "npt": {
+   "word": 15,
+   "bit": 0,
+   "leaf": "0x8000000a",
+   "subleaf": null,
+   "register": "EDX",
+   "linux_defined": false,
+   "cpuinfo": "npt",
+   "description": "Nested Page Table support"
+  },
+  "lbrv": {
+   "word": 15,
+   "bit": 1,
+   "leaf": "0x8000000a",
+   "subleaf": null,
+   "register": "EDX",
+   "linux_defined": false,
+   "cpuinfo": "lbrv",
+   "description": "LBR Virtualization support"
+  },
+  "svml": {
+   "word": 15,
+   "bit": 2,
+   "leaf": "0x8000000a",
+   "subleaf": null,
+   "register": "EDX",
+   "linux_defined": false,
+   "cpuinfo": "svm_lock",
+   "description": "SVM locking MSR"
+  },
+  "nrips": {
+   "word": 15,
+   "bit": 3,
+   "leaf": "0x8000000a",
+   "subleaf": null,
+   "register": "EDX",
+   "linux_defined": false,
+   "cpuinfo": "nrip_save",
+   "description": "SVM next_rip save"
+  },
+  "tscratemsr": {
+   "word": 15,
+   "bit": 4,
+   "leaf": "0x8000000a",
+   "subleaf": null,
+   "register": "EDX",
+   "linux_defined": false,
+   "cpuinfo": "tsc_scale",
+   "description": "TSC scaling support"
+  },
+  "vmcbclean": {
+   "word": 15,
+   "bit": 5,
+   "leaf": "0x8000000a",
+   "subleaf": null,
+   "register": "EDX",
+   "linux_defined": false,
+   "cpuinfo": "vmcb_clean",
+   "description": "VMCB clean bits support"
+  },
+  "flushbyasid": {
+   "word": 15,
+   "bit": 6,
+   "leaf": "0x8000000a",
+   "subleaf": null,
+   "register": "EDX",
+   "linux_defined": false,
+   "cpuinfo": "flushbyasid",
+   "description": "Flush-by-ASID support"
+  },
+  "decodeassists": {
+   "word": 15,
+   "bit": 7,
+   "leaf": "0x8000000a",
+   "subleaf": null,
+   "register": "EDX",
+   "linux_defined": false,
+   "cpuinfo": "decodeassists",
+   "description": "Decode Assists support"
+  },
+  "pausefilter": {
+   "word": 15,
+   "bit": 10,
+   "leaf": "0x8000000a",
+   "subleaf": null,
+   "register": "EDX",
+   "linux_defined": false,
+   "cpuinfo": "pausefilter",
+   "description": "Filtered pause intercept"
+  },
+  "pfthreshold": {
+   "word": 15,
+   "bit": 12,
+   "leaf": "0x8000000a",
+   "subleaf": null,
+   "register": "EDX",
+   "linux_defined": false,
+   "cpuinfo": "pfthreshold",
+   "description": "Pause filter threshold"
+  },
+  "avic": {
+   "word": 15,
+   "bit": 13,
+   "leaf": "0x8000000a",
+   "subleaf": null,
+   "register": "EDX",
+   "linux_defined": false,
+   "cpuinfo": "avic",
+   "description": "Virtual Interrupt Controller"
+  },
+  "v_vmsave_vmload": {
+   "word": 15,
+   "bit": 15,
+   "leaf": "0x8000000a",
+   "subleaf": null,
+   "register": "EDX",
+   "linux_defined": false,
+   "cpuinfo": "v_vmsave_vmload",
+   "description": "Virtual VMSAVE VMLOAD"
+  },
+  "vgif": {
+   "word": 15,
+   "bit": 16,
+   "leaf": "0x8000000a",
+   "subleaf": null,
+   "register": "EDX",
+   "linux_defined": false,
+   "cpuinfo": "vgif",
+   "description": "Virtual GIF"
+  },
+  "gmet": {
+   "word": 15,
+   "bit": 17,
+   "leaf": "0x8000000a",
+   "subleaf": null,
+   "register": "EDX",
+   "linux_defined": false,
+   "cpuinfo": null,
+   "description": "Guest Mode Execution Trap"
+  },
+  "x2avic": {
+   "word": 15,
+   "bit": 18,
+   "leaf": "0x8000000a",
+   "subleaf": null,
+   "register": "EDX",
+   "linux_defined": false,
+   "cpuinfo": "x2avic",
+   "description": "Virtual x2apic"
+  },
+  "v_spec_ctrl": {
+   "word": 15,
+   "bit": 20,
+   "leaf": "0x8000000a",
+   "subleaf": null,
+   "register": "EDX",
+   "linux_defined": false,
+   "cpuinfo": "v_spec_ctrl",
+   "description": "Virtual SPEC_CTRL"
+  },
+  "vnmi": {
+   "word": 15,
+   "bit": 25,
+   "leaf": "0x8000000a",
+   "subleaf": null,
+   "register": "EDX",
+   "linux_defined": false,
+   "cpuinfo": "vnmi",
+   "description": "Virtual NMI"
+  },
+  "svme_addr_chk": {
+   "word": 15,
+   "bit": 28,
+   "leaf": "0x8000000a",
+   "subleaf": null,
+   "register": "EDX",
+   "linux_defined": false,
+   "cpuinfo": null,
+   "description": "SVME addr check"
+  },
+  "bus_lock_threshold": {
+   "word": 15,
+   "bit": 29,
+   "leaf": "0x8000000a",
+   "subleaf": null,
+   "register": "EDX",
+   "linux_defined": false,
+   "cpuinfo": null,
+   "description": "Bus lock threshold"
+  },
+  "idle_hlt": {
+   "word": 15,
+   "bit": 30,
+   "leaf": "0x8000000a",
+   "subleaf": null,
+   "register": "EDX",
+   "linux_defined": false,
+   "cpuinfo": null,
+   "description": "IDLE HLT intercept"
+  },
+  "avx512vbmi": {
+   "word": 16,
+   "bit": 1,
+   "leaf": "0x00000007",
+   "subleaf": 0,
+   "register": "ECX",
+   "linux_defined": false,
+   "cpuinfo": "avx512vbmi",
+   "description": "AVX512 Vector Bit Manipulation instructions"
+  },
+  "umip": {
+   "word": 16,
+   "bit": 2,
+   "leaf": "0x00000007",
+   "subleaf": 0,
+   "register": "ECX",
+   "linux_defined": false,
+   "cpuinfo": "umip",
+   "description": "User Mode Instruction Protection"
+  },
+  "pku": {
+   "word": 16,
+   "bit": 3,
+   "leaf": "0x00000007",
+   "subleaf": 0,
+   "register": "ECX",
+   "linux_defined": false,
+   "cpuinfo": "pku",
+   "description": "Protection Keys for Userspace"
+  },
+  "ospke": {
+   "word": 16,
+   "bit": 4,
+   "leaf": "0x00000007",
+   "subleaf": 0,
+   "register": "ECX",
+   "linux_defined": false,
+   "cpuinfo": "ospke",
+   "description": "OS Protection Keys Enable"
+  },
+  "waitpkg": {
+   "word": 16,
+   "bit": 5,
+   "leaf": "0x00000007",
+   "subleaf": 0,
+   "register": "ECX",
+   "linux_defined": false,
+   "cpuinfo": "waitpkg",
+   "description": "UMONITOR/UMWAIT/TPAUSE Instructions"
+  },
+  "avx512_vbmi2": {
+   "word": 16,
+   "bit": 6,
+   "leaf": "0x00000007",
+   "subleaf": 0,
+   "register": "ECX",
+   "linux_defined": false,
+   "cpuinfo": "avx512_vbmi2",
+   "description": "Additional AVX512 Vector Bit Manipulation Instructions"
+  },
+  "shstk": {
+   "word": 16,
+   "bit": 7,
+   "leaf": "0x00000007",
+   "subleaf": 0,
+   "register": "ECX",
+   "linux_defined": false,
+   "cpuinfo": null,
+   "description": "Shadow stack"
+  },
+  "gfni": {
+   "word": 16,
+   "bit": 8,
+   "leaf": "0x00000007",
+   "subleaf": 0,
+   "register": "ECX",
+   "linux_defined": false,
+   "cpuinfo": "gfni",
+   "description": "Galois Field New Instructions"
+  },
+  "vaes": {
+   "word": 16,
+   "bit": 9,
+   "leaf": "0x00000007",
+   "subleaf": 0,
+   "register": "ECX",
+   "linux_defined": false,
+   "cpuinfo": "vaes",
+   "description": "Vector AES"
+  },
+  "vpclmulqdq": {
+   "word": 16,
+   "bit": 10,
+   "leaf": "0x00000007",
+   "subleaf": 0,
+   "register": "ECX",
+   "linux_defined": false,
+   "cpuinfo": "vpclmulqdq",
+   "description": "Carry-Less Multiplication Double Quadword"
+  },
+  "avx512_vnni": {
+   "word": 16,
+   "bit": 11,
+   "leaf": "0x00000007",
+   "subleaf": 0,
+   "register": "ECX",
+   "linux_defined": false,
+   "cpuinfo": "avx512_vnni",
+   "description": "Vector Neural Network Instructions"
+  },
+  "avx512_bitalg": {
+   "word": 16,
+   "bit": 12,
+   "leaf": "0x00000007",
+   "subleaf": 0,
+   "register": "ECX",
+   "linux_defined": false,
+   "cpuinfo": "avx512_bitalg",
+   "description": "Support for VPOPCNT[B,W] and VPSHUF-BITQMB instructions"
+  },
+  "tme": {
+   "word": 16,
+   "bit": 13,
+   "leaf": "0x00000007",
+   "subleaf": 0,
+   "register": "ECX",
+   "linux_defined": false,
+   "cpuinfo": "tme",
+   "description": "Intel Total Memory Encryption"
+  },
+  "avx512_vpopcntdq": {
+   "word": 16,
+   "bit": 14,
+   "leaf": "0x00000007",
+   "subleaf": 0,
+   "register": "ECX",
+   "linux_defined": false,
+   "cpuinfo": "avx512_vpopcntdq",
+   "description": "POPCNT for vectors of DW/QW"
+  },
+  "la57": {
+   "word": 16,
+   "bit": 16,
+   "leaf": "0x00000007",
+   "subleaf": 0,
+   "register": "ECX",
+   "linux_defined": false,
+   "cpuinfo": "la57",
+   "description": "5-level page tables"
+  },
+  "rdpid": {
+   "word": 16,
+   "bit": 22,
+   "leaf": "0x00000007",
+   "subleaf": 0,
+   "register": "ECX",
+   "linux_defined": false,
+   "cpuinfo": "rdpid",
+   "description": "RDPID instruction"
+  },
+  "bus_lock_detect": {
+   "word": 16,
+   "bit": 24,
+   "leaf": "0x00000007",
+   "subleaf": 0,
+   "register": "ECX",
+   "linux_defined": false,
+   "cpuinfo": "bus_lock_detect",
+   "description": "Bus Lock detect"
+  },
+  "cldemote": {
+   "word": 16,
+   "bit": 25,
+   "leaf": "0x00000007",
+   "subleaf": 0,
+   "register": "ECX",
+   "linux_defined": false,
+   "cpuinfo": "cldemote",
+   "description": "CLDEMOTE instruction"
+  },
+  "movdiri": {
+   "word": 16,
+   "bit": 27,
+   "leaf": "0x00000007",
+   "subleaf": 0,
+   "register": "ECX",
+   "linux_defined": false,
+   "cpuinfo": "movdiri",
+   "description": "MOVDIRI instruction"
+  },
+  "movdir64b": {
+   "word": 16,
+   "bit": 28,
+   "leaf": "0x00000007",
+   "subleaf": 0,
+   "register": "ECX",
+   "linux_defined": false,
+   "cpuinfo": "movdir64b",
+   "description": "MOVDIR64B instruction"
+  },
+  "enqcmd": {
+   "word": 16,
+   "bit": 29,
+   "leaf": "0x00000007",
+   "subleaf": 0,
+   "register": "ECX",
+   "linux_defined": false,
+   "cpuinfo": "enqcmd",
+   "description": "ENQCMD and ENQCMDS instructions"
+  },
+  "sgx_lc": {
+   "word": 16,
+   "bit": 30,
+   "leaf": "0x00000007",
+   "subleaf": 0,
+   "register": "ECX",
+   "linux_defined": false,
+   "cpuinfo": "sgx_lc",
+   "description": "Software Guard Extensions Launch Control"
+  },
+  "overflow_recov": {
+   "word": 17,
+   "bit": 0,
+   "linux_defined": true,
+   "cpuinfo": "overflow_recov",
+   "description": "MCA overflow recovery support"
+  },
+  "succor": {
+   "word": 17,
+   "bit": 1,
+   "linux_defined": true,
+   "cpuinfo": "succor",
+   "description": "Uncorrectable error containment and recovery"
+  },
+  "cppc_perf_prio": {
+   "word": 17,
+   "bit": 2,
+   "linux_defined": true,
+   "cpuinfo": null,
+   "description": "CPPC Floor Perf support"
+  },
+  "smca": {
+   "word": 17,
+   "bit": 3,
+   "linux_defined": true,
+   "cpuinfo": "smca",
+   "description": "Scalable MCA"
+  },
+  "avx512_4vnniw": {
+   "word": 18,
+   "bit": 2,
+   "leaf": "0x00000007",
+   "subleaf": 0,
+   "register": "EDX",
+   "linux_defined": false,
+   "cpuinfo": "avx512_4vnniw",
+   "description": "AVX-512 Neural Network Instructions"
+  },
+  "avx512_4fmaps": {
+   "word": 18,
+   "bit": 3,
+   "leaf": "0x00000007",
+   "subleaf": 0,
+   "register": "EDX",
+   "linux_defined": false,
+   "cpuinfo": "avx512_4fmaps",
+   "description": "AVX-512 Multiply Accumulation Single precision"
+  },
+  "fsrm": {
+   "word": 18,
+   "bit": 4,
+   "leaf": "0x00000007",
+   "subleaf": 0,
+   "register": "EDX",
+   "linux_defined": false,
+   "cpuinfo": "fsrm",
+   "description": "Fast Short Rep Mov"
+  },
+  "avx512_vp2intersect": {
+   "word": 18,
+   "bit": 8,
+   "leaf": "0x00000007",
+   "subleaf": 0,
+   "register": "EDX",
+   "linux_defined": false,
+   "cpuinfo": "avx512_vp2intersect",
+   "description": "AVX-512 Intersect for D/Q"
+  },
+  "srbds_ctrl": {
+   "word": 18,
+   "bit": 9,
+   "leaf": "0x00000007",
+   "subleaf": 0,
+   "register": "EDX",
+   "linux_defined": false,
+   "cpuinfo": null,
+   "description": "SRBDS mitigation MSR available"
+  },
+  "md_clear": {
+   "word": 18,
+   "bit": 10,
+   "leaf": "0x00000007",
+   "subleaf": 0,
+   "register": "EDX",
+   "linux_defined": false,
+   "cpuinfo": "md_clear",
+   "description": "VERW clears CPU buffers"
+  },
+  "rtm_always_abort": {
+   "word": 18,
+   "bit": 11,
+   "leaf": "0x00000007",
+   "subleaf": 0,
+   "register": "EDX",
+   "linux_defined": false,
+   "cpuinfo": null,
+   "description": "RTM transaction always aborts"
+  },
+  "tsx_force_abort": {
+   "word": 18,
+   "bit": 13,
+   "leaf": "0x00000007",
+   "subleaf": 0,
+   "register": "EDX",
+   "linux_defined": false,
+   "cpuinfo": null,
+   "description": "TSX_FORCE_ABORT"
+  },
+  "serialize": {
+   "word": 18,
+   "bit": 14,
+   "leaf": "0x00000007",
+   "subleaf": 0,
+   "register": "EDX",
+   "linux_defined": false,
+   "cpuinfo": "serialize",
+   "description": "SERIALIZE instruction"
+  },
+  "hybrid_cpu": {
+   "word": 18,
+   "bit": 15,
+   "leaf": "0x00000007",
+   "subleaf": 0,
+   "register": "EDX",
+   "linux_defined": false,
+   "cpuinfo": null,
+   "description": "This part has CPUs of more than one type"
+  },
+  "tsxldtrk": {
+   "word": 18,
+   "bit": 16,
+   "leaf": "0x00000007",
+   "subleaf": 0,
+   "register": "EDX",
+   "linux_defined": false,
+   "cpuinfo": "tsxldtrk",
+   "description": "TSX Suspend Load Address Tracking"
+  },
+  "pconfig": {
+   "word": 18,
+   "bit": 18,
+   "leaf": "0x00000007",
+   "subleaf": 0,
+   "register": "EDX",
+   "linux_defined": false,
+   "cpuinfo": "pconfig",
+   "description": "Intel PCONFIG"
+  },
+  "arch_lbr": {
+   "word": 18,
+   "bit": 19,
+   "leaf": "0x00000007",
+   "subleaf": 0,
+   "register": "EDX",
+   "linux_defined": false,
+   "cpuinfo": "arch_lbr",
+   "description": "Intel ARCH LBR"
+  },
+  "ibt": {
+   "word": 18,
+   "bit": 20,
+   "leaf": "0x00000007",
+   "subleaf": 0,
+   "register": "EDX",
+   "linux_defined": false,
+   "cpuinfo": "ibt",
+   "description": "Indirect Branch Tracking"
+  },
+  "amx_bf16": {
+   "word": 18,
+   "bit": 22,
+   "leaf": "0x00000007",
+   "subleaf": 0,
+   "register": "EDX",
+   "linux_defined": false,
+   "cpuinfo": "amx_bf16",
+   "description": "AMX bf16 Support"
+  },
+  "avx512_fp16": {
+   "word": 18,
+   "bit": 23,
+   "leaf": "0x00000007",
+   "subleaf": 0,
+   "register": "EDX",
+   "linux_defined": false,
+   "cpuinfo": "avx512_fp16",
+   "description": "AVX512 FP16"
+  },
+  "amx_tile": {
+   "word": 18,
+   "bit": 24,
+   "leaf": "0x00000007",
+   "subleaf": 0,
+   "register": "EDX",
+   "linux_defined": false,
+   "cpuinfo": "amx_tile",
+   "description": "AMX tile Support"
+  },
+  "amx_int8": {
+   "word": 18,
+   "bit": 25,
+   "leaf": "0x00000007",
+   "subleaf": 0,
+   "register": "EDX",
+   "linux_defined": false,
+   "cpuinfo": "amx_int8",
+   "description": "AMX int8 Support"
+  },
+  "spec_ctrl": {
+   "word": 18,
+   "bit": 26,
+   "leaf": "0x00000007",
+   "subleaf": 0,
+   "register": "EDX",
+   "linux_defined": false,
+   "cpuinfo": null,
+   "description": "Speculation Control (IBRS + IBPB)"
+  },
+  "intel_stibp": {
+   "word": 18,
+   "bit": 27,
+   "leaf": "0x00000007",
+   "subleaf": 0,
+   "register": "EDX",
+   "linux_defined": false,
+   "cpuinfo": null,
+   "description": "Single Thread Indirect Branch Predictors"
+  },
+  "flush_l1d": {
+   "word": 18,
+   "bit": 28,
+   "leaf": "0x00000007",
+   "subleaf": 0,
+   "register": "EDX",
+   "linux_defined": false,
+   "cpuinfo": "flush_l1d",
+   "description": "Flush L1D cache"
+  },
+  "arch_capabilities": {
+   "word": 18,
+   "bit": 29,
+   "leaf": "0x00000007",
+   "subleaf": 0,
+   "register": "EDX",
+   "linux_defined": false,
+   "cpuinfo": "arch_capabilities",
+   "description": "IA32_ARCH_CAPABILITIES MSR (Intel)"
+  },
+  "core_capabilities": {
+   "word": 18,
+   "bit": 30,
+   "leaf": "0x00000007",
+   "subleaf": 0,
+   "register": "EDX",
+   "linux_defined": false,
+   "cpuinfo": null,
+   "description": "IA32_CORE_CAPABILITIES MSR"
+  },
+  "spec_ctrl_ssbd": {
+   "word": 18,
+   "bit": 31,
+   "leaf": "0x00000007",
+   "subleaf": 0,
+   "register": "EDX",
+   "linux_defined": false,
+   "cpuinfo": null,
+   "description": "Speculative Store Bypass Disable"
+  },
+  "sme": {
+   "word": 19,
+   "bit": 0,
+   "leaf": "0x8000001f",
+   "subleaf": null,
+   "register": "EAX",
+   "linux_defined": false,
+   "cpuinfo": "sme",
+   "description": "Secure Memory Encryption"
+  },
+  "sev": {
+   "word": 19,
+   "bit": 1,
+   "leaf": "0x8000001f",
+   "subleaf": null,
+   "register": "EAX",
+   "linux_defined": false,
+   "cpuinfo": "sev",
+   "description": "Secure Encrypted Virtualization"
+  },
+  "vm_page_flush": {
+   "word": 19,
+   "bit": 2,
+   "leaf": "0x8000001f",
+   "subleaf": null,
+   "register": "EAX",
+   "linux_defined": false,
+   "cpuinfo": null,
+   "description": "VM Page Flush MSR is supported"
+  },
+  "sev_es": {
+   "word": 19,
+   "bit": 3,
+   "leaf": "0x8000001f",
+   "subleaf": null,
+   "register": "EAX",
+   "linux_defined": false,
+   "cpuinfo": "sev_es",
+   "description": "Secure Encrypted Virtualization - Encrypted State"
+  },
+  "sev_snp": {
+   "word": 19,
+   "bit": 4,
+   "leaf": "0x8000001f",
+   "subleaf": null,
+   "register": "EAX",
+   "linux_defined": false,
+   "cpuinfo": "sev_snp",
+   "description": "Secure Encrypted Virtualization - Secure Nested Paging"
+  },
+  "snp_secure_tsc": {
+   "word": 19,
+   "bit": 8,
+   "leaf": "0x8000001f",
+   "subleaf": null,
+   "register": "EAX",
+   "linux_defined": false,
+   "cpuinfo": null,
+   "description": "SEV-SNP Secure TSC"
+  },
+  "v_tsc_aux": {
+   "word": 19,
+   "bit": 9,
+   "leaf": "0x8000001f",
+   "subleaf": null,
+   "register": "EAX",
+   "linux_defined": false,
+   "cpuinfo": null,
+   "description": "Virtual TSC_AUX"
+  },
+  "sme_coherent": {
+   "word": 19,
+   "bit": 10,
+   "leaf": "0x8000001f",
+   "subleaf": null,
+   "register": "EAX",
+   "linux_defined": false,
+   "cpuinfo": null,
+   "description": "hardware-enforced cache coherency"
+  },
+  "debug_swap": {
+   "word": 19,
+   "bit": 14,
+   "leaf": "0x8000001f",
+   "subleaf": null,
+   "register": "EAX",
+   "linux_defined": false,
+   "cpuinfo": "debug_swap",
+   "description": "SEV-ES full debug state swap support"
+  },
+  "rmpread": {
+   "word": 19,
+   "bit": 21,
+   "leaf": "0x8000001f",
+   "subleaf": null,
+   "register": "EAX",
+   "linux_defined": false,
+   "cpuinfo": null,
+   "description": "RMPREAD instruction"
+  },
+  "segmented_rmp": {
+   "word": 19,
+   "bit": 23,
+   "leaf": "0x8000001f",
+   "subleaf": null,
+   "register": "EAX",
+   "linux_defined": false,
+   "cpuinfo": null,
+   "description": "Segmented RMP support"
+  },
+  "allowed_sev_features": {
+   "word": 19,
+   "bit": 27,
+   "leaf": "0x8000001f",
+   "subleaf": null,
+   "register": "EAX",
+   "linux_defined": false,
+   "cpuinfo": null,
+   "description": "Allowed SEV Features"
+  },
+  "svsm": {
+   "word": 19,
+   "bit": 28,
+   "leaf": "0x8000001f",
+   "subleaf": null,
+   "register": "EAX",
+   "linux_defined": false,
+   "cpuinfo": "svsm",
+   "description": "SVSM present"
+  },
+  "hv_inuse_wr_allowed": {
+   "word": 19,
+   "bit": 30,
+   "leaf": "0x8000001f",
+   "subleaf": null,
+   "register": "EAX",
+   "linux_defined": false,
+   "cpuinfo": null,
+   "description": "Allow Write to in-use hypervisor-owned pages"
+  },
+  "no_nested_data_bp": {
+   "word": 20,
+   "bit": 0,
+   "leaf": "0x80000021",
+   "subleaf": null,
+   "register": "EAX",
+   "linux_defined": false,
+   "cpuinfo": null,
+   "description": "No Nested Data Breakpoints"
+  },
+  "wrmsr_xx_base_ns": {
+   "word": 20,
+   "bit": 1,
+   "leaf": "0x80000021",
+   "subleaf": null,
+   "register": "EAX",
+   "linux_defined": false,
+   "cpuinfo": null,
+   "description": "WRMSR to {FS,GS,KERNEL_GS}_BASE is non-serializing"
+  },
+  "lfence_rdtsc": {
+   "word": 20,
+   "bit": 2,
+   "leaf": "0x80000021",
+   "subleaf": null,
+   "register": "EAX",
+   "linux_defined": false,
+   "cpuinfo": null,
+   "description": "LFENCE always serializing / synchronizes RDTSC"
+  },
+  "tlbsync_sfw_no": {
+   "word": 20,
+   "bit": 4,
+   "leaf": "0x80000021",
+   "subleaf": null,
+   "register": "EAX",
+   "linux_defined": false,
+   "cpuinfo": null,
+   "description": "TLBI Erratum #1718 fixed in microcode"
+  },
+  "verw_clear": {
+   "word": 20,
+   "bit": 5,
+   "leaf": "0x80000021",
+   "subleaf": null,
+   "register": "EAX",
+   "linux_defined": false,
+   "cpuinfo": null,
+   "description": "The memory form of VERW mitigates TSA"
+  },
+  "null_sel_clr_base": {
+   "word": 20,
+   "bit": 6,
+   "leaf": "0x80000021",
+   "subleaf": null,
+   "register": "EAX",
+   "linux_defined": false,
+   "cpuinfo": null,
+   "description": "Null Selector Clears Base"
+  },
+  "autoibrs": {
+   "word": 20,
+   "bit": 8,
+   "leaf": "0x80000021",
+   "subleaf": null,
+   "register": "EAX",
+   "linux_defined": false,
+   "cpuinfo": null,
+   "description": "Automatic IBRS"
+  },
+  "no_smm_ctl_msr": {
+   "word": 20,
+   "bit": 9,
+   "leaf": "0x80000021",
+   "subleaf": null,
+   "register": "EAX",
+   "linux_defined": false,
+   "cpuinfo": null,
+   "description": "SMM_CTL MSR is not present"
+  },
+  "gp_on_user_cpuid": {
+   "word": 20,
+   "bit": 17,
+   "leaf": "0x80000021",
+   "subleaf": null,
+   "register": "EAX",
+   "linux_defined": false,
+   "cpuinfo": null,
+   "description": "User CPUID faulting"
+  },
+  "prefetchi": {
+   "word": 20,
+   "bit": 20,
+   "leaf": "0x80000021",
+   "subleaf": null,
+   "register": "EAX",
+   "linux_defined": false,
+   "cpuinfo": null,
+   "description": "Prefetch Data/Instruction to Cache Level"
+  },
+  "avx512_bmm": {
+   "word": 20,
+   "bit": 23,
+   "leaf": "0x80000021",
+   "subleaf": null,
+   "register": "EAX",
+   "linux_defined": false,
+   "cpuinfo": null,
+   "description": "AVX512 Bit Matrix Multiply instructions"
+  },
+  "eraps": {
+   "word": 20,
+   "bit": 24,
+   "leaf": "0x80000021",
+   "subleaf": null,
+   "register": "EAX",
+   "linux_defined": false,
+   "cpuinfo": null,
+   "description": "Enhanced Return Address Predictor Security"
+  },
+  "sbpb": {
+   "word": 20,
+   "bit": 27,
+   "leaf": "0x80000021",
+   "subleaf": null,
+   "register": "EAX",
+   "linux_defined": false,
+   "cpuinfo": null,
+   "description": "Selective Branch Prediction Barrier"
+  },
+  "ibpb_brtype": {
+   "word": 20,
+   "bit": 28,
+   "leaf": "0x80000021",
+   "subleaf": null,
+   "register": "EAX",
+   "linux_defined": false,
+   "cpuinfo": null,
+   "description": "MSR_PRED_CMD[IBPB] flushes all branch type predictions"
+  },
+  "srso_no": {
+   "word": 20,
+   "bit": 29,
+   "leaf": "0x80000021",
+   "subleaf": null,
+   "register": "EAX",
+   "linux_defined": false,
+   "cpuinfo": null,
+   "description": "CPU is not affected by SRSO"
+  },
+  "srso_user_kernel_no": {
+   "word": 20,
+   "bit": 30,
+   "leaf": "0x80000021",
+   "subleaf": null,
+   "register": "EAX",
+   "linux_defined": false,
+   "cpuinfo": null,
+   "description": "CPU is not affected by SRSO across user/kernel boundaries"
+  },
+  "srso_bp_spec_reduce": {
+   "word": 20,
+   "bit": 31,
+   "leaf": "0x80000021",
+   "subleaf": null,
+   "register": "EAX",
+   "linux_defined": false,
+   "cpuinfo": null,
+   "description": ""
+  },
+  "amd_lbr_pmc_freeze": {
+   "word": 21,
+   "bit": 0,
+   "linux_defined": true,
+   "cpuinfo": "amd_lbr_pmc_freeze",
+   "description": "AMD LBR and PMC Freeze"
+  },
+  "clear_bhb_loop": {
+   "word": 21,
+   "bit": 1,
+   "linux_defined": true,
+   "cpuinfo": null,
+   "description": "Clear branch history at syscall entry using SW loop"
+  },
+  "bhi_ctrl": {
+   "word": 21,
+   "bit": 2,
+   "linux_defined": true,
+   "cpuinfo": null,
+   "description": "BHI_DIS_S HW control available"
+  },
+  "clear_bhb_hw": {
+   "word": 21,
+   "bit": 3,
+   "linux_defined": true,
+   "cpuinfo": null,
+   "description": "BHI_DIS_S HW control enabled"
+  },
+  "clear_bhb_vmexit": {
+   "word": 21,
+   "bit": 4,
+   "linux_defined": true,
+   "cpuinfo": null,
+   "description": "Clear branch history at vmexit using SW loop"
+  },
+  "amd_fast_cppc": {
+   "word": 21,
+   "bit": 5,
+   "linux_defined": true,
+   "cpuinfo": null,
+   "description": "Fast CPPC"
+  },
+  "amd_htr_cores": {
+   "word": 21,
+   "bit": 6,
+   "linux_defined": true,
+   "cpuinfo": null,
+   "description": "Heterogeneous Core Topology"
+  },
+  "amd_workload_class": {
+   "word": 21,
+   "bit": 7,
+   "linux_defined": true,
+   "cpuinfo": null,
+   "description": "Workload Classification"
+  },
+  "prefer_ymm": {
+   "word": 21,
+   "bit": 8,
+   "linux_defined": true,
+   "cpuinfo": null,
+   "description": "Avoid ZMM registers due to downclocking"
+  },
+  "apx": {
+   "word": 21,
+   "bit": 9,
+   "linux_defined": true,
+   "cpuinfo": null,
+   "description": "Advanced Performance Extensions"
+  },
+  "indirect_thunk_its": {
+   "word": 21,
+   "bit": 10,
+   "linux_defined": true,
+   "cpuinfo": null,
+   "description": "Use thunk for indirect branches in lower half of cacheline"
+  },
+  "tsa_sq_no": {
+   "word": 21,
+   "bit": 11,
+   "linux_defined": true,
+   "cpuinfo": null,
+   "description": "AMD CPU not vulnerable to TSA-SQ"
+  },
+  "tsa_l1_no": {
+   "word": 21,
+   "bit": 12,
+   "linux_defined": true,
+   "cpuinfo": null,
+   "description": "AMD CPU not vulnerable to TSA-L1"
+  },
+  "clear_cpu_buf_vm": {
+   "word": 21,
+   "bit": 13,
+   "linux_defined": true,
+   "cpuinfo": null,
+   "description": "Clear CPU buffers using VERW before VMRUN"
+  },
+  "ibpb_exit_to_user": {
+   "word": 21,
+   "bit": 14,
+   "linux_defined": true,
+   "cpuinfo": null,
+   "description": "Use IBPB on exit-to-userspace, see VMSCAPE bug"
+  },
+  "abmc": {
+   "word": 21,
+   "bit": 15,
+   "linux_defined": true,
+   "cpuinfo": null,
+   "description": "Assignable Bandwidth Monitoring Counters"
+  },
+  "msr_imm": {
+   "word": 21,
+   "bit": 16,
+   "linux_defined": true,
+   "cpuinfo": null,
+   "description": "MSR immediate form instructions"
+  },
+  "sgx_eupdatesvn": {
+   "word": 21,
+   "bit": 17,
+   "linux_defined": true,
+   "cpuinfo": null,
+   "description": "Support for ENCLS[EUPDATESVN] instruction"
+  },
+  "sdciae": {
+   "word": 21,
+   "bit": 18,
+   "linux_defined": true,
+   "cpuinfo": null,
+   "description": "L3 Smart Data Cache Injection Allocation Enforcement"
+  },
+  "clear_cpu_buf_vm_mmio": {
+   "word": 21,
+   "bit": 19,
+   "linux_defined": true,
+   "cpuinfo": null,
+   "description": ""
+  },
+  "x2avic_ext": {
+   "word": 21,
+   "bit": 20,
+   "linux_defined": true,
+   "cpuinfo": null,
+   "description": "AMD SVM x2AVIC support for 4k vCPUs"
+  }
+ },
+ "processors": {
+  "alderlake": ["64bit", "adx", "aes", "avx", "avx2", "avxvnni", "bmi", "bmi2", "clflushopt", "clwb", "cmov", "crc32", "cx16", "cx8", "f16c", "fma", "fsgsbase", "fxsr", "gfni", "hreset", "invpcid", "kl", "lzcnt", "mmx", "movbe", "movdir64b", "movdiri", "nopl", "pclmul", "pconfig", "pku", "popcnt", "prfchw", "ptwrite", "rdpid", "rdrnd", "rdseed", "sahf", "serialize", "sha", "shstk", "sse", "sse2", "sse3", "sse4.1", "sse4.2", "ssse3", "vaes", "vpclmulqdq", "waitpkg", "widekl", "x87", "xsave", "xsavec", "xsaveopt", "xsaves"],
+  "amdfam10": ["64bit", "cmov", "cx16", "cx8", "fxsr", "lzcnt", "nopl", "popcnt", "prfchw", "sahf", "sse", "sse2", "sse3", "sse4a", "x87"],
+  "arrowlake": ["64bit", "adx", "aes", "avx", "avx2", "avxifma", "avxneconvert", "avxvnni", "avxvnniint8", "bmi", "bmi2", "clflushopt", "clwb", "cmov", "cmpccxadd", "crc32", "cx16", "cx8", "enqcmd", "f16c", "fma", "fsgsbase", "fxsr", "gfni", "hreset", "invpcid", "kl", "lzcnt", "mmx", "movbe", "movdir64b", "movdiri", "nopl", "pclmul", "pconfig", "pku", "popcnt", "prfchw", "ptwrite", "rdpid", "rdrnd", "rdseed", "sahf", "serialize", "sha", "shstk", "sse", "sse2", "sse3", "sse4.1", "sse4.2", "ssse3", "uintr", "vaes", "vpclmulqdq", "waitpkg", "widekl", "x87", "xsave", "xsavec", "xsaveopt", "xsaves"],
+  "arrowlake-s": ["64bit", "adx", "aes", "avx", "avx2", "avxifma", "avxneconvert", "avxvnni", "avxvnniint16", "avxvnniint8", "bmi", "bmi2", "clflushopt", "clwb", "cmov", "cmpccxadd", "crc32", "cx16", "cx8", "enqcmd", "f16c", "fma", "fsgsbase", "fxsr", "gfni", "hreset", "invpcid", "kl", "lzcnt", "mmx", "movbe", "movdir64b", "movdiri", "nopl", "pclmul", "pconfig", "pku", "popcnt", "prfchw", "ptwrite", "rdpid", "rdrnd", "rdseed", "sahf", "serialize", "sha", "sha512", "shstk", "sm3", "sm4", "sse", "sse2", "sse3", "sse4.1", "sse4.2", "ssse3", "uintr", "vaes", "vpclmulqdq", "waitpkg", "widekl", "x87", "xsave", "xsavec", "xsaveopt", "xsaves"],
+  "athlon": ["cmov", "cx8", "mmx", "nopl", "prfchw", "x87"],
+  "athlon-4": ["cmov", "cx8", "fxsr", "mmx", "nopl", "prfchw", "sse", "x87"],
+  "atom_sse4_2_movbe": ["64bit", "aes", "clflushopt", "cmov", "crc32", "cx16", "cx8", "fsgsbase", "fxsr", "mmx", "movbe", "nopl", "pclmul", "popcnt", "prfchw", "rdrnd", "rdseed", "sahf", "sha", "sse", "sse2", "sse3", "sse4.1", "sse4.2", "ssse3", "x87", "xsave", "xsavec", "xsaveopt", "xsaves"],
+  "bdver1": ["64bit", "aes", "avx", "cmov", "crc32", "cx16", "cx8", "fma4", "fxsr", "lwp", "lzcnt", "mmx", "nopl", "pclmul", "popcnt", "prfchw", "sahf", "sse", "sse2", "sse3", "sse4.1", "sse4.2", "sse4a", "ssse3", "x87", "xop", "xsave"],
+  "bdver2": ["64bit", "aes", "avx", "bmi", "cmov", "crc32", "cx16", "cx8", "f16c", "fma", "fma4", "fxsr", "lwp", "lzcnt", "mmx", "nopl", "pclmul", "popcnt", "prfchw", "sahf", "sse", "sse2", "sse3", "sse4.1", "sse4.2", "sse4a", "ssse3", "tbm", "x87", "xop", "xsave"],
+  "bdver3": ["64bit", "aes", "avx", "bmi", "cmov", "crc32", "cx16", "cx8", "f16c", "fma", "fma4", "fsgsbase", "fxsr", "lwp", "lzcnt", "mmx", "nopl", "pclmul", "popcnt", "prfchw", "sahf", "sse", "sse2", "sse3", "sse4.1", "sse4.2", "sse4a", "ssse3", "tbm", "x87", "xop", "xsave", "xsaveopt"],
+  "bdver4": ["64bit", "aes", "avx", "avx2", "bmi", "bmi2", "cmov", "crc32", "cx16", "cx8", "f16c", "fma", "fma4", "fsgsbase", "fxsr", "lwp", "lzcnt", "mmx", "movbe", "mwaitx", "nopl", "pclmul", "popcnt", "prfchw", "rdrnd", "sahf", "sse", "sse2", "sse3", "sse4.1", "sse4.2", "sse4a", "ssse3", "tbm", "x87", "xop", "xsave", "xsaveopt"],
+  "bonnell": ["64bit", "cmov", "cx16", "cx8", "fxsr", "mmx", "movbe", "nopl", "sahf", "sse", "sse2", "sse3", "ssse3", "x87"],
+  "broadwell": ["64bit", "adx", "avx", "avx2", "bmi", "bmi2", "cmov", "crc32", "cx16", "cx8", "ermsb", "f16c", "fma", "fsgsbase", "fxsr", "invpcid", "lzcnt", "mmx", "movbe", "nopl", "pclmul", "popcnt", "prfchw", "rdrnd", "rdseed", "sahf", "sse", "sse2", "sse3", "sse4.1", "sse4.2", "ssse3", "x87", "xsave", "xsaveopt"],
+  "btver1": ["64bit", "cmov", "cx16", "cx8", "fxsr", "lzcnt", "mmx", "nopl", "popcnt", "prfchw", "sahf", "sse", "sse2", "sse3", "sse4a", "ssse3", "x87"],
+  "btver2": ["64bit", "aes", "avx", "bmi", "cmov", "crc32", "cx16", "cx8", "f16c", "fxsr", "lzcnt", "mmx", "movbe", "nopl", "pclmul", "popcnt", "prfchw", "sahf", "sse", "sse2", "sse3", "sse4.1", "sse4.2", "sse4a", "ssse3", "x87", "xsave", "xsaveopt"],
+  "c3": ["mmx", "prfchw", "x87"],
+  "c3-2": ["cmov", "cx8", "fxsr", "mmx", "sse", "x87"],
+  "c86-4g-m4": ["64bit", "adx", "aes", "avx", "avx2", "bmi", "bmi2", "clflushopt", "clzero", "cmov", "crc32", "cx16", "cx8", "f16c", "fma", "fsgsbase", "fxsr", "lzcnt", "mmx", "movbe", "mwaitx", "nopl", "pclmul", "popcnt", "prfchw", "rdrnd", "rdseed", "sahf", "sha", "sse", "sse2", "sse3", "sse4.1", "sse4.2", "sse4a", "ssse3", "x87", "xsave", "xsavec", "xsaveopt", "xsaves"],
+  "c86-4g-m7": ["64bit", "adx", "aes", "avx", "avx2", "avx512bf16", "avx512bitalg", "avx512bw", "avx512cd", "avx512dq", "avx512f", "avx512ifma", "avx512vbmi", "avx512vbmi2", "avx512vl", "avx512vnni", "avx512vpopcntdq", "bmi", "bmi2", "clflushopt", "clwb", "clzero", "cmov", "crc32", "cx16", "cx8", "f16c", "fma", "fsgsbase", "fxsr", "gfni", "lzcnt", "mmx", "movbe", "mwaitx", "nopl", "pclmul", "popcnt", "prfchw", "rdrnd", "rdseed", "sahf", "sha", "sse", "sse2", "sse3", "sse4.1", "sse4.2", "sse4a", "ssse3", "vaes", "vpclmulqdq", "wbnoinvd", "x87", "xsave", "xsavec", "xsaveopt", "xsaves"],
+  "c86-4g-m8": ["64bit", "adx", "aes", "avx", "avx2", "avx512bf16", "avx512bitalg", "avx512bw", "avx512cd", "avx512dq", "avx512f", "avx512ifma", "avx512vbmi", "avx512vbmi2", "avx512vl", "avx512vnni", "avx512vpopcntdq", "bmi", "bmi2", "clflushopt", "clwb", "clzero", "cmov", "crc32", "cx16", "cx8", "f16c", "fma", "fsgsbase", "fxsr", "gfni", "lzcnt", "mmx", "movbe", "mwaitx", "nopl", "pclmul", "popcnt", "prfchw", "rdrnd", "rdseed", "sahf", "sha", "shstk", "sse", "sse2", "sse3", "sse4.1", "sse4.2", "sse4a", "ssse3", "vaes", "vpclmulqdq", "wbnoinvd", "x87", "xsave", "xsavec", "xsaveopt", "xsaves"],
+  "cannonlake": ["64bit", "adx", "aes", "avx", "avx2", "avx512bw", "avx512cd", "avx512dq", "avx512f", "avx512ifma", "avx512vbmi", "avx512vl", "bmi", "bmi2", "clflushopt", "cmov", "crc32", "cx16", "cx8", "ermsb", "f16c", "fma", "fsgsbase", "fxsr", "invpcid", "lzcnt", "mmx", "movbe", "nopl", "pclmul", "pku", "popcnt", "prfchw", "rdrnd", "rdseed", "sahf", "sha", "sse", "sse2", "sse3", "sse4.1", "sse4.2", "ssse3", "x87", "xsave", "xsavec", "xsaveopt", "xsaves"],
+  "cascadelake": ["64bit", "adx", "aes", "avx", "avx2", "avx512bw", "avx512cd", "avx512dq", "avx512f", "avx512vl", "avx512vnni", "bmi", "bmi2", "clflushopt", "clwb", "cmov", "crc32", "cx16", "cx8", "ermsb", "f16c", "fma", "fsgsbase", "fxsr", "invpcid", "lzcnt", "mmx", "movbe", "nopl", "pclmul", "pku", "popcnt", "prfchw", "rdrnd", "rdseed", "sahf", "sse", "sse2", "sse3", "sse4.1", "sse4.2", "ssse3", "x87", "xsave", "xsavec", "xsaveopt", "xsaves"],
+  "clearwaterforest": ["64bit", "adx", "aes", "avx", "avx2", "avxifma", "avxneconvert", "avxvnni", "avxvnniint16", "avxvnniint8", "bmi", "bmi2", "cldemote", "clflushopt", "clwb", "cmov", "cmpccxadd", "crc32", "cx16", "cx8", "enqcmd", "f16c", "fma", "fsgsbase", "fxsr", "gfni", "hreset", "invpcid", "lzcnt", "mmx", "movbe", "movdir64b", "movdiri", "nopl", "pclmul", "pconfig", "pku", "popcnt", "prefetchi", "prfchw", "ptwrite", "rdpid", "rdrnd", "rdseed", "sahf", "serialize", "sha", "sha512", "shstk", "sm3", "sm4", "sse", "sse2", "sse3", "sse4.1", "sse4.2", "ssse3", "uintr", "usermsr", "vaes", "vpclmulqdq", "waitpkg", "x87", "xsave", "xsavec", "xsaveopt", "xsaves"],
+  "cooperlake": ["64bit", "adx", "aes", "avx", "avx2", "avx512bf16", "avx512bw", "avx512cd", "avx512dq", "avx512f", "avx512vl", "avx512vnni", "bmi", "bmi2", "clflushopt", "clwb", "cmov", "crc32", "cx16", "cx8", "ermsb", "f16c", "fma", "fsgsbase", "fxsr", "invpcid", "lzcnt", "mmx", "movbe", "nopl", "pclmul", "pku", "popcnt", "prfchw", "rdrnd", "rdseed", "sahf", "sse", "sse2", "sse3", "sse4.1", "sse4.2", "ssse3", "x87", "xsave", "xsavec", "xsaveopt", "xsaves"],
+  "core2": ["64bit", "cmov", "cx16", "cx8", "fxsr", "mmx", "nopl", "sahf", "sse", "sse2", "sse3", "ssse3", "x87"],
+  "diamondrapids": ["64bit", "adx", "aes", "amx-avx512", "amx-bf16", "amx-complex", "amx-fp16", "amx-fp8", "amx-int8", "amx-movrs", "amx-tile", "avx", "avx10.1", "avx10.2", "avx2", "avx512bf16", "avx512bitalg", "avx512bw", "avx512cd", "avx512dq", "avx512f", "avx512fp16", "avx512ifma", "avx512vbmi", "avx512vbmi2", "avx512vl", "avx512vnni", "avx512vpopcntdq", "avxifma", "avxneconvert", "avxvnni", "avxvnniint16", "avxvnniint8", "bmi", "bmi2", "ccmp", "cldemote", "clflushopt", "clwb", "cmov", "cmpccxadd", "crc32", "cx16", "cx8", "egpr", "enqcmd", "ermsb", "f16c", "fma", "fsgsbase", "fsrm", "fxsr", "gfni", "invpcid", "jmpabs", "lzcnt", "mmx", "movbe", "movdir64b", "movdiri", "movrs", "ndd", "nf", "nopl", "pclmul", "pconfig", "pku", "popcnt", "ppx", "prefetchi", "prfchw", "ptwrite", "push2pop2", "rdpid", "rdrnd", "rdseed", "sahf", "serialize", "sha", "sha512", "shstk", "sm3", "sm4", "sse", "sse2", "sse3", "sse4.1", "sse4.2", "ssse3", "tsxldtrk", "uintr", "vaes", "vpclmulqdq", "waitpkg", "wbnoinvd", "x87", "xsave", "xsavec", "xsaveopt", "xsaves", "zu"],
+  "emeraldrapids": ["64bit", "adx", "aes", "amx-bf16", "amx-int8", "amx-tile", "avx", "avx2", "avx512bf16", "avx512bitalg", "avx512bw", "avx512cd", "avx512dq", "avx512f", "avx512fp16", "avx512ifma", "avx512vbmi", "avx512vbmi2", "avx512vl", "avx512vnni", "avx512vpopcntdq", "avxvnni", "bmi", "bmi2", "cldemote", "clflushopt", "clwb", "cmov", "crc32", "cx16", "cx8", "enqcmd", "ermsb", "f16c", "fma", "fsgsbase", "fsrm", "fxsr", "gfni", "invpcid", "lzcnt", "mmx", "movbe", "movdir64b", "movdiri", "nopl", "pclmul", "pconfig", "pku", "popcnt", "prfchw", "ptwrite", "rdpid", "rdrnd", "rdseed", "sahf", "serialize", "sha", "shstk", "sse", "sse2", "sse3", "sse4.1", "sse4.2", "ssse3", "tsxldtrk", "uintr", "vaes", "vpclmulqdq", "waitpkg", "wbnoinvd", "x87", "xsave", "xsavec", "xsaveopt", "xsaves"],
+  "generic": ["64bit", "cx8", "x87"],
+  "geode": ["cx8", "mmx", "prfchw", "x87"],
+  "goldmont": ["64bit", "aes", "clflushopt", "cmov", "crc32", "cx16", "cx8", "fsgsbase", "fxsr", "mmx", "movbe", "nopl", "pclmul", "popcnt", "prfchw", "rdrnd", "rdseed", "sahf", "sha", "sse", "sse2", "sse3", "sse4.1", "sse4.2", "ssse3", "x87", "xsave", "xsavec", "xsaveopt", "xsaves"],
+  "goldmont_plus": ["64bit", "aes", "clflushopt", "cmov", "crc32", "cx16", "cx8", "fsgsbase", "fxsr", "mmx", "movbe", "nopl", "pclmul", "popcnt", "prfchw", "ptwrite", "rdpid", "rdrnd", "rdseed", "sahf", "sha", "sse", "sse2", "sse3", "sse4.1", "sse4.2", "ssse3", "x87", "xsave", "xsavec", "xsaveopt", "xsaves"],
+  "gracemont": ["64bit", "adx", "aes", "avx", "avx2", "avxvnni", "bmi", "bmi2", "clflushopt", "clwb", "cmov", "crc32", "cx16", "cx8", "f16c", "fma", "fsgsbase", "fxsr", "gfni", "hreset", "invpcid", "kl", "lzcnt", "mmx", "movbe", "movdir64b", "movdiri", "nopl", "pclmul", "pconfig", "pku", "popcnt", "prfchw", "ptwrite", "rdpid", "rdrnd", "rdseed", "sahf", "serialize", "sha", "shstk", "sse", "sse2", "sse3", "sse4.1", "sse4.2", "ssse3", "vaes", "vpclmulqdq", "waitpkg", "widekl", "x87", "xsave", "xsavec", "xsaveopt", "xsaves"],
+  "graniterapids": ["64bit", "adx", "aes", "amx-bf16", "amx-fp16", "amx-int8", "amx-tile", "avx", "avx2", "avx512bf16", "avx512bitalg", "avx512bw", "avx512cd", "avx512dq", "avx512f", "avx512fp16", "avx512ifma", "avx512vbmi", "avx512vbmi2", "avx512vl", "avx512vnni", "avx512vpopcntdq", "avxvnni", "bmi", "bmi2", "cldemote", "clflushopt", "clwb", "cmov", "crc32", "cx16", "cx8", "enqcmd", "ermsb", "f16c", "fma", "fsgsbase", "fsrm", "fxsr", "gfni", "invpcid", "lzcnt", "mmx", "movbe", "movdir64b", "movdiri", "nopl", "pclmul", "pconfig", "pku", "popcnt", "prefetchi", "prfchw", "ptwrite", "rdpid", "rdrnd", "rdseed", "sahf", "serialize", "sha", "shstk", "sse", "sse2", "sse3", "sse4.1", "sse4.2", "ssse3", "tsxldtrk", "uintr", "vaes", "vpclmulqdq", "waitpkg", "wbnoinvd", "x87", "xsave", "xsavec", "xsaveopt", "xsaves"],
+  "graniterapids-d": ["64bit", "adx", "aes", "amx-bf16", "amx-complex", "amx-fp16", "amx-int8", "amx-tile", "avx", "avx2", "avx512bf16", "avx512bitalg", "avx512bw", "avx512cd", "avx512dq", "avx512f", "avx512fp16", "avx512ifma", "avx512vbmi", "avx512vbmi2", "avx512vl", "avx512vnni", "avx512vpopcntdq", "avxvnni", "bmi", "bmi2", "cldemote", "clflushopt", "clwb", "cmov", "crc32", "cx16", "cx8", "enqcmd", "ermsb", "f16c", "fma", "fsgsbase", "fsrm", "fxsr", "gfni", "invpcid", "lzcnt", "mmx", "movbe", "movdir64b", "movdiri", "nopl", "pclmul", "pconfig", "pku", "popcnt", "prefetchi", "prfchw", "ptwrite", "rdpid", "rdrnd", "rdseed", "sahf", "serialize", "sha", "shstk", "sse", "sse2", "sse3", "sse4.1", "sse4.2", "ssse3", "tsxldtrk", "uintr", "vaes", "vpclmulqdq", "waitpkg", "wbnoinvd", "x87", "xsave", "xsavec", "xsaveopt", "xsaves"],
+  "haswell": ["64bit", "avx", "avx2", "bmi", "bmi2", "cmov", "crc32", "cx16", "cx8", "ermsb", "f16c", "fma", "fsgsbase", "fxsr", "invpcid", "lzcnt", "mmx", "movbe", "nopl", "pclmul", "popcnt", "rdrnd", "sahf", "sse", "sse2", "sse3", "sse4.1", "sse4.2", "ssse3", "x87", "xsave", "xsaveopt"],
+  "i386": ["x87"],
+  "i486": ["x87"],
+  "i586": ["cx8", "x87"],
+  "i686": ["cmov", "cx8", "x87"],
+  "icelake-client": ["64bit", "adx", "aes", "avx", "avx2", "avx512bitalg", "avx512bw", "avx512cd", "avx512dq", "avx512f", "avx512ifma", "avx512vbmi", "avx512vbmi2", "avx512vl", "avx512vnni", "avx512vpopcntdq", "bmi", "bmi2", "clflushopt", "cmov", "crc32", "cx16", "cx8", "ermsb", "f16c", "fma", "fsgsbase", "fsrm", "fxsr", "gfni", "invpcid", "lzcnt", "mmx", "movbe", "nopl", "pclmul", "pku", "popcnt", "prfchw", "rdpid", "rdrnd", "rdseed", "sahf", "sha", "sse", "sse2", "sse3", "sse4.1", "sse4.2", "ssse3", "vaes", "vpclmulqdq", "x87", "xsave", "xsavec", "xsaveopt", "xsaves"],
+  "icelake-server": ["64bit", "adx", "aes", "avx", "avx2", "avx512bitalg", "avx512bw", "avx512cd", "avx512dq", "avx512f", "avx512ifma", "avx512vbmi", "avx512vbmi2", "avx512vl", "avx512vnni", "avx512vpopcntdq", "bmi", "bmi2", "clflushopt", "clwb", "cmov", "crc32", "cx16", "cx8", "ermsb", "f16c", "fma", "fsgsbase", "fsrm", "fxsr", "gfni", "invpcid", "lzcnt", "mmx", "movbe", "nopl", "pclmul", "pconfig", "pku", "popcnt", "prfchw", "rdpid", "rdrnd", "rdseed", "sahf", "sha", "sse", "sse2", "sse3", "sse4.1", "sse4.2", "ssse3", "vaes", "vpclmulqdq", "wbnoinvd", "x87", "xsave", "xsavec", "xsaveopt", "xsaves"],
+  "ivybridge": ["64bit", "avx", "cmov", "crc32", "cx16", "cx8", "f16c", "fsgsbase", "fxsr", "mmx", "nopl", "pclmul", "popcnt", "rdrnd", "sahf", "sse", "sse2", "sse3", "sse4.1", "sse4.2", "ssse3", "x87", "xsave", "xsaveopt"],
+  "k6": ["cx8", "mmx", "x87"],
+  "k6-2": ["cx8", "mmx", "prfchw", "x87"],
+  "k6-3": ["cx8", "mmx", "prfchw", "x87"],
+  "k8": ["64bit", "cmov", "cx8", "fxsr", "mmx", "nopl", "prfchw", "sse", "sse2", "x87"],
+  "k8-sse3": ["64bit", "cmov", "cx16", "cx8", "fxsr", "mmx", "nopl", "prfchw", "sse", "sse2", "sse3", "x87"],
+  "knl": ["64bit", "adx", "aes", "avx", "avx2", "avx512cd", "avx512f", "bmi", "bmi2", "cmov", "crc32", "cx16", "cx8", "f16c", "fma", "fsgsbase", "fxsr", "lzcnt", "mmx", "movbe", "nopl", "pclmul", "popcnt", "prfchw", "rdrnd", "rdseed", "sahf", "sse", "sse2", "sse3", "sse4.1", "sse4.2", "ssse3", "x87", "xsave", "xsaveopt"],
+  "knm": ["64bit", "adx", "aes", "avx", "avx2", "avx512cd", "avx512f", "avx512vpopcntdq", "bmi", "bmi2", "cmov", "crc32", "cx16", "cx8", "f16c", "fma", "fsgsbase", "fxsr", "lzcnt", "mmx", "movbe", "nopl", "pclmul", "popcnt", "prfchw", "rdrnd", "rdseed", "sahf", "sse", "sse2", "sse3", "sse4.1", "sse4.2", "ssse3", "x87", "xsave", "xsaveopt"],
+  "lakemont": ["cx8"],
+  "lunarlake": ["64bit", "adx", "aes", "avx", "avx2", "avxifma", "avxneconvert", "avxvnni", "avxvnniint16", "avxvnniint8", "bmi", "bmi2", "clflushopt", "clwb", "cmov", "cmpccxadd", "crc32", "cx16", "cx8", "enqcmd", "f16c", "fma", "fsgsbase", "fxsr", "gfni", "hreset", "invpcid", "kl", "lzcnt", "mmx", "movbe", "movdir64b", "movdiri", "nopl", "pclmul", "pconfig", "pku", "popcnt", "prfchw", "ptwrite", "rdpid", "rdrnd", "rdseed", "sahf", "serialize", "sha", "sha512", "shstk", "sm3", "sm4", "sse", "sse2", "sse3", "sse4.1", "sse4.2", "ssse3", "uintr", "vaes", "vpclmulqdq", "waitpkg", "widekl", "x87", "xsave", "xsavec", "xsaveopt", "xsaves"],
+  "meteorlake": ["64bit", "adx", "aes", "avx", "avx2", "avxvnni", "bmi", "bmi2", "clflushopt", "clwb", "cmov", "crc32", "cx16", "cx8", "f16c", "fma", "fsgsbase", "fxsr", "gfni", "hreset", "invpcid", "kl", "lzcnt", "mmx", "movbe", "movdir64b", "movdiri", "nopl", "pclmul", "pconfig", "pku", "popcnt", "prfchw", "ptwrite", "rdpid", "rdrnd", "rdseed", "sahf", "serialize", "sha", "shstk", "sse", "sse2", "sse3", "sse4.1", "sse4.2", "ssse3", "vaes", "vpclmulqdq", "waitpkg", "widekl", "x87", "xsave", "xsavec", "xsaveopt", "xsaves"],
+  "nehalem": ["64bit", "cmov", "crc32", "cx16", "cx8", "fxsr", "mmx", "nopl", "popcnt", "sahf", "sse", "sse2", "sse3", "sse4.1", "sse4.2", "ssse3", "x87"],
+  "nocona": ["64bit", "cmov", "cx16", "cx8", "fxsr", "mmx", "nopl", "sse", "sse2", "sse3", "x87"],
+  "novalake": ["64bit", "adx", "aes", "avx", "avx10.1", "avx10.2", "avx2", "avx512bf16", "avx512bitalg", "avx512bw", "avx512cd", "avx512dq", "avx512f", "avx512fp16", "avx512ifma", "avx512vbmi", "avx512vbmi2", "avx512vl", "avx512vnni", "avx512vpopcntdq", "avxifma", "avxneconvert", "avxvnni", "avxvnniint16", "avxvnniint8", "bmi", "bmi2", "ccmp", "clflushopt", "clwb", "cmov", "cmpccxadd", "crc32", "cx16", "cx8", "egpr", "enqcmd", "f16c", "fma", "fsgsbase", "fxsr", "gfni", "hreset", "invpcid", "jmpabs", "lzcnt", "mmx", "movbe", "movdir64b", "movdiri", "movrs", "ndd", "nf", "nopl", "pclmul", "pconfig", "pku", "popcnt", "ppx", "prefetchi", "prfchw", "ptwrite", "push2pop2", "rdpid", "rdrnd", "rdseed", "sahf", "serialize", "sha", "sha512", "shstk", "sm3", "sm4", "sse", "sse2", "sse3", "sse4.1", "sse4.2", "ssse3", "uintr", "vaes", "vpclmulqdq", "waitpkg", "x87", "xsave", "xsavec", "xsaveopt", "xsaves", "zu"],
+  "pantherlake": ["64bit", "adx", "aes", "avx", "avx2", "avxifma", "avxneconvert", "avxvnni", "avxvnniint16", "avxvnniint8", "bmi", "bmi2", "clflushopt", "clwb", "cmov", "cmpccxadd", "crc32", "cx16", "cx8", "enqcmd", "f16c", "fma", "fsgsbase", "fxsr", "gfni", "hreset", "invpcid", "lzcnt", "mmx", "movbe", "movdir64b", "movdiri", "nopl", "pclmul", "pconfig", "pku", "popcnt", "prfchw", "ptwrite", "rdpid", "rdrnd", "rdseed", "sahf", "serialize", "sha", "sha512", "shstk", "sm3", "sm4", "sse", "sse2", "sse3", "sse4.1", "sse4.2", "ssse3", "uintr", "vaes", "vpclmulqdq", "waitpkg", "x87", "xsave", "xsavec", "xsaveopt", "xsaves"],
+  "penryn": ["64bit", "cmov", "cx16", "cx8", "fxsr", "mmx", "nopl", "sahf", "sse", "sse2", "sse3", "sse4.1", "ssse3", "x87"],
+  "pentium-mmx": ["cx8", "mmx", "x87"],
+  "pentium2": ["cmov", "cx8", "fxsr", "mmx", "nopl", "x87"],
+  "pentium3": ["cmov", "cx8", "fxsr", "mmx", "nopl", "sse", "x87"],
+  "pentium4": ["cmov", "cx8", "fxsr", "mmx", "nopl", "sse", "sse2", "x87"],
+  "pentium_m": ["cmov", "cx8", "fxsr", "mmx", "nopl", "sse", "sse2", "x87"],
+  "pentiumpro": ["cmov", "cx8", "nopl", "x87"],
+  "prescott": ["cmov", "cx8", "fxsr", "mmx", "nopl", "sse", "sse2", "sse3", "x87"],
+  "raptorlake": ["64bit", "adx", "aes", "avx", "avx2", "avxvnni", "bmi", "bmi2", "clflushopt", "clwb", "cmov", "crc32", "cx16", "cx8", "f16c", "fma", "fsgsbase", "fxsr", "gfni", "hreset", "invpcid", "kl", "lzcnt", "mmx", "movbe", "movdir64b", "movdiri", "nopl", "pclmul", "pconfig", "pku", "popcnt", "prfchw", "ptwrite", "rdpid", "rdrnd", "rdseed", "sahf", "serialize", "sha", "shstk", "sse", "sse2", "sse3", "sse4.1", "sse4.2", "ssse3", "vaes", "vpclmulqdq", "waitpkg", "widekl", "x87", "xsave", "xsavec", "xsaveopt", "xsaves"],
+  "rocketlake": ["64bit", "adx", "aes", "avx", "avx2", "avx512bitalg", "avx512bw", "avx512cd", "avx512dq", "avx512f", "avx512ifma", "avx512vbmi", "avx512vbmi2", "avx512vl", "avx512vnni", "avx512vpopcntdq", "bmi", "bmi2", "clflushopt", "cmov", "crc32", "cx16", "cx8", "ermsb", "f16c", "fma", "fsgsbase", "fsrm", "fxsr", "gfni", "invpcid", "lzcnt", "mmx", "movbe", "nopl", "pclmul", "pku", "popcnt", "prfchw", "rdpid", "rdrnd", "rdseed", "sahf", "sha", "sse", "sse2", "sse3", "sse4.1", "sse4.2", "ssse3", "vaes", "vpclmulqdq", "x87", "xsave", "xsavec", "xsaveopt", "xsaves"],
+  "sandybridge": ["64bit", "avx", "cmov", "crc32", "cx16", "cx8", "fxsr", "mmx", "nopl", "pclmul", "popcnt", "sahf", "sse", "sse2", "sse3", "sse4.1", "sse4.2", "ssse3", "x87", "xsave", "xsaveopt"],
+  "sapphirerapids": ["64bit", "adx", "aes", "amx-bf16", "amx-int8", "amx-tile", "avx", "avx2", "avx512bf16", "avx512bitalg", "avx512bw", "avx512cd", "avx512dq", "avx512f", "avx512fp16", "avx512ifma", "avx512vbmi", "avx512vbmi2", "avx512vl", "avx512vnni", "avx512vpopcntdq", "avxvnni", "bmi", "bmi2", "cldemote", "clflushopt", "clwb", "cmov", "crc32", "cx16", "cx8", "enqcmd", "ermsb", "f16c", "fma", "fsgsbase", "fsrm", "fxsr", "gfni", "invpcid", "lzcnt", "mmx", "movbe", "movdir64b", "movdiri", "nopl", "pclmul", "pconfig", "pku", "popcnt", "prfchw", "ptwrite", "rdpid", "rdrnd", "rdseed", "sahf", "serialize", "sha", "shstk", "sse", "sse2", "sse3", "sse4.1", "sse4.2", "ssse3", "tsxldtrk", "uintr", "vaes", "vpclmulqdq", "waitpkg", "wbnoinvd", "x87", "xsave", "xsavec", "xsaveopt", "xsaves"],
+  "sierraforest": ["64bit", "adx", "aes", "avx", "avx2", "avxifma", "avxneconvert", "avxvnni", "avxvnniint8", "bmi", "bmi2", "cldemote", "clflushopt", "clwb", "cmov", "cmpccxadd", "crc32", "cx16", "cx8", "enqcmd", "f16c", "fma", "fsgsbase", "fxsr", "gfni", "hreset", "invpcid", "kl", "lzcnt", "mmx", "movbe", "movdir64b", "movdiri", "nopl", "pclmul", "pconfig", "pku", "popcnt", "prfchw", "ptwrite", "rdpid", "rdrnd", "rdseed", "sahf", "serialize", "sha", "shstk", "sse", "sse2", "sse3", "sse4.1", "sse4.2", "ssse3", "uintr", "vaes", "vpclmulqdq", "waitpkg", "widekl", "x87", "xsave", "xsavec", "xsaveopt", "xsaves"],
+  "silvermont": ["64bit", "cmov", "crc32", "cx16", "cx8", "fxsr", "mmx", "movbe", "nopl", "pclmul", "popcnt", "prfchw", "rdrnd", "sahf", "sse", "sse2", "sse3", "sse4.1", "sse4.2", "ssse3", "x87"],
+  "skylake": ["64bit", "adx", "aes", "avx", "avx2", "bmi", "bmi2", "clflushopt", "cmov", "crc32", "cx16", "cx8", "ermsb", "f16c", "fma", "fsgsbase", "fxsr", "invpcid", "lzcnt", "mmx", "movbe", "nopl", "pclmul", "popcnt", "prfchw", "rdrnd", "rdseed", "sahf", "sse", "sse2", "sse3", "sse4.1", "sse4.2", "ssse3", "x87", "xsave", "xsavec", "xsaveopt", "xsaves"],
+  "skylake-avx512": ["64bit", "adx", "aes", "avx", "avx2", "avx512bw", "avx512cd", "avx512dq", "avx512f", "avx512vl", "bmi", "bmi2", "clflushopt", "clwb", "cmov", "crc32", "cx16", "cx8", "ermsb", "f16c", "fma", "fsgsbase", "fxsr", "invpcid", "lzcnt", "mmx", "movbe", "nopl", "pclmul", "pku", "popcnt", "prfchw", "rdrnd", "rdseed", "sahf", "sse", "sse2", "sse3", "sse4.1", "sse4.2", "ssse3", "x87", "xsave", "xsavec", "xsaveopt", "xsaves"],
+  "tigerlake": ["64bit", "adx", "aes", "avx", "avx2", "avx512bitalg", "avx512bw", "avx512cd", "avx512dq", "avx512f", "avx512ifma", "avx512vbmi", "avx512vbmi2", "avx512vl", "avx512vnni", "avx512vp2intersect", "avx512vpopcntdq", "bmi", "bmi2", "clflushopt", "clwb", "cmov", "crc32", "cx16", "cx8", "ermsb", "f16c", "fma", "fsgsbase", "fsrm", "fxsr", "gfni", "invpcid", "lzcnt", "mmx", "movbe", "movdir64b", "movdiri", "nopl", "pclmul", "pku", "popcnt", "prfchw", "rdpid", "rdrnd", "rdseed", "sahf", "sha", "shstk", "sse", "sse2", "sse3", "sse4.1", "sse4.2", "ssse3", "vaes", "vpclmulqdq", "x87", "xsave", "xsavec", "xsaveopt", "xsaves"],
+  "tremont": ["64bit", "aes", "clflushopt", "clwb", "cmov", "crc32", "cx16", "cx8", "fsgsbase", "fxsr", "gfni", "mmx", "movbe", "nopl", "pclmul", "popcnt", "prfchw", "ptwrite", "rdpid", "rdrnd", "rdseed", "sahf", "sha", "sse", "sse2", "sse3", "sse4.1", "sse4.2", "ssse3", "x87", "xsave", "xsavec", "xsaveopt", "xsaves"],
+  "westmere": ["64bit", "cmov", "crc32", "cx16", "cx8", "fxsr", "mmx", "nopl", "pclmul", "popcnt", "sahf", "sse", "sse2", "sse3", "sse4.1", "sse4.2", "ssse3", "x87"],
+  "winchip-c6": ["mmx", "x87"],
+  "winchip2": ["mmx", "prfchw", "x87"],
+  "x86-64": ["64bit", "cmov", "cx8", "fxsr", "mmx", "nopl", "sse", "sse2", "x87"],
+  "x86-64-v2": ["64bit", "cmov", "crc32", "cx16", "cx8", "fxsr", "mmx", "nopl", "popcnt", "sahf", "sse", "sse2", "sse3", "sse4.1", "sse4.2", "ssse3", "x87"],
+  "x86-64-v3": ["64bit", "avx", "avx2", "bmi", "bmi2", "cmov", "crc32", "cx16", "cx8", "f16c", "fma", "fxsr", "lzcnt", "mmx", "movbe", "nopl", "popcnt", "sahf", "sse", "sse2", "sse3", "sse4.1", "sse4.2", "ssse3", "x87", "xsave"],
+  "x86-64-v4": ["64bit", "avx", "avx2", "avx512bw", "avx512cd", "avx512dq", "avx512f", "avx512vl", "bmi", "bmi2", "cmov", "crc32", "cx16", "cx8", "f16c", "fma", "fxsr", "lzcnt", "mmx", "movbe", "nopl", "popcnt", "sahf", "sse", "sse2", "sse3", "sse4.1", "sse4.2", "ssse3", "x87", "xsave"],
+  "yonah": ["cmov", "cx8", "fxsr", "mmx", "nopl", "sse", "sse2", "sse3", "x87"],
+  "znver1": ["64bit", "adx", "aes", "avx", "avx2", "bmi", "bmi2", "clflushopt", "clzero", "cmov", "crc32", "cx16", "cx8", "f16c", "fma", "fsgsbase", "fxsr", "lzcnt", "mmx", "movbe", "mwaitx", "nopl", "pclmul", "popcnt", "prfchw", "rdrnd", "rdseed", "sahf", "sha", "sse", "sse2", "sse3", "sse4.1", "sse4.2", "sse4a", "ssse3", "x87", "xsave", "xsavec", "xsaveopt", "xsaves"],
+  "znver2": ["64bit", "adx", "aes", "avx", "avx2", "bmi", "bmi2", "clflushopt", "clwb", "clzero", "cmov", "crc32", "cx16", "cx8", "f16c", "fma", "fsgsbase", "fxsr", "lzcnt", "mmx", "movbe", "mwaitx", "nopl", "pclmul", "popcnt", "prfchw", "rdpid", "rdpru", "rdrnd", "rdseed", "sahf", "sha", "sse", "sse2", "sse3", "sse4.1", "sse4.2", "sse4a", "ssse3", "wbnoinvd", "x87", "xsave", "xsavec", "xsaveopt", "xsaves"],
+  "znver3": ["64bit", "adx", "aes", "avx", "avx2", "bmi", "bmi2", "clflushopt", "clwb", "clzero", "cmov", "crc32", "cx16", "cx8", "f16c", "fma", "fsgsbase", "fsrm", "fxsr", "invpcid", "lzcnt", "mmx", "movbe", "mwaitx", "nopl", "pclmul", "pku", "popcnt", "prfchw", "rdpid", "rdpru", "rdrnd", "rdseed", "sahf", "sha", "sse", "sse2", "sse3", "sse4.1", "sse4.2", "sse4a", "ssse3", "vaes", "vpclmulqdq", "wbnoinvd", "x87", "xsave", "xsavec", "xsaveopt", "xsaves"],
+  "znver4": ["64bit", "adx", "aes", "avx", "avx2", "avx512bf16", "avx512bitalg", "avx512bw", "avx512cd", "avx512dq", "avx512f", "avx512ifma", "avx512vbmi", "avx512vbmi2", "avx512vl", "avx512vnni", "avx512vpopcntdq", "bmi", "bmi2", "clflushopt", "clwb", "clzero", "cmov", "crc32", "cx16", "cx8", "f16c", "fma", "fsgsbase", "fsrm", "fxsr", "gfni", "invpcid", "lzcnt", "mmx", "movbe", "mwaitx", "nopl", "pclmul", "pku", "popcnt", "prfchw", "rdpid", "rdpru", "rdrnd", "rdseed", "sahf", "sha", "shstk", "sse", "sse2", "sse3", "sse4.1", "sse4.2", "sse4a", "ssse3", "vaes", "vpclmulqdq", "wbnoinvd", "x87", "xsave", "xsavec", "xsaveopt", "xsaves"],
+  "znver5": ["64bit", "adx", "aes", "avx", "avx2", "avx512bf16", "avx512bitalg", "avx512bw", "avx512cd", "avx512dq", "avx512f", "avx512ifma", "avx512vbmi", "avx512vbmi2", "avx512vl", "avx512vnni", "avx512vp2intersect", "avx512vpopcntdq", "avxvnni", "bmi", "bmi2", "clflushopt", "clwb", "clzero", "cmov", "crc32", "cx16", "cx8", "f16c", "fma", "fsgsbase", "fsrm", "fxsr", "gfni", "invpcid", "lzcnt", "mmx", "movbe", "movdir64b", "movdiri", "mwaitx", "nopl", "pclmul", "pku", "popcnt", "prefetchi", "prfchw", "rdpid", "rdpru", "rdrnd", "rdseed", "sahf", "sha", "shstk", "sse", "sse2", "sse3", "sse4.1", "sse4.2", "sse4a", "ssse3", "vaes", "vpclmulqdq", "wbnoinvd", "x87", "xsave", "xsavec", "xsaveopt", "xsaves"],
+  "znver6": ["64bit", "adx", "aes", "avx", "avx2", "avx512bf16", "avx512bitalg", "avx512bmm", "avx512bw", "avx512cd", "avx512dq", "avx512f", "avx512fp16", "avx512ifma", "avx512vbmi", "avx512vbmi2", "avx512vl", "avx512vnni", "avx512vp2intersect", "avx512vpopcntdq", "avxifma", "avxneconvert", "avxvnni", "avxvnniint8", "bmi", "bmi2", "clflushopt", "clwb", "clzero", "cmov", "crc32", "cx16", "cx8", "f16c", "fma", "fsgsbase", "fsrm", "fxsr", "gfni", "invpcid", "lzcnt", "mmx", "movbe", "movdir64b", "movdiri", "mwaitx", "nopl", "pclmul", "pku", "popcnt", "prefetchi", "prfchw", "rdpid", "rdpru", "rdrnd", "rdseed", "sahf", "sha", "shstk", "sse", "sse2", "sse3", "sse4.1", "sse4.2", "sse4a", "ssse3", "vaes", "vpclmulqdq", "wbnoinvd", "x87", "xsave", "xsavec", "xsaveopt", "xsaves"]
+ }
+}

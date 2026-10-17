@@ -1,0 +1,148 @@
+# Where shipped silicon disagrees with the nominal per-model feature lists in
+# agent/hardware/isa/<arch>.json (derived from LLVM). Read by isa_tables.py.
+#
+# The rule these rows exist to enforce: a document never proves an instruction is
+# present. Manuals describe extensions that were announced and never built, and
+# parts lose extensions after release: by fuse, firmware or microcode. The kernel
+# uses an optional instruction only after the running CPU says it has it.
+#
+#   feature      the LLVM feature name, as in <arch>.json
+#   kind         never-shipped | removed | fused-off | microcode-disabled | undocumented
+#   applies_to   LLVM processor names (aliases resolve), or [] for "every part"
+#   source       a citation a reader can find. Prefer the vendor's own document
+#   source_kind  vendor-document | vendor-statement | secondary
+#   verified     true only once someone has read the cited vendor document and
+#                checked the row against it. A row written from secondary sources
+#                stays false, and the spec-reader agent's queue is every false row
+#   verify_with  the vendors.yaml document id to verify against
+exceptions:
+  - arch: x86
+    feature: fma4
+    vendor: intel
+    kind: never-shipped
+    applies_to: []
+    when: "2008-2009"
+    note: >-
+      Intel's early AVX documentation specified four-operand FMA (FMA4). Intel
+      changed the specification to three-operand FMA (FMA3) before any part
+      shipped; Haswell (2013) was the first Intel part with FMA, and it is FMA3.
+      No Intel processor implements FMA4.
+    source: "Intel AVX Programming Reference, 2008 vs 2009 revisions; Wikipedia, 'FMA instruction set'"
+    source_kind: secondary
+    verified: false
+    verify_with: intel-sdm
+
+  - arch: x86
+    feature: fma4
+    vendor: amd
+    kind: removed
+    applies_to: [znver1, znver2, znver3, znver4, znver5]
+    when: "2017"
+    note: >-
+      FMA4 shipped in Bulldozer through Excavator (bdver1-bdver4) and is not
+      reported by Zen-family CPUID. The kernel must not infer FMA4 from "AMD".
+    source: "AMD Software Optimization Guide for AMD Family 17h Processors; Wikipedia, 'FMA instruction set'"
+    source_kind: secondary
+    verified: false
+    verify_with: amd-ppr
+
+  - arch: x86
+    feature: fma4
+    vendor: amd
+    kind: undocumented
+    applies_to: [znver1]
+    when: "2017"
+    note: >-
+      Reported: first-generation Zen executes FMA4 instructions although CPUID
+      does not advertise them. Undocumented behaviour is not a feature: the kernel
+      must treat FMA4 as absent here, and this row exists so a conformance test
+      that finds it working is not filed as a defect in the wrong direction.
+    source: "Wikipedia, 'FMA instruction set' (Zen section), citing third-party testing"
+    source_kind: secondary
+    verified: false
+    verify_with: amd-ppr
+
+  - arch: x86
+    feature: xop
+    vendor: amd
+    kind: removed
+    applies_to: [znver1, znver2, znver3, znver4, znver5]
+    when: "2017"
+    note: XOP (Bulldozer family) is absent from Zen.
+    source: "AMD Software Optimization Guide for AMD Family 17h Processors"
+    source_kind: secondary
+    verified: false
+    verify_with: amd-ppr
+
+  - arch: x86
+    feature: tbm
+    vendor: amd
+    kind: removed
+    applies_to: [znver1, znver2, znver3, znver4, znver5]
+    when: "2017"
+    note: TBM (Piledriver onward) is absent from Zen.
+    source: "AMD Software Optimization Guide for AMD Family 17h Processors"
+    source_kind: secondary
+    verified: false
+    verify_with: amd-ppr
+
+  - arch: x86
+    feature: 3dnow
+    vendor: amd
+    kind: removed
+    applies_to: [bdver1, bdver2, bdver3, bdver4, btver1, btver2, znver1, znver2, znver3, znver4, znver5]
+    when: "2010"
+    note: >-
+      AMD deprecated 3DNow! and dropped it from Bulldozer and later, keeping only
+      PREFETCH/PREFETCHW. (LLVM itself removed 3DNow! in LLVM 19, so no LLVM
+      processor lists it; this row records the silicon fact, not LLVM's.)
+    source: "AMD Developer Central, '3DNow! Instructions are Being Deprecated' (2010)"
+    source_kind: vendor-statement
+    verified: false
+    verify_with: amd-apm
+
+  - arch: x86
+    feature: avx512f
+    vendor: intel
+    kind: fused-off
+    applies_to: [alderlake]
+    when: "2022"
+    note: >-
+      Alder Lake P-cores contain AVX-512 hardware. Early boards could enable it
+      with the E-cores disabled; Intel then disabled it by microcode and fused it
+      off in later production. The same model and stepping can differ by BIOS and
+      microcode, so only CPUID on the running machine can answer.
+    source: "Intel statement on Alder Lake AVX-512 (2022); Intel 12th Gen Core datasheet"
+    source_kind: vendor-statement
+    verified: false
+    verify_with: intel-spec-update
+
+  - arch: x86
+    feature: rtm
+    vendor: intel
+    kind: microcode-disabled
+    applies_to: [haswell, broadwell]
+    when: "2014"
+    note: >-
+      TSX (RTM/HLE) shipped in Haswell and early Broadwell and was disabled by a
+      microcode update for an erratum (HSW136). LLVM no longer lists RTM for these
+      parts for that reason.
+    source: "Intel 4th Generation Core Specification Update, erratum HSW136"
+    source_kind: vendor-document
+    verified: false
+    verify_with: intel-spec-update-6
+
+  - arch: x86
+    feature: rtm
+    vendor: intel
+    kind: microcode-disabled
+    applies_to: [skylake, cascadelake, skylake-avx512, cooperlake, icelake-client, icelake-server, tigerlake]
+    when: "2019-2021"
+    note: >-
+      After TSX Asynchronous Abort (TAA), Intel microcode added TSX_CTRL to
+      disable TSX, and a 2021 update disabled it by default on many client parts.
+      A part may report RTM before a microcode update and not after.
+    source: "Intel INTEL-SA-00270 (TAA); Intel 'Performance Monitoring Impact of Intel TSX Memory Ordering Issue' (2021)"
+    source_kind: vendor-document
+    verified: false
+    verify_with: intel-sa

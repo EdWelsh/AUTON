@@ -1,0 +1,303 @@
+{
+ "arch": "systemz",
+ "generated_from": [
+  {
+   "document": "llvm-systemz-features-td",
+   "sha256": "38cd1490ba9594c41115a1da7675f72b562c4c4c186168adaa618d0d8f8b08cc",
+   "source": "https://raw.githubusercontent.com/llvm/llvm-project/main/llvm/lib/Target/SystemZ/SystemZFeatures.td"
+  },
+  {
+   "document": "llvm-systemz-processors-td",
+   "sha256": "b3676676ec56f94130fdfdac8397b09a420222c46e0d98dcdfe352210daaced8",
+   "source": "https://raw.githubusercontent.com/llvm/llvm-project/main/llvm/lib/Target/SystemZ/SystemZProcessors.td"
+  }
+ ],
+ "features": {
+  "bear-enhancement": {
+   "def": "FeatureBEAREnhancement",
+   "description": "Assume that the BEAR-enhancement facility is installed",
+   "implies": []
+  },
+  "backchain": {
+   "def": "FeatureBackChain",
+   "description": "Store the address of the caller's frame into the callee's stack frame",
+   "implies": []
+  },
+  "concurrent-functions": {
+   "def": "FeatureConcurrentFunctions",
+   "description": "Assume that the concurrent-functions facility is installed",
+   "implies": []
+  },
+  "dfp-packed-conversion": {
+   "def": "FeatureDFPPackedConversion",
+   "description": "Assume that the DFP packed-conversion facility is installed",
+   "implies": []
+  },
+  "dfp-zoned-conversion": {
+   "def": "FeatureDFPZonedConversion",
+   "description": "Assume that the DFP zoned-conversion facility is installed",
+   "implies": []
+  },
+  "deflate-conversion": {
+   "def": "FeatureDeflateConversion",
+   "description": "Assume that the deflate-conversion facility is installed",
+   "implies": []
+  },
+  "distinct-ops": {
+   "def": "FeatureDistinctOps",
+   "description": "Assume that the distinct-operands facility is installed",
+   "implies": []
+  },
+  "enhanced-dat-2": {
+   "def": "FeatureEnhancedDAT2",
+   "description": "Assume that the enhanced-DAT facility 2 is installed",
+   "implies": []
+  },
+  "enhanced-sort": {
+   "def": "FeatureEnhancedSort",
+   "description": "Assume that the enhanced-sort facility is installed",
+   "implies": []
+  },
+  "execution-hint": {
+   "def": "FeatureExecutionHint",
+   "description": "Assume that the execution-hint facility is installed",
+   "implies": []
+  },
+  "fp-extension": {
+   "def": "FeatureFPExtension",
+   "description": "Assume that the floating-point extension facility is installed",
+   "implies": []
+  },
+  "fast-serialization": {
+   "def": "FeatureFastSerialization",
+   "description": "Assume that the fast-serialization facility is installed",
+   "implies": []
+  },
+  "guarded-storage": {
+   "def": "FeatureGuardedStorage",
+   "description": "Assume that the guarded-storage facility is installed",
+   "implies": []
+  },
+  "high-word": {
+   "def": "FeatureHighWord",
+   "description": "Assume that the high-word facility is installed",
+   "implies": []
+  },
+  "insert-reference-bits-multiple": {
+   "def": "FeatureInsertReferenceBitsMultiple",
+   "description": "Assume that the insert-reference-bits-multiple facility is installed",
+   "implies": []
+  },
+  "interlocked-access1": {
+   "def": "FeatureInterlockedAccess1",
+   "description": "Assume that interlocked-access facility 1 is installed",
+   "implies": []
+  },
+  "load-and-trap": {
+   "def": "FeatureLoadAndTrap",
+   "description": "Assume that the load-and-trap facility is installed",
+   "implies": []
+  },
+  "load-and-zero-rightmost-byte": {
+   "def": "FeatureLoadAndZeroRightmostByte",
+   "description": "Assume that the load-and-zero-rightmost-byte facility is installed",
+   "implies": []
+  },
+  "load-store-on-cond": {
+   "def": "FeatureLoadStoreOnCond",
+   "description": "Assume that the load/store-on-condition facility is installed",
+   "implies": []
+  },
+  "load-store-on-cond-2": {
+   "def": "FeatureLoadStoreOnCond2",
+   "description": "Assume that the load/store-on-condition facility 2 is installed",
+   "implies": []
+  },
+  "message-security-assist-extension12": {
+   "def": "FeatureMessageSecurityAssist12",
+   "description": "Assume that the message-security-assist extension facility 12 is installed",
+   "implies": []
+  },
+  "message-security-assist-extension3": {
+   "def": "FeatureMessageSecurityAssist3",
+   "description": "Assume that the message-security-assist extension facility 3 is installed",
+   "implies": []
+  },
+  "message-security-assist-extension4": {
+   "def": "FeatureMessageSecurityAssist4",
+   "description": "Assume that the message-security-assist extension facility 4 is installed",
+   "implies": []
+  },
+  "message-security-assist-extension5": {
+   "def": "FeatureMessageSecurityAssist5",
+   "description": "Assume that the message-security-assist extension facility 5 is installed",
+   "implies": []
+  },
+  "message-security-assist-extension7": {
+   "def": "FeatureMessageSecurityAssist7",
+   "description": "Assume that the message-security-assist extension facility 7 is installed",
+   "implies": []
+  },
+  "message-security-assist-extension8": {
+   "def": "FeatureMessageSecurityAssist8",
+   "description": "Assume that the message-security-assist extension facility 8 is installed",
+   "implies": []
+  },
+  "message-security-assist-extension9": {
+   "def": "FeatureMessageSecurityAssist9",
+   "description": "Assume that the message-security-assist extension facility 9 is installed",
+   "implies": []
+  },
+  "miscellaneous-extensions": {
+   "def": "FeatureMiscellaneousExtensions",
+   "description": "Assume that the miscellaneous-extensions facility is installed",
+   "implies": []
+  },
+  "miscellaneous-extensions-2": {
+   "def": "FeatureMiscellaneousExtensions2",
+   "description": "Assume that the miscellaneous-extensions facility 2 is installed",
+   "implies": []
+  },
+  "miscellaneous-extensions-3": {
+   "def": "FeatureMiscellaneousExtensions3",
+   "description": "Assume that the miscellaneous-extensions facility 3 is installed",
+   "implies": []
+  },
+  "miscellaneous-extensions-4": {
+   "def": "FeatureMiscellaneousExtensions4",
+   "description": "Assume that the miscellaneous-extensions facility 4 is installed",
+   "implies": []
+  },
+  "nnp-assist": {
+   "def": "FeatureNNPAssist",
+   "description": "Assume that the NNP-assist facility is installed",
+   "implies": []
+  },
+  "InterlockedAccess1": {
+   "def": "FeatureNoInterlockedAccess1",
+   "description": "",
+   "implies": []
+  },
+  "LoadStoreOnCond": {
+   "def": "FeatureNoLoadStoreOnCond",
+   "description": "",
+   "implies": []
+  },
+  "Vector": {
+   "def": "FeatureNoVector",
+   "description": "",
+   "implies": []
+  },
+  "VectorEnhancements1": {
+   "def": "FeatureNoVectorEnhancements1",
+   "description": "",
+   "implies": []
+  },
+  "population-count": {
+   "def": "FeaturePopulationCount",
+   "description": "Assume that the population-count facility is installed",
+   "implies": []
+  },
+  "processor-activity-instrumentation": {
+   "def": "FeatureProcessorActivityInstrumentation",
+   "description": "Assume that the processor-activity-instrumentation facility is installed",
+   "implies": []
+  },
+  "processor-assist": {
+   "def": "FeatureProcessorAssist",
+   "description": "Assume that the processor-assist facility is installed",
+   "implies": []
+  },
+  "reset-dat-protection": {
+   "def": "FeatureResetDATProtection",
+   "description": "Assume that the reset-DAT-protection facility is installed",
+   "implies": []
+  },
+  "reset-reference-bits-multiple": {
+   "def": "FeatureResetReferenceBitsMultiple",
+   "description": "Assume that the reset-reference-bits-multiple facility is installed",
+   "implies": []
+  },
+  "soft-float": {
+   "def": "FeatureSoftFloat",
+   "description": "Use software emulation for floating point",
+   "implies": []
+  },
+  "test-pending-external-interruption": {
+   "def": "FeatureTestPendingExternalInterruption",
+   "description": "Assume that the test-pending-external-interruption facility is installed",
+   "implies": []
+  },
+  "transactional-execution": {
+   "def": "FeatureTransactionalExecution",
+   "description": "Assume that the transactional-execution facility is installed",
+   "implies": []
+  },
+  "unaligned-symbols": {
+   "def": "FeatureUnalignedSymbols",
+   "description": "Don't apply the ABI minimum alignment to external symbols.",
+   "implies": []
+  },
+  "vector": {
+   "def": "FeatureVector",
+   "description": "Assume that the vectory facility is installed",
+   "implies": []
+  },
+  "vector-enhancements-1": {
+   "def": "FeatureVectorEnhancements1",
+   "description": "Assume that the vector enhancements facility 1 is installed",
+   "implies": []
+  },
+  "vector-enhancements-2": {
+   "def": "FeatureVectorEnhancements2",
+   "description": "Assume that the vector enhancements facility 2 is installed",
+   "implies": []
+  },
+  "vector-enhancements-3": {
+   "def": "FeatureVectorEnhancements3",
+   "description": "Assume that the vector enhancements facility 3 is installed",
+   "implies": []
+  },
+  "vector-packed-decimal": {
+   "def": "FeatureVectorPackedDecimal",
+   "description": "Assume that the vector packed decimal facility is installed",
+   "implies": []
+  },
+  "vector-packed-decimal-enhancement": {
+   "def": "FeatureVectorPackedDecimalEnhancement",
+   "description": "Assume that the vector packed decimal enhancement facility is installed",
+   "implies": []
+  },
+  "vector-packed-decimal-enhancement-2": {
+   "def": "FeatureVectorPackedDecimalEnhancement2",
+   "description": "Assume that the vector packed decimal enhancement facility 2 is installed",
+   "implies": []
+  },
+  "vector-packed-decimal-enhancement-3": {
+   "def": "FeatureVectorPackedDecimalEnhancement3",
+   "description": "Assume that the vector packed decimal enhancement facility 3 is installed",
+   "implies": []
+  }
+ },
+ "aliases": {},
+ "unresolved": [],
+ "processors": {
+  "arch10": ["dfp-zoned-conversion", "distinct-ops", "enhanced-dat-2", "execution-hint", "fast-serialization", "fp-extension", "high-word", "interlocked-access1", "load-and-trap", "load-store-on-cond", "message-security-assist-extension3", "message-security-assist-extension4", "miscellaneous-extensions", "population-count", "processor-assist", "reset-reference-bits-multiple", "transactional-execution"],
+  "arch11": ["dfp-packed-conversion", "dfp-zoned-conversion", "distinct-ops", "enhanced-dat-2", "execution-hint", "fast-serialization", "fp-extension", "high-word", "interlocked-access1", "load-and-trap", "load-and-zero-rightmost-byte", "load-store-on-cond", "load-store-on-cond-2", "message-security-assist-extension3", "message-security-assist-extension4", "message-security-assist-extension5", "miscellaneous-extensions", "population-count", "processor-assist", "reset-reference-bits-multiple", "transactional-execution", "vector"],
+  "arch12": ["dfp-packed-conversion", "dfp-zoned-conversion", "distinct-ops", "enhanced-dat-2", "execution-hint", "fast-serialization", "fp-extension", "guarded-storage", "high-word", "insert-reference-bits-multiple", "interlocked-access1", "load-and-trap", "load-and-zero-rightmost-byte", "load-store-on-cond", "load-store-on-cond-2", "message-security-assist-extension3", "message-security-assist-extension4", "message-security-assist-extension5", "message-security-assist-extension7", "message-security-assist-extension8", "miscellaneous-extensions", "miscellaneous-extensions-2", "population-count", "processor-assist", "reset-reference-bits-multiple", "test-pending-external-interruption", "transactional-execution", "vector", "vector-enhancements-1", "vector-packed-decimal"],
+  "arch13": ["deflate-conversion", "dfp-packed-conversion", "dfp-zoned-conversion", "distinct-ops", "enhanced-dat-2", "enhanced-sort", "execution-hint", "fast-serialization", "fp-extension", "guarded-storage", "high-word", "insert-reference-bits-multiple", "interlocked-access1", "load-and-trap", "load-and-zero-rightmost-byte", "load-store-on-cond", "load-store-on-cond-2", "message-security-assist-extension3", "message-security-assist-extension4", "message-security-assist-extension5", "message-security-assist-extension7", "message-security-assist-extension8", "message-security-assist-extension9", "miscellaneous-extensions", "miscellaneous-extensions-2", "miscellaneous-extensions-3", "population-count", "processor-assist", "reset-reference-bits-multiple", "test-pending-external-interruption", "transactional-execution", "vector", "vector-enhancements-1", "vector-enhancements-2", "vector-packed-decimal", "vector-packed-decimal-enhancement"],
+  "arch14": ["bear-enhancement", "deflate-conversion", "dfp-packed-conversion", "dfp-zoned-conversion", "distinct-ops", "enhanced-dat-2", "enhanced-sort", "execution-hint", "fast-serialization", "fp-extension", "guarded-storage", "high-word", "insert-reference-bits-multiple", "interlocked-access1", "load-and-trap", "load-and-zero-rightmost-byte", "load-store-on-cond", "load-store-on-cond-2", "message-security-assist-extension3", "message-security-assist-extension4", "message-security-assist-extension5", "message-security-assist-extension7", "message-security-assist-extension8", "message-security-assist-extension9", "miscellaneous-extensions", "miscellaneous-extensions-2", "miscellaneous-extensions-3", "nnp-assist", "population-count", "processor-activity-instrumentation", "processor-assist", "reset-dat-protection", "reset-reference-bits-multiple", "test-pending-external-interruption", "transactional-execution", "vector", "vector-enhancements-1", "vector-enhancements-2", "vector-packed-decimal", "vector-packed-decimal-enhancement", "vector-packed-decimal-enhancement-2"],
+  "arch15": ["bear-enhancement", "concurrent-functions", "deflate-conversion", "dfp-packed-conversion", "dfp-zoned-conversion", "distinct-ops", "enhanced-dat-2", "enhanced-sort", "execution-hint", "fast-serialization", "fp-extension", "guarded-storage", "high-word", "insert-reference-bits-multiple", "interlocked-access1", "load-and-trap", "load-and-zero-rightmost-byte", "load-store-on-cond", "load-store-on-cond-2", "message-security-assist-extension12", "message-security-assist-extension3", "message-security-assist-extension4", "message-security-assist-extension5", "message-security-assist-extension7", "message-security-assist-extension8", "message-security-assist-extension9", "miscellaneous-extensions", "miscellaneous-extensions-2", "miscellaneous-extensions-3", "miscellaneous-extensions-4", "nnp-assist", "population-count", "processor-activity-instrumentation", "processor-assist", "reset-dat-protection", "reset-reference-bits-multiple", "test-pending-external-interruption", "transactional-execution", "vector", "vector-enhancements-1", "vector-enhancements-2", "vector-enhancements-3", "vector-packed-decimal", "vector-packed-decimal-enhancement", "vector-packed-decimal-enhancement-2", "vector-packed-decimal-enhancement-3"],
+  "arch8": [],
+  "arch9": ["distinct-ops", "fast-serialization", "fp-extension", "high-word", "interlocked-access1", "load-store-on-cond", "message-security-assist-extension3", "message-security-assist-extension4", "population-count", "reset-reference-bits-multiple"],
+  "generic": [],
+  "z10": [],
+  "z13": ["dfp-packed-conversion", "dfp-zoned-conversion", "distinct-ops", "enhanced-dat-2", "execution-hint", "fast-serialization", "fp-extension", "high-word", "interlocked-access1", "load-and-trap", "load-and-zero-rightmost-byte", "load-store-on-cond", "load-store-on-cond-2", "message-security-assist-extension3", "message-security-assist-extension4", "message-security-assist-extension5", "miscellaneous-extensions", "population-count", "processor-assist", "reset-reference-bits-multiple", "transactional-execution", "vector"],
+  "z14": ["dfp-packed-conversion", "dfp-zoned-conversion", "distinct-ops", "enhanced-dat-2", "execution-hint", "fast-serialization", "fp-extension", "guarded-storage", "high-word", "insert-reference-bits-multiple", "interlocked-access1", "load-and-trap", "load-and-zero-rightmost-byte", "load-store-on-cond", "load-store-on-cond-2", "message-security-assist-extension3", "message-security-assist-extension4", "message-security-assist-extension5", "message-security-assist-extension7", "message-security-assist-extension8", "miscellaneous-extensions", "miscellaneous-extensions-2", "population-count", "processor-assist", "reset-reference-bits-multiple", "test-pending-external-interruption", "transactional-execution", "vector", "vector-enhancements-1", "vector-packed-decimal"],
+  "z15": ["deflate-conversion", "dfp-packed-conversion", "dfp-zoned-conversion", "distinct-ops", "enhanced-dat-2", "enhanced-sort", "execution-hint", "fast-serialization", "fp-extension", "guarded-storage", "high-word", "insert-reference-bits-multiple", "interlocked-access1", "load-and-trap", "load-and-zero-rightmost-byte", "load-store-on-cond", "load-store-on-cond-2", "message-security-assist-extension3", "message-security-assist-extension4", "message-security-assist-extension5", "message-security-assist-extension7", "message-security-assist-extension8", "message-security-assist-extension9", "miscellaneous-extensions", "miscellaneous-extensions-2", "miscellaneous-extensions-3", "population-count", "processor-assist", "reset-reference-bits-multiple", "test-pending-external-interruption", "transactional-execution", "vector", "vector-enhancements-1", "vector-enhancements-2", "vector-packed-decimal", "vector-packed-decimal-enhancement"],
+  "z16": ["bear-enhancement", "deflate-conversion", "dfp-packed-conversion", "dfp-zoned-conversion", "distinct-ops", "enhanced-dat-2", "enhanced-sort", "execution-hint", "fast-serialization", "fp-extension", "guarded-storage", "high-word", "insert-reference-bits-multiple", "interlocked-access1", "load-and-trap", "load-and-zero-rightmost-byte", "load-store-on-cond", "load-store-on-cond-2", "message-security-assist-extension3", "message-security-assist-extension4", "message-security-assist-extension5", "message-security-assist-extension7", "message-security-assist-extension8", "message-security-assist-extension9", "miscellaneous-extensions", "miscellaneous-extensions-2", "miscellaneous-extensions-3", "nnp-assist", "population-count", "processor-activity-instrumentation", "processor-assist", "reset-dat-protection", "reset-reference-bits-multiple", "test-pending-external-interruption", "transactional-execution", "vector", "vector-enhancements-1", "vector-enhancements-2", "vector-packed-decimal", "vector-packed-decimal-enhancement", "vector-packed-decimal-enhancement-2"],
+  "z17": ["bear-enhancement", "concurrent-functions", "deflate-conversion", "dfp-packed-conversion", "dfp-zoned-conversion", "distinct-ops", "enhanced-dat-2", "enhanced-sort", "execution-hint", "fast-serialization", "fp-extension", "guarded-storage", "high-word", "insert-reference-bits-multiple", "interlocked-access1", "load-and-trap", "load-and-zero-rightmost-byte", "load-store-on-cond", "load-store-on-cond-2", "message-security-assist-extension12", "message-security-assist-extension3", "message-security-assist-extension4", "message-security-assist-extension5", "message-security-assist-extension7", "message-security-assist-extension8", "message-security-assist-extension9", "miscellaneous-extensions", "miscellaneous-extensions-2", "miscellaneous-extensions-3", "miscellaneous-extensions-4", "nnp-assist", "population-count", "processor-activity-instrumentation", "processor-assist", "reset-dat-protection", "reset-reference-bits-multiple", "test-pending-external-interruption", "transactional-execution", "vector", "vector-enhancements-1", "vector-enhancements-2", "vector-enhancements-3", "vector-packed-decimal", "vector-packed-decimal-enhancement", "vector-packed-decimal-enhancement-2", "vector-packed-decimal-enhancement-3"],
+  "z196": ["distinct-ops", "fast-serialization", "fp-extension", "high-word", "interlocked-access1", "load-store-on-cond", "message-security-assist-extension3", "message-security-assist-extension4", "population-count", "reset-reference-bits-multiple"],
+  "zEC12": ["dfp-zoned-conversion", "distinct-ops", "enhanced-dat-2", "execution-hint", "fast-serialization", "fp-extension", "high-word", "interlocked-access1", "load-and-trap", "load-store-on-cond", "message-security-assist-extension3", "message-security-assist-extension4", "miscellaneous-extensions", "population-count", "processor-assist", "reset-reference-bits-multiple", "transactional-execution"]
+ }
+}

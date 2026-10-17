@@ -858,6 +858,25 @@ vendors:
         cadence: per-release
         fetch_url: https://raw.githubusercontent.com/llvm/llvm-project/main/llvm/lib/Target/SystemZ/SystemZProcessors.td
 
+      - id: llvm-riscv-features-td
+        title: LLVM RISCVFeatures.td
+        kind: machine-readable-registers
+        access: public-source
+        redistributable: true
+        licence: Apache-2.0 WITH LLVM-exception
+        form: structured
+        cadence: per-release
+        fetch_url: https://raw.githubusercontent.com/llvm/llvm-project/main/llvm/lib/Target/RISCV/RISCVFeatures.td
+      - id: llvm-systemz-features-td
+        title: LLVM SystemZFeatures.td (IBM Z facilities)
+        kind: machine-readable-registers
+        access: public-source
+        redistributable: true
+        licence: Apache-2.0 WITH LLVM-exception
+        form: structured
+        cadence: per-release
+        fetch_url: https://raw.githubusercontent.com/llvm/llvm-project/main/llvm/lib/Target/SystemZ/SystemZFeatures.td
+
   # CPU identity codes as the Linux kernel matches them: the strings and numbers a
   # running CPU reports about itself (CPUID vendor string, MIDR implementer, PVR),
   # and the CPUID feature-bit map. Facts are derived from these files; the files

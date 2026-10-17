@@ -146,7 +146,7 @@ class TestAgainstTheRealSpecs:
     def test_every_spec_parses_and_declares_capabilities(self):
         specs = load_specs()
 
-        assert len(specs) == 15, sorted(specs)
+        assert len(specs) == 16, sorted(specs)     # cpu.md (w26) is the 16th
         assert all(s.provides for s in specs.values())
 
     def test_no_capability_has_two_owners(self):

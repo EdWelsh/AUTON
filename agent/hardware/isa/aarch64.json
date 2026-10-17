@@ -1,0 +1,2676 @@
+{
+ "arch": "aarch64",
+ "generated_from": [
+  {
+   "document": "llvm-aarch64-features-td",
+   "sha256": "225a2e9312c41f2c29d365789b31851a1ecd9455358fb785612099e962308c1e",
+   "source": "https://raw.githubusercontent.com/llvm/llvm-project/main/llvm/lib/Target/AArch64/AArch64Features.td"
+  },
+  {
+   "document": "llvm-aarch64-processors-td",
+   "sha256": "c583a1b2463935ad3497a641b0e5bf2714788e2e2bb02bf182d54d9078fa75cd",
+   "source": "https://raw.githubusercontent.com/llvm/llvm-project/main/llvm/lib/Target/AArch64/AArch64Processors.td"
+  }
+ ],
+ "features": {
+  "aes": {
+   "def": "FeatureAES",
+   "description": "FEAT_AES, FEAT_PMULL",
+   "implies": [
+    "neon"
+   ]
+  },
+  "alu-lsl-fast": {
+   "def": "FeatureALULSLFast",
+   "description": "Add/Sub operations with lsl shift <= 4 are cheap",
+   "implies": []
+  },
+  "am": {
+   "def": "FeatureAM",
+   "description": "Enable Armv8.4-A Activity Monitors extension",
+   "implies": []
+  },
+  "amvs": {
+   "def": "FeatureAMVS",
+   "description": "Enable Armv8.6-A Activity Monitors Virtualization support",
+   "implies": [
+    "am"
+   ]
+  },
+  "addr-lsl-slow-14": {
+   "def": "FeatureAddrLSLSlow14",
+   "description": "Address operands with shift amount of 1 or 4 are slow",
+   "implies": []
+  },
+  "aggressive-fma": {
+   "def": "FeatureAggressiveFMA",
+   "description": "Enable Aggressive FMA for floating-point.",
+   "implies": []
+  },
+  "aggressive-interleaving": {
+   "def": "FeatureAggressiveInterleaving",
+   "description": "Make use of aggressive interleaving during vectorization",
+   "implies": []
+  },
+  "sve2-aes": {
+   "def": "FeatureAliasSVE2AES",
+   "description": "Shorthand for +sve2+sve-aes",
+   "implies": [
+    "sve-aes",
+    "sve2"
+   ]
+  },
+  "sve2-bitperm": {
+   "def": "FeatureAliasSVE2BitPerm",
+   "description": "Shorthand for +sve2+sve-bitperm",
+   "implies": [
+    "sve-bitperm",
+    "sve2"
+   ]
+  },
+  "sve2-sha3": {
+   "def": "FeatureAliasSVE2SHA3",
+   "description": "Shorthand for +sve2+sve-sha3",
+   "implies": [
+    "sve-sha3",
+    "sve2"
+   ]
+  },
+  "sve2-sm4": {
+   "def": "FeatureAliasSVE2SM4",
+   "description": "Shorthand for +sve2+sve-sm4",
+   "implies": [
+    "sve-sm4",
+    "sve2"
+   ]
+  },
+  "align-cmp-csel-pairs": {
+   "def": "FeatureAlignCmpCSelPairs",
+   "description": "Align certain CMP/FCMP and CSEL/FCSEL instruction pairs",
+   "implies": []
+  },
+  "all": {
+   "def": "FeatureAll",
+   "description": "Enable all instructions",
+   "implies": []
+  },
+  "altnzcv": {
+   "def": "FeatureAltFPCmp",
+   "description": "Enable alternative NZCV format for floating point comparisons",
+   "implies": [
+    "flagm"
+   ]
+  },
+  "alternate-sextload-cvt-f32-pattern": {
+   "def": "FeatureAlternateSExtLoadCVTF32Pattern",
+   "description": "Use alternative pattern for sextload convert to f32",
+   "implies": []
+  },
+  "arith-bcc-fusion": {
+   "def": "FeatureArithmeticBccFusion",
+   "description": "CPU fuses arithmetic+bcc operations",
+   "implies": []
+  },
+  "arith-cbz-fusion": {
+   "def": "FeatureArithmeticCbzFusion",
+   "description": "CPU fuses arithmetic + cbz/cbnz operations",
+   "implies": []
+  },
+  "ascend-store-address": {
+   "def": "FeatureAscendStoreAddress",
+   "description": "Schedule vector stores by ascending address",
+   "implies": []
+  },
+  "avoid-ldapur": {
+   "def": "FeatureAvoidLDAPUR",
+   "description": "Prefer add+ldapr to offset ldapur",
+   "implies": []
+  },
+  "bf16": {
+   "def": "FeatureBF16",
+   "description": "Enable BFloat16 Extension",
+   "implies": [
+    "neon"
+   ]
+  },
+  "brbe": {
+   "def": "FeatureBRBE",
+   "description": "Enable Branch Record Buffer Extension",
+   "implies": []
+  },
+  "btie": {
+   "def": "FeatureBTIE",
+   "description": "Enable Enhanced Branch Target Identification extension",
+   "implies": []
+  },
+  "balance-fp-ops": {
+   "def": "FeatureBalanceFPOps",
+   "description": "balance mix of odd and even D-registers for fp multiply(-accumulate) ops",
+   "implies": []
+  },
+  "bti": {
+   "def": "FeatureBranchTargetId",
+   "description": "Enable Branch Target Identification",
+   "implies": []
+  },
+  "ccidx": {
+   "def": "FeatureCCIDX",
+   "description": "Enable Armv8.3-A Extend of the CCSIDR number of sets",
+   "implies": []
+  },
+  "ccpp": {
+   "def": "FeatureCCPP",
+   "description": "Enable Armv8.2-A data Cache Clean to Point of Persistence",
+   "implies": []
+  },
+  "cflt": {
+   "def": "FeatureCFLT",
+   "description": "Enable Armv9.8-A Conditional Fault instructions",
+   "implies": []
+  },
+  "chk": {
+   "def": "FeatureCHK",
+   "description": "Enable Armv8.0-A Check Feature Status Extension",
+   "implies": []
+  },
+  "clrbhb": {
+   "def": "FeatureCLRBHB",
+   "description": "Enable Clear BHB instruction",
+   "implies": []
+  },
+  "cmpbr": {
+   "def": "FeatureCMPBR",
+   "description": "Enable Armv9.6-A base compare and branch instructions",
+   "implies": []
+  },
+  "CONTEXTIDREL2": {
+   "def": "FeatureCONTEXTIDREL2",
+   "description": "Enable RW operand CONTEXTIDR_EL2",
+   "implies": []
+  },
+  "cpa": {
+   "def": "FeatureCPA",
+   "description": "Enable Armv9.5-A Checked Pointer Arithmetic",
+   "implies": []
+  },
+  "crc": {
+   "def": "FeatureCRC",
+   "description": "Enable Armv8.0-A CRC-32 checksum instructions",
+   "implies": []
+  },
+  "cssc": {
+   "def": "FeatureCSSC",
+   "description": "Enable Common Short Sequence Compression (CSSC) instructions",
+   "implies": []
+  },
+  "ccdp": {
+   "def": "FeatureCacheDeepPersist",
+   "description": "Enable Armv8.5-A Cache Clean to Point of Deep Persistence",
+   "implies": [
+    "ccpp"
+   ]
+  },
+  "cmp-bcc-fusion": {
+   "def": "FeatureCmpBccFusion",
+   "description": "CPU fuses cmp+bcc operations",
+   "implies": []
+  },
+  "complxnum": {
+   "def": "FeatureComplxNum",
+   "description": "Enable Armv8.3-A Floating-point complex number support",
+   "implies": [
+    "neon"
+   ]
+  },
+  "crypto": {
+   "def": "FeatureCrypto",
+   "description": "Enable cryptographic instructions",
+   "implies": [
+    "aes",
+    "neon",
+    "sha2"
+   ]
+  },
+  "d128": {
+   "def": "FeatureD128",
+   "description": "FEAT_D128, FEAT_LVA3, FEAT_SYSREG128, FEAT_SYSINSTR128",
+   "implies": [
+    "lse128"
+   ]
+  },
+  "dit": {
+   "def": "FeatureDIT",
+   "description": "Enable Armv8.4-A Data Independent Timing instructions",
+   "implies": []
+  },
+  "disable-distinct-predicate-dst-reg": {
+   "def": "FeatureDisableDistinctPredicateDstReg",
+   "description": "Disabling selecting a distinct predicate register for the destination \"\n    \"operand of instructions that take a governing predicate",
+   "implies": []
+  },
+  "disable-fast-inc-vl": {
+   "def": "FeatureDisableFastIncVL",
+   "description": "Do not prefer INC/DEC, ALL, { 1, 2, 4 } over ADDVL",
+   "implies": []
+  },
+  "disable-latency-sched-heuristic": {
+   "def": "FeatureDisableLatencySchedHeuristic",
+   "description": "Disable latency scheduling heuristic",
+   "implies": []
+  },
+  "disable-ldp": {
+   "def": "FeatureDisableLdp",
+   "description": "Prefer not to emit ldp",
+   "implies": []
+  },
+  "disable-maximize-scalable-bandwidth": {
+   "def": "FeatureDisableMaximizeScalableBandwidth",
+   "description": "Determine the maximum scalable vector length for a loop by the \"\n    \"largest scalar type rather than the smallest",
+   "implies": []
+  },
+  "disable-stp": {
+   "def": "FeatureDisableStp",
+   "description": "Prefer not to emit stp",
+   "implies": []
+  },
+  "disable-unpredicated-ld-st-lower": {
+   "def": "FeatureDisableUnpredicatedLdStLower",
+   "description": "Disable lowering unpredicated loads/stores as LDR/STR",
+   "implies": []
+  },
+  "dont-prefer-predicated-ld1r": {
+   "def": "FeatureDontPreferPredicatedLD1R",
+   "description": "Don't prefer predicated SVE LD1R over sign-extended-load + NEON dup",
+   "implies": []
+  },
+  "dotprod": {
+   "def": "FeatureDotProd",
+   "description": "Enable dot product support",
+   "implies": [
+    "neon"
+   ]
+  },
+  "el2vmsa": {
+   "def": "FeatureEL2VMSA",
+   "description": "Enable Exception Level 2 Virtual Memory System Architecture",
+   "implies": []
+  },
+  "el3": {
+   "def": "FeatureEL3",
+   "description": "Enable Exception Level 3",
+   "implies": []
+  },
+  "ete": {
+   "def": "FeatureETE",
+   "description": "Enable Embedded Trace Extension",
+   "implies": [
+    "trbe"
+   ]
+  },
+  "enable-select-opt": {
+   "def": "FeatureEnableSelectOptimize",
+   "description": "Enable the select optimize pass for select loop heuristics",
+   "implies": []
+  },
+  "ecv": {
+   "def": "FeatureEnhancedCounterVirtualization",
+   "description": "Enable enhanced counter virtualization extension",
+   "implies": []
+  },
+  "execute-only": {
+   "def": "FeatureExecuteOnly",
+   "description": "Enable the generation of \"\n                                          \"execute only code.",
+   "implies": []
+  },
+  "use-experimental-zeroing-pseudos": {
+   "def": "FeatureExperimentalZeroingPseudos",
+   "description": "Hint to the compiler that the MOVPRFX instruction is \"\n                       \"merged with destructive operations",
+   "implies": []
+  },
+  "exynos-cheap-as-move": {
+   "def": "FeatureExynosCheapAsMoveHandling",
+   "description": "Use Exynos specific handling of cheap instructions",
+   "implies": []
+  },
+  "f16f32dot": {
+   "def": "FeatureF16F32DOT",
+   "description": "Enable Armv9.7-A Advanced SIMD half-precision dot product accumulate to single-precision",
+   "implies": [
+    "fullfp16",
+    "neon"
+   ]
+  },
+  "f16f32mm": {
+   "def": "FeatureF16F32MM",
+   "description": "Enable Armv9.7-A Advanced SIMD half-precision matrix multiply-accumulate to single-precision",
+   "implies": [
+    "fullfp16",
+    "neon"
+   ]
+  },
+  "f16mm": {
+   "def": "FeatureF16MM",
+   "description": "Enable Armv9.7-A non-widening half-precision matrix multiply-accumulate",
+   "implies": [
+    "fullfp16",
+    "neon"
+   ]
+  },
+  "f8f16mm": {
+   "def": "FeatureF8F16MM",
+   "description": "Enable Armv9.6-A FP8 to Half-Precision Matrix Multiplication",
+   "implies": [
+    "fp8",
+    "neon"
+   ]
+  },
+  "f8f32mm": {
+   "def": "FeatureF8F32MM",
+   "description": "Enable Armv9.6-A FP8 to Single-Precision Matrix Multiplication",
+   "implies": [
+    "fp8",
+    "neon"
+   ]
+  },
+  "faminmax": {
+   "def": "FeatureFAMINMAX",
+   "description": "Enable FAMIN and FAMAX instructions",
+   "implies": [
+    "neon"
+   ]
+  },
+  "fmv": {
+   "def": "FeatureFMV",
+   "description": "Enable Function Multi Versioning support.",
+   "implies": []
+  },
+  "fp16fml": {
+   "def": "FeatureFP16FML",
+   "description": "Enable FP16 FML instructions",
+   "implies": [
+    "fullfp16",
+    "neon"
+   ]
+  },
+  "fp8": {
+   "def": "FeatureFP8",
+   "description": "Enable FP8 instructions",
+   "implies": [
+    "neon"
+   ]
+  },
+  "fp8dot2": {
+   "def": "FeatureFP8DOT2",
+   "description": "Enable FP8 2-way dot instructions",
+   "implies": [
+    "fp8"
+   ]
+  },
+  "fp8dot4": {
+   "def": "FeatureFP8DOT4",
+   "description": "Enable FP8 4-way dot instructions",
+   "implies": [
+    "fp8"
+   ]
+  },
+  "fp8fma": {
+   "def": "FeatureFP8FMA",
+   "description": "Enable Armv9.5-A FP8 multiply-add instructions",
+   "implies": [
+    "fp8"
+   ]
+  },
+  "fpac": {
+   "def": "FeatureFPAC",
+   "description": "Enable Armv8.3-A Pointer Authentication Faulting enhancement",
+   "implies": []
+  },
+  "fp-armv8": {
+   "def": "FeatureFPARMv8",
+   "description": "Enable Armv8.0-A Floating Point Extensions",
+   "implies": []
+  },
+  "fprcvt": {
+   "def": "FeatureFPRCVT",
+   "description": "Enable Armv9.6-A base convert instructions for SIMD&FP scalar register operands of\"\n  \" different input and output sizes",
+   "implies": [
+    "fp-armv8"
+   ]
+  },
+  "fptoint": {
+   "def": "FeatureFRInt3264",
+   "description": "Enable FRInt[32|64][Z|X] instructions that round a floating-point number to \"\n  \"an integer (in FP format) forcing it to fit into a 32- or 64-bit int",
+   "implies": [
+    "fp-armv8"
+   ]
+  },
+  "fast-ld1-single": {
+   "def": "FeatureFastLD1Single",
+   "description": "Single-element LD1 to vector lane has same performance as regular load",
+   "implies": []
+  },
+  "fgt": {
+   "def": "FeatureFineGrainedTraps",
+   "description": "Enable fine grained virtualization traps extension",
+   "implies": []
+  },
+  "fix-cortex-a53-835769": {
+   "def": "FeatureFixCortexA53_835769",
+   "description": "Mitigate Cortex-A53 Erratum 835769",
+   "implies": []
+  },
+  "fixed-load-latency-4": {
+   "def": "FeatureFixedLoadLatency4",
+   "description": "Use a fixed latency of 4 for loads instead of querying the scheduling model",
+   "implies": []
+  },
+  "flagm": {
+   "def": "FeatureFlagM",
+   "description": "Enable Armv8.4-A Flag Manipulation instructions",
+   "implies": []
+  },
+  "force-32bit-jump-tables": {
+   "def": "FeatureForce32BitJumpTables",
+   "description": "Force jump table entries to be 32-bits wide except at MinSize",
+   "implies": []
+  },
+  "fullfp16": {
+   "def": "FeatureFullFP16",
+   "description": "Enable half-precision floating-point data processing",
+   "implies": [
+    "fp-armv8"
+   ]
+  },
+  "fuse-aes": {
+   "def": "FeatureFuseAES",
+   "description": "CPU fuses AES crypto operations",
+   "implies": []
+  },
+  "fuse-addsub-2reg-const1": {
+   "def": "FeatureFuseAddSub2RegAndConstOne",
+   "description": "CPU fuses (a + b + 1) and (a - b - 1)",
+   "implies": []
+  },
+  "fuse-address": {
+   "def": "FeatureFuseAddress",
+   "description": "CPU fuses address generation and memory operations",
+   "implies": []
+  },
+  "fuse-adrp-add": {
+   "def": "FeatureFuseAdrpAdd",
+   "description": "CPU fuses adrp+add operations",
+   "implies": []
+  },
+  "fuse-apple-sme-compute": {
+   "def": "FeatureFuseAppleSMECompute",
+   "description": "CPU fuses SME compute operations",
+   "implies": []
+  },
+  "fuse-arith-logic": {
+   "def": "FeatureFuseArithmeticLogic",
+   "description": "CPU fuses arithmetic and logic operations",
+   "implies": []
+  },
+  "fuse-csel": {
+   "def": "FeatureFuseCmpCSel",
+   "description": "CPU can fuse CMP and CSEL operations",
+   "implies": []
+  },
+  "fuse-cset": {
+   "def": "FeatureFuseCmpCSet",
+   "description": "CPU can fuse CMP and CSET operations",
+   "implies": []
+  },
+  "fuse-crypto-eor": {
+   "def": "FeatureFuseCryptoEOR",
+   "description": "CPU fuses AES/PMULL and EOR operations",
+   "implies": []
+  },
+  "fuse-fcsel": {
+   "def": "FeatureFuseFCmpFCSel",
+   "description": "CPU can fuse FCMP and FCSEL operations",
+   "implies": []
+  },
+  "fuse-fmin-fmax": {
+   "def": "FeatureFuseFMinFMax",
+   "description": "CPU can fuse FMIN and FMAX operations",
+   "implies": []
+  },
+  "fuse-literals": {
+   "def": "FeatureFuseLiterals",
+   "description": "CPU fuses literal generation operations",
+   "implies": []
+  },
+  "gcie": {
+   "def": "FeatureGCIE",
+   "description": "Enable GICv5 (Generic Interrupt Controller) CPU Interface Extension",
+   "implies": []
+  },
+  "gcs": {
+   "def": "FeatureGCS",
+   "description": "Enable Armv9.4-A Guarded Call Stack Extension",
+   "implies": [
+    "chk"
+   ]
+  },
+  "hbc": {
+   "def": "FeatureHBC",
+   "description": "Enable Armv8.8-A Hinted Conditional Branches Extension",
+   "implies": []
+  },
+  "hinte": {
+   "def": "FeatureHINTE",
+   "description": "Enable extended A64 hint instruction space",
+   "implies": []
+  },
+  "harden-sls-blr": {
+   "def": "FeatureHardenSlsBlr",
+   "description": "Harden against straight line speculation across BLR instructions",
+   "implies": []
+  },
+  "harden-sls-nocomdat": {
+   "def": "FeatureHardenSlsNoComdat",
+   "description": "Generate thunk code for SLS mitigation in the normal text section",
+   "implies": []
+  },
+  "harden-sls-retbr": {
+   "def": "FeatureHardenSlsRetBr",
+   "description": "Harden against straight line speculation across RET and BR instructions",
+   "implies": []
+  },
+  "ite": {
+   "def": "FeatureITE",
+   "description": "Enable Armv9.4-A Instrumentation Extension",
+   "implies": [
+    "ete",
+    "trbe"
+   ]
+  },
+  "jsconv": {
+   "def": "FeatureJS",
+   "description": "Enable Armv8.3-A JavaScript FP conversion instructions",
+   "implies": [
+    "fp-armv8"
+   ]
+  },
+  "lor": {
+   "def": "FeatureLOR",
+   "description": "Enable Armv8.1-A Limited Ordering Regions extension",
+   "implies": []
+  },
+  "ls64": {
+   "def": "FeatureLS64",
+   "description": "FEAT_LS64, FEAT_LS64_V, FEAT_LS64_ACCDATA",
+   "implies": []
+  },
+  "lsc64b": {
+   "def": "FeatureLSC64B",
+   "description": "Enable Armv9.8-A Single-copy atomic 64-byte load/store consistency extension",
+   "implies": [
+    "lscp"
+   ]
+  },
+  "lscp": {
+   "def": "FeatureLSCP",
+   "description": "Enable Armv9.7-A Load-acquire and store-release pair extension",
+   "implies": []
+  },
+  "lse": {
+   "def": "FeatureLSE",
+   "description": "Enable Armv8.1-A Large System Extension (LSE) atomic instructions",
+   "implies": []
+  },
+  "lse128": {
+   "def": "FeatureLSE128",
+   "description": "Enable Armv9.4-A 128-bit Atomic instructions",
+   "implies": [
+    "lse"
+   ]
+  },
+  "lse2": {
+   "def": "FeatureLSE2",
+   "description": "Enable Armv8.4-A Large System Extension 2 (LSE2) atomicity rules",
+   "implies": []
+  },
+  "lsfe": {
+   "def": "FeatureLSFE",
+   "description": "Enable Armv9.6-A base Atomic floating-point in-memory instructions",
+   "implies": [
+    "fp-armv8"
+   ]
+  },
+  "lsui": {
+   "def": "FeatureLSUI",
+   "description": "Enable Armv9.6-A unprivileged load/store instructions",
+   "implies": []
+  },
+  "lut": {
+   "def": "FeatureLUT",
+   "description": "Enable Lookup Table instructions",
+   "implies": [
+    "neon"
+   ]
+  },
+  "ldp-aligned-only": {
+   "def": "FeatureLdpAlignedOnly",
+   "description": "In order to emit ldp, first check if the load will be aligned to 2 * element_size",
+   "implies": []
+  },
+  "has-limited-64bit-vector-mul-bandwidth": {
+   "def": "FeatureLimited64bitVectorMulBandwidth",
+   "description": "Has limited 64bit vector multiply bandwidth compared to scalar multiply",
+   "implies": []
+  },
+  "mca-streaming-sched": {
+   "def": "FeatureMCAStreamingSched",
+   "description": "Enable streaming-SVE schedule predicates for MC analysis tools",
+   "implies": []
+  },
+  "mec": {
+   "def": "FeatureMEC",
+   "description": "Enable Memory Encryption Contexts Extension",
+   "implies": [
+    "rme"
+   ]
+  },
+  "mops": {
+   "def": "FeatureMOPS",
+   "description": "Enable Armv8.8-A memcpy and memset acceleration instructions",
+   "implies": []
+  },
+  "mops-go": {
+   "def": "FeatureMOPS_GO",
+   "description": "Enable memset acceleration granule only",
+   "implies": [
+    "mops",
+    "mte"
+   ]
+  },
+  "mpam": {
+   "def": "FeatureMPAM",
+   "description": "Enable Armv8.4-A Memory system Partitioning and Monitoring extension",
+   "implies": []
+  },
+  "mte": {
+   "def": "FeatureMTE",
+   "description": "FEAT_MTE, FEAT_MTE2",
+   "implies": []
+  },
+  "mtetc": {
+   "def": "FeatureMTETC",
+   "description": "Enable Virtual Memory Tagging Extension",
+   "implies": [
+    "mte"
+   ]
+  },
+  "f32mm": {
+   "def": "FeatureMatMulFP32",
+   "description": "Enable Matrix Multiply FP32 Extension",
+   "implies": [
+    "sve"
+   ]
+  },
+  "f64mm": {
+   "def": "FeatureMatMulFP64",
+   "description": "Enable Matrix Multiply FP64 Extension",
+   "implies": [
+    "sve"
+   ]
+  },
+  "i8mm": {
+   "def": "FeatureMatMulInt8",
+   "description": "Enable Matrix Multiply Int8 Extension",
+   "implies": [
+    "neon"
+   ]
+  },
+  "max-interleave-factor-4": {
+   "def": "FeatureMaxInterleaveFactor4",
+   "description": "Set the MaxInterleaveFactor to 4 (from the default 2)",
+   "implies": []
+  },
+  "neon": {
+   "def": "FeatureNEON",
+   "description": "Enable Advanced SIMD instructions",
+   "implies": [
+    "fp-armv8"
+   ]
+  },
+  "nmi": {
+   "def": "FeatureNMI",
+   "description": "FEAT_NMI, FEAT_GICv3_NMI",
+   "implies": []
+  },
+  "nv": {
+   "def": "FeatureNV",
+   "description": "FEAT_NV, FEAT_NV2",
+   "implies": []
+  },
+  "no-bti-at-return-twice": {
+   "def": "FeatureNoBTIAtReturnTwice",
+   "description": "Don't place a BTI instruction \"\n                                                 \"after a return-twice",
+   "implies": []
+  },
+  "no-lfi-loads": {
+   "def": "FeatureNoLFILoads",
+   "description": "Disable LFI sandboxing for load instructions",
+   "implies": []
+  },
+  "no-lfi-stores": {
+   "def": "FeatureNoLFIStores",
+   "description": "Disable LFI sandboxing for store instructions",
+   "implies": []
+  },
+  "no-neg-immediates": {
+   "def": "FeatureNoNegativeImmediates",
+   "description": "Convert immediates and instructions \"\n                                        \"to their negated or complemented \"\n                                        \"equivalent when the immediate does \"\n                                        \"not fit in the encoding.",
+   "implies": []
+  },
+  "no-sve-fp-ld1r": {
+   "def": "FeatureNoSVEFPLD1R",
+   "description": "Avoid using LD1RX instructions for FP",
+   "implies": []
+  },
+  "no-zcz-fpr64": {
+   "def": "FeatureNoZCZeroingFPR64",
+   "description": "Has no zero-cycle zeroing instructions for FPR64 registers",
+   "implies": []
+  },
+  "occmo": {
+   "def": "FeatureOCCMO",
+   "description": "Enable Armv9.6-A Outer cacheable cache maintenance operations",
+   "implies": []
+  },
+  "outline-atomics": {
+   "def": "FeatureOutlineAtomics",
+   "description": "Enable out of line atomics to support LSE instructions",
+   "implies": []
+  },
+  "pan": {
+   "def": "FeaturePAN",
+   "description": "Enable Armv8.1-A Privileged Access-Never extension",
+   "implies": []
+  },
+  "pan-rwv": {
+   "def": "FeaturePAN_RWV",
+   "description": "Enable Armv8.2-A PAN s1e1R and s1e1W Variants",
+   "implies": [
+    "pan"
+   ]
+  },
+  "pauth": {
+   "def": "FeaturePAuth",
+   "description": "Enable Armv8.3-A Pointer Authentication extension",
+   "implies": []
+  },
+  "pauth-lr": {
+   "def": "FeaturePAuthLR",
+   "description": "Enable Armv9.5-A PAC enhancements",
+   "implies": []
+  },
+  "prfm-slc-target": {
+   "def": "FeaturePRFM_SLC",
+   "description": "Enable SLC target for PRFM instruction",
+   "implies": []
+  },
+  "perfmon": {
+   "def": "FeaturePerfMon",
+   "description": "Enable Armv8.0-A PMUv3 Performance Monitors extension",
+   "implies": []
+  },
+  "pops": {
+   "def": "FeaturePoPS",
+   "description": "Enable Armv9.6-A Point Of Physical Storage (PoPS) DC instructions",
+   "implies": []
+  },
+  "use-postra-scheduler": {
+   "def": "FeaturePostRAScheduler",
+   "description": "Schedule again after register allocation",
+   "implies": []
+  },
+  "predres": {
+   "def": "FeaturePredRes",
+   "description": "Enable Armv8.5-A execution and data prediction invalidation instructions",
+   "implies": []
+  },
+  "predictable-select-expensive": {
+   "def": "FeaturePredictableSelectIsExpensive",
+   "description": "Prefer likely predicted branches over selects",
+   "implies": []
+  },
+  "uaops": {
+   "def": "FeaturePsUAO",
+   "description": "Enable Armv8.2-A UAO PState",
+   "implies": []
+  },
+  "ras": {
+   "def": "FeatureRAS",
+   "description": "FEAT_RAS, FEAT_RASv1p1",
+   "implies": []
+  },
+  "rasv2": {
+   "def": "FeatureRASv2",
+   "description": "Enable Armv8.9-A Reliability, Availability and Serviceability Extensions",
+   "implies": [
+    "ras"
+   ]
+  },
+  "rcpc": {
+   "def": "FeatureRCPC",
+   "description": "Enable support for RCPC extension",
+   "implies": []
+  },
+  "rcpc3": {
+   "def": "FeatureRCPC3",
+   "description": "Enable Armv8.9-A RCPC instructions for A64 and Advanced SIMD and floating-point instruction set",
+   "implies": [
+    "rcpc-immo"
+   ]
+  },
+  "rcpc-immo": {
+   "def": "FeatureRCPC_IMMO",
+   "description": "Enable Armv8.4-A RCPC instructions with Immediate Offsets",
+   "implies": [
+    "rcpc"
+   ]
+  },
+  "rdm": {
+   "def": "FeatureRDM",
+   "description": "Enable Armv8.1-A Rounding Double Multiply Add/Subtract instructions",
+   "implies": [
+    "neon"
+   ]
+  },
+  "rme": {
+   "def": "FeatureRME",
+   "description": "Enable Realm Management Extension",
+   "implies": []
+  },
+  "rand": {
+   "def": "FeatureRandGen",
+   "description": "Enable Random Number generation instructions",
+   "implies": []
+  },
+  "reserve-lr-for-ra": {
+   "def": "FeatureReserveLRForRA",
+   "description": "Reserve LR for call use only",
+   "implies": []
+  },
+  "poe2": {
+   "def": "FeatureS1POE2",
+   "description": "Enable Stage 1 Permission Overlays Extension 2 instructions",
+   "implies": []
+  },
+  "sb": {
+   "def": "FeatureSB",
+   "description": "Enable Armv8.5-A Speculation Barrier",
+   "implies": []
+  },
+  "sel2": {
+   "def": "FeatureSEL2",
+   "description": "Enable Armv8.4-A Secure Exception Level 2 extension",
+   "implies": []
+  },
+  "sha2": {
+   "def": "FeatureSHA2",
+   "description": "FEAT_SHA1, FEAT_SHA256",
+   "implies": [
+    "neon"
+   ]
+  },
+  "sha3": {
+   "def": "FeatureSHA3",
+   "description": "FEAT_SHA3, FEAT_SHA512",
+   "implies": [
+    "neon",
+    "sha2"
+   ]
+  },
+  "sm4": {
+   "def": "FeatureSM4",
+   "description": "FEAT_SM4, FEAT_SM3",
+   "implies": [
+    "neon"
+   ]
+  },
+  "sme": {
+   "def": "FeatureSME",
+   "description": "Enable Scalable Matrix Extension (SME)",
+   "implies": [
+    "bf16",
+    "fullfp16"
+   ]
+  },
+  "sme2": {
+   "def": "FeatureSME2",
+   "description": "Enable Scalable Matrix Extension 2 (SME2) instructions",
+   "implies": [
+    "sme"
+   ]
+  },
+  "sme2p1": {
+   "def": "FeatureSME2p1",
+   "description": "Enable Scalable Matrix Extension 2.1 instructions",
+   "implies": [
+    "sme2"
+   ]
+  },
+  "sme2p2": {
+   "def": "FeatureSME2p2",
+   "description": "Enable Armv9.6-A Scalable Matrix Extension 2.2 instructions",
+   "implies": [
+    "sme2p1"
+   ]
+  },
+  "sme2p3": {
+   "def": "FeatureSME2p3",
+   "description": "Enable Armv9.7-A Scalable Matrix Extension 2.3 instructions",
+   "implies": [
+    "sme2p2"
+   ]
+  },
+  "sme-b16b16": {
+   "def": "FeatureSMEB16B16",
+   "description": "Enable SME2.1 ZA-targeting non-widening BFloat16 instructions",
+   "implies": [
+    "sme2",
+    "sve-b16b16"
+   ]
+  },
+  "sme-f16f16": {
+   "def": "FeatureSMEF16F16",
+   "description": "Enable SME non-widening Float16 instructions",
+   "implies": [
+    "sme2"
+   ]
+  },
+  "sme-f64f64": {
+   "def": "FeatureSMEF64F64",
+   "description": "Enable Scalable Matrix Extension (SME) F64F64 instructions",
+   "implies": [
+    "sme"
+   ]
+  },
+  "sme-f8f16": {
+   "def": "FeatureSMEF8F16",
+   "description": "Enable Scalable Matrix Extension (SME) F8F16 instructions",
+   "implies": [
+    "fp8",
+    "sme2"
+   ]
+  },
+  "sme-f8f32": {
+   "def": "FeatureSMEF8F32",
+   "description": "Enable Scalable Matrix Extension (SME) F8F32 instructions",
+   "implies": [
+    "fp8",
+    "sme2"
+   ]
+  },
+  "sme-fa64": {
+   "def": "FeatureSMEFA64",
+   "description": "Enable the full A64 instruction set in streaming SVE mode",
+   "implies": [
+    "sme",
+    "sve2"
+   ]
+  },
+  "sme-i16i64": {
+   "def": "FeatureSMEI16I64",
+   "description": "Enable Scalable Matrix Extension (SME) I16I64 instructions",
+   "implies": [
+    "sme"
+   ]
+  },
+  "sme-lutv2": {
+   "def": "FeatureSME_LUTv2",
+   "description": "Enable Scalable Matrix Extension (SME) LUTv2 instructions",
+   "implies": [
+    "sme2"
+   ]
+  },
+  "sme-mop4": {
+   "def": "FeatureSME_MOP4",
+   "description": "Enable SME Quarter-tile outer product instructions",
+   "implies": [
+    "sme2"
+   ]
+  },
+  "sme-tmop": {
+   "def": "FeatureSME_TMOP",
+   "description": "Enable SME Structured sparsity outer product instructions.",
+   "implies": [
+    "sme2"
+   ]
+  },
+  "spe": {
+   "def": "FeatureSPE",
+   "description": "Enable Statistical Profiling extension",
+   "implies": []
+  },
+  "specres2": {
+   "def": "FeatureSPECRES2",
+   "description": "Enable Speculation Restriction Instruction",
+   "implies": [
+    "predres"
+   ]
+  },
+  "spe-eef": {
+   "def": "FeatureSPE_EEF",
+   "description": "Enable extra register in the Statistical Profiling Extension",
+   "implies": []
+  },
+  "ssbs": {
+   "def": "FeatureSSBS",
+   "description": "FEAT_SSBS, FEAT_SSBS2",
+   "implies": []
+  },
+  "ssve-aes": {
+   "def": "FeatureSSVE_AES",
+   "description": "Enable Armv9.6-A SVE AES support in streaming SVE mode",
+   "implies": [
+    "sme2",
+    "sve-aes"
+   ]
+  },
+  "ssve-bitperm": {
+   "def": "FeatureSSVE_BitPerm",
+   "description": "Enable Armv9.6-A SVE BitPerm support in streaming SVE mode",
+   "implies": [
+    "sme2",
+    "sve-bitperm"
+   ]
+  },
+  "ssve-fexpa": {
+   "def": "FeatureSSVE_FEXPA",
+   "description": "Enable SVE FEXPA instruction in Streaming SVE mode",
+   "implies": [
+    "sme2"
+   ]
+  },
+  "ssve-fp8dot2": {
+   "def": "FeatureSSVE_FP8DOT2",
+   "description": "Enable SVE2 FP8 2-way dot product instructions",
+   "implies": [
+    "fp8",
+    "sme2"
+   ]
+  },
+  "ssve-fp8dot4": {
+   "def": "FeatureSSVE_FP8DOT4",
+   "description": "Enable SVE2 FP8 4-way dot product instructions",
+   "implies": [
+    "fp8",
+    "sme2"
+   ]
+  },
+  "ssve-fp8fma": {
+   "def": "FeatureSSVE_FP8FMA",
+   "description": "Enable SVE2 FP8 multiply-add instructions",
+   "implies": [
+    "fp8",
+    "sme2"
+   ]
+  },
+  "sve": {
+   "def": "FeatureSVE",
+   "description": "Enable Scalable Vector Extension (SVE) instructions",
+   "implies": [
+    "fullfp16"
+   ]
+  },
+  "sve2": {
+   "def": "FeatureSVE2",
+   "description": "Enable Scalable Vector Extension 2 (SVE2) instructions",
+   "implies": [
+    "sve"
+   ]
+  },
+  "sve2p1": {
+   "def": "FeatureSVE2p1",
+   "description": "Enable Scalable Vector Extension 2.1 instructions",
+   "implies": [
+    "sve2"
+   ]
+  },
+  "sve2p2": {
+   "def": "FeatureSVE2p2",
+   "description": "Enable Armv9.6-A Scalable Vector Extension 2.2 instructions",
+   "implies": [
+    "sve2p1"
+   ]
+  },
+  "sve2p3": {
+   "def": "FeatureSVE2p3",
+   "description": "Enable Armv9.7-A Scalable Vector Extension 2.3 instructions",
+   "implies": [
+    "sve2p2"
+   ]
+  },
+  "sve-aes": {
+   "def": "FeatureSVEAES",
+   "description": "FEAT_SVE_AES, FEAT_SVE_PMULL128",
+   "implies": [
+    "aes"
+   ]
+  },
+  "sve-aes2": {
+   "def": "FeatureSVEAES2",
+   "description": "Enable Armv9.6-A SVE multi-vector AES and multi-vector quadword polynomial multiply instructions",
+   "implies": []
+  },
+  "sve-b16b16": {
+   "def": "FeatureSVEB16B16",
+   "description": "Enable SVE2 non-widening and SME2 Z-targeting non-widening BFloat16 instructions",
+   "implies": []
+  },
+  "sve-bfscale": {
+   "def": "FeatureSVEBFSCALE",
+   "description": "Enable Armv9.6-A SVE BFloat16 scaling instructions",
+   "implies": []
+  },
+  "sve-bitperm": {
+   "def": "FeatureSVEBitPerm",
+   "description": "Enable bit permutation SVE2 instructions",
+   "implies": []
+  },
+  "sve-sha3": {
+   "def": "FeatureSVESHA3",
+   "description": "Enable SVE SHA3 instructions",
+   "implies": [
+    "sha3"
+   ]
+  },
+  "sve-sm4": {
+   "def": "FeatureSVESM4",
+   "description": "Enable SVE SM4 instructions",
+   "implies": [
+    "sm4"
+   ]
+  },
+  "sve-b16mm": {
+   "def": "FeatureSVE_B16MM",
+   "description": "Enable Armv9.7-A SVE non-widening BFloat16 matrix multiply-accumulate",
+   "implies": [
+    "sve"
+   ]
+  },
+  "sve-f16f32mm": {
+   "def": "FeatureSVE_F16F32MM",
+   "description": "Enable Armv9.6-A FP16 to FP32 Matrix Multiply instructions",
+   "implies": [
+    "sve"
+   ]
+  },
+  "slow-misaligned-128store": {
+   "def": "FeatureSlowMisaligned128Store",
+   "description": "Misaligned 128 bit stores are slow",
+   "implies": []
+  },
+  "slow-paired-128": {
+   "def": "FeatureSlowPaired128",
+   "description": "Paired 128 bit loads and stores are slow",
+   "implies": []
+  },
+  "slow-strqro-store": {
+   "def": "FeatureSlowSTRQro",
+   "description": "STR of Q register with register offset is slow",
+   "implies": []
+  },
+  "specrestrict": {
+   "def": "FeatureSpecRestrict",
+   "description": "Enable architectural speculation restriction",
+   "implies": []
+  },
+  "store-pair-suppress": {
+   "def": "FeatureStorePairSuppress",
+   "description": "Enable Store Pair Suppression heuristics",
+   "implies": []
+  },
+  "stp-aligned-only": {
+   "def": "FeatureStpAlignedOnly",
+   "description": "In order to emit stp, first check if the store will be aligned to 2 * element_size",
+   "implies": []
+  },
+  "strict-align": {
+   "def": "FeatureStrictAlign",
+   "description": "Disallow all unaligned memory \"\n                                          \"access",
+   "implies": []
+  },
+  "tev": {
+   "def": "FeatureTEV",
+   "description": "Enable TIndex Exception-like Vector instructions",
+   "implies": []
+  },
+  "the": {
+   "def": "FeatureTHE",
+   "description": "Enable Armv8.9-A Translation Hardening Extension",
+   "implies": []
+  },
+  "tlbid": {
+   "def": "FeatureTLBID",
+   "description": "Enable Armv9.7-A TLBI Domains extension",
+   "implies": []
+  },
+  "tlbiw": {
+   "def": "FeatureTLBIW",
+   "description": "Enable Armv9.5-A TLBI VMALL for Dirty State",
+   "implies": []
+  },
+  "tlb-rmi": {
+   "def": "FeatureTLB_RMI",
+   "description": "FEAT_TLBIOS, FEAT_TLBIRANGE",
+   "implies": []
+  },
+  "tracev8.4": {
+   "def": "FeatureTRACEV8_4",
+   "description": "Enable Armv8.4-A Trace extension",
+   "implies": []
+  },
+  "trbe": {
+   "def": "FeatureTRBE",
+   "description": "Enable Trace Buffer Extension",
+   "implies": []
+  },
+  "tagged-globals": {
+   "def": "FeatureTaggedGlobals",
+   "description": "Use an instruction sequence for taking the address of a global \"\n    \"that allows a memory tag in the upper address bits",
+   "implies": []
+  },
+  "use-fixed-over-scalable-if-equal-cost": {
+   "def": "FeatureUseFixedOverScalableIfEqualCost",
+   "description": "Prefer fixed width loop vectorization over scalable if the cost-model assigns equal costs",
+   "implies": []
+  },
+  "tpidrro-el0": {
+   "def": "FeatureUseROEL0ForTP",
+   "description": "Permit use of TPIDRRO_EL0 for the TLS base",
+   "implies": []
+  },
+  "use-reciprocal-square-root": {
+   "def": "FeatureUseRSqrt",
+   "description": "Use the reciprocal square root approximation",
+   "implies": []
+  },
+  "use-reciprocal-fdiv-combine-threshold-2": {
+   "def": "FeatureUseReciprocalFDivCombineThreshold2",
+   "description": "Set the reciprocal FDiv combine threshold to 2 (from the default 3)",
+   "implies": []
+  },
+  "use-wzr-to-vec-move": {
+   "def": "FeatureUseWzrToVecMove",
+   "description": "Move from WZR to insert 0 into vector registers",
+   "implies": []
+  },
+  "vh": {
+   "def": "FeatureVH",
+   "description": "Enable Armv8.1-A Virtual Host extension",
+   "implies": [
+    "CONTEXTIDREL2"
+   ]
+  },
+  "wfxt": {
+   "def": "FeatureWFxT",
+   "description": "Enable Armv8.7-A WFET and WFIT instruction",
+   "implies": []
+  },
+  "xs": {
+   "def": "FeatureXS",
+   "description": "Enable Armv8.7-A limited-TLB-maintenance instruction",
+   "implies": []
+  },
+  "zcm-fpr128": {
+   "def": "FeatureZCRegMoveFPR128",
+   "description": "Has zero-cycle register moves for FPR128 registers",
+   "implies": []
+  },
+  "zcm-fpr32": {
+   "def": "FeatureZCRegMoveFPR32",
+   "description": "Has zero-cycle register moves for FPR32 registers",
+   "implies": []
+  },
+  "zcm-fpr64": {
+   "def": "FeatureZCRegMoveFPR64",
+   "description": "Has zero-cycle register moves for FPR64 registers",
+   "implies": []
+  },
+  "zcm-gpr32": {
+   "def": "FeatureZCRegMoveGPR32",
+   "description": "Has zero-cycle register moves for GPR32 registers",
+   "implies": []
+  },
+  "zcm-gpr64": {
+   "def": "FeatureZCRegMoveGPR64",
+   "description": "Has zero-cycle register moves for GPR64 registers",
+   "implies": []
+  },
+  "zcz-fpr128": {
+   "def": "FeatureZCZeroingFPR128",
+   "description": "Has zero-cycle zeroing instructions for FPR128 registers",
+   "implies": []
+  },
+  "zcz-fp-workaround": {
+   "def": "FeatureZCZeroingFPWorkaround",
+   "description": "The zero-cycle floating-point zeroing instruction has a bug",
+   "implies": []
+  },
+  "zcz-gpr32": {
+   "def": "FeatureZCZeroingGPR32",
+   "description": "Has zero-cycle zeroing instructions for GPR32 registers",
+   "implies": []
+  },
+  "zcz-gpr64": {
+   "def": "FeatureZCZeroingGPR64",
+   "description": "Has zero-cycle zeroing instructions for GPR64 registers",
+   "implies": []
+  },
+  "v8a": {
+   "def": "HasV8_0aOps",
+   "description": "",
+   "implies": [
+    "el2vmsa",
+    "el3"
+   ]
+  },
+  "v8r": {
+   "def": "HasV8_0rOps",
+   "description": "",
+   "implies": [
+    "CONTEXTIDREL2",
+    "ccpp",
+    "crc",
+    "dit",
+    "flagm",
+    "lse",
+    "pan",
+    "pan-rwv",
+    "pauth",
+    "ras",
+    "rcpc",
+    "rcpc-immo",
+    "sel2",
+    "specrestrict",
+    "tlb-rmi",
+    "tracev8.4",
+    "uaops"
+   ]
+  },
+  "v8.1a": {
+   "def": "HasV8_1aOps",
+   "description": "",
+   "implies": [
+    "crc",
+    "lor",
+    "lse",
+    "pan",
+    "rdm",
+    "v8a",
+    "vh"
+   ]
+  },
+  "v8.2a": {
+   "def": "HasV8_2aOps",
+   "description": "",
+   "implies": [
+    "ccpp",
+    "pan-rwv",
+    "ras",
+    "uaops",
+    "v8.1a"
+   ]
+  },
+  "v8.3a": {
+   "def": "HasV8_3aOps",
+   "description": "",
+   "implies": [
+    "complxnum",
+    "jsconv",
+    "pauth",
+    "rcpc",
+    "v8.2a"
+   ]
+  },
+  "v8.4a": {
+   "def": "HasV8_4aOps",
+   "description": "",
+   "implies": [
+    "am",
+    "dit",
+    "dotprod",
+    "flagm",
+    "lse2",
+    "mpam",
+    "nv",
+    "rcpc-immo",
+    "sel2",
+    "tlb-rmi",
+    "tracev8.4",
+    "v8.3a"
+   ]
+  },
+  "v8.5a": {
+   "def": "HasV8_5aOps",
+   "description": "",
+   "implies": [
+    "altnzcv",
+    "bti",
+    "ccdp",
+    "fptoint",
+    "predres",
+    "sb",
+    "specrestrict",
+    "v8.4a"
+   ]
+  },
+  "v8.6a": {
+   "def": "HasV8_6aOps",
+   "description": "",
+   "implies": [
+    "amvs",
+    "bf16",
+    "ecv",
+    "fgt",
+    "i8mm",
+    "v8.5a"
+   ]
+  },
+  "v8.7a": {
+   "def": "HasV8_7aOps",
+   "description": "",
+   "implies": [
+    "v8.6a",
+    "wfxt",
+    "xs"
+   ]
+  },
+  "v8.8a": {
+   "def": "HasV8_8aOps",
+   "description": "",
+   "implies": [
+    "hbc",
+    "mops",
+    "nmi",
+    "v8.7a"
+   ]
+  },
+  "v8.9a": {
+   "def": "HasV8_9aOps",
+   "description": "",
+   "implies": [
+    "chk",
+    "clrbhb",
+    "cssc",
+    "prfm-slc-target",
+    "rasv2",
+    "specres2",
+    "v8.8a"
+   ]
+  },
+  "v9a": {
+   "def": "HasV9_0aOps",
+   "description": "",
+   "implies": [
+    "v8.5a"
+   ]
+  },
+  "v9.1a": {
+   "def": "HasV9_1aOps",
+   "description": "",
+   "implies": [
+    "v8.6a",
+    "v9a"
+   ]
+  },
+  "v9.2a": {
+   "def": "HasV9_2aOps",
+   "description": "",
+   "implies": [
+    "v8.7a",
+    "v9.1a"
+   ]
+  },
+  "v9.3a": {
+   "def": "HasV9_3aOps",
+   "description": "",
+   "implies": [
+    "v8.8a",
+    "v9.2a"
+   ]
+  },
+  "v9.4a": {
+   "def": "HasV9_4aOps",
+   "description": "",
+   "implies": [
+    "v8.9a",
+    "v9.3a"
+   ]
+  },
+  "v9.5a": {
+   "def": "HasV9_5aOps",
+   "description": "",
+   "implies": [
+    "cpa",
+    "v9.4a"
+   ]
+  },
+  "v9.6a": {
+   "def": "HasV9_6aOps",
+   "description": "",
+   "implies": [
+    "cmpbr",
+    "hinte",
+    "lsui",
+    "occmo",
+    "v9.5a"
+   ]
+  },
+  "v9.7a": {
+   "def": "HasV9_7aOps",
+   "description": "",
+   "implies": [
+    "f16f32dot",
+    "fprcvt",
+    "sve2p3",
+    "v9.6a"
+   ]
+  },
+  "v9.8a": {
+   "def": "HasV9_8aOps",
+   "description": "",
+   "implies": [
+    "v9.7a"
+   ]
+  },
+  "a320": {
+   "def": "TuneA320",
+   "description": "Cortex-A320 ARM processors",
+   "implies": [
+    "aggressive-interleaving",
+    "fuse-adrp-add",
+    "fuse-aes",
+    "use-fixed-over-scalable-if-equal-cost",
+    "use-postra-scheduler",
+    "use-wzr-to-vec-move"
+   ]
+  },
+  "a35": {
+   "def": "TuneA35",
+   "description": "Cortex-A35 ARM processors",
+   "implies": []
+  },
+  "a510": {
+   "def": "TuneA510",
+   "description": "Cortex-A510 ARM processors",
+   "implies": [
+    "fuse-adrp-add",
+    "fuse-aes",
+    "use-fixed-over-scalable-if-equal-cost",
+    "use-postra-scheduler",
+    "use-wzr-to-vec-move"
+   ]
+  },
+  "a520": {
+   "def": "TuneA520",
+   "description": "Cortex-A520 ARM processors",
+   "implies": [
+    "fuse-adrp-add",
+    "fuse-aes",
+    "use-fixed-over-scalable-if-equal-cost",
+    "use-postra-scheduler",
+    "use-wzr-to-vec-move"
+   ]
+  },
+  "a520ae": {
+   "def": "TuneA520AE",
+   "description": "Cortex-A520AE ARM processors",
+   "implies": [
+    "fuse-adrp-add",
+    "fuse-aes",
+    "use-postra-scheduler",
+    "use-wzr-to-vec-move"
+   ]
+  },
+  "a53": {
+   "def": "TuneA53",
+   "description": "Cortex-A53 ARM processors",
+   "implies": [
+    "balance-fp-ops",
+    "fuse-adrp-add",
+    "fuse-aes",
+    "use-postra-scheduler",
+    "use-wzr-to-vec-move"
+   ]
+  },
+  "a55": {
+   "def": "TuneA55",
+   "description": "Cortex-A55 ARM processors",
+   "implies": [
+    "fuse-address",
+    "fuse-adrp-add",
+    "fuse-aes",
+    "use-postra-scheduler",
+    "use-wzr-to-vec-move"
+   ]
+  },
+  "a57": {
+   "def": "TuneA57",
+   "description": "Cortex-A57 ARM processors",
+   "implies": [
+    "addr-lsl-slow-14",
+    "balance-fp-ops",
+    "enable-select-opt",
+    "fuse-adrp-add",
+    "fuse-aes",
+    "fuse-literals",
+    "max-interleave-factor-4",
+    "predictable-select-expensive",
+    "use-postra-scheduler"
+   ]
+  },
+  "a64fx": {
+   "def": "TuneA64FX",
+   "description": "Fujitsu A64FX processors",
+   "implies": [
+    "aggressive-fma",
+    "arith-bcc-fusion",
+    "disable-unpredicated-ld-st-lower",
+    "max-interleave-factor-4",
+    "predictable-select-expensive",
+    "store-pair-suppress",
+    "use-postra-scheduler",
+    "use-reciprocal-fdiv-combine-threshold-2"
+   ]
+  },
+  "a65": {
+   "def": "TuneA65",
+   "description": "Cortex-A65 ARM processors",
+   "implies": [
+    "enable-select-opt",
+    "fuse-address",
+    "fuse-adrp-add",
+    "fuse-aes",
+    "fuse-literals",
+    "predictable-select-expensive"
+   ]
+  },
+  "a710": {
+   "def": "TuneA710",
+   "description": "Cortex-A710 ARM processors",
+   "implies": [
+    "alu-lsl-fast",
+    "cmp-bcc-fusion",
+    "enable-select-opt",
+    "fuse-adrp-add",
+    "fuse-aes",
+    "fuse-csel",
+    "fuse-cset",
+    "predictable-select-expensive",
+    "use-postra-scheduler"
+   ]
+  },
+  "a715": {
+   "def": "TuneA715",
+   "description": "Cortex-A715 ARM processors",
+   "implies": [
+    "alu-lsl-fast",
+    "cmp-bcc-fusion",
+    "enable-select-opt",
+    "fuse-adrp-add",
+    "fuse-aes",
+    "fuse-csel",
+    "fuse-cset",
+    "predictable-select-expensive",
+    "use-postra-scheduler"
+   ]
+  },
+  "a72": {
+   "def": "TuneA72",
+   "description": "Cortex-A72 ARM processors",
+   "implies": [
+    "addr-lsl-slow-14",
+    "enable-select-opt",
+    "fuse-adrp-add",
+    "fuse-aes",
+    "fuse-literals",
+    "predictable-select-expensive"
+   ]
+  },
+  "a720": {
+   "def": "TuneA720",
+   "description": "Cortex-A720 ARM processors",
+   "implies": [
+    "alu-lsl-fast",
+    "cmp-bcc-fusion",
+    "enable-select-opt",
+    "fuse-adrp-add",
+    "fuse-aes",
+    "fuse-csel",
+    "fuse-cset",
+    "predictable-select-expensive",
+    "use-postra-scheduler"
+   ]
+  },
+  "a720ae": {
+   "def": "TuneA720AE",
+   "description": "Cortex-A720AE ARM processors",
+   "implies": [
+    "alu-lsl-fast",
+    "cmp-bcc-fusion",
+    "enable-select-opt",
+    "fuse-adrp-add",
+    "fuse-aes",
+    "fuse-csel",
+    "fuse-cset",
+    "predictable-select-expensive",
+    "use-postra-scheduler"
+   ]
+  },
+  "cortex-a725": {
+   "def": "TuneA725",
+   "description": "Cortex-A725 ARM processors",
+   "implies": [
+    "alu-lsl-fast",
+    "cmp-bcc-fusion",
+    "enable-select-opt",
+    "fuse-adrp-add",
+    "fuse-aes",
+    "fuse-csel",
+    "fuse-cset",
+    "predictable-select-expensive",
+    "use-postra-scheduler"
+   ]
+  },
+  "a73": {
+   "def": "TuneA73",
+   "description": "Cortex-A73 ARM processors",
+   "implies": [
+    "addr-lsl-slow-14",
+    "enable-select-opt",
+    "fuse-adrp-add",
+    "fuse-aes",
+    "predictable-select-expensive"
+   ]
+  },
+  "a75": {
+   "def": "TuneA75",
+   "description": "Cortex-A75 ARM processors",
+   "implies": [
+    "addr-lsl-slow-14",
+    "enable-select-opt",
+    "fuse-adrp-add",
+    "fuse-aes",
+    "predictable-select-expensive"
+   ]
+  },
+  "a76": {
+   "def": "TuneA76",
+   "description": "Cortex-A76 ARM processors",
+   "implies": [
+    "addr-lsl-slow-14",
+    "alu-lsl-fast",
+    "enable-select-opt",
+    "fuse-adrp-add",
+    "fuse-aes",
+    "predictable-select-expensive"
+   ]
+  },
+  "a77": {
+   "def": "TuneA77",
+   "description": "Cortex-A77 ARM processors",
+   "implies": [
+    "addr-lsl-slow-14",
+    "alu-lsl-fast",
+    "cmp-bcc-fusion",
+    "enable-select-opt",
+    "fuse-adrp-add",
+    "fuse-aes",
+    "predictable-select-expensive"
+   ]
+  },
+  "a78": {
+   "def": "TuneA78",
+   "description": "Cortex-A78 ARM processors",
+   "implies": [
+    "addr-lsl-slow-14",
+    "alu-lsl-fast",
+    "cmp-bcc-fusion",
+    "enable-select-opt",
+    "fuse-adrp-add",
+    "fuse-aes",
+    "fuse-csel",
+    "fuse-cset",
+    "predictable-select-expensive",
+    "use-postra-scheduler"
+   ]
+  },
+  "a78ae": {
+   "def": "TuneA78AE",
+   "description": "Cortex-A78AE ARM processors",
+   "implies": [
+    "addr-lsl-slow-14",
+    "alu-lsl-fast",
+    "cmp-bcc-fusion",
+    "enable-select-opt",
+    "fuse-adrp-add",
+    "fuse-aes",
+    "fuse-csel",
+    "fuse-cset",
+    "predictable-select-expensive",
+    "use-postra-scheduler"
+   ]
+  },
+  "a78c": {
+   "def": "TuneA78C",
+   "description": "Cortex-A78C ARM processors",
+   "implies": [
+    "addr-lsl-slow-14",
+    "alu-lsl-fast",
+    "cmp-bcc-fusion",
+    "enable-select-opt",
+    "fuse-adrp-add",
+    "fuse-aes",
+    "fuse-csel",
+    "fuse-cset",
+    "predictable-select-expensive",
+    "use-postra-scheduler"
+   ]
+  },
+  "ampere1": {
+   "def": "TuneAmpere1",
+   "description": "Ampere Computing Ampere-1 processors",
+   "implies": [
+    "aggressive-fma",
+    "alu-lsl-fast",
+    "arith-bcc-fusion",
+    "cmp-bcc-fusion",
+    "fuse-address",
+    "fuse-adrp-add",
+    "fuse-aes",
+    "fuse-literals",
+    "ldp-aligned-only",
+    "max-interleave-factor-4",
+    "store-pair-suppress",
+    "stp-aligned-only",
+    "use-postra-scheduler"
+   ]
+  },
+  "ampere1a": {
+   "def": "TuneAmpere1A",
+   "description": "Ampere Computing Ampere-1A processors",
+   "implies": [
+    "aggressive-fma",
+    "alu-lsl-fast",
+    "arith-bcc-fusion",
+    "cmp-bcc-fusion",
+    "fuse-address",
+    "fuse-addsub-2reg-const1",
+    "fuse-adrp-add",
+    "fuse-aes",
+    "fuse-literals",
+    "ldp-aligned-only",
+    "max-interleave-factor-4",
+    "store-pair-suppress",
+    "stp-aligned-only",
+    "use-postra-scheduler"
+   ]
+  },
+  "ampere1b": {
+   "def": "TuneAmpere1B",
+   "description": "Ampere Computing Ampere-1B processors",
+   "implies": [
+    "aggressive-fma",
+    "alu-lsl-fast",
+    "arith-bcc-fusion",
+    "cmp-bcc-fusion",
+    "enable-select-opt",
+    "fuse-address",
+    "fuse-adrp-add",
+    "fuse-aes",
+    "fuse-literals",
+    "ldp-aligned-only",
+    "max-interleave-factor-4",
+    "predictable-select-expensive",
+    "store-pair-suppress",
+    "stp-aligned-only",
+    "use-postra-scheduler"
+   ]
+  },
+  "ampere1c": {
+   "def": "TuneAmpere1C",
+   "description": "Ampere Computing Ampere-1C processors",
+   "implies": [
+    "aggressive-fma",
+    "alu-lsl-fast",
+    "arith-bcc-fusion",
+    "cmp-bcc-fusion",
+    "enable-select-opt",
+    "fuse-address",
+    "fuse-adrp-add",
+    "fuse-aes",
+    "fuse-literals",
+    "max-interleave-factor-4",
+    "predictable-select-expensive",
+    "store-pair-suppress",
+    "use-postra-scheduler"
+   ]
+  },
+  "apple-a10": {
+   "def": "TuneAppleA10",
+   "description": "Apple A10",
+   "implies": []
+  },
+  "apple-a11": {
+   "def": "TuneAppleA11",
+   "description": "Apple A11",
+   "implies": []
+  },
+  "apple-a12": {
+   "def": "TuneAppleA12",
+   "description": "Apple A12",
+   "implies": []
+  },
+  "apple-a13": {
+   "def": "TuneAppleA13",
+   "description": "Apple A13",
+   "implies": []
+  },
+  "apple-a14": {
+   "def": "TuneAppleA14",
+   "description": "Apple A14",
+   "implies": [
+    "aggressive-fma",
+    "align-cmp-csel-pairs",
+    "fast-ld1-single",
+    "fuse-arith-logic",
+    "fuse-csel",
+    "fuse-literals",
+    "max-interleave-factor-4"
+   ]
+  },
+  "apple-a15": {
+   "def": "TuneAppleA15",
+   "description": "Apple A15",
+   "implies": [
+    "fuse-adrp-add"
+   ]
+  },
+  "apple-a16": {
+   "def": "TuneAppleA16",
+   "description": "Apple A16",
+   "implies": [
+    "fuse-fcsel"
+   ]
+  },
+  "apple-a17": {
+   "def": "TuneAppleA17",
+   "description": "Apple A17",
+   "implies": []
+  },
+  "apple-a7": {
+   "def": "TuneAppleA7",
+   "description": "Apple A7 (the CPU formerly known as Cyclone)",
+   "implies": [
+    "alternate-sextload-cvt-f32-pattern",
+    "arith-bcc-fusion",
+    "arith-cbz-fusion",
+    "disable-latency-sched-heuristic",
+    "fuse-aes",
+    "fuse-crypto-eor",
+    "no-zcz-fpr64",
+    "store-pair-suppress",
+    "zcm-fpr128",
+    "zcm-gpr64",
+    "zcz-fp-workaround",
+    "zcz-fpr128",
+    "zcz-gpr32",
+    "zcz-gpr64"
+   ]
+  },
+  "apple-m4": {
+   "def": "TuneAppleM4",
+   "description": "Apple M4",
+   "implies": [
+    "fuse-apple-sme-compute"
+   ]
+  },
+  "apple-m5": {
+   "def": "TuneAppleM5",
+   "description": "Apple M5",
+   "implies": [
+    "fuse-fmin-fmax"
+   ]
+  },
+  "c1-nano": {
+   "def": "TuneC1Nano",
+   "description": "C1-Nano ARM Processors",
+   "implies": [
+    "fuse-adrp-add",
+    "fuse-aes",
+    "use-fixed-over-scalable-if-equal-cost",
+    "use-postra-scheduler",
+    "use-wzr-to-vec-move"
+   ]
+  },
+  "c1-premium": {
+   "def": "TuneC1Premium",
+   "description": "C1-Premium ARM Processors",
+   "implies": [
+    "alu-lsl-fast",
+    "avoid-ldapur",
+    "enable-select-opt",
+    "fuse-adrp-add",
+    "fuse-aes",
+    "fuse-csel",
+    "fuse-cset",
+    "predictable-select-expensive",
+    "use-fixed-over-scalable-if-equal-cost",
+    "use-postra-scheduler"
+   ]
+  },
+  "c1-pro": {
+   "def": "TuneC1Pro",
+   "description": "C1-Pro ARM Processors",
+   "implies": [
+    "alu-lsl-fast",
+    "cmp-bcc-fusion",
+    "enable-select-opt",
+    "fuse-adrp-add",
+    "fuse-aes",
+    "fuse-csel",
+    "fuse-cset",
+    "predictable-select-expensive",
+    "use-postra-scheduler"
+   ]
+  },
+  "c1-ultra": {
+   "def": "TuneC1Ultra",
+   "description": "C1-Ultra ARM Processors",
+   "implies": [
+    "alu-lsl-fast",
+    "avoid-ldapur",
+    "enable-select-opt",
+    "fuse-adrp-add",
+    "fuse-aes",
+    "fuse-csel",
+    "fuse-cset",
+    "max-interleave-factor-4",
+    "predictable-select-expensive",
+    "use-fixed-over-scalable-if-equal-cost",
+    "use-postra-scheduler"
+   ]
+  },
+  "c2-ultra": {
+   "def": "TuneC2Ultra",
+   "description": "C2-Ultra ARM Processors",
+   "implies": [
+    "alu-lsl-fast",
+    "avoid-ldapur",
+    "enable-select-opt",
+    "fuse-adrp-add",
+    "fuse-aes",
+    "fuse-csel",
+    "fuse-cset",
+    "max-interleave-factor-4",
+    "predictable-select-expensive",
+    "use-fixed-over-scalable-if-equal-cost",
+    "use-postra-scheduler"
+   ]
+  },
+  "carmel": {
+   "def": "TuneCarmel",
+   "description": "Nvidia Carmel processors",
+   "implies": []
+  },
+  "exynosm3": {
+   "def": "TuneExynosM3",
+   "description": "Samsung Exynos-M3 processors",
+   "implies": [
+    "alu-lsl-fast",
+    "exynos-cheap-as-move",
+    "force-32bit-jump-tables",
+    "fuse-address",
+    "fuse-adrp-add",
+    "fuse-aes",
+    "fuse-csel",
+    "fuse-literals",
+    "max-interleave-factor-4",
+    "predictable-select-expensive",
+    "store-pair-suppress",
+    "use-postra-scheduler"
+   ]
+  },
+  "exynosm4": {
+   "def": "TuneExynosM4",
+   "description": "Samsung Exynos-M4 processors",
+   "implies": [
+    "alu-lsl-fast",
+    "arith-bcc-fusion",
+    "arith-cbz-fusion",
+    "exynos-cheap-as-move",
+    "force-32bit-jump-tables",
+    "fuse-address",
+    "fuse-adrp-add",
+    "fuse-aes",
+    "fuse-arith-logic",
+    "fuse-csel",
+    "fuse-literals",
+    "max-interleave-factor-4",
+    "store-pair-suppress",
+    "use-postra-scheduler",
+    "zcz-gpr32",
+    "zcz-gpr64"
+   ]
+  },
+  "falkor": {
+   "def": "TuneFalkor",
+   "description": "Qualcomm Falkor processors",
+   "implies": [
+    "alu-lsl-fast",
+    "max-interleave-factor-4",
+    "predictable-select-expensive",
+    "slow-strqro-store",
+    "store-pair-suppress",
+    "use-postra-scheduler",
+    "zcz-gpr32",
+    "zcz-gpr64"
+   ]
+  },
+  "hip12": {
+   "def": "TuneHIP12",
+   "description": "HiSilicon HIP12 processors",
+   "implies": [
+    "addr-lsl-slow-14",
+    "alu-lsl-fast",
+    "cmp-bcc-fusion",
+    "fuse-aes",
+    "store-pair-suppress",
+    "use-postra-scheduler"
+   ]
+  },
+  "kryo": {
+   "def": "TuneKryo",
+   "description": "Qualcomm Kryo processors",
+   "implies": [
+    "alu-lsl-fast",
+    "max-interleave-factor-4",
+    "predictable-select-expensive",
+    "store-pair-suppress",
+    "use-postra-scheduler",
+    "zcz-gpr32",
+    "zcz-gpr64"
+   ]
+  },
+  "fujitsu-monaka": {
+   "def": "TuneMONAKA",
+   "description": "Fujitsu FUJITSU-MONAKA processors",
+   "implies": [
+    "arith-bcc-fusion",
+    "enable-select-opt",
+    "predictable-select-expensive",
+    "use-postra-scheduler"
+   ]
+  },
+  "neoverse512tvb": {
+   "def": "TuneNeoverse512TVB",
+   "description": "Neoverse 512-TVB ARM processors",
+   "implies": [
+    "alu-lsl-fast",
+    "enable-select-opt",
+    "fuse-adrp-add",
+    "fuse-aes",
+    "max-interleave-factor-4",
+    "predictable-select-expensive",
+    "use-postra-scheduler"
+   ]
+  },
+  "neoversee1": {
+   "def": "TuneNeoverseE1",
+   "description": "Neoverse E1 ARM processors",
+   "implies": [
+    "fuse-adrp-add",
+    "fuse-aes",
+    "use-postra-scheduler"
+   ]
+  },
+  "neoversen1": {
+   "def": "TuneNeoverseN1",
+   "description": "Neoverse N1 ARM processors",
+   "implies": [
+    "addr-lsl-slow-14",
+    "alu-lsl-fast",
+    "enable-select-opt",
+    "fuse-adrp-add",
+    "fuse-aes",
+    "predictable-select-expensive",
+    "use-postra-scheduler"
+   ]
+  },
+  "neoversen2": {
+   "def": "TuneNeoverseN2",
+   "description": "Neoverse N2 ARM processors",
+   "implies": [
+    "alu-lsl-fast",
+    "enable-select-opt",
+    "fuse-adrp-add",
+    "fuse-aes",
+    "fuse-csel",
+    "fuse-cset",
+    "has-limited-64bit-vector-mul-bandwidth",
+    "predictable-select-expensive",
+    "use-fixed-over-scalable-if-equal-cost",
+    "use-postra-scheduler"
+   ]
+  },
+  "neoversen3": {
+   "def": "TuneNeoverseN3",
+   "description": "Neoverse N3 ARM processors",
+   "implies": [
+    "alu-lsl-fast",
+    "enable-select-opt",
+    "fuse-adrp-add",
+    "fuse-aes",
+    "fuse-csel",
+    "fuse-cset",
+    "predictable-select-expensive",
+    "use-postra-scheduler"
+   ]
+  },
+  "neoversev1": {
+   "def": "TuneNeoverseV1",
+   "description": "Neoverse V1 ARM processors",
+   "implies": [
+    "addr-lsl-slow-14",
+    "alu-lsl-fast",
+    "disable-maximize-scalable-bandwidth",
+    "dont-prefer-predicated-ld1r",
+    "enable-select-opt",
+    "fuse-adrp-add",
+    "fuse-aes",
+    "fuse-csel",
+    "fuse-cset",
+    "no-sve-fp-ld1r",
+    "predictable-select-expensive",
+    "use-postra-scheduler"
+   ]
+  },
+  "neoversev2": {
+   "def": "TuneNeoverseV2",
+   "description": "Neoverse V2 ARM processors",
+   "implies": [
+    "alu-lsl-fast",
+    "avoid-ldapur",
+    "cmp-bcc-fusion",
+    "disable-latency-sched-heuristic",
+    "dont-prefer-predicated-ld1r",
+    "enable-select-opt",
+    "fuse-adrp-add",
+    "fuse-aes",
+    "fuse-csel",
+    "fuse-cset",
+    "max-interleave-factor-4",
+    "predictable-select-expensive",
+    "use-fixed-over-scalable-if-equal-cost",
+    "use-postra-scheduler"
+   ]
+  },
+  "neoversev3": {
+   "def": "TuneNeoverseV3",
+   "description": "Neoverse V3 ARM processors",
+   "implies": [
+    "alu-lsl-fast",
+    "avoid-ldapur",
+    "enable-select-opt",
+    "fuse-adrp-add",
+    "fuse-aes",
+    "fuse-csel",
+    "fuse-cset",
+    "max-interleave-factor-4",
+    "predictable-select-expensive",
+    "use-fixed-over-scalable-if-equal-cost",
+    "use-postra-scheduler"
+   ]
+  },
+  "neoversev3AE": {
+   "def": "TuneNeoverseV3AE",
+   "description": "Neoverse V3AE ARM processors",
+   "implies": [
+    "alu-lsl-fast",
+    "avoid-ldapur",
+    "enable-select-opt",
+    "fuse-adrp-add",
+    "fuse-aes",
+    "fuse-csel",
+    "fuse-cset",
+    "has-limited-64bit-vector-mul-bandwidth",
+    "predictable-select-expensive",
+    "use-fixed-over-scalable-if-equal-cost",
+    "use-postra-scheduler"
+   ]
+  },
+  "olympus": {
+   "def": "TuneOlympus",
+   "description": "NVIDIA Olympus processors",
+   "implies": [
+    "alu-lsl-fast",
+    "cmp-bcc-fusion",
+    "enable-select-opt",
+    "fuse-adrp-add",
+    "fuse-aes",
+    "max-interleave-factor-4",
+    "predictable-select-expensive",
+    "use-fixed-over-scalable-if-equal-cost",
+    "use-postra-scheduler"
+   ]
+  },
+  "oryon-1": {
+   "def": "TuneOryon",
+   "description": "Nuvia Inc Oryon processors",
+   "implies": [
+    "aes",
+    "enable-select-opt",
+    "fp-armv8",
+    "fp16fml",
+    "fullfp16",
+    "fuse-address",
+    "fuse-adrp-add",
+    "fuse-aes",
+    "fuse-crypto-eor",
+    "max-interleave-factor-4",
+    "neon",
+    "perfmon",
+    "sha2",
+    "sha3",
+    "sm4",
+    "spe",
+    "use-postra-scheduler",
+    "v8.6a"
+   ]
+  },
+  "cortex-r82": {
+   "def": "TuneR82",
+   "description": "Cortex-R82 ARM processors",
+   "implies": [
+    "use-postra-scheduler"
+   ]
+  },
+  "cortex-r82ae": {
+   "def": "TuneR82AE",
+   "description": "Cortex-R82-AE ARM processors",
+   "implies": [
+    "use-postra-scheduler"
+   ]
+  },
+  "saphira": {
+   "def": "TuneSaphira",
+   "description": "Qualcomm Saphira processors",
+   "implies": [
+    "alu-lsl-fast",
+    "max-interleave-factor-4",
+    "predictable-select-expensive",
+    "store-pair-suppress",
+    "use-postra-scheduler",
+    "zcz-gpr32",
+    "zcz-gpr64"
+   ]
+  },
+  "tsv110": {
+   "def": "TuneTSV110",
+   "description": "HiSilicon TS-V110 processors",
+   "implies": [
+    "fuse-aes",
+    "store-pair-suppress",
+    "use-postra-scheduler"
+   ]
+  },
+  "thunderx": {
+   "def": "TuneThunderX",
+   "description": "Cavium ThunderX processors",
+   "implies": [
+    "predictable-select-expensive",
+    "store-pair-suppress",
+    "use-postra-scheduler"
+   ]
+  },
+  "thunderx2t99": {
+   "def": "TuneThunderX2T99",
+   "description": "Cavium ThunderX2 processors",
+   "implies": [
+    "aggressive-fma",
+    "arith-bcc-fusion",
+    "max-interleave-factor-4",
+    "predictable-select-expensive",
+    "store-pair-suppress",
+    "use-postra-scheduler"
+   ]
+  },
+  "thunderx3t110": {
+   "def": "TuneThunderX3T110",
+   "description": "Marvell ThunderX3 processors",
+   "implies": [
+    "aggressive-fma",
+    "arith-bcc-fusion",
+    "balance-fp-ops",
+    "max-interleave-factor-4",
+    "predictable-select-expensive",
+    "store-pair-suppress",
+    "strict-align",
+    "use-postra-scheduler"
+   ]
+  },
+  "thunderxt81": {
+   "def": "TuneThunderXT81",
+   "description": "Cavium ThunderX processors",
+   "implies": [
+    "predictable-select-expensive",
+    "store-pair-suppress",
+    "use-postra-scheduler"
+   ]
+  },
+  "thunderxt83": {
+   "def": "TuneThunderXT83",
+   "description": "Cavium ThunderX processors",
+   "implies": [
+    "predictable-select-expensive",
+    "store-pair-suppress",
+    "use-postra-scheduler"
+   ]
+  },
+  "thunderxt88": {
+   "def": "TuneThunderXT88",
+   "description": "Cavium ThunderX processors",
+   "implies": [
+    "predictable-select-expensive",
+    "store-pair-suppress",
+    "use-postra-scheduler"
+   ]
+  },
+  "cortex-x1": {
+   "def": "TuneX1",
+   "description": "Cortex-X1 ARM processors",
+   "implies": [
+    "addr-lsl-slow-14",
+    "alu-lsl-fast",
+    "cmp-bcc-fusion",
+    "enable-select-opt",
+    "fuse-adrp-add",
+    "fuse-aes",
+    "max-interleave-factor-4",
+    "predictable-select-expensive",
+    "use-postra-scheduler"
+   ]
+  },
+  "cortex-x2": {
+   "def": "TuneX2",
+   "description": "Cortex-X2 ARM processors",
+   "implies": [
+    "alu-lsl-fast",
+    "cmp-bcc-fusion",
+    "enable-select-opt",
+    "fuse-adrp-add",
+    "fuse-aes",
+    "max-interleave-factor-4",
+    "predictable-select-expensive",
+    "use-fixed-over-scalable-if-equal-cost",
+    "use-postra-scheduler"
+   ]
+  },
+  "cortex-x3": {
+   "def": "TuneX3",
+   "description": "Cortex-X3 ARM processors",
+   "implies": [
+    "alu-lsl-fast",
+    "avoid-ldapur",
+    "enable-select-opt",
+    "fuse-adrp-add",
+    "fuse-aes",
+    "max-interleave-factor-4",
+    "predictable-select-expensive",
+    "use-fixed-over-scalable-if-equal-cost",
+    "use-postra-scheduler"
+   ]
+  },
+  "cortex-x4": {
+   "def": "TuneX4",
+   "description": "Cortex-X4 ARM processors",
+   "implies": [
+    "alu-lsl-fast",
+    "avoid-ldapur",
+    "enable-select-opt",
+    "fuse-adrp-add",
+    "fuse-aes",
+    "fuse-csel",
+    "fuse-cset",
+    "max-interleave-factor-4",
+    "predictable-select-expensive",
+    "use-fixed-over-scalable-if-equal-cost",
+    "use-postra-scheduler"
+   ]
+  },
+  "cortex-x925": {
+   "def": "TuneX925",
+   "description": "Cortex-X925 ARM processors",
+   "implies": [
+    "alu-lsl-fast",
+    "avoid-ldapur",
+    "enable-select-opt",
+    "fuse-adrp-add",
+    "fuse-aes",
+    "fuse-csel",
+    "fuse-cset",
+    "max-interleave-factor-4",
+    "predictable-select-expensive",
+    "use-fixed-over-scalable-if-equal-cost",
+    "use-postra-scheduler"
+   ]
+  }
+ },
+ "aliases": {
+  "apple-a18": "apple-m4",
+  "apple-a19": "apple-m5",
+  "apple-a8": "apple-a7",
+  "apple-a9": "apple-a7",
+  "apple-latest": "apple-m5",
+  "apple-m1": "apple-a14",
+  "apple-m2": "apple-a15",
+  "apple-m3": "apple-a16",
+  "apple-s10": "apple-a16",
+  "apple-s4": "apple-a12",
+  "apple-s5": "apple-a12",
+  "apple-s6": "apple-a13",
+  "apple-s7": "apple-a13",
+  "apple-s8": "apple-a13",
+  "apple-s9": "apple-a16",
+  "armagicpu": "neoverse-v3ae",
+  "c2-pro": "c1-pro",
+  "cobalt-100": "neoverse-n2",
+  "cyclone": "apple-a7"
+ },
+ "unresolved": [],
+ "processors": {
+  "a64fx": ["CONTEXTIDREL2", "aes", "ccpp", "complxnum", "crc", "el2vmsa", "el3", "fp-armv8", "fullfp16", "lor", "lse", "neon", "pan", "pan-rwv", "perfmon", "ras", "rdm", "sha2", "sve", "uaops", "v8.1a", "v8.2a", "v8a", "vh"],
+  "ampere1": ["CONTEXTIDREL2", "aes", "altnzcv", "am", "amvs", "bf16", "bti", "ccdp", "ccidx", "ccpp", "complxnum", "crc", "dit", "dotprod", "ecv", "el2vmsa", "el3", "fgt", "flagm", "fp-armv8", "fptoint", "fullfp16", "i8mm", "jsconv", "lor", "lse", "lse2", "mpam", "neon", "nv", "pan", "pan-rwv", "pauth", "perfmon", "predres", "rand", "ras", "rcpc", "rcpc-immo", "rdm", "sb", "sel2", "sha2", "sha3", "specrestrict", "ssbs", "tlb-rmi", "tracev8.4", "uaops", "v8.1a", "v8.2a", "v8.3a", "v8.4a", "v8.5a", "v8.6a", "v8a", "vh"],
+  "ampere1a": ["CONTEXTIDREL2", "aes", "altnzcv", "am", "amvs", "bf16", "bti", "ccdp", "ccidx", "ccpp", "complxnum", "crc", "dit", "dotprod", "ecv", "el2vmsa", "el3", "fgt", "flagm", "fp-armv8", "fptoint", "fullfp16", "i8mm", "jsconv", "lor", "lse", "lse2", "mpam", "mte", "neon", "nv", "pan", "pan-rwv", "pauth", "perfmon", "predres", "rand", "ras", "rcpc", "rcpc-immo", "rdm", "sb", "sel2", "sha2", "sha3", "sm4", "specrestrict", "ssbs", "tlb-rmi", "tracev8.4", "uaops", "v8.1a", "v8.2a", "v8.3a", "v8.4a", "v8.5a", "v8.6a", "v8a", "vh"],
+  "ampere1b": ["CONTEXTIDREL2", "aes", "altnzcv", "am", "amvs", "bf16", "bti", "ccdp", "ccidx", "ccpp", "complxnum", "crc", "cssc", "dit", "dotprod", "ecv", "el2vmsa", "el3", "fgt", "flagm", "fp-armv8", "fptoint", "fullfp16", "i8mm", "jsconv", "lor", "lse", "lse2", "mpam", "mte", "neon", "nv", "pan", "pan-rwv", "pauth", "perfmon", "predres", "rand", "ras", "rcpc", "rcpc-immo", "rdm", "sb", "sel2", "sha2", "sha3", "sm4", "specrestrict", "ssbs", "tlb-rmi", "tracev8.4", "uaops", "v8.1a", "v8.2a", "v8.3a", "v8.4a", "v8.5a", "v8.6a", "v8.7a", "v8a", "vh", "wfxt", "xs"],
+  "ampere1c": ["CONTEXTIDREL2", "aes", "altnzcv", "am", "amvs", "bf16", "bti", "ccdp", "ccidx", "ccpp", "complxnum", "crc", "cssc", "dit", "dotprod", "ecv", "el2vmsa", "el3", "faminmax", "fgt", "flagm", "fp-armv8", "fp16fml", "fp8", "fp8fma", "fptoint", "fullfp16", "i8mm", "jsconv", "lor", "lse", "lse2", "lut", "mpam", "mte", "neon", "nv", "pan", "pan-rwv", "pauth", "perfmon", "predres", "rand", "ras", "rcpc", "rcpc-immo", "rdm", "sb", "sel2", "sha2", "sha3", "sm4", "specrestrict", "ssbs", "sve", "sve-aes", "sve-b16b16", "sve-sha3", "sve-sm4", "sve2", "tlb-rmi", "tracev8.4", "uaops", "v8.1a", "v8.2a", "v8.3a", "v8.4a", "v8.5a", "v8.6a", "v8.7a", "v8a", "v9.1a", "v9.2a", "v9a", "vh", "wfxt", "xs"],
+  "apple-a10": ["CONTEXTIDREL2", "aes", "crc", "el2vmsa", "el3", "fp-armv8", "lor", "neon", "pan", "perfmon", "rdm", "sha2", "v8a", "vh"],
+  "apple-a11": ["CONTEXTIDREL2", "aes", "ccpp", "crc", "el2vmsa", "el3", "fp-armv8", "fullfp16", "lor", "lse", "neon", "pan", "pan-rwv", "perfmon", "ras", "rdm", "sha2", "uaops", "v8.1a", "v8.2a", "v8a", "vh"],
+  "apple-a12": ["CONTEXTIDREL2", "aes", "ccpp", "complxnum", "crc", "el2vmsa", "el3", "fp-armv8", "fullfp16", "jsconv", "lor", "lse", "neon", "pan", "pan-rwv", "pauth", "perfmon", "ras", "rcpc", "rdm", "sha2", "uaops", "v8.1a", "v8.2a", "v8.3a", "v8a", "vh"],
+  "apple-a13": ["CONTEXTIDREL2", "aes", "am", "ccpp", "complxnum", "crc", "dit", "dotprod", "el2vmsa", "el3", "flagm", "fp-armv8", "fp16fml", "fullfp16", "jsconv", "lor", "lse", "lse2", "mpam", "neon", "nv", "pan", "pan-rwv", "pauth", "perfmon", "ras", "rcpc", "rcpc-immo", "rdm", "sel2", "sha2", "sha3", "tlb-rmi", "tracev8.4", "uaops", "v8.1a", "v8.2a", "v8.3a", "v8.4a", "v8a", "vh"],
+  "apple-a14": ["CONTEXTIDREL2", "aes", "altnzcv", "am", "ccdp", "ccpp", "complxnum", "crc", "dit", "dotprod", "el2vmsa", "el3", "flagm", "fp-armv8", "fp16fml", "fptoint", "fullfp16", "jsconv", "lor", "lse", "lse2", "mpam", "neon", "nv", "pan", "pan-rwv", "pauth", "perfmon", "predres", "ras", "rcpc", "rcpc-immo", "rdm", "sb", "sel2", "sha2", "sha3", "specrestrict", "ssbs", "tlb-rmi", "tracev8.4", "uaops", "v8.1a", "v8.2a", "v8.3a", "v8.4a", "v8a", "vh"],
+  "apple-a15": ["CONTEXTIDREL2", "aes", "altnzcv", "am", "amvs", "bf16", "bti", "ccdp", "ccpp", "complxnum", "crc", "dit", "dotprod", "ecv", "el2vmsa", "el3", "fgt", "flagm", "fp-armv8", "fp16fml", "fpac", "fptoint", "fullfp16", "i8mm", "jsconv", "lor", "lse", "lse2", "mpam", "neon", "nv", "pan", "pan-rwv", "pauth", "perfmon", "predres", "ras", "rcpc", "rcpc-immo", "rdm", "sb", "sel2", "sha2", "sha3", "specrestrict", "ssbs", "tlb-rmi", "tracev8.4", "uaops", "v8.1a", "v8.2a", "v8.3a", "v8.4a", "v8.5a", "v8.6a", "v8a", "vh"],
+  "apple-a16": ["CONTEXTIDREL2", "aes", "altnzcv", "am", "amvs", "bf16", "bti", "ccdp", "ccpp", "complxnum", "crc", "dit", "dotprod", "ecv", "el2vmsa", "el3", "fgt", "flagm", "fp-armv8", "fp16fml", "fpac", "fptoint", "fullfp16", "i8mm", "jsconv", "lor", "lse", "lse2", "mpam", "neon", "nv", "pan", "pan-rwv", "pauth", "perfmon", "predres", "ras", "rcpc", "rcpc-immo", "rdm", "sb", "sel2", "sha2", "sha3", "specrestrict", "ssbs", "tlb-rmi", "tracev8.4", "uaops", "v8.1a", "v8.2a", "v8.3a", "v8.4a", "v8.5a", "v8.6a", "v8a", "vh"],
+  "apple-a17": ["CONTEXTIDREL2", "aes", "altnzcv", "am", "amvs", "bf16", "bti", "ccdp", "ccpp", "complxnum", "crc", "dit", "dotprod", "ecv", "el2vmsa", "el3", "fgt", "flagm", "fp-armv8", "fp16fml", "fpac", "fptoint", "fullfp16", "i8mm", "jsconv", "lor", "lse", "lse2", "mpam", "neon", "nv", "pan", "pan-rwv", "pauth", "perfmon", "predres", "ras", "rcpc", "rcpc-immo", "rdm", "sb", "sel2", "sha2", "sha3", "specrestrict", "ssbs", "tlb-rmi", "tracev8.4", "uaops", "v8.1a", "v8.2a", "v8.3a", "v8.4a", "v8.5a", "v8.6a", "v8a", "vh"],
+  "apple-a7": ["aes", "el2vmsa", "el3", "fp-armv8", "neon", "perfmon", "sha2", "v8a"],
+  "apple-m4": ["CONTEXTIDREL2", "aes", "altnzcv", "am", "amvs", "bf16", "bti", "ccdp", "ccpp", "complxnum", "crc", "dit", "dotprod", "ecv", "el2vmsa", "el3", "fgt", "flagm", "fp-armv8", "fp16fml", "fpac", "fptoint", "fullfp16", "i8mm", "jsconv", "lor", "lse", "lse2", "mpam", "neon", "nv", "pan", "pan-rwv", "pauth", "perfmon", "predres", "ras", "rcpc", "rcpc-immo", "rdm", "sb", "sel2", "sha2", "sha3", "sme", "sme-f64f64", "sme-i16i64", "sme2", "specrestrict", "tlb-rmi", "tracev8.4", "uaops", "v8.1a", "v8.2a", "v8.3a", "v8.4a", "v8.5a", "v8.6a", "v8.7a", "v8a", "vh", "wfxt", "xs"],
+  "apple-m5": ["CONTEXTIDREL2", "aes", "altnzcv", "am", "amvs", "bf16", "bti", "ccdp", "ccpp", "complxnum", "crc", "cssc", "dit", "dotprod", "ecv", "el2vmsa", "el3", "fgt", "flagm", "fp-armv8", "fp16fml", "fpac", "fptoint", "fullfp16", "hbc", "i8mm", "jsconv", "lor", "lse", "lse2", "mpam", "mte", "neon", "nv", "pan", "pan-rwv", "pauth", "perfmon", "predres", "ras", "rcpc", "rcpc-immo", "rdm", "sb", "sel2", "sha2", "sha3", "sme", "sme-b16b16", "sme-f16f16", "sme-f64f64", "sme-i16i64", "sme2", "sme2p1", "specres2", "specrestrict", "sve-b16b16", "tlb-rmi", "tracev8.4", "uaops", "v8.1a", "v8.2a", "v8.3a", "v8.4a", "v8.5a", "v8.6a", "v8.7a", "v8a", "vh", "wfxt", "xs"],
+  "c1-nano": ["CONTEXTIDREL2", "altnzcv", "am", "amvs", "bf16", "bti", "ccdp", "ccidx", "ccpp", "chk", "clrbhb", "complxnum", "crc", "dit", "dotprod", "ecv", "el2vmsa", "el3", "ete", "fgt", "flagm", "fp-armv8", "fp16fml", "fpac", "fptoint", "fullfp16", "hbc", "i8mm", "jsconv", "lor", "lse", "lse2", "mops", "mpam", "mte", "neon", "nmi", "nv", "pan", "pan-rwv", "pauth", "perfmon", "predres", "ras", "rcpc", "rcpc-immo", "rcpc3", "rdm", "sb", "sel2", "sme", "sme2", "specres2", "specrestrict", "ssbs", "sve", "sve-bitperm", "sve2", "tlb-rmi", "tracev8.4", "trbe", "uaops", "v8.1a", "v8.2a", "v8.3a", "v8.4a", "v8.5a", "v8.6a", "v8.7a", "v8.8a", "v8a", "v9.1a", "v9.2a", "v9.3a", "v9a", "vh", "wfxt", "xs"],
+  "c1-premium": ["CONTEXTIDREL2", "altnzcv", "am", "amvs", "bf16", "bti", "ccdp", "ccidx", "ccpp", "chk", "clrbhb", "complxnum", "crc", "dit", "dotprod", "ecv", "el2vmsa", "el3", "ete", "fgt", "flagm", "fp-armv8", "fp16fml", "fpac", "fptoint", "fullfp16", "hbc", "i8mm", "jsconv", "lor", "lse", "lse2", "mops", "mpam", "mte", "neon", "nmi", "nv", "pan", "pan-rwv", "pauth", "perfmon", "predres", "ras", "rcpc", "rcpc-immo", "rcpc3", "rdm", "sb", "sel2", "sme", "sme2", "spe", "spe-eef", "specres2", "specrestrict", "ssbs", "sve", "sve-bitperm", "sve2", "tlb-rmi", "tracev8.4", "trbe", "uaops", "v8.1a", "v8.2a", "v8.3a", "v8.4a", "v8.5a", "v8.6a", "v8.7a", "v8.8a", "v8a", "v9.1a", "v9.2a", "v9.3a", "v9a", "vh", "wfxt", "xs"],
+  "c1-pro": ["CONTEXTIDREL2", "altnzcv", "am", "amvs", "bf16", "bti", "ccdp", "ccidx", "ccpp", "chk", "clrbhb", "complxnum", "crc", "dit", "dotprod", "ecv", "el2vmsa", "el3", "ete", "fgt", "flagm", "fp-armv8", "fp16fml", "fpac", "fptoint", "fullfp16", "hbc", "i8mm", "jsconv", "lor", "lse", "lse2", "mops", "mpam", "mte", "neon", "nmi", "nv", "pan", "pan-rwv", "pauth", "perfmon", "predres", "ras", "rcpc", "rcpc-immo", "rcpc3", "rdm", "sb", "sel2", "sme", "sme2", "spe", "spe-eef", "specres2", "specrestrict", "ssbs", "sve", "sve-bitperm", "sve2", "tlb-rmi", "tracev8.4", "trbe", "uaops", "v8.1a", "v8.2a", "v8.3a", "v8.4a", "v8.5a", "v8.6a", "v8.7a", "v8.8a", "v8a", "v9.1a", "v9.2a", "v9.3a", "v9a", "vh", "wfxt", "xs"],
+  "c1-ultra": ["CONTEXTIDREL2", "altnzcv", "am", "amvs", "bf16", "bti", "ccdp", "ccidx", "ccpp", "chk", "clrbhb", "complxnum", "crc", "dit", "dotprod", "ecv", "el2vmsa", "el3", "ete", "fgt", "flagm", "fp-armv8", "fp16fml", "fpac", "fptoint", "fullfp16", "hbc", "i8mm", "jsconv", "lor", "lse", "lse2", "mops", "mpam", "mte", "neon", "nmi", "nv", "pan", "pan-rwv", "pauth", "perfmon", "predres", "ras", "rcpc", "rcpc-immo", "rcpc3", "rdm", "sb", "sel2", "sme", "sme2", "spe", "spe-eef", "specres2", "specrestrict", "ssbs", "sve", "sve-bitperm", "sve2", "tlb-rmi", "tracev8.4", "trbe", "uaops", "v8.1a", "v8.2a", "v8.3a", "v8.4a", "v8.5a", "v8.6a", "v8.7a", "v8.8a", "v8a", "v9.1a", "v9.2a", "v9.3a", "v9a", "vh", "wfxt", "xs"],
+  "c2-ultra": ["CONTEXTIDREL2", "altnzcv", "am", "amvs", "bf16", "bti", "ccdp", "ccidx", "ccpp", "chk", "clrbhb", "complxnum", "crc", "dit", "dotprod", "ecv", "el2vmsa", "el3", "ete", "fgt", "flagm", "fp-armv8", "fp16fml", "fpac", "fptoint", "fullfp16", "hbc", "i8mm", "jsconv", "lor", "lse", "lse2", "mops", "mpam", "mte", "neon", "nmi", "nv", "pan", "pan-rwv", "pauth", "perfmon", "predres", "ras", "rcpc", "rcpc-immo", "rcpc3", "rdm", "sb", "sel2", "sme", "sme2", "spe", "spe-eef", "specres2", "specrestrict", "ssbs", "sve", "sve-bitperm", "sve2", "tlb-rmi", "tracev8.4", "trbe", "uaops", "v8.1a", "v8.2a", "v8.3a", "v8.4a", "v8.5a", "v8.6a", "v8.7a", "v8.8a", "v8a", "v9.1a", "v9.2a", "v9.3a", "v9a", "vh", "wfxt", "xs"],
+  "carmel": ["CONTEXTIDREL2", "aes", "ccpp", "crc", "el2vmsa", "el3", "fp-armv8", "fullfp16", "lor", "lse", "neon", "pan", "pan-rwv", "ras", "rdm", "sha2", "uaops", "v8.1a", "v8.2a", "v8a", "vh"],
+  "cortex-a320": ["CONTEXTIDREL2", "altnzcv", "am", "amvs", "bf16", "bti", "ccdp", "ccidx", "ccpp", "complxnum", "crc", "dit", "dotprod", "ecv", "el2vmsa", "el3", "ete", "fgt", "flagm", "fp-armv8", "fp16fml", "fptoint", "fullfp16", "i8mm", "jsconv", "lor", "lse", "lse2", "mpam", "mte", "neon", "nv", "pan", "pan-rwv", "pauth", "perfmon", "predres", "ras", "rcpc", "rcpc-immo", "rdm", "sb", "sel2", "specrestrict", "ssbs", "sve", "sve-bitperm", "sve2", "tlb-rmi", "tracev8.4", "trbe", "uaops", "v8.1a", "v8.2a", "v8.3a", "v8.4a", "v8.5a", "v8.6a", "v8.7a", "v8a", "v9.1a", "v9.2a", "v9a", "vh", "wfxt", "xs"],
+  "cortex-a34": ["aes", "crc", "el2vmsa", "el3", "fp-armv8", "neon", "perfmon", "sha2", "v8a"],
+  "cortex-a35": ["aes", "crc", "el2vmsa", "el3", "fp-armv8", "neon", "perfmon", "sha2", "v8a"],
+  "cortex-a510": ["CONTEXTIDREL2", "altnzcv", "am", "bf16", "bti", "ccdp", "ccidx", "ccpp", "complxnum", "crc", "dit", "dotprod", "el2vmsa", "el3", "ete", "flagm", "fp-armv8", "fp16fml", "fpac", "fptoint", "fullfp16", "i8mm", "jsconv", "lor", "lse", "lse2", "mpam", "mte", "neon", "nv", "pan", "pan-rwv", "pauth", "perfmon", "predres", "ras", "rcpc", "rcpc-immo", "rdm", "sb", "sel2", "specrestrict", "ssbs", "sve", "sve-bitperm", "sve2", "tlb-rmi", "tracev8.4", "trbe", "uaops", "v8.1a", "v8.2a", "v8.3a", "v8.4a", "v8.5a", "v8a", "v9a", "vh"],
+  "cortex-a520": ["CONTEXTIDREL2", "altnzcv", "am", "amvs", "bf16", "bti", "ccdp", "ccidx", "ccpp", "complxnum", "crc", "dit", "dotprod", "ecv", "el2vmsa", "el3", "ete", "fgt", "flagm", "fp-armv8", "fp16fml", "fpac", "fptoint", "fullfp16", "i8mm", "jsconv", "lor", "lse", "lse2", "mpam", "mte", "neon", "nv", "pan", "pan-rwv", "pauth", "perfmon", "predres", "ras", "rcpc", "rcpc-immo", "rdm", "sb", "sel2", "specrestrict", "ssbs", "sve", "sve-bitperm", "sve2", "tlb-rmi", "tracev8.4", "trbe", "uaops", "v8.1a", "v8.2a", "v8.3a", "v8.4a", "v8.5a", "v8.6a", "v8.7a", "v8a", "v9.1a", "v9.2a", "v9a", "vh", "wfxt", "xs"],
+  "cortex-a520ae": ["CONTEXTIDREL2", "altnzcv", "am", "amvs", "bf16", "bti", "ccdp", "ccidx", "ccpp", "complxnum", "crc", "dit", "dotprod", "ecv", "el2vmsa", "el3", "ete", "fgt", "flagm", "fp-armv8", "fp16fml", "fpac", "fptoint", "fullfp16", "i8mm", "jsconv", "lor", "lse", "lse2", "mpam", "mte", "neon", "nv", "pan", "pan-rwv", "pauth", "perfmon", "predres", "ras", "rcpc", "rcpc-immo", "rdm", "sb", "sel2", "specrestrict", "ssbs", "sve", "sve-bitperm", "sve2", "tlb-rmi", "tracev8.4", "trbe", "uaops", "v8.1a", "v8.2a", "v8.3a", "v8.4a", "v8.5a", "v8.6a", "v8.7a", "v8a", "v9.1a", "v9.2a", "v9a", "vh", "wfxt", "xs"],
+  "cortex-a53": ["aes", "crc", "el2vmsa", "el3", "fp-armv8", "neon", "perfmon", "sha2", "v8a"],
+  "cortex-a55": ["CONTEXTIDREL2", "aes", "ccpp", "crc", "dotprod", "el2vmsa", "el3", "fp-armv8", "fullfp16", "lor", "lse", "neon", "pan", "pan-rwv", "perfmon", "ras", "rcpc", "rdm", "sha2", "uaops", "v8.1a", "v8.2a", "v8a", "vh"],
+  "cortex-a57": ["aes", "crc", "el2vmsa", "el3", "fp-armv8", "neon", "perfmon", "sha2", "v8a"],
+  "cortex-a65": ["CONTEXTIDREL2", "aes", "ccpp", "crc", "dotprod", "el2vmsa", "el3", "fp-armv8", "fullfp16", "lor", "lse", "neon", "pan", "pan-rwv", "perfmon", "ras", "rcpc", "rdm", "sha2", "ssbs", "uaops", "v8.1a", "v8.2a", "v8a", "vh"],
+  "cortex-a65ae": ["CONTEXTIDREL2", "aes", "ccpp", "crc", "dotprod", "el2vmsa", "el3", "fp-armv8", "fullfp16", "lor", "lse", "neon", "pan", "pan-rwv", "perfmon", "ras", "rcpc", "rdm", "sha2", "ssbs", "uaops", "v8.1a", "v8.2a", "v8a", "vh"],
+  "cortex-a710": ["CONTEXTIDREL2", "altnzcv", "am", "bf16", "bti", "ccdp", "ccidx", "ccpp", "complxnum", "crc", "dit", "dotprod", "el2vmsa", "el3", "ete", "flagm", "fp-armv8", "fp16fml", "fpac", "fptoint", "fullfp16", "i8mm", "jsconv", "lor", "lse", "lse2", "mpam", "mte", "neon", "nv", "pan", "pan-rwv", "pauth", "perfmon", "predres", "ras", "rcpc", "rcpc-immo", "rdm", "sb", "sel2", "specrestrict", "ssbs", "sve", "sve-bitperm", "sve2", "tlb-rmi", "tracev8.4", "trbe", "uaops", "v8.1a", "v8.2a", "v8.3a", "v8.4a", "v8.5a", "v8a", "v9a", "vh"],
+  "cortex-a715": ["CONTEXTIDREL2", "altnzcv", "am", "bf16", "bti", "ccdp", "ccidx", "ccpp", "complxnum", "crc", "dit", "dotprod", "el2vmsa", "el3", "ete", "flagm", "fp-armv8", "fp16fml", "fpac", "fptoint", "fullfp16", "i8mm", "jsconv", "lor", "lse", "lse2", "mpam", "mte", "neon", "nv", "pan", "pan-rwv", "pauth", "perfmon", "predres", "ras", "rcpc", "rcpc-immo", "rdm", "sb", "sel2", "spe", "specrestrict", "ssbs", "sve", "sve-bitperm", "sve2", "tlb-rmi", "tracev8.4", "trbe", "uaops", "v8.1a", "v8.2a", "v8.3a", "v8.4a", "v8.5a", "v8a", "v9a", "vh"],
+  "cortex-a72": ["aes", "crc", "el2vmsa", "el3", "fp-armv8", "neon", "perfmon", "sha2", "v8a"],
+  "cortex-a720": ["CONTEXTIDREL2", "altnzcv", "am", "amvs", "bf16", "bti", "ccdp", "ccidx", "ccpp", "complxnum", "crc", "dit", "dotprod", "ecv", "el2vmsa", "el3", "ete", "fgt", "flagm", "fp-armv8", "fp16fml", "fpac", "fptoint", "fullfp16", "i8mm", "jsconv", "lor", "lse", "lse2", "mpam", "mte", "neon", "nv", "pan", "pan-rwv", "pauth", "perfmon", "predres", "ras", "rcpc", "rcpc-immo", "rdm", "sb", "sel2", "spe", "spe-eef", "specrestrict", "ssbs", "sve", "sve-bitperm", "sve2", "tlb-rmi", "tracev8.4", "trbe", "uaops", "v8.1a", "v8.2a", "v8.3a", "v8.4a", "v8.5a", "v8.6a", "v8.7a", "v8a", "v9.1a", "v9.2a", "v9a", "vh", "wfxt", "xs"],
+  "cortex-a720ae": ["CONTEXTIDREL2", "altnzcv", "am", "amvs", "bf16", "bti", "ccdp", "ccidx", "ccpp", "complxnum", "crc", "dit", "dotprod", "ecv", "el2vmsa", "el3", "ete", "fgt", "flagm", "fp-armv8", "fp16fml", "fpac", "fptoint", "fullfp16", "i8mm", "jsconv", "lor", "lse", "lse2", "mpam", "mte", "neon", "nv", "pan", "pan-rwv", "pauth", "perfmon", "predres", "ras", "rcpc", "rcpc-immo", "rdm", "sb", "sel2", "spe", "spe-eef", "specrestrict", "ssbs", "sve", "sve-bitperm", "sve2", "tlb-rmi", "tracev8.4", "trbe", "uaops", "v8.1a", "v8.2a", "v8.3a", "v8.4a", "v8.5a", "v8.6a", "v8.7a", "v8a", "v9.1a", "v9.2a", "v9a", "vh", "wfxt", "xs"],
+  "cortex-a725": ["CONTEXTIDREL2", "altnzcv", "am", "amvs", "bf16", "bti", "ccdp", "ccidx", "ccpp", "complxnum", "crc", "dit", "dotprod", "ecv", "el2vmsa", "el3", "ete", "fgt", "flagm", "fp-armv8", "fp16fml", "fpac", "fptoint", "fullfp16", "i8mm", "jsconv", "lor", "lse", "lse2", "mpam", "mte", "neon", "nv", "pan", "pan-rwv", "pauth", "perfmon", "predres", "ras", "rcpc", "rcpc-immo", "rdm", "sb", "sel2", "spe", "spe-eef", "specrestrict", "ssbs", "sve", "sve-bitperm", "sve2", "tlb-rmi", "tracev8.4", "trbe", "uaops", "v8.1a", "v8.2a", "v8.3a", "v8.4a", "v8.5a", "v8.6a", "v8.7a", "v8a", "v9.1a", "v9.2a", "v9a", "vh", "wfxt", "xs"],
+  "cortex-a73": ["aes", "crc", "el2vmsa", "el3", "fp-armv8", "neon", "perfmon", "sha2", "v8a"],
+  "cortex-a75": ["CONTEXTIDREL2", "aes", "ccpp", "crc", "dotprod", "el2vmsa", "el3", "fp-armv8", "fullfp16", "lor", "lse", "neon", "pan", "pan-rwv", "perfmon", "ras", "rcpc", "rdm", "sha2", "uaops", "v8.1a", "v8.2a", "v8a", "vh"],
+  "cortex-a76": ["CONTEXTIDREL2", "aes", "ccpp", "crc", "dotprod", "el2vmsa", "el3", "fp-armv8", "fullfp16", "lor", "lse", "neon", "pan", "pan-rwv", "perfmon", "ras", "rcpc", "rdm", "sha2", "ssbs", "uaops", "v8.1a", "v8.2a", "v8a", "vh"],
+  "cortex-a76ae": ["CONTEXTIDREL2", "aes", "ccpp", "crc", "dotprod", "el2vmsa", "el3", "fp-armv8", "fullfp16", "lor", "lse", "neon", "pan", "pan-rwv", "perfmon", "ras", "rcpc", "rdm", "sha2", "ssbs", "uaops", "v8.1a", "v8.2a", "v8a", "vh"],
+  "cortex-a77": ["CONTEXTIDREL2", "aes", "ccpp", "crc", "dotprod", "el2vmsa", "el3", "fp-armv8", "fullfp16", "lor", "lse", "neon", "pan", "pan-rwv", "perfmon", "ras", "rcpc", "rdm", "sha2", "ssbs", "uaops", "v8.1a", "v8.2a", "v8a", "vh"],
+  "cortex-a78": ["CONTEXTIDREL2", "aes", "ccpp", "crc", "dotprod", "el2vmsa", "el3", "fp-armv8", "fullfp16", "lor", "lse", "neon", "pan", "pan-rwv", "perfmon", "ras", "rcpc", "rdm", "sha2", "spe", "ssbs", "uaops", "v8.1a", "v8.2a", "v8a", "vh"],
+  "cortex-a78ae": ["CONTEXTIDREL2", "aes", "ccpp", "crc", "dotprod", "el2vmsa", "el3", "fp-armv8", "fullfp16", "lor", "lse", "neon", "pan", "pan-rwv", "perfmon", "ras", "rcpc", "rdm", "sha2", "spe", "ssbs", "uaops", "v8.1a", "v8.2a", "v8a", "vh"],
+  "cortex-a78c": ["CONTEXTIDREL2", "aes", "ccpp", "crc", "dotprod", "el2vmsa", "el3", "flagm", "fp-armv8", "fullfp16", "lor", "lse", "neon", "pan", "pan-rwv", "pauth", "perfmon", "ras", "rcpc", "rdm", "sha2", "spe", "ssbs", "uaops", "v8.1a", "v8.2a", "v8a", "vh"],
+  "cortex-r82": ["CONTEXTIDREL2", "ccdp", "ccpp", "complxnum", "crc", "dit", "dotprod", "flagm", "fp-armv8", "fp16fml", "fpac", "fullfp16", "jsconv", "lse", "neon", "pan", "pan-rwv", "pauth", "perfmon", "predres", "ras", "rcpc", "rcpc-immo", "rdm", "sb", "sel2", "specrestrict", "ssbs", "tlb-rmi", "tracev8.4", "uaops", "v8r"],
+  "cortex-r82ae": ["CONTEXTIDREL2", "ccdp", "ccpp", "complxnum", "crc", "dit", "dotprod", "flagm", "fp-armv8", "fp16fml", "fpac", "fullfp16", "jsconv", "lse", "neon", "pan", "pan-rwv", "pauth", "perfmon", "predres", "ras", "rcpc", "rcpc-immo", "rdm", "sb", "sel2", "specrestrict", "ssbs", "tlb-rmi", "tracev8.4", "uaops", "v8r"],
+  "cortex-x1": ["CONTEXTIDREL2", "aes", "ccpp", "crc", "dotprod", "el2vmsa", "el3", "fp-armv8", "fullfp16", "lor", "lse", "neon", "pan", "pan-rwv", "perfmon", "ras", "rcpc", "rdm", "sha2", "spe", "ssbs", "uaops", "v8.1a", "v8.2a", "v8a", "vh"],
+  "cortex-x1c": ["CONTEXTIDREL2", "aes", "ccpp", "crc", "dotprod", "el2vmsa", "el3", "flagm", "fp-armv8", "fullfp16", "lor", "lse", "lse2", "neon", "pan", "pan-rwv", "pauth", "perfmon", "ras", "rcpc", "rcpc-immo", "rdm", "sha2", "spe", "ssbs", "uaops", "v8.1a", "v8.2a", "v8a", "vh"],
+  "cortex-x2": ["CONTEXTIDREL2", "altnzcv", "am", "bf16", "bti", "ccdp", "ccidx", "ccpp", "complxnum", "crc", "dit", "dotprod", "el2vmsa", "el3", "ete", "flagm", "fp-armv8", "fp16fml", "fpac", "fptoint", "fullfp16", "i8mm", "jsconv", "lor", "lse", "lse2", "mpam", "mte", "neon", "nv", "pan", "pan-rwv", "pauth", "perfmon", "predres", "ras", "rcpc", "rcpc-immo", "rdm", "sb", "sel2", "specrestrict", "ssbs", "sve", "sve-bitperm", "sve2", "tlb-rmi", "tracev8.4", "trbe", "uaops", "v8.1a", "v8.2a", "v8.3a", "v8.4a", "v8.5a", "v8a", "v9a", "vh"],
+  "cortex-x3": ["CONTEXTIDREL2", "altnzcv", "am", "bf16", "bti", "ccdp", "ccidx", "ccpp", "complxnum", "crc", "dit", "dotprod", "el2vmsa", "el3", "ete", "flagm", "fp-armv8", "fp16fml", "fpac", "fptoint", "fullfp16", "i8mm", "jsconv", "lor", "lse", "lse2", "mpam", "mte", "neon", "nv", "pan", "pan-rwv", "pauth", "perfmon", "predres", "ras", "rcpc", "rcpc-immo", "rdm", "sb", "sel2", "spe", "specrestrict", "ssbs", "sve", "sve-bitperm", "sve2", "tlb-rmi", "tracev8.4", "trbe", "uaops", "v8.1a", "v8.2a", "v8.3a", "v8.4a", "v8.5a", "v8a", "v9a", "vh"],
+  "cortex-x4": ["CONTEXTIDREL2", "altnzcv", "am", "amvs", "bf16", "bti", "ccdp", "ccidx", "ccpp", "complxnum", "crc", "dit", "dotprod", "ecv", "el2vmsa", "el3", "ete", "fgt", "flagm", "fp-armv8", "fp16fml", "fpac", "fptoint", "fullfp16", "i8mm", "jsconv", "lor", "lse", "lse2", "mpam", "mte", "neon", "nv", "pan", "pan-rwv", "pauth", "perfmon", "predres", "ras", "rcpc", "rcpc-immo", "rdm", "sb", "sel2", "spe", "spe-eef", "specrestrict", "ssbs", "sve", "sve-bitperm", "sve2", "tlb-rmi", "tracev8.4", "trbe", "uaops", "v8.1a", "v8.2a", "v8.3a", "v8.4a", "v8.5a", "v8.6a", "v8.7a", "v8a", "v9.1a", "v9.2a", "v9a", "vh", "wfxt", "xs"],
+  "cortex-x925": ["CONTEXTIDREL2", "altnzcv", "am", "amvs", "bf16", "bti", "ccdp", "ccidx", "ccpp", "complxnum", "crc", "dit", "dotprod", "ecv", "el2vmsa", "el3", "ete", "fgt", "flagm", "fp-armv8", "fp16fml", "fpac", "fptoint", "fullfp16", "i8mm", "jsconv", "lor", "lse", "lse2", "mpam", "mte", "neon", "nv", "pan", "pan-rwv", "pauth", "perfmon", "predres", "ras", "rcpc", "rcpc-immo", "rdm", "sb", "sel2", "spe", "spe-eef", "specrestrict", "ssbs", "sve", "sve-bitperm", "sve2", "tlb-rmi", "tracev8.4", "trbe", "uaops", "v8.1a", "v8.2a", "v8.3a", "v8.4a", "v8.5a", "v8.6a", "v8.7a", "v8a", "v9.1a", "v9.2a", "v9a", "vh", "wfxt", "xs"],
+  "exynos-m3": ["aes", "crc", "el2vmsa", "el3", "fp-armv8", "neon", "perfmon", "sha2", "v8a"],
+  "exynos-m4": ["CONTEXTIDREL2", "aes", "ccpp", "crc", "dotprod", "el2vmsa", "el3", "fp-armv8", "fullfp16", "lor", "lse", "neon", "pan", "pan-rwv", "perfmon", "ras", "rdm", "sha2", "uaops", "v8.1a", "v8.2a", "v8a", "vh"],
+  "exynos-m5": ["CONTEXTIDREL2", "aes", "ccpp", "crc", "dotprod", "el2vmsa", "el3", "fp-armv8", "fullfp16", "lor", "lse", "neon", "pan", "pan-rwv", "perfmon", "ras", "rdm", "sha2", "uaops", "v8.1a", "v8.2a", "v8a", "vh"],
+  "falkor": ["aes", "crc", "el2vmsa", "el3", "fp-armv8", "neon", "perfmon", "rdm", "sha2", "v8a"],
+  "fujitsu-monaka": ["CONTEXTIDREL2", "aes", "altnzcv", "am", "amvs", "bf16", "bti", "ccdp", "ccidx", "ccpp", "clrbhb", "complxnum", "crc", "dit", "dotprod", "ecv", "el2vmsa", "el3", "ete", "faminmax", "fgt", "flagm", "fp-armv8", "fp16fml", "fp8", "fp8dot2", "fp8dot4", "fp8fma", "fpac", "fptoint", "fullfp16", "hbc", "i8mm", "jsconv", "lor", "ls64", "lse", "lse2", "lut", "mec", "mops", "mpam", "neon", "nmi", "nv", "pan", "pan-rwv", "pauth", "perfmon", "predres", "rand", "ras", "rcpc", "rcpc-immo", "rdm", "rme", "sb", "sel2", "sha2", "sha3", "sm4", "specres2", "specrestrict", "ssbs", "sve", "sve-aes", "sve-bitperm", "sve-sha3", "sve-sm4", "sve2", "tlb-rmi", "tracev8.4", "trbe", "uaops", "v8.1a", "v8.2a", "v8.3a", "v8.4a", "v8.5a", "v8.6a", "v8.7a", "v8.8a", "v8a", "v9.1a", "v9.2a", "v9.3a", "v9a", "vh", "wfxt", "xs"],
+  "gb10": ["CONTEXTIDREL2", "aes", "altnzcv", "am", "amvs", "bf16", "bti", "ccdp", "ccidx", "ccpp", "complxnum", "crc", "dit", "dotprod", "ecv", "el2vmsa", "el3", "ete", "fgt", "flagm", "fp-armv8", "fp16fml", "fpac", "fptoint", "fullfp16", "i8mm", "jsconv", "lor", "lse", "lse2", "mpam", "mte", "neon", "nv", "pan", "pan-rwv", "pauth", "perfmon", "predres", "ras", "rcpc", "rcpc-immo", "rdm", "sb", "sel2", "sha2", "sha3", "sm4", "spe", "spe-eef", "specrestrict", "ssbs", "sve", "sve-aes", "sve-bitperm", "sve-sha3", "sve-sm4", "sve2", "tlb-rmi", "tracev8.4", "trbe", "uaops", "v8.1a", "v8.2a", "v8.3a", "v8.4a", "v8.5a", "v8.6a", "v8.7a", "v8a", "v9.1a", "v9.2a", "v9a", "vh", "wfxt", "xs"],
+  "generic": ["ete", "fp-armv8", "neon", "trbe"],
+  "grace": ["CONTEXTIDREL2", "aes", "altnzcv", "am", "bf16", "bti", "ccdp", "ccidx", "ccpp", "complxnum", "crc", "dit", "dotprod", "el2vmsa", "el3", "ete", "flagm", "fp-armv8", "fp16fml", "fpac", "fptoint", "fullfp16", "i8mm", "jsconv", "lor", "lse", "lse2", "mpam", "mte", "neon", "nv", "pan", "pan-rwv", "pauth", "perfmon", "predres", "ras", "rcpc", "rcpc-immo", "rdm", "sb", "sel2", "sha2", "sha3", "sm4", "spe", "specrestrict", "ssbs", "sve", "sve-aes", "sve-bitperm", "sve-sha3", "sve-sm4", "sve2", "tlb-rmi", "tracev8.4", "trbe", "uaops", "v8.1a", "v8.2a", "v8.3a", "v8.4a", "v8.5a", "v8a", "v9a", "vh"],
+  "hip12": ["CONTEXTIDREL2", "aes", "altnzcv", "am", "amvs", "bf16", "brbe", "bti", "ccdp", "ccidx", "ccpp", "complxnum", "crc", "dit", "dotprod", "ecv", "el2vmsa", "el3", "ete", "fgt", "flagm", "fp-armv8", "fp16fml", "fpac", "fptoint", "fullfp16", "hbc", "i8mm", "jsconv", "lor", "ls64", "lse", "lse2", "mpam", "neon", "nmi", "nv", "pan", "pan-rwv", "pauth", "perfmon", "predres", "rand", "ras", "rcpc", "rcpc-immo", "rcpc3", "rdm", "rme", "sb", "sel2", "sha2", "sha3", "sm4", "spe", "spe-eef", "specrestrict", "ssbs", "sve", "sve-aes", "sve-bitperm", "sve-sha3", "sve-sm4", "sve2", "tlb-rmi", "tracev8.4", "trbe", "uaops", "v8.1a", "v8.2a", "v8.3a", "v8.4a", "v8.5a", "v8.6a", "v8.7a", "v8a", "vh", "wfxt", "xs"],
+  "kryo": ["aes", "crc", "el2vmsa", "el3", "fp-armv8", "neon", "perfmon", "sha2", "v8a"],
+  "neoverse-512tvb": ["CONTEXTIDREL2", "aes", "am", "bf16", "ccdp", "ccidx", "ccpp", "complxnum", "crc", "dit", "dotprod", "el2vmsa", "el3", "flagm", "fp-armv8", "fp16fml", "fpac", "fullfp16", "i8mm", "jsconv", "lor", "lse", "lse2", "mpam", "neon", "nv", "pan", "pan-rwv", "pauth", "perfmon", "rand", "ras", "rcpc", "rcpc-immo", "rdm", "sel2", "sha2", "sha3", "sm4", "spe", "ssbs", "sve", "tlb-rmi", "tracev8.4", "uaops", "v8.1a", "v8.2a", "v8.3a", "v8.4a", "v8a", "vh"],
+  "neoverse-e1": ["CONTEXTIDREL2", "aes", "ccpp", "crc", "dotprod", "el2vmsa", "el3", "fp-armv8", "fullfp16", "lor", "lse", "neon", "pan", "pan-rwv", "perfmon", "ras", "rcpc", "rdm", "sha2", "ssbs", "uaops", "v8.1a", "v8.2a", "v8a", "vh"],
+  "neoverse-n1": ["CONTEXTIDREL2", "aes", "ccpp", "crc", "dotprod", "el2vmsa", "el3", "fp-armv8", "fullfp16", "lor", "lse", "neon", "pan", "pan-rwv", "perfmon", "ras", "rcpc", "rdm", "sha2", "spe", "ssbs", "uaops", "v8.1a", "v8.2a", "v8a", "vh"],
+  "neoverse-n2": ["CONTEXTIDREL2", "altnzcv", "am", "bf16", "bti", "ccdp", "ccidx", "ccpp", "complxnum", "crc", "dit", "dotprod", "el2vmsa", "el3", "ete", "flagm", "fp-armv8", "fp16fml", "fpac", "fptoint", "fullfp16", "i8mm", "jsconv", "lor", "lse", "lse2", "mpam", "mte", "neon", "nv", "pan", "pan-rwv", "pauth", "perfmon", "predres", "ras", "rcpc", "rcpc-immo", "rdm", "sb", "sel2", "specrestrict", "ssbs", "sve", "sve-bitperm", "sve2", "tlb-rmi", "tracev8.4", "trbe", "uaops", "v8.1a", "v8.2a", "v8.3a", "v8.4a", "v8.5a", "v8a", "v9a", "vh"],
+  "neoverse-n3": ["CONTEXTIDREL2", "altnzcv", "am", "amvs", "bf16", "bti", "ccdp", "ccidx", "ccpp", "complxnum", "crc", "dit", "dotprod", "ecv", "el2vmsa", "el3", "ete", "fgt", "flagm", "fp-armv8", "fp16fml", "fpac", "fptoint", "fullfp16", "i8mm", "jsconv", "lor", "lse", "lse2", "mpam", "mte", "neon", "nv", "pan", "pan-rwv", "pauth", "perfmon", "predres", "rand", "ras", "rcpc", "rcpc-immo", "rdm", "sb", "sel2", "spe", "spe-eef", "specrestrict", "ssbs", "sve", "sve-bitperm", "sve2", "tlb-rmi", "tracev8.4", "trbe", "uaops", "v8.1a", "v8.2a", "v8.3a", "v8.4a", "v8.5a", "v8.6a", "v8.7a", "v8a", "v9.1a", "v9.2a", "v9a", "vh", "wfxt", "xs"],
+  "neoverse-v1": ["CONTEXTIDREL2", "aes", "am", "bf16", "ccdp", "ccidx", "ccpp", "complxnum", "crc", "dit", "dotprod", "el2vmsa", "el3", "flagm", "fp-armv8", "fp16fml", "fullfp16", "i8mm", "jsconv", "lor", "lse", "lse2", "mpam", "neon", "nv", "pan", "pan-rwv", "pauth", "perfmon", "rand", "ras", "rcpc", "rcpc-immo", "rdm", "sel2", "sha2", "sha3", "sm4", "spe", "ssbs", "sve", "tlb-rmi", "tracev8.4", "uaops", "v8.1a", "v8.2a", "v8.3a", "v8.4a", "v8a", "vh"],
+  "neoverse-v2": ["CONTEXTIDREL2", "altnzcv", "am", "bf16", "bti", "ccdp", "ccidx", "ccpp", "complxnum", "crc", "dit", "dotprod", "el2vmsa", "el3", "ete", "flagm", "fp-armv8", "fp16fml", "fpac", "fptoint", "fullfp16", "i8mm", "jsconv", "lor", "lse", "lse2", "mpam", "mte", "neon", "nv", "pan", "pan-rwv", "pauth", "perfmon", "predres", "rand", "ras", "rcpc", "rcpc-immo", "rdm", "sb", "sel2", "spe", "specrestrict", "ssbs", "sve", "sve-bitperm", "sve2", "tlb-rmi", "tracev8.4", "trbe", "uaops", "v8.1a", "v8.2a", "v8.3a", "v8.4a", "v8.5a", "v8a", "v9a", "vh"],
+  "neoverse-v3": ["CONTEXTIDREL2", "altnzcv", "am", "amvs", "bf16", "brbe", "bti", "ccdp", "ccidx", "ccpp", "complxnum", "crc", "dit", "dotprod", "ecv", "el2vmsa", "el3", "ete", "fgt", "flagm", "fp-armv8", "fp16fml", "fpac", "fptoint", "fullfp16", "i8mm", "jsconv", "lor", "ls64", "lse", "lse2", "mpam", "mte", "neon", "nv", "pan", "pan-rwv", "pauth", "perfmon", "predres", "rand", "ras", "rcpc", "rcpc-immo", "rdm", "rme", "sb", "sel2", "spe", "spe-eef", "specrestrict", "ssbs", "sve", "sve-bitperm", "sve2", "tlb-rmi", "tracev8.4", "trbe", "uaops", "v8.1a", "v8.2a", "v8.3a", "v8.4a", "v8.5a", "v8.6a", "v8.7a", "v8a", "v9.1a", "v9.2a", "v9a", "vh", "wfxt", "xs"],
+  "neoverse-v3ae": ["CONTEXTIDREL2", "altnzcv", "am", "amvs", "bf16", "brbe", "bti", "ccdp", "ccidx", "ccpp", "complxnum", "crc", "dit", "dotprod", "ecv", "el2vmsa", "el3", "ete", "fgt", "flagm", "fp-armv8", "fp16fml", "fpac", "fptoint", "fullfp16", "i8mm", "jsconv", "lor", "ls64", "lse", "lse2", "mpam", "mte", "neon", "nv", "pan", "pan-rwv", "pauth", "perfmon", "predres", "rand", "ras", "rcpc", "rcpc-immo", "rdm", "rme", "sb", "sel2", "spe", "spe-eef", "specrestrict", "ssbs", "sve", "sve-bitperm", "sve2", "tlb-rmi", "tracev8.4", "trbe", "uaops", "v8.1a", "v8.2a", "v8.3a", "v8.4a", "v8.5a", "v8.6a", "v8.7a", "v8a", "v9.1a", "v9.2a", "v9a", "vh", "wfxt", "xs"],
+  "olympus": ["CONTEXTIDREL2", "aes", "altnzcv", "am", "amvs", "bf16", "brbe", "bti", "ccdp", "ccidx", "ccpp", "chk", "complxnum", "crc", "dit", "dotprod", "ecv", "el2vmsa", "el3", "ete", "faminmax", "fgt", "flagm", "fp-armv8", "fp16fml", "fp8", "fp8dot2", "fp8dot4", "fp8fma", "fpac", "fptoint", "fullfp16", "i8mm", "jsconv", "lor", "ls64", "lse", "lse2", "lut", "mec", "mpam", "mte", "neon", "nv", "pan", "pan-rwv", "pauth", "perfmon", "predres", "rand", "ras", "rcpc", "rcpc-immo", "rdm", "rme", "sb", "sel2", "sha2", "sha3", "sm4", "spe", "spe-eef", "specrestrict", "ssbs", "sve", "sve-aes", "sve-bitperm", "sve-sha3", "sve-sm4", "sve2", "tlb-rmi", "tracev8.4", "trbe", "uaops", "v8.1a", "v8.2a", "v8.3a", "v8.4a", "v8.5a", "v8.6a", "v8.7a", "v8a", "v9.1a", "v9.2a", "v9a", "vh", "wfxt", "xs"],
+  "oryon-1": ["CONTEXTIDREL2", "aes", "altnzcv", "am", "amvs", "bf16", "bti", "ccdp", "ccidx", "ccpp", "complxnum", "crc", "dit", "dotprod", "ecv", "el2vmsa", "el3", "fgt", "flagm", "fp-armv8", "fptoint", "i8mm", "jsconv", "lor", "lse", "lse2", "mpam", "neon", "nv", "pan", "pan-rwv", "pauth", "perfmon", "predres", "rand", "ras", "rcpc", "rcpc-immo", "rdm", "sb", "sel2", "sha2", "sha3", "sm4", "spe", "specrestrict", "ssbs", "tlb-rmi", "tracev8.4", "uaops", "v8.1a", "v8.2a", "v8.3a", "v8.4a", "v8.5a", "v8.6a", "v8a", "vh"],
+  "rigel": ["CONTEXTIDREL2", "aes", "altnzcv", "am", "amvs", "bf16", "brbe", "bti", "ccdp", "ccidx", "ccpp", "chk", "complxnum", "crc", "dit", "dotprod", "ecv", "el2vmsa", "el3", "ete", "faminmax", "fgt", "flagm", "fp-armv8", "fp16fml", "fp8", "fp8dot2", "fp8dot4", "fp8fma", "fpac", "fptoint", "fullfp16", "i8mm", "jsconv", "lor", "ls64", "lse", "lse2", "lut", "mec", "mpam", "mte", "neon", "nv", "pan", "pan-rwv", "pauth", "perfmon", "predres", "rand", "ras", "rcpc", "rcpc-immo", "rdm", "rme", "sb", "sel2", "sha2", "sha3", "sm4", "spe", "spe-eef", "specrestrict", "ssbs", "sve", "sve-aes", "sve-bitperm", "sve-sha3", "sve-sm4", "sve2", "tlb-rmi", "tracev8.4", "trbe", "uaops", "v8.1a", "v8.2a", "v8.3a", "v8.4a", "v8.5a", "v8.6a", "v8.7a", "v8a", "v9.1a", "v9.2a", "v9a", "vh", "wfxt", "xs"],
+  "saphira": ["CONTEXTIDREL2", "aes", "am", "ccidx", "ccpp", "complxnum", "crc", "dit", "dotprod", "el2vmsa", "el3", "flagm", "fp-armv8", "jsconv", "lor", "lse", "lse2", "mpam", "neon", "nv", "pan", "pan-rwv", "pauth", "perfmon", "ras", "rcpc", "rcpc-immo", "rdm", "sel2", "sha2", "spe", "tlb-rmi", "tracev8.4", "uaops", "v8.1a", "v8.2a", "v8.3a", "v8.4a", "v8a", "vh"],
+  "thunderx": ["aes", "crc", "el2vmsa", "el3", "fp-armv8", "neon", "perfmon", "sha2", "v8a"],
+  "thunderx2t99": ["CONTEXTIDREL2", "aes", "crc", "el2vmsa", "el3", "fp-armv8", "lor", "lse", "neon", "pan", "rdm", "sha2", "v8.1a", "v8a", "vh"],
+  "thunderx3t110": ["CONTEXTIDREL2", "aes", "ccidx", "ccpp", "complxnum", "crc", "el2vmsa", "el3", "fp-armv8", "jsconv", "lor", "lse", "neon", "pan", "pan-rwv", "pauth", "perfmon", "ras", "rcpc", "rdm", "sha2", "uaops", "v8.1a", "v8.2a", "v8.3a", "v8a", "vh"],
+  "thunderxt81": ["aes", "crc", "el2vmsa", "el3", "fp-armv8", "neon", "perfmon", "sha2", "v8a"],
+  "thunderxt83": ["aes", "crc", "el2vmsa", "el3", "fp-armv8", "neon", "perfmon", "sha2", "v8a"],
+  "thunderxt88": ["aes", "crc", "el2vmsa", "el3", "fp-armv8", "neon", "perfmon", "sha2", "v8a"],
+  "tsv110": ["CONTEXTIDREL2", "aes", "ccpp", "complxnum", "crc", "dotprod", "el2vmsa", "el3", "fp-armv8", "fp16fml", "fullfp16", "jsconv", "lor", "lse", "neon", "pan", "pan-rwv", "perfmon", "ras", "rdm", "sha2", "spe", "uaops", "v8.1a", "v8.2a", "v8a", "vh"]
+ }
+}

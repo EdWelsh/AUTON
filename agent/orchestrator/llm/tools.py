@@ -225,7 +225,7 @@ TOOL_READ_SPEC = {
             "properties": {
                 "subsystem": {
                     "type": "string",
-                    "description": "A subsystem name ('architecture', 'boot', 'mm', 'sched', 'ipc', 'dev', 'slm', 'drivers', 'fs', 'net', 'pkg', 'sys', 'hal'), or <kind>/<name> for services/<name>, drivers/<name>, mitigations/<name>, targets/<name>, arch/<x86_64|aarch64|riscv64>.",
+                    "description": "A subsystem name ('architecture', 'boot', 'cpu', 'mm', 'sched', 'ipc', 'dev', 'slm', 'drivers', 'fs', 'net', 'pkg', 'sys', 'hal'), or <kind>/<name> for services/<name>, drivers/<name>, mitigations/<name>, targets/<name>, arch/<x86_64|aarch64|riscv64>.",
                 },
                 "section": {
                     "type": "string",

@@ -1,0 +1,602 @@
+{
+ "arch": "powerpc",
+ "generated_from": [
+  {
+   "document": "llvm-ppc-td",
+   "sha256": "e1c5387a5ed21a840656c518a327f8d73e10aa61995e12dd1cf70d99a85e4f45",
+   "source": "https://raw.githubusercontent.com/llvm/llvm-project/main/llvm/lib/Target/PowerPC/PPC.td"
+  }
+ ],
+ "features": {
+  "aix": {
+   "def": "AIXOS",
+   "description": "AIX OS",
+   "implies": []
+  },
+  "deprecateddst": {
+   "def": "DeprecatedDST",
+   "description": "Treat vector data stream cache control instructions as deprecated",
+   "implies": []
+  },
+  "64bit": {
+   "def": "Feature64Bit",
+   "description": "Enable 64-bit mode",
+   "implies": [
+    "64bit-support"
+   ]
+  },
+  "64bitregs": {
+   "def": "Feature64BitRegs",
+   "description": "Enable 64-bit registers usage for ppc32 [beta]",
+   "implies": []
+  },
+  "64bit-support": {
+   "def": "Feature64BitSupport",
+   "description": "Supports 64-bit instructions",
+   "implies": []
+  },
+  "aix-small-local-dynamic-tls": {
+   "def": "FeatureAIXLocalDynamicTLS",
+   "description": "Produce a faster local-dynamic TLS sequence for this \"\n                   \"function for 64-bit AIX",
+   "implies": []
+  },
+  "aix-small-local-exec-tls": {
+   "def": "FeatureAIXLocalExecTLS",
+   "description": "Produce a TOC-free local-exec TLS sequence for this function \"\n                   \"for 64-bit AIX",
+   "implies": []
+  },
+  "aix-shared-lib-tls-model-opt": {
+   "def": "FeatureAIXSharedLibTLSModelOpt",
+   "description": "Tune TLS model at function level in shared library loaded \"\n                   \"with the main program (for 64-bit AIX only)",
+   "implies": []
+  },
+  "fuse-add-logical": {
+   "def": "FeatureAddLogicalFusion",
+   "description": "Target supports Add with Logical Operations fusion",
+   "implies": [
+    "fusion"
+   ]
+  },
+  "fuse-addi-load": {
+   "def": "FeatureAddiLoadFusion",
+   "description": "Power8 Addi-Load fusion",
+   "implies": [
+    "fusion"
+   ]
+  },
+  "fuse-addis-load": {
+   "def": "FeatureAddisLoadFusion",
+   "description": "Power8 Addis-Load fusion",
+   "implies": [
+    "fusion"
+   ]
+  },
+  "altivec": {
+   "def": "FeatureAltivec",
+   "description": "Enable Altivec instructions",
+   "implies": [
+    "fpu"
+   ]
+  },
+  "fuse-arith-add": {
+   "def": "FeatureArithAddFusion",
+   "description": "Target supports Arithmetic Operations with Add fusion",
+   "implies": [
+    "fusion"
+   ]
+  },
+  "bpermd": {
+   "def": "FeatureBPERMD",
+   "description": "Enable the bpermd instruction",
+   "implies": []
+  },
+  "fuse-back2back": {
+   "def": "FeatureBack2BackFusion",
+   "description": "Target supports general back to back fusion",
+   "implies": [
+    "fusion"
+   ]
+  },
+  "booke": {
+   "def": "FeatureBookE",
+   "description": "Enable Book E instructions",
+   "implies": [
+    "icbt"
+   ]
+  },
+  "cmpb": {
+   "def": "FeatureCMPB",
+   "description": "Enable the cmpb instruction",
+   "implies": []
+  },
+  "crbits": {
+   "def": "FeatureCRBits",
+   "description": "Use condition-register bits individually",
+   "implies": []
+  },
+  "fuse-cmp": {
+   "def": "FeatureCompareFusion",
+   "description": "Target supports Comparison Operations fusion",
+   "implies": [
+    "fusion"
+   ]
+  },
+  "direct-move": {
+   "def": "FeatureDirectMove",
+   "description": "Enable Power8 direct move instructions",
+   "implies": [
+    "vsx"
+   ]
+  },
+  "e500": {
+   "def": "FeatureE500",
+   "description": "Enable E500/E500mc instructions",
+   "implies": []
+  },
+  "efpu2": {
+   "def": "FeatureEFPU2",
+   "description": "Enable Embedded Floating-Point APU 2 instructions",
+   "implies": [
+    "spe"
+   ]
+  },
+  "extdiv": {
+   "def": "FeatureExtDiv",
+   "description": "Enable extended divide instructions",
+   "implies": []
+  },
+  "fcpsgn": {
+   "def": "FeatureFCPSGN",
+   "description": "Enable the fcpsgn instruction",
+   "implies": [
+    "fpu"
+   ]
+  },
+  "fpcvt": {
+   "def": "FeatureFPCVT",
+   "description": "Enable fc[ft]* (unsigned and single-precision) and lfiwzx instructions",
+   "implies": [
+    "fpu"
+   ]
+  },
+  "fprnd": {
+   "def": "FeatureFPRND",
+   "description": "Enable the fri[mnpz] instructions",
+   "implies": [
+    "fpu"
+   ]
+  },
+  "fpu": {
+   "def": "FeatureFPU",
+   "description": "Enable classic FPU instructions",
+   "implies": [
+    "hard-float"
+   ]
+  },
+  "fre": {
+   "def": "FeatureFRE",
+   "description": "Enable the fre instruction",
+   "implies": [
+    "fpu"
+   ]
+  },
+  "fres": {
+   "def": "FeatureFRES",
+   "description": "Enable the fres instruction",
+   "implies": [
+    "fpu"
+   ]
+  },
+  "frsqrte": {
+   "def": "FeatureFRSQRTE",
+   "description": "Enable the frsqrte instruction",
+   "implies": [
+    "fpu"
+   ]
+  },
+  "frsqrtes": {
+   "def": "FeatureFRSQRTES",
+   "description": "Enable the frsqrtes instruction",
+   "implies": [
+    "fpu"
+   ]
+  },
+  "fsqrt": {
+   "def": "FeatureFSqrt",
+   "description": "Enable the fsqrt instruction",
+   "implies": [
+    "fpu"
+   ]
+  },
+  "fast-MFLR": {
+   "def": "FeatureFastMFLR",
+   "description": "MFLR is a fast instruction",
+   "implies": []
+  },
+  "float128": {
+   "def": "FeatureFloat128",
+   "description": "Enable the __float128 data type for IEEE-754R Binary128.",
+   "implies": [
+    "vsx"
+   ]
+  },
+  "fusion": {
+   "def": "FeatureFusion",
+   "description": "Target supports instruction fusion",
+   "implies": []
+  },
+  "future-vector": {
+   "def": "FeatureFutureVector",
+   "description": "Enable Future vector instructions",
+   "implies": [
+    "isa-future-instructions",
+    "power10-vector"
+   ]
+  },
+  "htm": {
+   "def": "FeatureHTM",
+   "description": "Enable Hardware Transactional Memory instructions",
+   "implies": []
+  },
+  "hard-float": {
+   "def": "FeatureHardFloat",
+   "description": "Enable floating-point instructions",
+   "implies": []
+  },
+  "icbt": {
+   "def": "FeatureICBT",
+   "description": "Enable icbt instruction",
+   "implies": []
+  },
+  "isa-v206-instructions": {
+   "def": "FeatureISA2_06",
+   "description": "Enable instructions in ISA 2.06.",
+   "implies": []
+  },
+  "isa-v207-instructions": {
+   "def": "FeatureISA2_07",
+   "description": "Enable instructions in ISA 2.07.",
+   "implies": []
+  },
+  "isa-v30-instructions": {
+   "def": "FeatureISA3_0",
+   "description": "Enable instructions in ISA 3.0.",
+   "implies": [
+    "isa-v207-instructions"
+   ]
+  },
+  "isa-v31-instructions": {
+   "def": "FeatureISA3_1",
+   "description": "Enable instructions in ISA 3.1.",
+   "implies": [
+    "isa-v30-instructions"
+   ]
+  },
+  "isa-future-instructions": {
+   "def": "FeatureISAFuture",
+   "description": "Enable instructions for Future ISA.",
+   "implies": [
+    "isa-v31-instructions"
+   ]
+  },
+  "isel": {
+   "def": "FeatureISEL",
+   "description": "Enable the isel instruction",
+   "implies": []
+  },
+  "invariant-function-descriptors": {
+   "def": "FeatureInvariantFunctionDescriptors",
+   "description": "Assume function descriptors are invariant",
+   "implies": []
+  },
+  "ldbrx": {
+   "def": "FeatureLDBRX",
+   "description": "Enable the ldbrx instruction",
+   "implies": []
+  },
+  "lfiwax": {
+   "def": "FeatureLFIWAX",
+   "description": "Enable the lfiwax instruction",
+   "implies": [
+    "fpu"
+   ]
+  },
+  "fuse-logical-add": {
+   "def": "FeatureLogicalAddFusion",
+   "description": "Target supports Logical with Add Operations fusion",
+   "implies": [
+    "fusion"
+   ]
+  },
+  "fuse-logical": {
+   "def": "FeatureLogicalFusion",
+   "description": "Target supports Logical Operations fusion",
+   "implies": [
+    "fusion"
+   ]
+  },
+  "longcall": {
+   "def": "FeatureLongCall",
+   "description": "Always use indirect calls",
+   "implies": []
+  },
+  "mfocrf": {
+   "def": "FeatureMFOCRF",
+   "description": "Enable the MFOCRF instruction",
+   "implies": []
+  },
+  "mftb": {
+   "def": "FeatureMFTB",
+   "description": "Implement mftb using the mfspr instruction",
+   "implies": []
+  },
+  "mma": {
+   "def": "FeatureMMA",
+   "description": "Enable MMA instructions",
+   "implies": [
+    "paired-vector-memops",
+    "power8-vector",
+    "power9-altivec"
+   ]
+  },
+  "msync": {
+   "def": "FeatureMSYNC",
+   "description": "Has only the msync instruction instead of sync",
+   "implies": [
+    "booke"
+   ]
+  },
+  "modern-aix-as": {
+   "def": "FeatureModernAIXAs",
+   "description": "AIX system assembler is modern enough to support new mnes",
+   "implies": []
+  },
+  "power10-vector": {
+   "def": "FeatureP10Vector",
+   "description": "Enable POWER10 vector instructions",
+   "implies": [
+    "isa-v31-instructions",
+    "power9-vector"
+   ]
+  },
+  "power8-altivec": {
+   "def": "FeatureP8Altivec",
+   "description": "Enable POWER8 Altivec instructions",
+   "implies": [
+    "altivec"
+   ]
+  },
+  "crypto": {
+   "def": "FeatureP8Crypto",
+   "description": "Enable POWER8 Crypto instructions",
+   "implies": [
+    "power8-altivec"
+   ]
+  },
+  "power8-vector": {
+   "def": "FeatureP8Vector",
+   "description": "Enable POWER8 vector instructions",
+   "implies": [
+    "power8-altivec",
+    "vsx"
+   ]
+  },
+  "power9-altivec": {
+   "def": "FeatureP9Altivec",
+   "description": "Enable POWER9 Altivec instructions",
+   "implies": [
+    "isa-v30-instructions",
+    "power8-altivec"
+   ]
+  },
+  "power9-vector": {
+   "def": "FeatureP9Vector",
+   "description": "Enable POWER9 vector instructions",
+   "implies": [
+    "isa-v30-instructions",
+    "power8-vector",
+    "power9-altivec"
+   ]
+  },
+  "pcrelative-memops": {
+   "def": "FeaturePCRelativeMemops",
+   "description": "Enable PC relative Memory Ops",
+   "implies": [
+    "isa-v30-instructions",
+    "prefix-instrs"
+   ]
+  },
+  "popcntd": {
+   "def": "FeaturePOPCNTD",
+   "description": "Enable the popcnt[dw] instructions",
+   "implies": []
+  },
+  "ppc4xx": {
+   "def": "FeaturePPC4xx",
+   "description": "Enable PPC 4xx instructions",
+   "implies": []
+  },
+  "ppc6xx": {
+   "def": "FeaturePPC6xx",
+   "description": "Enable PPC 6xx instructions",
+   "implies": []
+  },
+  "ppc-postra-sched": {
+   "def": "FeaturePPCPostRASched",
+   "description": "Use PowerPC post-RA scheduling strategy",
+   "implies": []
+  },
+  "ppc-prera-sched": {
+   "def": "FeaturePPCPreRASched",
+   "description": "Use PowerPC pre-RA scheduling strategy",
+   "implies": []
+  },
+  "paired-vector-memops": {
+   "def": "FeaturePairedVectorMemops",
+   "description": "32Byte load and store instructions",
+   "implies": [
+    "isa-v30-instructions",
+    "vsx"
+   ]
+  },
+  "partword-atomics": {
+   "def": "FeaturePartwordAtomic",
+   "description": "Enable l[bh]arx and st[bh]cx.",
+   "implies": []
+  },
+  "use-ptrgl-helper": {
+   "def": "FeaturePointerGlueHelper",
+   "description": "Use ._ptrgl for indirect calls",
+   "implies": []
+  },
+  "predictable-select-expensive": {
+   "def": "FeaturePredictableSelectIsExpensive",
+   "description": "Prefer likely predicted branches over selects",
+   "implies": []
+  },
+  "prefix-instrs": {
+   "def": "FeaturePrefixInstrs",
+   "description": "Enable prefixed instructions",
+   "implies": [
+    "isa-v31-instructions"
+   ]
+  },
+  "privileged": {
+   "def": "FeaturePrivileged",
+   "description": "Add privileged instructions",
+   "implies": []
+  },
+  "quadword-atomics": {
+   "def": "FeatureQuadwordAtomic",
+   "description": "Enable lqarx and stqcx.",
+   "implies": []
+  },
+  "rop-protect": {
+   "def": "FeatureROPProtect",
+   "description": "Add ROP protect",
+   "implies": []
+  },
+  "recipprec": {
+   "def": "FeatureRecipPrec",
+   "description": "Assume higher precision reciprocal estimates",
+   "implies": []
+  },
+  "spe": {
+   "def": "FeatureSPE",
+   "description": "Enable SPE instructions",
+   "implies": [
+    "hard-float"
+   ]
+  },
+  "stfiwx": {
+   "def": "FeatureSTFIWX",
+   "description": "Enable the stfiwx instruction",
+   "implies": [
+    "fpu"
+   ]
+  },
+  "secure-plt": {
+   "def": "FeatureSecurePlt",
+   "description": "Enable secure plt mode",
+   "implies": []
+  },
+  "fuse-sha3": {
+   "def": "FeatureSha3Fusion",
+   "description": "Target supports SHA3 assist fusion",
+   "implies": [
+    "fusion"
+   ]
+  },
+  "slow-popcntd": {
+   "def": "FeatureSlowPOPCNTD",
+   "description": "Has slow popcnt[dw] instructions",
+   "implies": []
+  },
+  "fuse-store": {
+   "def": "FeatureStoreFusion",
+   "description": "Target supports store clustering",
+   "implies": [
+    "fusion"
+   ]
+  },
+  "two-const-nr": {
+   "def": "FeatureTwoConstNR",
+   "description": "Requires two constant Newton-Raphson computation",
+   "implies": []
+  },
+  "allow-unaligned-fp-access": {
+   "def": "FeatureUnalignedFloats",
+   "description": "CPU does not trap on unaligned FP access",
+   "implies": []
+  },
+  "vsx": {
+   "def": "FeatureVSX",
+   "description": "Enable VSX instructions",
+   "implies": [
+    "altivec"
+   ]
+  },
+  "vectors-use-two-units": {
+   "def": "FeatureVectorsUseTwoUnits",
+   "description": "Vectors use two units",
+   "implies": []
+  },
+  "fuse-wideimm": {
+   "def": "FeatureWideImmFusion",
+   "description": "Target supports Wide-Immediate fusion",
+   "implies": [
+    "fusion"
+   ]
+  },
+  "fuse-zeromove": {
+   "def": "FeatureZeroMoveFusion",
+   "description": "Target supports move to SPR with branch fusion",
+   "implies": [
+    "fusion"
+   ]
+  }
+ },
+ "aliases": {},
+ "unresolved": [],
+ "processors": {
+  "440": ["booke", "fpu", "fres", "frsqrte", "hard-float", "icbt", "isel", "mftb", "msync"],
+  "450": ["booke", "fpu", "fres", "frsqrte", "hard-float", "icbt", "isel", "mftb", "msync"],
+  "601": ["fpu", "hard-float"],
+  "602": ["fpu", "hard-float", "mftb"],
+  "603": ["fpu", "fres", "frsqrte", "hard-float", "mftb"],
+  "603e": ["fpu", "fres", "frsqrte", "hard-float", "mftb"],
+  "603ev": ["fpu", "fres", "frsqrte", "hard-float", "mftb"],
+  "604": ["fpu", "fres", "frsqrte", "hard-float", "mftb"],
+  "604e": ["fpu", "fres", "frsqrte", "hard-float", "mftb"],
+  "620": ["fpu", "fres", "frsqrte", "hard-float", "mftb"],
+  "7400": ["altivec", "fpu", "fres", "frsqrte", "hard-float", "mftb"],
+  "7450": ["altivec", "fpu", "fres", "frsqrte", "hard-float", "mftb"],
+  "750": ["fpu", "fres", "frsqrte", "hard-float", "mftb"],
+  "970": ["64bit-support", "altivec", "fpu", "fres", "frsqrte", "fsqrt", "hard-float", "mfocrf", "mftb", "stfiwx"],
+  "a2": ["64bit-support", "booke", "cmpb", "fcpsgn", "fpcvt", "fprnd", "fpu", "fre", "fres", "frsqrte", "frsqrtes", "fsqrt", "hard-float", "icbt", "isa-v206-instructions", "isel", "ldbrx", "lfiwax", "mfocrf", "mftb", "recipprec", "slow-popcntd", "stfiwx"],
+  "e500": ["booke", "hard-float", "icbt", "isel", "mftb", "msync", "spe"],
+  "e500mc": ["booke", "fpu", "hard-float", "icbt", "isel", "mftb", "stfiwx"],
+  "e5500": ["64bit-support", "booke", "fpu", "hard-float", "icbt", "isel", "mfocrf", "mftb", "stfiwx"],
+  "future": ["64bit-support", "allow-unaligned-fp-access", "altivec", "bpermd", "cmpb", "crbits", "crypto", "deprecateddst", "direct-move", "extdiv", "fast-MFLR", "fcpsgn", "fpcvt", "fprnd", "fpu", "fre", "fres", "frsqrte", "frsqrtes", "fsqrt", "fuse-add-logical", "fuse-arith-add", "fuse-logical", "fuse-logical-add", "fuse-sha3", "fuse-store", "fusion", "future-vector", "hard-float", "icbt", "isa-future-instructions", "isa-v206-instructions", "isa-v207-instructions", "isa-v30-instructions", "isa-v31-instructions", "isel", "ldbrx", "lfiwax", "mfocrf", "mftb", "mma", "paired-vector-memops", "partword-atomics", "pcrelative-memops", "popcntd", "power10-vector", "power8-altivec", "power8-vector", "power9-altivec", "power9-vector", "ppc-postra-sched", "ppc-prera-sched", "predictable-select-expensive", "prefix-instrs", "quadword-atomics", "recipprec", "stfiwx", "two-const-nr", "vsx"],
+  "g3": ["fpu", "fres", "frsqrte", "hard-float", "mftb"],
+  "g4": ["altivec", "fpu", "fres", "frsqrte", "hard-float", "mftb"],
+  "g4+": ["altivec", "fpu", "fres", "frsqrte", "hard-float", "mftb"],
+  "g5": ["64bit-support", "altivec", "deprecateddst", "fpu", "fres", "frsqrte", "fsqrt", "hard-float", "mfocrf", "mftb", "stfiwx"],
+  "generic": ["hard-float", "mftb"],
+  "ppc": ["hard-float", "mftb"],
+  "ppc32": ["hard-float", "mftb"],
+  "ppc64": ["64bit-support", "altivec", "fpu", "fres", "frsqrte", "fsqrt", "hard-float", "mfocrf", "mftb", "stfiwx"],
+  "ppc64le": ["64bit-support", "allow-unaligned-fp-access", "altivec", "bpermd", "cmpb", "crbits", "crypto", "deprecateddst", "direct-move", "extdiv", "fcpsgn", "fpcvt", "fprnd", "fpu", "fre", "fres", "frsqrte", "frsqrtes", "fsqrt", "fuse-addi-load", "fuse-addis-load", "fusion", "hard-float", "htm", "icbt", "isa-v206-instructions", "isa-v207-instructions", "isel", "ldbrx", "lfiwax", "mfocrf", "mftb", "partword-atomics", "popcntd", "power8-altivec", "power8-vector", "predictable-select-expensive", "quadword-atomics", "recipprec", "stfiwx", "two-const-nr", "vsx"],
+  "pwr10": ["64bit-support", "allow-unaligned-fp-access", "altivec", "bpermd", "cmpb", "crbits", "crypto", "deprecateddst", "direct-move", "extdiv", "fast-MFLR", "fcpsgn", "fpcvt", "fprnd", "fpu", "fre", "fres", "frsqrte", "frsqrtes", "fsqrt", "fuse-add-logical", "fuse-arith-add", "fuse-logical", "fuse-logical-add", "fuse-sha3", "fuse-store", "fusion", "hard-float", "icbt", "isa-v206-instructions", "isa-v207-instructions", "isa-v30-instructions", "isa-v31-instructions", "isel", "ldbrx", "lfiwax", "mfocrf", "mftb", "mma", "paired-vector-memops", "partword-atomics", "pcrelative-memops", "popcntd", "power10-vector", "power8-altivec", "power8-vector", "power9-altivec", "power9-vector", "ppc-postra-sched", "ppc-prera-sched", "predictable-select-expensive", "prefix-instrs", "quadword-atomics", "recipprec", "stfiwx", "two-const-nr", "vsx"],
+  "pwr11": ["64bit-support", "allow-unaligned-fp-access", "altivec", "bpermd", "cmpb", "crbits", "crypto", "deprecateddst", "direct-move", "extdiv", "fast-MFLR", "fcpsgn", "fpcvt", "fprnd", "fpu", "fre", "fres", "frsqrte", "frsqrtes", "fsqrt", "fuse-add-logical", "fuse-arith-add", "fuse-logical", "fuse-logical-add", "fuse-sha3", "fuse-store", "fusion", "hard-float", "icbt", "isa-v206-instructions", "isa-v207-instructions", "isa-v30-instructions", "isa-v31-instructions", "isel", "ldbrx", "lfiwax", "mfocrf", "mftb", "mma", "paired-vector-memops", "partword-atomics", "pcrelative-memops", "popcntd", "power10-vector", "power8-altivec", "power8-vector", "power9-altivec", "power9-vector", "ppc-postra-sched", "ppc-prera-sched", "predictable-select-expensive", "prefix-instrs", "quadword-atomics", "recipprec", "stfiwx", "two-const-nr", "vsx"],
+  "pwr3": ["64bit-support", "altivec", "fpu", "fres", "frsqrte", "hard-float", "mfocrf", "stfiwx"],
+  "pwr4": ["64bit-support", "altivec", "fpu", "fres", "frsqrte", "fsqrt", "hard-float", "mfocrf", "mftb", "stfiwx"],
+  "pwr5": ["64bit-support", "altivec", "deprecateddst", "fpu", "fre", "fres", "frsqrte", "frsqrtes", "fsqrt", "hard-float", "mfocrf", "mftb", "stfiwx"],
+  "pwr5x": ["64bit-support", "altivec", "deprecateddst", "fprnd", "fpu", "fre", "fres", "frsqrte", "frsqrtes", "fsqrt", "hard-float", "mfocrf", "mftb", "stfiwx"],
+  "pwr6": ["64bit-support", "altivec", "cmpb", "deprecateddst", "fcpsgn", "fprnd", "fpu", "fre", "fres", "frsqrte", "frsqrtes", "fsqrt", "hard-float", "lfiwax", "mfocrf", "mftb", "recipprec", "stfiwx"],
+  "pwr6x": ["64bit-support", "altivec", "cmpb", "deprecateddst", "fcpsgn", "fprnd", "fpu", "fre", "fres", "frsqrte", "frsqrtes", "fsqrt", "hard-float", "lfiwax", "mfocrf", "mftb", "recipprec", "stfiwx"],
+  "pwr7": ["64bit-support", "allow-unaligned-fp-access", "altivec", "bpermd", "cmpb", "deprecateddst", "extdiv", "fcpsgn", "fpcvt", "fprnd", "fpu", "fre", "fres", "frsqrte", "frsqrtes", "fsqrt", "hard-float", "isa-v206-instructions", "isel", "ldbrx", "lfiwax", "mfocrf", "mftb", "popcntd", "recipprec", "stfiwx", "two-const-nr", "vsx"],
+  "pwr8": ["64bit-support", "allow-unaligned-fp-access", "altivec", "bpermd", "cmpb", "crbits", "crypto", "deprecateddst", "direct-move", "extdiv", "fcpsgn", "fpcvt", "fprnd", "fpu", "fre", "fres", "frsqrte", "frsqrtes", "fsqrt", "fuse-addi-load", "fuse-addis-load", "fusion", "hard-float", "htm", "icbt", "isa-v206-instructions", "isa-v207-instructions", "isel", "ldbrx", "lfiwax", "mfocrf", "mftb", "partword-atomics", "popcntd", "power8-altivec", "power8-vector", "predictable-select-expensive", "quadword-atomics", "recipprec", "stfiwx", "two-const-nr", "vsx"],
+  "pwr9": ["64bit-support", "allow-unaligned-fp-access", "altivec", "bpermd", "cmpb", "crbits", "crypto", "deprecateddst", "direct-move", "extdiv", "fcpsgn", "fpcvt", "fprnd", "fpu", "fre", "fres", "frsqrte", "frsqrtes", "fsqrt", "hard-float", "htm", "icbt", "isa-v206-instructions", "isa-v207-instructions", "isa-v30-instructions", "isel", "ldbrx", "lfiwax", "mfocrf", "mftb", "partword-atomics", "popcntd", "power8-altivec", "power8-vector", "power9-altivec", "power9-vector", "ppc-postra-sched", "ppc-prera-sched", "predictable-select-expensive", "quadword-atomics", "recipprec", "stfiwx", "two-const-nr", "vectors-use-two-units", "vsx"]
+ }
+}

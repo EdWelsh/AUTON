@@ -1,0 +1,1926 @@
+{
+ "arch": "riscv",
+ "generated_from": [
+  {
+   "document": "llvm-riscv-features-td",
+   "sha256": "4052caeead2d35d91737dcb9ea2c43e770c4e5a5a48158be3b463516be71a8bf",
+   "source": "https://raw.githubusercontent.com/llvm/llvm-project/main/llvm/lib/Target/RISCV/RISCVFeatures.td"
+  },
+  {
+   "document": "llvm-riscv-processors-td",
+   "sha256": "5918ab78ff001075f15097cb53804cda3947ca773e171b93c2b8529483683302",
+   "source": "https://raw.githubusercontent.com/llvm/llvm-project/main/llvm/lib/Target/RISCV/RISCVProcessors.td"
+  }
+ ],
+ "features": {
+  "experimental": {
+   "def": "Experimental",
+   "description": "Experimental intrinsics",
+   "implies": []
+  },
+  "32bit": {
+   "def": "Feature32Bit",
+   "description": "Implements RV32",
+   "implies": []
+  },
+  "64bit": {
+   "def": "Feature64Bit",
+   "description": "Implements RV64",
+   "implies": []
+  },
+  "exact-asm": {
+   "def": "FeatureExactAssembly",
+   "description": "Enable Exact Assembly (Disables Compression and Relaxation)",
+   "implies": []
+  },
+  "forced-atomics": {
+   "def": "FeatureForcedAtomics",
+   "description": "Assume that lock-free native-width atomics are available",
+   "implies": []
+  },
+  "no-trailing-seq-cst-fence": {
+   "def": "FeatureNoTrailingSeqCstFence",
+   "description": "Disable trailing fence for seq-cst store",
+   "implies": []
+  },
+  "permissive-zalrsc": {
+   "def": "FeaturePermissiveZalrsc",
+   "description": "Implementation permits non-base instructions between LR/SC pairs",
+   "implies": []
+  },
+  "relax": {
+   "def": "FeatureRelax",
+   "description": "Enable Linker relaxation",
+   "implies": []
+  },
+  "save-restore": {
+   "def": "FeatureSaveRestore",
+   "description": "Enable save/restore",
+   "implies": []
+  },
+  "a": {
+   "def": "FeatureStdExtA",
+   "description": "Atomic Instructions",
+   "implies": [
+    "zaamo",
+    "zalrsc"
+   ]
+  },
+  "b": {
+   "def": "FeatureStdExtB",
+   "description": "the collection of the Zba, Zbb, Zbs extensions",
+   "implies": [
+    "zba",
+    "zbb",
+    "zbs"
+   ]
+  },
+  "c": {
+   "def": "FeatureStdExtC",
+   "description": "Compressed Instructions",
+   "implies": [
+    "zca"
+   ]
+  },
+  "d": {
+   "def": "FeatureStdExtD",
+   "description": "Double-Precision Floating-Point",
+   "implies": [
+    "f"
+   ]
+  },
+  "e": {
+   "def": "FeatureStdExtE",
+   "description": "Embedded Instruction Set with 16 GPRs",
+   "implies": []
+  },
+  "f": {
+   "def": "FeatureStdExtF",
+   "description": "Single-Precision Floating-Point",
+   "implies": [
+    "zicsr"
+   ]
+  },
+  "h": {
+   "def": "FeatureStdExtH",
+   "description": "",
+   "implies": []
+  },
+  "i": {
+   "def": "FeatureStdExtI",
+   "description": "Base Integer Instruction Set",
+   "implies": []
+  },
+  "m": {
+   "def": "FeatureStdExtM",
+   "description": "Integer Multiplication and Division",
+   "implies": [
+    "zmmul"
+   ]
+  },
+  "p": {
+   "def": "FeatureStdExtP",
+   "description": "'Base P' (Packed SIMD)",
+   "implies": [
+    "zba",
+    "zbb",
+    "zicsr",
+    "zmmul"
+   ]
+  },
+  "q": {
+   "def": "FeatureStdExtQ",
+   "description": "Quad-Precision Floating-Point",
+   "implies": [
+    "d"
+   ]
+  },
+  "sdext": {
+   "def": "FeatureStdExtSdext",
+   "description": "External debugger",
+   "implies": []
+  },
+  "sdtrig": {
+   "def": "FeatureStdExtSdtrig",
+   "description": "Debugger triggers",
+   "implies": []
+  },
+  "sha": {
+   "def": "FeatureStdExtSha",
+   "description": "Augmented Hypervisor",
+   "implies": [
+    "h",
+    "shcounterenw",
+    "shgatpa",
+    "shtvala",
+    "shvsatpa",
+    "shvstvala",
+    "shvstvecd",
+    "ssstateen"
+   ]
+  },
+  "shcounterenw": {
+   "def": "FeatureStdExtShcounterenw",
+   "description": "Support writeable hcounteren enable \"\n                     \"bit for any hpmcounter that is not read-only zero",
+   "implies": []
+  },
+  "shgatpa": {
+   "def": "FeatureStdExtShgatpa",
+   "description": "SvNNx4 mode supported for all modes supported by satp, as well as Bare",
+   "implies": []
+  },
+  "shlcofideleg": {
+   "def": "FeatureStdExtShlcofideleg",
+   "description": "Delegating LCOFI Interrupts to VS-mode",
+   "implies": []
+  },
+  "shtvala": {
+   "def": "FeatureStdExtShtvala",
+   "description": "htval provides all needed values",
+   "implies": []
+  },
+  "shvsatpa": {
+   "def": "FeatureStdExtShvsatpa",
+   "description": "vsatp supports all modes supported by satp",
+   "implies": []
+  },
+  "shvstvala": {
+   "def": "FeatureStdExtShvstvala",
+   "description": "vstval provides all needed values",
+   "implies": []
+  },
+  "shvstvecd": {
+   "def": "FeatureStdExtShvstvecd",
+   "description": "vstvec supports Direct mode",
+   "implies": []
+  },
+  "smaia": {
+   "def": "FeatureStdExtSmaia",
+   "description": "Advanced Interrupt Architecture Machine Level",
+   "implies": []
+  },
+  "smcdeleg": {
+   "def": "FeatureStdExtSmcdeleg",
+   "description": "Counter Delegation Machine Level",
+   "implies": []
+  },
+  "smcntrpmf": {
+   "def": "FeatureStdExtSmcntrpmf",
+   "description": "Cycle and Instret Privilege Mode Filtering",
+   "implies": []
+  },
+  "smcsps": {
+   "def": "FeatureStdExtSmcsps",
+   "description": "Conditional Stack Pointer Swap at Machine Level",
+   "implies": []
+  },
+  "smcsrind": {
+   "def": "FeatureStdExtSmcsrind",
+   "description": "Indirect CSR Access Machine Level",
+   "implies": []
+  },
+  "smctr": {
+   "def": "FeatureStdExtSmctr",
+   "description": "Control Transfer Records Machine Level",
+   "implies": [
+    "sscsrind"
+   ]
+  },
+  "smdbltrp": {
+   "def": "FeatureStdExtSmdbltrp",
+   "description": "Double Trap Machine Level",
+   "implies": [
+    "zicsr"
+   ]
+  },
+  "smehv": {
+   "def": "FeatureStdExtSmehv",
+   "description": "Synchronous Exception Hardware Vectoring at Machine Level",
+   "implies": [
+    "smijt"
+   ]
+  },
+  "smepmp": {
+   "def": "FeatureStdExtSmepmp",
+   "description": "Enhanced Physical Memory Protection",
+   "implies": []
+  },
+  "smidctrl": {
+   "def": "FeatureStdExtSmidctrl",
+   "description": "Interrupt Domain Control Interface at Machine Level",
+   "implies": [
+    "smaia",
+    "smcsrind"
+   ]
+  },
+  "smijt": {
+   "def": "FeatureStdExtSmijt",
+   "description": "Interrupt Jump Table at Machine Level",
+   "implies": []
+  },
+  "smip": {
+   "def": "FeatureStdExtSmip",
+   "description": "Support for Interrupt Handler Push/Pop at Machine Level",
+   "implies": []
+  },
+  "smmpm": {
+   "def": "FeatureStdExtSmmpm",
+   "description": "Machine-level Pointer Masking for M-mode",
+   "implies": []
+  },
+  "smnip": {
+   "def": "FeatureStdExtSmnip",
+   "description": "Nested Interrupt Preemption Support at Machine Level",
+   "implies": [
+    "smidctrl"
+   ]
+  },
+  "smnpm": {
+   "def": "FeatureStdExtSmnpm",
+   "description": "Machine-level Pointer Masking for next lower privilege mode",
+   "implies": []
+  },
+  "smpmpdeleg": {
+   "def": "FeatureStdExtSmpmpdeleg",
+   "description": "Sharing Hardware Resources between PMP and SPMP",
+   "implies": [
+    "smcsrind",
+    "sspmp"
+   ]
+  },
+  "smpmpmt": {
+   "def": "FeatureStdExtSmpmpmt",
+   "description": "PMP-based Memory Types Extension",
+   "implies": []
+  },
+  "smrnmi": {
+   "def": "FeatureStdExtSmrnmi",
+   "description": "Resumable Non-Maskable Interrupts",
+   "implies": []
+  },
+  "smstateen": {
+   "def": "FeatureStdExtSmstateen",
+   "description": "Machine-mode view of the state-enable extension",
+   "implies": []
+  },
+  "ssaia": {
+   "def": "FeatureStdExtSsaia",
+   "description": "Advanced Interrupt Architecture Supervisor Level",
+   "implies": []
+  },
+  "ssccfg": {
+   "def": "FeatureStdExtSsccfg",
+   "description": "Counter Configuration Supervisor Level",
+   "implies": []
+  },
+  "ssccptr": {
+   "def": "FeatureStdExtSsccptr",
+   "description": "Main memory supports page table reads",
+   "implies": []
+  },
+  "sscofpmf": {
+   "def": "FeatureStdExtSscofpmf",
+   "description": "Count Overflow and Mode-Based Filtering",
+   "implies": []
+  },
+  "sscounterenw": {
+   "def": "FeatureStdExtSscounterenw",
+   "description": "Support writeable scounteren enable \"\n                     \"bit for any hpmcounter that is not read-only zero",
+   "implies": []
+  },
+  "sscsps": {
+   "def": "FeatureStdExtSscsps",
+   "description": "Conditional Stack Pointer Swap at Supervisor Level",
+   "implies": [
+    "smcsps"
+   ]
+  },
+  "sscsrind": {
+   "def": "FeatureStdExtSscsrind",
+   "description": "Indirect CSR Access Supervisor Level",
+   "implies": []
+  },
+  "ssctr": {
+   "def": "FeatureStdExtSsctr",
+   "description": "Control Transfer Records Supervisor Level",
+   "implies": [
+    "sscsrind"
+   ]
+  },
+  "ssdbltrp": {
+   "def": "FeatureStdExtSsdbltrp",
+   "description": "Double Trap Supervisor Level",
+   "implies": [
+    "zicsr"
+   ]
+  },
+  "ssehv": {
+   "def": "FeatureStdExtSsehv",
+   "description": "Synchronous Exception Hardware Vectoring at Supervisor Level",
+   "implies": [
+    "ssijt"
+   ]
+  },
+  "ssidctrl": {
+   "def": "FeatureStdExtSsidctrl",
+   "description": "Interrupt Domain Control Interface at Supervisor Level",
+   "implies": [
+    "ssaia",
+    "sscsrind"
+   ]
+  },
+  "ssijt": {
+   "def": "FeatureStdExtSsijt",
+   "description": "Interrupt Jump Table at Supervisor Level",
+   "implies": []
+  },
+  "ssip": {
+   "def": "FeatureStdExtSsip",
+   "description": "Support for Interrupt Handler Push/Pop at Supervisor Level",
+   "implies": []
+  },
+  "ssnip": {
+   "def": "FeatureStdExtSsnip",
+   "description": "Nested Interrupt Preemption Support at Supervisor Level",
+   "implies": [
+    "ssidctrl"
+   ]
+  },
+  "ssnpm": {
+   "def": "FeatureStdExtSsnpm",
+   "description": "Supervisor-level Pointer Masking for next lower privilege mode",
+   "implies": []
+  },
+  "sspm": {
+   "def": "FeatureStdExtSspm",
+   "description": "Indicates Supervisor-mode Pointer Masking",
+   "implies": []
+  },
+  "sspmp": {
+   "def": "FeatureStdExtSspmp",
+   "description": "S-level Physical Memory Protection (SPMP)",
+   "implies": [
+    "sscsrind"
+   ]
+  },
+  "sspmpen": {
+   "def": "FeatureStdExtSspmpen",
+   "description": "Optimizing Context Switching of SPMP Entries",
+   "implies": [
+    "sspmp"
+   ]
+  },
+  "ssqosid": {
+   "def": "FeatureStdExtSsqosid",
+   "description": "Quality-of-Service (QoS) Identifiers",
+   "implies": []
+  },
+  "ssstateen": {
+   "def": "FeatureStdExtSsstateen",
+   "description": "Supervisor-mode view of the state-enable extension",
+   "implies": []
+  },
+  "ssstrict": {
+   "def": "FeatureStdExtSsstrict",
+   "description": "No non-conforming extensions are present",
+   "implies": []
+  },
+  "sstc": {
+   "def": "FeatureStdExtSstc",
+   "description": "Supervisor-mode timer interrupts",
+   "implies": []
+  },
+  "sstvala": {
+   "def": "FeatureStdExtSstvala",
+   "description": "stval provides all needed values",
+   "implies": []
+  },
+  "sstvecd": {
+   "def": "FeatureStdExtSstvecd",
+   "description": "stvec supports Direct mode",
+   "implies": []
+  },
+  "ssu64xl": {
+   "def": "FeatureStdExtSsu64xl",
+   "description": "UXLEN=64 supported",
+   "implies": []
+  },
+  "supm": {
+   "def": "FeatureStdExtSupm",
+   "description": "Indicates User-mode Pointer Masking",
+   "implies": []
+  },
+  "svade": {
+   "def": "FeatureStdExtSvade",
+   "description": "Raise exceptions on improper A/D bits",
+   "implies": []
+  },
+  "svadu": {
+   "def": "FeatureStdExtSvadu",
+   "description": "Hardware A/D updates",
+   "implies": []
+  },
+  "svbare": {
+   "def": "FeatureStdExtSvbare",
+   "description": "satp mode Bare supported",
+   "implies": []
+  },
+  "svinval": {
+   "def": "FeatureStdExtSvinval",
+   "description": "Fine-Grained Address-Translation Cache Invalidation",
+   "implies": []
+  },
+  "svnapot": {
+   "def": "FeatureStdExtSvnapot",
+   "description": "NAPOT Translation Contiguity",
+   "implies": []
+  },
+  "svpbmt": {
+   "def": "FeatureStdExtSvpbmt",
+   "description": "Page-Based Memory Types",
+   "implies": []
+  },
+  "svrsw60t59b": {
+   "def": "FeatureStdExtSvrsw60t59b",
+   "description": "PTE Reserved-for-Software Bits 60-59",
+   "implies": []
+  },
+  "svukte": {
+   "def": "FeatureStdExtSvukte",
+   "description": "Address-Independent Latency of User-Mode Faults to Supervisor Addresses",
+   "implies": []
+  },
+  "svvptc": {
+   "def": "FeatureStdExtSvvptc",
+   "description": "Obviating Memory-Management Instructions after Marking PTEs Valid",
+   "implies": []
+  },
+  "v": {
+   "def": "FeatureStdExtV",
+   "description": "Vector Extension for Application Processors",
+   "implies": [
+    "zve64d"
+   ]
+  },
+  "y": {
+   "def": "FeatureStdExtY",
+   "description": "'Base Y' (CHERI)",
+   "implies": []
+  },
+  "za128rs": {
+   "def": "FeatureStdExtZa128rs",
+   "description": "Reservation Set Size of at Most 128 Bytes",
+   "implies": []
+  },
+  "za64rs": {
+   "def": "FeatureStdExtZa64rs",
+   "description": "Reservation Set Size of at Most 64 Bytes",
+   "implies": []
+  },
+  "zaamo": {
+   "def": "FeatureStdExtZaamo",
+   "description": "Atomic Memory Operations",
+   "implies": []
+  },
+  "zabha": {
+   "def": "FeatureStdExtZabha",
+   "description": "Byte and Halfword Atomic Memory Operations",
+   "implies": [
+    "zaamo"
+   ]
+  },
+  "zacas": {
+   "def": "FeatureStdExtZacas",
+   "description": "Atomic Compare-And-Swap Instructions",
+   "implies": [
+    "zaamo"
+   ]
+  },
+  "zalasr": {
+   "def": "FeatureStdExtZalasr",
+   "description": "Load-Acquire and Store-Release Instructions",
+   "implies": []
+  },
+  "zalrsc": {
+   "def": "FeatureStdExtZalrsc",
+   "description": "",
+   "implies": []
+  },
+  "zama16b": {
+   "def": "FeatureStdExtZama16b",
+   "description": "Atomic 16-byte misaligned loads, stores and AMOs",
+   "implies": []
+  },
+  "zawrs": {
+   "def": "FeatureStdExtZawrs",
+   "description": "Wait on Reservation Set",
+   "implies": []
+  },
+  "zba": {
+   "def": "FeatureStdExtZba",
+   "description": "Address Generation Instructions",
+   "implies": []
+  },
+  "zbb": {
+   "def": "FeatureStdExtZbb",
+   "description": "Basic Bit-Manipulation",
+   "implies": []
+  },
+  "zbc": {
+   "def": "FeatureStdExtZbc",
+   "description": "Carry-Less Multiplication",
+   "implies": [
+    "zbkc"
+   ]
+  },
+  "zbkb": {
+   "def": "FeatureStdExtZbkb",
+   "description": "Bitmanip instructions for Cryptography",
+   "implies": []
+  },
+  "zbkc": {
+   "def": "FeatureStdExtZbkc",
+   "description": "Carry-less multiply instructions for Cryptography",
+   "implies": []
+  },
+  "zbkx": {
+   "def": "FeatureStdExtZbkx",
+   "description": "Crossbar permutation instructions",
+   "implies": []
+  },
+  "zbs": {
+   "def": "FeatureStdExtZbs",
+   "description": "Single-Bit Instructions",
+   "implies": []
+  },
+  "zca": {
+   "def": "FeatureStdExtZca",
+   "description": "part of the C extension, excluding compressed \"\n                     \"floating point loads/stores",
+   "implies": []
+  },
+  "zcb": {
+   "def": "FeatureStdExtZcb",
+   "description": "Compressed basic bit manipulation instructions",
+   "implies": [
+    "zca"
+   ]
+  },
+  "zcd": {
+   "def": "FeatureStdExtZcd",
+   "description": "Compressed Double-Precision Floating-Point Instructions",
+   "implies": [
+    "d",
+    "zca"
+   ]
+  },
+  "zce": {
+   "def": "FeatureStdExtZce",
+   "description": "Compressed extensions for microcontrollers",
+   "implies": [
+    "zca",
+    "zcb",
+    "zcmp",
+    "zcmt"
+   ]
+  },
+  "zcf": {
+   "def": "FeatureStdExtZcf",
+   "description": "Compressed Single-Precision Floating-Point Instructions",
+   "implies": [
+    "f",
+    "zca"
+   ]
+  },
+  "zclsd": {
+   "def": "FeatureStdExtZclsd",
+   "description": "Compressed Load/Store Pair Instructions",
+   "implies": [
+    "zca",
+    "zilsd"
+   ]
+  },
+  "zcmop": {
+   "def": "FeatureStdExtZcmop",
+   "description": "Compressed May-Be-Operations",
+   "implies": [
+    "zca"
+   ]
+  },
+  "zcmp": {
+   "def": "FeatureStdExtZcmp",
+   "description": "sequenced instructions for code-size reduction",
+   "implies": [
+    "zca"
+   ]
+  },
+  "zcmt": {
+   "def": "FeatureStdExtZcmt",
+   "description": "table jump instructions for code-size reduction",
+   "implies": [
+    "zca",
+    "zicsr"
+   ]
+  },
+  "zdinx": {
+   "def": "FeatureStdExtZdinx",
+   "description": "Double in Integer",
+   "implies": [
+    "zfinx"
+   ]
+  },
+  "zfa": {
+   "def": "FeatureStdExtZfa",
+   "description": "Additional Floating-Point",
+   "implies": [
+    "f"
+   ]
+  },
+  "zfbfmin": {
+   "def": "FeatureStdExtZfbfmin",
+   "description": "Scalar BF16 Converts",
+   "implies": [
+    "f"
+   ]
+  },
+  "zfh": {
+   "def": "FeatureStdExtZfh",
+   "description": "Half-Precision Floating-Point",
+   "implies": [
+    "zfhmin"
+   ]
+  },
+  "zfhmin": {
+   "def": "FeatureStdExtZfhmin",
+   "description": "Half-Precision Floating-Point Minimal",
+   "implies": [
+    "f"
+   ]
+  },
+  "zfinx": {
+   "def": "FeatureStdExtZfinx",
+   "description": "Float in Integer",
+   "implies": [
+    "zicsr"
+   ]
+  },
+  "zhinx": {
+   "def": "FeatureStdExtZhinx",
+   "description": "Half Float in Integer",
+   "implies": [
+    "zhinxmin"
+   ]
+  },
+  "zhinxmin": {
+   "def": "FeatureStdExtZhinxmin",
+   "description": "Half Float in Integer Minimal",
+   "implies": [
+    "zfinx"
+   ]
+  },
+  "zibi": {
+   "def": "FeatureStdExtZibi",
+   "description": "Branch with Immediate",
+   "implies": []
+  },
+  "zic64b": {
+   "def": "FeatureStdExtZic64b",
+   "description": "Cache Block Size Is 64 Bytes",
+   "implies": []
+  },
+  "zicbom": {
+   "def": "FeatureStdExtZicbom",
+   "description": "Cache-Block Management Instructions",
+   "implies": []
+  },
+  "zicbop": {
+   "def": "FeatureStdExtZicbop",
+   "description": "Cache-Block Prefetch Instructions",
+   "implies": []
+  },
+  "zicboz": {
+   "def": "FeatureStdExtZicboz",
+   "description": "Cache-Block Zero Instructions",
+   "implies": []
+  },
+  "ziccamoa": {
+   "def": "FeatureStdExtZiccamoa",
+   "description": "Main Memory Supports All Atomics in A",
+   "implies": []
+  },
+  "ziccamoc": {
+   "def": "FeatureStdExtZiccamoc",
+   "description": "Main Memory Supports Atomics in Zacas",
+   "implies": []
+  },
+  "ziccid": {
+   "def": "FeatureStdExtZiccid",
+   "description": "Instruction/Data Coherence and Consistency",
+   "implies": [
+    "ziccif"
+   ]
+  },
+  "ziccif": {
+   "def": "FeatureStdExtZiccif",
+   "description": "Main Memory Supports Instruction Fetch with Atomicity Requirement",
+   "implies": []
+  },
+  "zicclsm": {
+   "def": "FeatureStdExtZicclsm",
+   "description": "Main Memory Supports Misaligned Loads/Stores",
+   "implies": []
+  },
+  "ziccrse": {
+   "def": "FeatureStdExtZiccrse",
+   "description": "Main Memory Supports Forward Progress on LR/SC Sequences",
+   "implies": []
+  },
+  "zicfilp": {
+   "def": "FeatureStdExtZicfilp",
+   "description": "Landing pad",
+   "implies": [
+    "zicsr"
+   ]
+  },
+  "zicfiss": {
+   "def": "FeatureStdExtZicfiss",
+   "description": "Shadow stack",
+   "implies": [
+    "zicsr",
+    "zimop"
+   ]
+  },
+  "zicntr": {
+   "def": "FeatureStdExtZicntr",
+   "description": "Base Counters and Timers",
+   "implies": [
+    "zicsr"
+   ]
+  },
+  "zicond": {
+   "def": "FeatureStdExtZicond",
+   "description": "Integer Conditional Operations",
+   "implies": []
+  },
+  "zicsr": {
+   "def": "FeatureStdExtZicsr",
+   "description": "",
+   "implies": []
+  },
+  "zifencei": {
+   "def": "FeatureStdExtZifencei",
+   "description": "",
+   "implies": []
+  },
+  "zihintntl": {
+   "def": "FeatureStdExtZihintntl",
+   "description": "Non-Temporal Locality Hints",
+   "implies": []
+  },
+  "zihintpause": {
+   "def": "FeatureStdExtZihintpause",
+   "description": "Pause Hint",
+   "implies": []
+  },
+  "zihpm": {
+   "def": "FeatureStdExtZihpm",
+   "description": "Hardware Performance Counters",
+   "implies": [
+    "zicsr"
+   ]
+  },
+  "zilsd": {
+   "def": "FeatureStdExtZilsd",
+   "description": "Load/Store Pair Instructions",
+   "implies": []
+  },
+  "zilx": {
+   "def": "FeatureStdExtZilx",
+   "description": "Indexed Integer Load Instructions",
+   "implies": []
+  },
+  "zimop": {
+   "def": "FeatureStdExtZimop",
+   "description": "",
+   "implies": []
+  },
+  "zk": {
+   "def": "FeatureStdExtZk",
+   "description": "Standard scalar cryptography extension",
+   "implies": [
+    "zkn",
+    "zkr",
+    "zkt"
+   ]
+  },
+  "zkn": {
+   "def": "FeatureStdExtZkn",
+   "description": "NIST Algorithm Suite",
+   "implies": [
+    "zbkb",
+    "zbkc",
+    "zbkx",
+    "zknd",
+    "zkne",
+    "zknh"
+   ]
+  },
+  "zknd": {
+   "def": "FeatureStdExtZknd",
+   "description": "NIST Suite: AES Decryption",
+   "implies": []
+  },
+  "zkne": {
+   "def": "FeatureStdExtZkne",
+   "description": "NIST Suite: AES Encryption",
+   "implies": []
+  },
+  "zknh": {
+   "def": "FeatureStdExtZknh",
+   "description": "NIST Suite: Hash Function Instructions",
+   "implies": []
+  },
+  "zkr": {
+   "def": "FeatureStdExtZkr",
+   "description": "Entropy Source Extension",
+   "implies": []
+  },
+  "zks": {
+   "def": "FeatureStdExtZks",
+   "description": "ShangMi Algorithm Suite",
+   "implies": [
+    "zbkb",
+    "zbkc",
+    "zbkx",
+    "zksed",
+    "zksh"
+   ]
+  },
+  "zksed": {
+   "def": "FeatureStdExtZksed",
+   "description": "ShangMi Suite: SM4 Block Cipher Instructions",
+   "implies": []
+  },
+  "zksh": {
+   "def": "FeatureStdExtZksh",
+   "description": "ShangMi Suite: SM3 Hash Function Instructions",
+   "implies": []
+  },
+  "zkt": {
+   "def": "FeatureStdExtZkt",
+   "description": "Data Independent Execution Latency",
+   "implies": []
+  },
+  "zmmul": {
+   "def": "FeatureStdExtZmmul",
+   "description": "Integer Multiplication",
+   "implies": []
+  },
+  "ztso": {
+   "def": "FeatureStdExtZtso",
+   "description": "Memory Model - Total Store Order",
+   "implies": []
+  },
+  "zvabd": {
+   "def": "FeatureStdExtZvabd",
+   "description": "Vector Absolute Difference",
+   "implies": [
+    "zve32x"
+   ]
+  },
+  "zvbb": {
+   "def": "FeatureStdExtZvbb",
+   "description": "Vector basic bit-manipulation instructions",
+   "implies": [
+    "zvkb"
+   ]
+  },
+  "zvbc": {
+   "def": "FeatureStdExtZvbc",
+   "description": "Vector Carryless Multiplication",
+   "implies": [
+    "zve64x"
+   ]
+  },
+  "zvbc32e": {
+   "def": "FeatureStdExtZvbc32e",
+   "description": "Vector Carryless Multiplication with 32-bits elements",
+   "implies": [
+    "zve32x"
+   ]
+  },
+  "zvdot4a8i": {
+   "def": "FeatureStdExtZvdot4a8i",
+   "description": "Vector 4-element Dot Product of packed 8-bit Integers",
+   "implies": [
+    "zve32x"
+   ]
+  },
+  "zve32f": {
+   "def": "FeatureStdExtZve32f",
+   "description": "Vector Extensions for Embedded Processors \"\n                     \"with maximal 32 EEW and F extension",
+   "implies": [
+    "f",
+    "zve32x"
+   ]
+  },
+  "zve32x": {
+   "def": "FeatureStdExtZve32x",
+   "description": "Vector Extensions for Embedded Processors \"\n                     \"with maximal 32 EEW",
+   "implies": [
+    "zicsr",
+    "zvl32b"
+   ]
+  },
+  "zve64d": {
+   "def": "FeatureStdExtZve64d",
+   "description": "Vector Extensions for Embedded Processors \"\n                     \"with maximal 64 EEW, F and D extension",
+   "implies": [
+    "d",
+    "zve64f"
+   ]
+  },
+  "zve64f": {
+   "def": "FeatureStdExtZve64f",
+   "description": "Vector Extensions for Embedded Processors \"\n                     \"with maximal 64 EEW and F extension",
+   "implies": [
+    "zve32f",
+    "zve64x"
+   ]
+  },
+  "zve64x": {
+   "def": "FeatureStdExtZve64x",
+   "description": "Vector Extensions for Embedded Processors \"\n                     \"with maximal 64 EEW",
+   "implies": [
+    "zve32x"
+   ]
+  },
+  "zvfbdota32f": {
+   "def": "FeatureStdExtZvfbdota32f",
+   "description": "FP32 batched dot-product extension",
+   "implies": [
+    "zve32f"
+   ]
+  },
+  "zvfbfa": {
+   "def": "FeatureStdExtZvfbfa",
+   "description": "Additional BF16 vector compute support",
+   "implies": [
+    "zfbfmin",
+    "zve32f"
+   ]
+  },
+  "zvfbfmin": {
+   "def": "FeatureStdExtZvfbfmin",
+   "description": "Vector BF16 Converts",
+   "implies": [
+    "zve32f"
+   ]
+  },
+  "zvfbfwma": {
+   "def": "FeatureStdExtZvfbfwma",
+   "description": "Vector BF16 widening mul-add",
+   "implies": [
+    "zfbfmin",
+    "zvfbfmin"
+   ]
+  },
+  "zvfh": {
+   "def": "FeatureStdExtZvfh",
+   "description": "Vector Half-Precision Floating-Point",
+   "implies": [
+    "zfhmin",
+    "zvfhmin"
+   ]
+  },
+  "zvfhmin": {
+   "def": "FeatureStdExtZvfhmin",
+   "description": "Vector Half-Precision Floating-Point Minimal",
+   "implies": [
+    "zve32f"
+   ]
+  },
+  "zvfofp8min": {
+   "def": "FeatureStdExtZvfofp8min",
+   "description": "Vector OFP8 Converts",
+   "implies": [
+    "zve32f"
+   ]
+  },
+  "zvfqwbdota8f": {
+   "def": "FeatureStdExtZvfqwbdota8f",
+   "description": "OCP FP8 batched dot-product extension",
+   "implies": [
+    "zve32f"
+   ]
+  },
+  "zvfqwdota8f": {
+   "def": "FeatureStdExtZvfqwdota8f",
+   "description": "OCP FP8 Dot-Product",
+   "implies": [
+    "zve32f"
+   ]
+  },
+  "zvfwbdota16bf": {
+   "def": "FeatureStdExtZvfwbdota16bf",
+   "description": "BF16 batched dot-product extension",
+   "implies": [
+    "zve32f"
+   ]
+  },
+  "zvfwdota16bf": {
+   "def": "FeatureStdExtZvfwdota16bf",
+   "description": "BF16 Dot-Product",
+   "implies": [
+    "zve32f"
+   ]
+  },
+  "zvkb": {
+   "def": "FeatureStdExtZvkb",
+   "description": "Vector Bit-manipulation used in Cryptography",
+   "implies": [
+    "zve32x"
+   ]
+  },
+  "zvkg": {
+   "def": "FeatureStdExtZvkg",
+   "description": "Vector GCM instructions for Cryptography",
+   "implies": [
+    "zve32x"
+   ]
+  },
+  "zvkgs": {
+   "def": "FeatureStdExtZvkgs",
+   "description": "Vector-Scalar GCM instructions for Cryptography",
+   "implies": [
+    "zvkg"
+   ]
+  },
+  "zvkn": {
+   "def": "FeatureStdExtZvkn",
+   "description": "shorthand for 'Zvkned', 'Zvknhb', 'Zvkb', and 'Zvkt'",
+   "implies": [
+    "zvkb",
+    "zvkned",
+    "zvknhb",
+    "zvkt"
+   ]
+  },
+  "zvknc": {
+   "def": "FeatureStdExtZvknc",
+   "description": "shorthand for 'Zvknc' and 'Zvbc'",
+   "implies": [
+    "zvbc",
+    "zvkn"
+   ]
+  },
+  "zvkned": {
+   "def": "FeatureStdExtZvkned",
+   "description": "Vector AES Encryption & Decryption (Single Round)",
+   "implies": [
+    "zve32x"
+   ]
+  },
+  "zvkng": {
+   "def": "FeatureStdExtZvkng",
+   "description": "shorthand for 'Zvkn' and 'Zvkg'",
+   "implies": [
+    "zvkg",
+    "zvkn"
+   ]
+  },
+  "zvknha": {
+   "def": "FeatureStdExtZvknha",
+   "description": "Vector SHA-2 (SHA-256 only)",
+   "implies": [
+    "zve32x"
+   ]
+  },
+  "zvknhb": {
+   "def": "FeatureStdExtZvknhb",
+   "description": "Vector SHA-2 (SHA-256 and SHA-512)",
+   "implies": [
+    "zve64x",
+    "zvknha"
+   ]
+  },
+  "zvks": {
+   "def": "FeatureStdExtZvks",
+   "description": "shorthand for 'Zvksed', 'Zvksh', 'Zvkb', and 'Zvkt'",
+   "implies": [
+    "zvkb",
+    "zvksed",
+    "zvksh",
+    "zvkt"
+   ]
+  },
+  "zvksc": {
+   "def": "FeatureStdExtZvksc",
+   "description": "shorthand for 'Zvks' and 'Zvbc'",
+   "implies": [
+    "zvbc",
+    "zvks"
+   ]
+  },
+  "zvksed": {
+   "def": "FeatureStdExtZvksed",
+   "description": "SM4 Block Cipher Instructions",
+   "implies": [
+    "zve32x"
+   ]
+  },
+  "zvksg": {
+   "def": "FeatureStdExtZvksg",
+   "description": "shorthand for 'Zvks' and 'Zvkg'",
+   "implies": [
+    "zvkg",
+    "zvks"
+   ]
+  },
+  "zvksh": {
+   "def": "FeatureStdExtZvksh",
+   "description": "SM3 Hash Function Instructions",
+   "implies": [
+    "zve32x"
+   ]
+  },
+  "zvkt": {
+   "def": "FeatureStdExtZvkt",
+   "description": "Vector Data-Independent Execution Latency",
+   "implies": []
+  },
+  "zvl32b": {
+   "def": "FeatureStdExtZvl32b",
+   "description": "Minimum Vector Length 32",
+   "implies": []
+  },
+  "zvqwbdota16i": {
+   "def": "FeatureStdExtZvqwbdota16i",
+   "description": "16-bit integer batched dot-product extension",
+   "implies": [
+    "zve64x"
+   ]
+  },
+  "zvqwbdota8i": {
+   "def": "FeatureStdExtZvqwbdota8i",
+   "description": "8-bit integer batched dot-product extension",
+   "implies": [
+    "zve32x"
+   ]
+  },
+  "zvqwdota16i": {
+   "def": "FeatureStdExtZvqwdota16i",
+   "description": "16-bit Integer Dot-Product",
+   "implies": [
+    "zve64x"
+   ]
+  },
+  "zvqwdota8i": {
+   "def": "FeatureStdExtZvqwdota8i",
+   "description": "8-bit Integer Dot-Product",
+   "implies": [
+    "zve32x"
+   ]
+  },
+  "zvvfmm": {
+   "def": "FeatureStdExtZvvfmm",
+   "description": "Floating-Point Matrix Multiply-Accumulate",
+   "implies": [
+    "zve32f"
+   ]
+  },
+  "zvvmm": {
+   "def": "FeatureStdExtZvvmm",
+   "description": "Integer Matrix Multiply-Accumulate",
+   "implies": [
+    "zve32x"
+   ]
+  },
+  "zvvmtls": {
+   "def": "FeatureStdExtZvvmtls",
+   "description": "Matrix Tile Load/Store",
+   "implies": [
+    "zve32x"
+   ]
+  },
+  "zvvmttls": {
+   "def": "FeatureStdExtZvvmttls",
+   "description": "Transposing Matrix Tile Load/Store",
+   "implies": [
+    "zve32x"
+   ]
+  },
+  "zvzip": {
+   "def": "FeatureStdExtZvzip",
+   "description": "Vector Reordering Structured Data",
+   "implies": [
+    "zve32x"
+   ]
+  },
+  "tagged-globals": {
+   "def": "FeatureTaggedGlobals",
+   "description": "Use an instruction sequence for taking the address of a global \"\n    \"that allows a memory tag in the upper address bits",
+   "implies": []
+  },
+  "unaligned-scalar-mem": {
+   "def": "FeatureUnalignedScalarMem",
+   "description": "Has reasonably performant unaligned scalar \"\n                      \"loads and stores",
+   "implies": []
+  },
+  "unaligned-vector-mem": {
+   "def": "FeatureUnalignedVectorMem",
+   "description": "Has reasonably performant unaligned vector \"\n                      \"loads and stores",
+   "implies": []
+  },
+  "xaifet": {
+   "def": "FeatureVendorXAIFET",
+   "description": "AI Foundry ET Extension",
+   "implies": [
+    "f"
+   ]
+  },
+  "xandesbfhcvt": {
+   "def": "FeatureVendorXAndesBFHCvt",
+   "description": "Andes Scalar BFLOAT16 Conversion Extension",
+   "implies": [
+    "f"
+   ]
+  },
+  "xandesperf": {
+   "def": "FeatureVendorXAndesPerf",
+   "description": "Andes Performance Extension",
+   "implies": []
+  },
+  "xandesvbfhcvt": {
+   "def": "FeatureVendorXAndesVBFHCvt",
+   "description": "Andes Vector BFLOAT16 Conversion Extension",
+   "implies": [
+    "zve32f"
+   ]
+  },
+  "xandesvdot": {
+   "def": "FeatureVendorXAndesVDot",
+   "description": "Andes Vector Dot Product Extension",
+   "implies": [
+    "zve32x"
+   ]
+  },
+  "xandesvpackfph": {
+   "def": "FeatureVendorXAndesVPackFPH",
+   "description": "Andes Vector Packed FP16 Extension",
+   "implies": [
+    "f"
+   ]
+  },
+  "xandesvsinth": {
+   "def": "FeatureVendorXAndesVSIntH",
+   "description": "Andes Vector Small INT Handling Extension",
+   "implies": [
+    "zve32x"
+   ]
+  },
+  "xandesvsintload": {
+   "def": "FeatureVendorXAndesVSIntLoad",
+   "description": "Andes Vector INT4 Load Extension",
+   "implies": [
+    "zve32x"
+   ]
+  },
+  "xcvalu": {
+   "def": "FeatureVendorXCValu",
+   "description": "CORE-V ALU Operations",
+   "implies": []
+  },
+  "xcvbi": {
+   "def": "FeatureVendorXCVbi",
+   "description": "CORE-V Immediate Branching",
+   "implies": []
+  },
+  "xcvbitmanip": {
+   "def": "FeatureVendorXCVbitmanip",
+   "description": "CORE-V Bit Manipulation",
+   "implies": []
+  },
+  "xcvelw": {
+   "def": "FeatureVendorXCVelw",
+   "description": "CORE-V Event Load Word",
+   "implies": []
+  },
+  "xcvmac": {
+   "def": "FeatureVendorXCVmac",
+   "description": "CORE-V Multiply-Accumulate",
+   "implies": []
+  },
+  "xcvmem": {
+   "def": "FeatureVendorXCVmem",
+   "description": "CORE-V Post-incrementing Load & Store",
+   "implies": []
+  },
+  "xcvsimd": {
+   "def": "FeatureVendorXCVsimd",
+   "description": "CORE-V SIMD ALU",
+   "implies": []
+  },
+  "xcheriot": {
+   "def": "FeatureVendorXCheriot",
+   "description": "CHERIoT extension",
+   "implies": [
+    "e",
+    "m",
+    "zca"
+   ]
+  },
+  "xmipscbop": {
+   "def": "FeatureVendorXMIPSCBOP",
+   "description": "MIPS Software Prefetch",
+   "implies": []
+  },
+  "xmipscmov": {
+   "def": "FeatureVendorXMIPSCMov",
+   "description": "MIPS conditional move instruction (mips.ccmov)",
+   "implies": []
+  },
+  "xmipsexectl": {
+   "def": "FeatureVendorXMIPSEXECTL",
+   "description": "MIPS execution control",
+   "implies": []
+  },
+  "xmipslsp": {
+   "def": "FeatureVendorXMIPSLSP",
+   "description": "MIPS optimization for hardware load-store bonding",
+   "implies": []
+  },
+  "xsmtvdot": {
+   "def": "FeatureVendorXSMTVDot",
+   "description": "SpacemiT Vector Dot Product Extension",
+   "implies": [
+    "zve32f"
+   ]
+  },
+  "xsmtvdotii": {
+   "def": "FeatureVendorXSMTVDotII",
+   "description": "SpacemiT Vector Extension for Matrix 2.0",
+   "implies": [
+    "zve32f"
+   ]
+  },
+  "xsfcease": {
+   "def": "FeatureVendorXSfcease",
+   "description": "SiFive sf.cease Instruction",
+   "implies": []
+  },
+  "xsfmclic": {
+   "def": "FeatureVendorXSfmclic",
+   "description": "SiFive CLIC Machine-mode CSRs",
+   "implies": []
+  },
+  "xsfmm128t": {
+   "def": "FeatureVendorXSfmm128t",
+   "description": "TE=128 configuration",
+   "implies": [
+    "xsfmmbase"
+   ]
+  },
+  "xsfmm16t": {
+   "def": "FeatureVendorXSfmm16t",
+   "description": "TE=16 configuration",
+   "implies": [
+    "xsfmmbase"
+   ]
+  },
+  "xsfmm32a": {
+   "def": "FeatureVendorXSfmm32a",
+   "description": "TEW=32-bit accumulation operands - int: 8b; float: fp16, bf16, fp32",
+   "implies": [
+    "xsfmm32a16f",
+    "xsfmm32a32f",
+    "xsfmm32a8i"
+   ]
+  },
+  "xsfmm32a16f": {
+   "def": "FeatureVendorXSfmm32a16f",
+   "description": "TEW=32-bit accumulation, operands - float: 16b, widen=2 (IEEE, BF)",
+   "implies": [
+    "xsfmmbase",
+    "zve32f"
+   ]
+  },
+  "xsfmm32a32f": {
+   "def": "FeatureVendorXSfmm32a32f",
+   "description": "TEW=32-bit accumulation, operands - float: 32b",
+   "implies": [
+    "xsfmmbase",
+    "zve32f"
+   ]
+  },
+  "xsfmm32a8f": {
+   "def": "FeatureVendorXSfmm32a8f",
+   "description": "TEW=32-bit accumulation, operands - float: fp8",
+   "implies": [
+    "xsfmmbase",
+    "zve32f"
+   ]
+  },
+  "xsfmm32a8i": {
+   "def": "FeatureVendorXSfmm32a8i",
+   "description": "TEW=32-bit accumulation, operands - int: 8b",
+   "implies": [
+    "xsfmmbase"
+   ]
+  },
+  "xsfmm32t": {
+   "def": "FeatureVendorXSfmm32t",
+   "description": "TE=32 configuration",
+   "implies": [
+    "xsfmmbase"
+   ]
+  },
+  "xsfmm64a64f": {
+   "def": "FeatureVendorXSfmm64a64f",
+   "description": "TEW=64-bit accumulation, operands - float: fp64",
+   "implies": [
+    "xsfmmbase",
+    "zve64d"
+   ]
+  },
+  "xsfmm64t": {
+   "def": "FeatureVendorXSfmm64t",
+   "description": "TE=64 configuration",
+   "implies": [
+    "xsfmmbase"
+   ]
+  },
+  "xsfmmbase": {
+   "def": "FeatureVendorXSfmmbase",
+   "description": "All non arithmetic instructions for all TEWs and sf.vtzero",
+   "implies": [
+    "zve32x"
+   ]
+  },
+  "xsfsclic": {
+   "def": "FeatureVendorXSfsclic",
+   "description": "SiFive CLIC Supervisor-mode CSRs",
+   "implies": []
+  },
+  "xsfvcp": {
+   "def": "FeatureVendorXSfvcp",
+   "description": "SiFive Custom Vector Coprocessor Interface Instructions",
+   "implies": [
+    "zve32x"
+   ]
+  },
+  "xsfvfbfexp16e": {
+   "def": "FeatureVendorXSfvfbfexp16e",
+   "description": "SiFive Vector Floating-Point Exponential Function Instruction, BFloat16",
+   "implies": []
+  },
+  "xsfvfexp16e": {
+   "def": "FeatureVendorXSfvfexp16e",
+   "description": "SiFive Vector Floating-Point Exponential Function Instruction, Half Precision",
+   "implies": [
+    "zvfh"
+   ]
+  },
+  "xsfvfexp32e": {
+   "def": "FeatureVendorXSfvfexp32e",
+   "description": "SiFive Vector Floating-Point Exponential Function Instruction, Single Precision",
+   "implies": [
+    "zve32f"
+   ]
+  },
+  "xsfvfexpa": {
+   "def": "FeatureVendorXSfvfexpa",
+   "description": "SiFive Vector Floating-Point Exponential Approximation Instruction",
+   "implies": [
+    "zve32f"
+   ]
+  },
+  "xsfvfexpa64e": {
+   "def": "FeatureVendorXSfvfexpa64e",
+   "description": "SiFive Vector Floating-Point Exponential Approximation Instruction with Double-Precision",
+   "implies": [
+    "xsfvfexpa",
+    "zve64d"
+   ]
+  },
+  "xsfvfnrclipxfqf": {
+   "def": "FeatureVendorXSfvfnrclipxfqf",
+   "description": "SiFive FP32-to-int8 Ranged Clip Instructions",
+   "implies": [
+    "zve32f"
+   ]
+  },
+  "xsfvfwmaccqqq": {
+   "def": "FeatureVendorXSfvfwmaccqqq",
+   "description": "SiFive Matrix Multiply Accumulate Instruction (4-by-4)",
+   "implies": [
+    "zvfbfmin"
+   ]
+  },
+  "xsfvqmaccdod": {
+   "def": "FeatureVendorXSfvqmaccdod",
+   "description": "SiFive Int8 Matrix Multiplication Instructions (2-by-8 and 8-by-2)",
+   "implies": [
+    "zve32x"
+   ]
+  },
+  "xsfvqmaccqoq": {
+   "def": "FeatureVendorXSfvqmaccqoq",
+   "description": "SiFive Int8 Matrix Multiplication Instructions (4-by-8 and 8-by-4)",
+   "implies": [
+    "zve32x"
+   ]
+  },
+  "xsifivecdiscarddlone": {
+   "def": "FeatureVendorXSiFivecdiscarddlone",
+   "description": "SiFive sf.cdiscard.d.l1 Instruction",
+   "implies": []
+  },
+  "xsifivecflushdlone": {
+   "def": "FeatureVendorXSiFivecflushdlone",
+   "description": "SiFive sf.cflush.d.l1 Instruction",
+   "implies": []
+  },
+  "xtheadba": {
+   "def": "FeatureVendorXTHeadBa",
+   "description": "T-Head address calculation instructions",
+   "implies": []
+  },
+  "xtheadbb": {
+   "def": "FeatureVendorXTHeadBb",
+   "description": "T-Head basic bit-manipulation instructions",
+   "implies": []
+  },
+  "xtheadbs": {
+   "def": "FeatureVendorXTHeadBs",
+   "description": "T-Head single-bit instructions",
+   "implies": []
+  },
+  "xtheadcmo": {
+   "def": "FeatureVendorXTHeadCmo",
+   "description": "T-Head cache management instructions",
+   "implies": []
+  },
+  "xtheadcondmov": {
+   "def": "FeatureVendorXTHeadCondMov",
+   "description": "T-Head conditional move instructions",
+   "implies": []
+  },
+  "xtheadfmemidx": {
+   "def": "FeatureVendorXTHeadFMemIdx",
+   "description": "T-Head FP Indexed Memory Operations",
+   "implies": []
+  },
+  "xtheadmac": {
+   "def": "FeatureVendorXTHeadMac",
+   "description": "T-Head Multiply-Accumulate Instructions",
+   "implies": []
+  },
+  "xtheadmemidx": {
+   "def": "FeatureVendorXTHeadMemIdx",
+   "description": "T-Head Indexed Memory Operations",
+   "implies": []
+  },
+  "xtheadmempair": {
+   "def": "FeatureVendorXTHeadMemPair",
+   "description": "T-Head two-GPR Memory Operations",
+   "implies": []
+  },
+  "xtheadsync": {
+   "def": "FeatureVendorXTHeadSync",
+   "description": "T-Head multicore synchronization instructions",
+   "implies": []
+  },
+  "xtheadvdot": {
+   "def": "FeatureVendorXTHeadVdot",
+   "description": "T-Head Vector Extensions for Dot",
+   "implies": [
+    "v"
+   ]
+  },
+  "xqccmi": {
+   "def": "FeatureVendorXqccmi",
+   "description": "Qualcomm 16-bit Instruction Lookup Table",
+   "implies": [
+    "zca",
+    "zicsr"
+   ]
+  },
+  "xqccmp": {
+   "def": "FeatureVendorXqccmp",
+   "description": "Qualcomm 16-bit Push/Pop and Double Moves",
+   "implies": [
+    "zca"
+   ]
+  },
+  "xqccmt": {
+   "def": "FeatureVendorXqccmt",
+   "description": "Qualcomm 16-bit Table Jump",
+   "implies": [
+    "zca",
+    "zicsr"
+   ]
+  },
+  "xqci": {
+   "def": "FeatureVendorXqci",
+   "description": "Qualcomm uC Extension",
+   "implies": [
+    "xqcia",
+    "xqciac",
+    "xqcibi",
+    "xqcibm",
+    "xqcicli",
+    "xqcicm",
+    "xqcics",
+    "xqcicsr",
+    "xqciint",
+    "xqciio",
+    "xqcilb",
+    "xqcili",
+    "xqcilia",
+    "xqcilo",
+    "xqcilsm",
+    "xqcisim",
+    "xqcisls",
+    "xqcisync"
+   ]
+  },
+  "xqcia": {
+   "def": "FeatureVendorXqcia",
+   "description": "Qualcomm uC Arithmetic Extension",
+   "implies": []
+  },
+  "xqciac": {
+   "def": "FeatureVendorXqciac",
+   "description": "Qualcomm uC Load-Store Address Calculation Extension",
+   "implies": [
+    "zca"
+   ]
+  },
+  "xqcibi": {
+   "def": "FeatureVendorXqcibi",
+   "description": "Qualcomm uC Branch Immediate Extension",
+   "implies": [
+    "zca"
+   ]
+  },
+  "xqcibm": {
+   "def": "FeatureVendorXqcibm",
+   "description": "Qualcomm uC Bit Manipulation Extension",
+   "implies": [
+    "zca"
+   ]
+  },
+  "xqcicli": {
+   "def": "FeatureVendorXqcicli",
+   "description": "Qualcomm uC Conditional Load Immediate Extension",
+   "implies": []
+  },
+  "xqcicm": {
+   "def": "FeatureVendorXqcicm",
+   "description": "Qualcomm uC Conditional Move Extension",
+   "implies": [
+    "zca"
+   ]
+  },
+  "xqcics": {
+   "def": "FeatureVendorXqcics",
+   "description": "Qualcomm uC Conditional Select Extension",
+   "implies": []
+  },
+  "xqcicsr": {
+   "def": "FeatureVendorXqcicsr",
+   "description": "Qualcomm uC CSR Extension",
+   "implies": []
+  },
+  "xqciint": {
+   "def": "FeatureVendorXqciint",
+   "description": "Qualcomm uC Interrupts Extension",
+   "implies": [
+    "zca"
+   ]
+  },
+  "xqciio": {
+   "def": "FeatureVendorXqciio",
+   "description": "Qualcomm uC External Input Output Extension",
+   "implies": []
+  },
+  "xqcilb": {
+   "def": "FeatureVendorXqcilb",
+   "description": "Qualcomm uC Long Branch Extension",
+   "implies": [
+    "zca"
+   ]
+  },
+  "xqcili": {
+   "def": "FeatureVendorXqcili",
+   "description": "Qualcomm uC Load Large Immediate Extension",
+   "implies": [
+    "zca"
+   ]
+  },
+  "xqcilia": {
+   "def": "FeatureVendorXqcilia",
+   "description": "Qualcomm uC Large Immediate Arithmetic Extension",
+   "implies": [
+    "zca"
+   ]
+  },
+  "xqcilo": {
+   "def": "FeatureVendorXqcilo",
+   "description": "Qualcomm uC Large Offset Load Store Extension",
+   "implies": [
+    "zca"
+   ]
+  },
+  "xqcilsm": {
+   "def": "FeatureVendorXqcilsm",
+   "description": "Qualcomm uC Load Store Multiple Extension",
+   "implies": []
+  },
+  "xqcisim": {
+   "def": "FeatureVendorXqcisim",
+   "description": "Qualcomm uC Simulation Hint Extension",
+   "implies": [
+    "zca"
+   ]
+  },
+  "xqcisls": {
+   "def": "FeatureVendorXqcisls",
+   "description": "Qualcomm uC Scaled Load Store Extension",
+   "implies": []
+  },
+  "xqcisync": {
+   "def": "FeatureVendorXqcisync",
+   "description": "Qualcomm uC Sync Delay Extension",
+   "implies": [
+    "zca"
+   ]
+  },
+  "xwchc": {
+   "def": "FeatureVendorXwchc",
+   "description": "WCH/QingKe additional compressed opcodes",
+   "implies": [
+    "zca"
+   ]
+  },
+  "zilsd-word-align": {
+   "def": "FeatureZilsdWordAlign",
+   "description": "Allow 4-byte alignment for Zilsd LD/SD instructions",
+   "implies": []
+  },
+  "andes45": {
+   "def": "TuneAndes45",
+   "description": "Andes 45-Series processors",
+   "implies": []
+  },
+  "avoid-vxrm": {
+   "def": "TuneAvoidVXRM",
+   "description": "Instructions that use VXRM should be avoided",
+   "implies": []
+  },
+  "dlen-factor-2": {
+   "def": "TuneDLenFactor2",
+   "description": "Vector unit DLEN(data path width) is half of VLEN",
+   "implies": []
+  },
+  "enable-select-opt": {
+   "def": "TuneEnableSelectOptimize",
+   "description": "Enable the select optimize pass for select loop heuristics",
+   "implies": []
+  },
+  "enable-vsetvli-sched-heuristic": {
+   "def": "TuneEnableVsetvliSchedHeuristic",
+   "description": "Enable vsetvli-based scheduling heuristic",
+   "implies": []
+  },
+  "mips-p8700": {
+   "def": "TuneMIPSP8700",
+   "description": "MIPS p8700 processor",
+   "implies": []
+  },
+  "log-vrgather": {
+   "def": "TuneNLogNVRGather",
+   "description": "Has vrgather.vv with LMUL*log2(LMUL) latency",
+   "implies": []
+  },
+  "optimized-zero-stride-load": {
+   "def": "TuneOptimizedZeroStrideLoad",
+   "description": "Optimized (perform fewer memory operations)\"\n                      \"zero-stride vector load",
+   "implies": []
+  },
+  "sifive7": {
+   "def": "TuneSiFive7",
+   "description": "SiFive 7-Series processors",
+   "implies": []
+  }
+ },
+ "aliases": {},
+ "unresolved": [
+  "FeatureStdExtZvl1024b",
+  "FeatureStdExtZvl128b",
+  "FeatureStdExtZvl256b",
+  "FeatureStdExtZvl512b",
+  "FeatureStdExtZvl64b",
+  "RVA22S64Features",
+  "RVA23S64Features",
+  "RVA23U64Features",
+  "RVB23S64Features"
+ ],
+ "processors": {
+  "an-erbium": ["64bit", "c", "f", "m", "xaifet", "zca", "zicsr", "zmmul"],
+  "andes-a25": ["32bit", "a", "c", "d", "f", "i", "m", "xandesperf", "zaamo", "zalrsc", "zca", "zicsr", "zifencei", "zmmul"],
+  "andes-a45": ["32bit", "a", "c", "d", "f", "i", "m", "unaligned-scalar-mem", "xandesperf", "zaamo", "zalrsc", "zca", "zicsr", "zifencei", "zmmul"],
+  "andes-ax25": ["64bit", "a", "c", "d", "f", "i", "m", "xandesperf", "zaamo", "zalrsc", "zca", "zicsr", "zifencei", "zmmul"],
+  "andes-ax45": ["64bit", "a", "c", "d", "f", "i", "m", "unaligned-scalar-mem", "xandesperf", "zaamo", "zalrsc", "zca", "zicsr", "zifencei", "zmmul"],
+  "andes-ax45mpv": ["64bit", "a", "c", "d", "f", "i", "m", "unaligned-scalar-mem", "v", "xandesperf", "zaamo", "zalrsc", "zca", "zicsr", "zifencei", "zmmul", "zve32f", "zve32x", "zve64d", "zve64f", "zve64x", "zvl32b"],
+  "andes-n45": ["32bit", "a", "c", "d", "f", "i", "m", "unaligned-scalar-mem", "xandesperf", "zaamo", "zalrsc", "zca", "zicsr", "zifencei", "zmmul"],
+  "andes-nx45": ["64bit", "a", "c", "d", "f", "i", "m", "unaligned-scalar-mem", "xandesperf", "zaamo", "zalrsc", "zca", "zicsr", "zifencei", "zmmul"],
+  "et-soc1": ["64bit", "c", "f", "m", "xaifet", "zca", "zicsr", "zmmul"],
+  "gaisler-gr765": ["64bit", "a", "b", "c", "d", "f", "i", "m", "zaamo", "zalrsc", "zba", "zbb", "zbc", "zbkb", "zbkc", "zbkx", "zbs", "zca", "zcb", "zcmop", "zfa", "zfbfmin", "zfh", "zfhmin", "zic64b", "zicbom", "zicfiss", "zicntr", "zicond", "zicsr", "zifencei", "zihpm", "zimop", "zkn", "zknd", "zkne", "zknh", "zkt", "zmmul"],
+  "generic-rv32": ["32bit", "i"],
+  "generic-rv64": ["64bit", "i"],
+  "mips-p8700": ["64bit", "a", "c", "d", "f", "i", "m", "xmipscbop", "xmipscmov", "xmipsexectl", "xmipslsp", "zaamo", "zalrsc", "zba", "zbb", "zca", "zicsr", "zifencei", "zmmul"],
+  "rocket-rv32": ["32bit", "i", "zicsr", "zifencei"],
+  "rocket-rv64": ["64bit", "i", "zicsr", "zifencei"],
+  "rp2350-hazard3": ["32bit", "a", "c", "i", "m", "zaamo", "zalrsc", "zba", "zbb", "zbkb", "zbs", "zca", "zcb", "zcmp", "zicsr", "zifencei", "zmmul"],
+  "sifive-e20": ["32bit", "c", "i", "m", "zca", "zicsr", "zifencei", "zmmul"],
+  "sifive-e21": ["32bit", "a", "c", "i", "m", "zaamo", "zalrsc", "zca", "zicsr", "zifencei", "zmmul"],
+  "sifive-e24": ["32bit", "a", "c", "f", "i", "m", "zaamo", "zalrsc", "zca", "zicsr", "zifencei", "zmmul"],
+  "sifive-e31": ["32bit", "a", "c", "i", "m", "zaamo", "zalrsc", "zca", "zicsr", "zifencei", "zmmul"],
+  "sifive-e34": ["32bit", "a", "c", "f", "i", "m", "zaamo", "zalrsc", "zca", "zicsr", "zifencei", "zmmul"],
+  "sifive-e76": ["32bit", "a", "c", "f", "i", "m", "zaamo", "zalrsc", "zca", "zicsr", "zifencei", "zmmul"],
+  "sifive-p450": ["64bit", "a", "b", "c", "d", "f", "i", "m", "unaligned-scalar-mem", "unaligned-vector-mem", "za64rs", "zaamo", "zalrsc", "zba", "zbb", "zbs", "zca", "zfhmin", "zic64b", "zicbom", "zicbop", "zicboz", "ziccamoa", "ziccif", "zicclsm", "ziccrse", "zicsr", "zifencei", "zihintntl", "zihintpause", "zihpm", "zkt", "zmmul"],
+  "sifive-p470": ["64bit", "a", "b", "c", "d", "f", "i", "m", "unaligned-scalar-mem", "unaligned-vector-mem", "v", "xsifivecdiscarddlone", "xsifivecflushdlone", "za64rs", "zaamo", "zalrsc", "zba", "zbb", "zbs", "zca", "zfhmin", "zic64b", "zicbom", "zicbop", "zicboz", "ziccamoa", "ziccif", "zicclsm", "ziccrse", "zicsr", "zifencei", "zihintntl", "zihintpause", "zihpm", "zkt", "zmmul", "zvbb", "zvbc", "zve32f", "zve32x", "zve64d", "zve64f", "zve64x", "zvkb", "zvkg", "zvkn", "zvknc", "zvkned", "zvkng", "zvknha", "zvknhb", "zvks", "zvksc", "zvksed", "zvksg", "zvksh", "zvkt", "zvl32b"],
+  "sifive-p550": ["64bit", "a", "c", "d", "f", "i", "m", "zaamo", "zalrsc", "zba", "zbb", "zca", "zicsr", "zifencei", "zmmul"],
+  "sifive-p670": ["64bit", "a", "b", "c", "d", "f", "i", "m", "unaligned-scalar-mem", "unaligned-vector-mem", "v", "za64rs", "zaamo", "zalrsc", "zba", "zbb", "zbs", "zca", "zfhmin", "zic64b", "zicbom", "zicbop", "zicboz", "ziccamoa", "ziccif", "zicclsm", "ziccrse", "zicsr", "zifencei", "zihintntl", "zihintpause", "zihpm", "zkt", "zmmul", "zvbb", "zvbc", "zve32f", "zve32x", "zve64d", "zve64f", "zve64x", "zvkb", "zvkg", "zvkn", "zvknc", "zvkned", "zvkng", "zvknha", "zvknhb", "zvks", "zvksc", "zvksed", "zvksg", "zvksh", "zvkt", "zvl32b"],
+  "sifive-p870-d": ["f", "unaligned-scalar-mem", "unaligned-vector-mem", "zama16b", "zfbfmin", "zfh", "zfhmin", "zicsr", "zifencei", "zkr", "zvbc", "zve32f", "zve32x", "zve64x", "zvfbfmin", "zvfbfwma", "zvfh", "zvfhmin", "zvkb", "zvkg", "zvkn", "zvknc", "zvkned", "zvkng", "zvknha", "zvknhb", "zvks", "zvksc", "zvksed", "zvksg", "zvksh", "zvkt", "zvl32b"],
+  "sifive-s21": ["64bit", "a", "c", "i", "m", "zaamo", "zalrsc", "zca", "zicsr", "zifencei", "zmmul"],
+  "sifive-s51": ["64bit", "a", "c", "i", "m", "zaamo", "zalrsc", "zca", "zicsr", "zifencei", "zmmul"],
+  "sifive-s54": ["64bit", "a", "c", "d", "f", "i", "m", "zaamo", "zalrsc", "zca", "zicsr", "zifencei", "zmmul"],
+  "sifive-s76": ["64bit", "a", "c", "d", "f", "i", "m", "zaamo", "zalrsc", "zca", "zicsr", "zifencei", "zihintpause", "zmmul"],
+  "sifive-u54": ["64bit", "a", "c", "d", "f", "i", "m", "zaamo", "zalrsc", "zca", "zicsr", "zifencei", "zmmul"],
+  "sifive-u74": ["64bit", "a", "c", "d", "f", "i", "m", "zaamo", "zalrsc", "zca", "zicsr", "zifencei", "zmmul"],
+  "sifive-x160": ["32bit", "a", "b", "c", "f", "i", "m", "xsfcease", "zaamo", "zalrsc", "zawrs", "zba", "zbb", "zbs", "zca", "zcb", "zce", "zcf", "zcmop", "zcmp", "zcmt", "zfa", "zfbfmin", "zfh", "zfhmin", "zicbom", "zicbop", "zicboz", "zicfilp", "zicond", "zicsr", "zifencei", "zihintntl", "zihintpause", "zihpm", "zimop", "zkt", "zmmul", "zvbb", "zvdot4a8i", "zve32f", "zve32x", "zvfbfa", "zvfbfmin", "zvfbfwma", "zvfh", "zvfhmin", "zvkb", "zvkt", "zvl32b"],
+  "sifive-x180": ["64bit", "a", "b", "c", "d", "f", "i", "m", "v", "xsfcease", "xsfvfbfexp16e", "xsfvfexp16e", "xsfvfexp32e", "xsfvfexpa", "xsifivecflushdlone", "za64rs", "zaamo", "zalrsc", "zawrs", "zba", "zbb", "zbs", "zca", "zcb", "zcd", "zcmop", "zfa", "zfbfmin", "zfh", "zfhmin", "zic64b", "zicbom", "zicbop", "zicboz", "ziccamoa", "ziccif", "ziccrse", "zicfilp", "zicond", "zicsr", "zifencei", "zihintntl", "zihintpause", "zihpm", "zimop", "zkt", "zmmul", "zvbb", "zvdot4a8i", "zve32f", "zve32x", "zve64d", "zve64f", "zve64x", "zvfbfa", "zvfbfmin", "zvfbfwma", "zvfh", "zvfhmin", "zvkb", "zvkt", "zvl32b"],
+  "sifive-x280": ["64bit", "a", "c", "d", "f", "i", "m", "v", "zaamo", "zalrsc", "zba", "zbb", "zca", "zfh", "zfhmin", "zicsr", "zifencei", "zmmul", "zve32f", "zve32x", "zve64d", "zve64f", "zve64x", "zvfh", "zvfhmin", "zvl32b"],
+  "sifive-x390": ["64bit", "a", "b", "c", "d", "f", "i", "m", "v", "xsifivecdiscarddlone", "xsifivecflushdlone", "za64rs", "zaamo", "zalrsc", "zawrs", "zba", "zbb", "zbs", "zca", "zcb", "zcmop", "zfa", "zfbfmin", "zfh", "zfhmin", "zic64b", "zicbom", "zicbop", "zicboz", "ziccamoa", "ziccif", "ziccrse", "zicfilp", "zicfiss", "zicntr", "zicond", "zicsr", "zifencei", "zihintntl", "zihintpause", "zihpm", "zimop", "zkr", "zkt", "zmmul", "zvbb", "zve32f", "zve32x", "zve64d", "zve64f", "zve64x", "zvfbfmin", "zvfbfwma", "zvfh", "zvfhmin", "zvkb", "zvkt", "zvl32b"],
+  "spacemit-a100": ["f", "smepmp", "smnpm", "smstateen", "sspm", "unaligned-scalar-mem", "xsmtvdotii", "zbc", "zbkc", "zfbfmin", "zfh", "zfhmin", "zicsr", "zvbc", "zve32f", "zve32x", "zve64x", "zvfbfmin", "zvfbfwma", "zvfh", "zvfhmin", "zvkb", "zvkg", "zvkn", "zvkned", "zvkng", "zvknha", "zvknhb", "zvks", "zvksc", "zvksed", "zvksg", "zvksh", "zvkt", "zvl32b"],
+  "spacemit-x100": ["f", "smepmp", "smnpm", "smstateen", "sspm", "unaligned-scalar-mem", "xsmtvdot", "zbc", "zbkc", "zfbfmin", "zfh", "zfhmin", "zicsr", "zvbc", "zve32f", "zve32x", "zve64x", "zvfbfmin", "zvfbfwma", "zvfh", "zvfhmin", "zvkb", "zvkg", "zvkn", "zvkned", "zvkng", "zvknha", "zvknhb", "zvks", "zvksc", "zvksed", "zvksg", "zvksh", "zvkt", "zvl32b"],
+  "spacemit-x60": ["d", "f", "sscofpmf", "sstc", "svnapot", "unaligned-scalar-mem", "v", "xsmtvdot", "zbc", "zbkc", "zfh", "zfhmin", "zicond", "zicsr", "zve32f", "zve32x", "zve64d", "zve64f", "zve64x", "zvfh", "zvfhmin", "zvkt", "zvl32b"],
+  "syntacore-scr1-base": ["32bit", "c", "i", "zca", "zicsr", "zifencei"],
+  "syntacore-scr1-max": ["32bit", "c", "i", "m", "zca", "zicsr", "zifencei", "zmmul"],
+  "syntacore-scr3-rv32": ["32bit", "c", "i", "m", "zca", "zicsr", "zifencei", "zmmul"],
+  "syntacore-scr3-rv64": ["64bit", "a", "c", "i", "m", "zaamo", "zalrsc", "zca", "zicsr", "zifencei", "zmmul"],
+  "syntacore-scr4-rv32": ["32bit", "c", "d", "f", "i", "m", "zca", "zicsr", "zifencei", "zmmul"],
+  "syntacore-scr4-rv64": ["64bit", "a", "c", "d", "f", "i", "m", "zaamo", "zalrsc", "zca", "zicsr", "zifencei", "zmmul"],
+  "syntacore-scr5-rv32": ["32bit", "a", "c", "d", "f", "i", "m", "zaamo", "zalrsc", "zca", "zicsr", "zifencei", "zmmul"],
+  "syntacore-scr5-rv64": ["64bit", "a", "c", "d", "f", "i", "m", "zaamo", "zalrsc", "zca", "zicsr", "zifencei", "zmmul"],
+  "syntacore-scr7": ["64bit", "a", "c", "d", "f", "i", "m", "v", "zaamo", "zalrsc", "zba", "zbb", "zbc", "zbkb", "zbkc", "zbkx", "zbs", "zca", "zicsr", "zifencei", "zkn", "zknd", "zkne", "zknh", "zmmul", "zve32f", "zve32x", "zve64d", "zve64f", "zve64x", "zvl32b"],
+  "tt-ascalon-x": ["f", "smaia", "smmpm", "smnpm", "smrnmi", "smstateen", "ssaia", "ssstrict", "unaligned-scalar-mem", "unaligned-vector-mem", "zfbfmin", "zfh", "zfhmin", "zicsr", "zkr", "zvbc", "zve32f", "zve32x", "zve64x", "zvfbfmin", "zvfbfwma", "zvfh", "zvfhmin", "zvkb", "zvkg", "zvkn", "zvkned", "zvkng", "zvknha", "zvknhb", "zvkt", "zvl32b"],
+  "tt-ascalon-xg": ["f", "smaia", "smmpm", "smnpm", "smrnmi", "smstateen", "ssaia", "ssstrict", "unaligned-scalar-mem", "unaligned-vector-mem", "zfbfmin", "zfh", "zfhmin", "zicsr", "zkr", "zvbc", "zve32f", "zve32x", "zve64x", "zvfbfmin", "zvfbfwma", "zvfh", "zvfhmin", "zvl32b"],
+  "xiangshan-kunminghu": ["f", "smaia", "smcsrind", "smdbltrp", "smmpm", "smnpm", "smrnmi", "smstateen", "ssaia", "sscsrind", "ssdbltrp", "sspm", "ssstrict", "zaamo", "zacas", "zbc", "zbkb", "zbkc", "zbkx", "zfh", "zfhmin", "zicsr", "zkn", "zknd", "zkne", "zknh", "zks", "zksed", "zksh", "zve32f", "zve32x", "zvfh", "zvfhmin", "zvl32b"],
+  "xiangshan-nanhu": ["64bit", "a", "c", "d", "f", "i", "m", "svinval", "zaamo", "zalrsc", "zba", "zbb", "zbc", "zbkb", "zbkc", "zbkx", "zbs", "zca", "zicbom", "zicboz", "zicsr", "zifencei", "zkn", "zknd", "zkne", "zknh", "zksed", "zksh", "zmmul"],
+  "xt-c910v2": ["d", "f", "unaligned-scalar-mem", "xtheadba", "xtheadbb", "xtheadbs", "xtheadcmo", "xtheadcondmov", "xtheadfmemidx", "xtheadmac", "xtheadmemidx", "xtheadmempair", "xtheadsync", "zbc", "zbkc", "zca", "zcd", "zfbfmin", "zfh", "zfhmin", "zicsr"],
+  "xt-c920v2": ["d", "f", "unaligned-scalar-mem", "v", "xtheadba", "xtheadbb", "xtheadbs", "xtheadcmo", "xtheadcondmov", "xtheadfmemidx", "xtheadmac", "xtheadmemidx", "xtheadmempair", "xtheadsync", "xtheadvdot", "zbc", "zbkc", "zca", "zcd", "zfbfmin", "zfh", "zfhmin", "zicsr", "zve32f", "zve32x", "zve64d", "zve64f", "zve64x", "zvfbfmin", "zvfbfwma", "zvfh", "zvfhmin", "zvl32b"]
+ }
+}
