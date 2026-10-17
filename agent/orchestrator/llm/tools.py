@@ -331,226 +331,127 @@ TOOL_SHELL = {
     },
 }
 
-# SLM-specific tools
-TOOL_ANALYZE_DATASET = {
-    "type": "function",
-    "function": {
-        "name": "analyze_dataset",
-        "description": "Analyze dataset statistics: vocab size, token counts, coverage.",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "dataset_path": {
-                    "type": "string",
-                    "description": "Path to raw dataset directory",
-                },
-            },
-            "required": ["dataset_path"],
-        },
-    },
-}
+# SLM-specific tools. They drive the pipeline the kernel actually ships
+# (SLM/DATA.md): ground-truth corpora -> word-level vocabulary within the
+# kernel's 1,024-word budget -> train -> export to the AUTON flat format ->
+# parity with the in-kernel forward pass -> the chat eval. Scripts are run from
+# the repository; paths an agent gives are resolved against its workspace first.
 
-TOOL_TOKENIZE_DATA = {
-    "type": "function",
-    "function": {
-        "name": "tokenize_data",
-        "description": "Tokenize text data using BPE/WordPiece/SentencePiece.",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "input_path": {
-                    "type": "string",
-                    "description": "Path to raw text files",
-                },
-                "output_path": {
-                    "type": "string",
-                    "description": "Output path for tokenized data",
-                },
-                "vocab_size": {
-                    "type": "integer",
-                    "description": "Vocabulary size. Default: 32000.",
-                },
-            },
-            "required": ["input_path", "output_path"],
-        },
-    },
-}
+def _slm(name: str, description: str, properties: dict, required: list[str]) -> dict:
+    return {"type": "function", "function": {
+        "name": name, "description": description,
+        "parameters": {"type": "object", "properties": properties, "required": required}}}
 
-TOOL_VALIDATE_ARCHITECTURE = {
-    "type": "function",
-    "function": {
-        "name": "validate_architecture",
-        "description": "Validate model architecture config YAML.",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "config_path": {
-                    "type": "string",
-                    "description": "Path to model config YAML",
-                },
-            },
-            "required": ["config_path"],
-        },
-    },
-}
 
-TOOL_ESTIMATE_FLOPS = {
-    "type": "function",
-    "function": {
-        "name": "estimate_flops",
-        "description": "Estimate compute and memory requirements for model.",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "config_path": {
-                    "type": "string",
-                    "description": "Path to model config YAML",
-                },
-            },
-            "required": ["config_path"],
-        },
-    },
-}
+_P = lambda d: {"type": "string", "description": d}  # noqa: E731
 
-TOOL_TRAIN_MODEL = {
-    "type": "function",
-    "function": {
-        "name": "train_model",
-        "description": "Train an SLM model using PyTorch. Runs SLM/scripts/train.py with config.",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "config_path": {
-                    "type": "string",
-                    "description": "Path to model config YAML (e.g. 'SLM/configs/tiny_10M.yaml')",
-                },
-                "dataset_path": {
-                    "type": "string",
-                    "description": "Path to processed dataset",
-                },
-                "max_steps": {
-                    "type": "integer",
-                    "description": "Maximum training steps. Default: 10000.",
-                },
-            },
-            "required": ["config_path", "dataset_path"],
-        },
-    },
-}
+TOOL_ANALYZE_DATASET = _slm(
+    "analyze_dataset", "Dataset statistics: records, words, distinct words, field coverage.",
+    {"dataset_path": _P("a JSONL file or a directory of them")}, ["dataset_path"])
 
-TOOL_EVALUATE_MODEL = {
-    "type": "function",
-    "function": {
-        "name": "evaluate_model",
-        "description": "Evaluate a trained model checkpoint. Computes perplexity and benchmarks.",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "checkpoint_path": {
-                    "type": "string",
-                    "description": "Path to model checkpoint",
-                },
-                "test_dataset": {
-                    "type": "string",
-                    "description": "Path to test dataset",
-                },
-            },
-            "required": ["checkpoint_path", "test_dataset"],
-        },
-    },
-}
+TOOL_BUILD_CORPUS = _slm(
+    "build_corpus",
+    "Regenerate the kernel training corpora from ground truth into output_dir: "
+    "os_chat.jsonl (what the kernel prints) and hardware_kernel.jsonl (this machine's CPU). "
+    "Never write answers by hand; change the generator or its source instead.",
+    {"output_dir": _P("directory in the workspace, e.g. slm/data")}, ["output_dir"])
 
-TOOL_QUANTIZE_MODEL = {
-    "type": "function",
-    "function": {
-        "name": "quantize_model",
-        "description": "Quantize model to INT4/INT8 using GPTQ or AWQ.",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "checkpoint_path": {
-                    "type": "string",
-                    "description": "Path to model checkpoint",
-                },
-                "bits": {
-                    "type": "integer",
-                    "description": "Quantization bits: 4 or 8. Default: 4.",
-                },
-                "output_path": {
-                    "type": "string",
-                    "description": "Output path for quantized model",
-                },
-            },
-            "required": ["checkpoint_path", "output_path"],
-        },
-    },
-}
+TOOL_CHECK_VOCAB_BUDGET = _slm(
+    "check_vocab_budget",
+    "Can these corpora train the model the kernel runs? The kernel tokenizer is word-level "
+    "with a 1,024-word vocabulary; reports answer/prompt <unk> rates as one training set. "
+    "A kernel training set must have 0% answer <unk>.",
+    {"datasets": {"type": "array", "items": {"type": "string"}},
+     "vocab_size": {"type": "integer", "description": "default 1024 (chat_tiny, chat_small)"}},
+    ["datasets"])
 
-TOOL_EXPORT_GGUF = {
-    "type": "function",
-    "function": {
-        "name": "export_gguf",
-        "description": "Export model to GGUF format for kernel integration.",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "model_path": {
-                    "type": "string",
-                    "description": "Path to quantized model",
-                },
-                "output_path": {
-                    "type": "string",
-                    "description": "Output GGUF file path",
-                },
-            },
-            "required": ["model_path", "output_path"],
-        },
-    },
-}
+TOOL_TOKENIZE_DATA = _slm(
+    "tokenize_data",
+    "Build the word-level vocabulary the kernel's tokenizer uses, and the "
+    "<bos> question <sep> answer <eos> token stream train_model reads.",
+    {"input_path": _P("a JSONL corpus or a directory of them"),
+     "output_path": _P("vocabulary JSON to write"),
+     "tokens_path": _P("token stream JSONL to write (default: <output_path>.tokens.jsonl)"),
+     "vocab_size": {"type": "integer", "description": "default 1024: the kernel budget"}},
+    ["input_path", "output_path"])
 
-TOOL_EXPORT_ONNX = {
-    "type": "function",
-    "function": {
-        "name": "export_onnx",
-        "description": "Export model to ONNX format.",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "model_path": {
-                    "type": "string",
-                    "description": "Path to model checkpoint",
-                },
-                "output_path": {
-                    "type": "string",
-                    "description": "Output ONNX file path",
-                },
-            },
-            "required": ["model_path", "output_path"],
-        },
-    },
-}
+TOOL_VALIDATE_ARCHITECTURE = _slm(
+    "validate_architecture",
+    "Validate a model config YAML, and check it against what the kernel can run "
+    "(vocab within the tokenizer budget, model within the boot memory budget).",
+    {"config_path": _P("e.g. SLM/configs/chat_tiny.yaml")}, ["config_path"])
 
-TOOL_INTEGRATE_SLM = {
-    "type": "function",
-    "function": {
-        "name": "integrate_slm",
-        "description": "Copy SLM model to kernel workspace and update Makefile.",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "model_path": {
-                    "type": "string",
-                    "description": "Path to GGUF model file",
-                },
-                "kernel_arch": {
-                    "type": "string",
-                    "description": "Target architecture: x86_64, aarch64, or riscv64",
-                },
-            },
-            "required": ["model_path", "kernel_arch"],
-        },
-    },
-}
+TOOL_ESTIMATE_FLOPS = _slm(
+    "estimate_flops", "Parameters, FLOPs per token, and model size at fp32 and int8.",
+    {"config_path": _P("model config YAML")}, ["config_path"])
+
+TOOL_TRAIN_MODEL = _slm(
+    "train_model", "Train with SLM/scripts/train.py on a token stream; writes checkpoints.",
+    {"config_path": _P("e.g. SLM/configs/chat_tiny.yaml"),
+     "dataset_path": _P("token stream JSONL from tokenize_data"),
+     "output_dir": _P("checkpoint directory (default slm/work)"),
+     "max_steps": {"type": "integer", "description": "default 10000"}},
+    ["config_path", "dataset_path"])
+
+TOOL_EVALUATE_MODEL = _slm(
+    "evaluate_model",
+    "Held-out loss and perplexity of a checkpoint (SLM/scripts/evaluate.py). A training "
+    "signal only: the bar a kernel model must meet is run_chat_eval.",
+    {"checkpoint_path": _P("checkpoint .pt"), "test_dataset": _P("token stream JSONL")},
+    ["checkpoint_path", "test_dataset"])
+
+TOOL_QUANTIZE_MODEL = _slm(
+    "quantize_model",
+    "Symmetric per-tensor INT8/INT4 quantization of a checkpoint (SLM/scripts/quantize.py). "
+    "For the kernel, prefer export_auton with quant int8.",
+    {"checkpoint_path": _P("checkpoint .pt"), "output_path": _P("quantized payload"),
+     "bits": {"type": "integer", "description": "8 or 4; default 8"}},
+    ["checkpoint_path", "output_path"])
+
+TOOL_EXPORT_AUTON = _slm(
+    "export_auton",
+    "Export a checkpoint to the AUTON flat model format, the only format every kernel must "
+    "load (subsystems/slm.md: MODEL_FORMAT_AUTON).",
+    {"checkpoint_path": _P("checkpoint .pt"), "vocab_path": _P("vocabulary JSON"),
+     "output_path": _P("model .bin to write"),
+     "quant": {"type": "string", "description": "fp32 (default) or int8"}},
+    ["checkpoint_path", "vocab_path", "output_path"])
+
+TOOL_RUN_PARITY = _slm(
+    "run_parity",
+    "Prove the kernel's forward pass generates the same tokens as PyTorch on this model "
+    "(tests/kernel/neural_parity.sh against the run's kernel tree). Exit 0 is a pass.",
+    {"model_path": _P("model .bin"), "checkpoint_path": _P("checkpoint .pt"),
+     "vocab_path": _P("vocabulary JSON")},
+    ["model_path", "checkpoint_path", "vocab_path"])
+
+TOOL_RUN_CHAT_EVAL = _slm(
+    "run_chat_eval",
+    "Boot the kernel with this model and score its chat on the frozen 50-prompt eval "
+    "(scripts/eval.sh). The bar: >=70% correct-or-honest and <10% garbage. Free-form answers "
+    "are queued for a person; the report says how many.",
+    {"model_path": _P("model .bin"), "json_path": _P("where to write the scored results")},
+    ["model_path"])
+
+TOOL_EXPORT_GGUF = _slm(
+    "export_gguf",
+    "Export to GGUF for host tools. The kernel does NOT load GGUF; use export_auton for it.",
+    {"model_path": _P("checkpoint"), "output_path": _P("GGUF file")},
+    ["model_path", "output_path"])
+
+TOOL_EXPORT_ONNX = _slm(
+    "export_onnx",
+    "Export to ONNX for host tools. The kernel does NOT load ONNX; use export_auton for it.",
+    {"model_path": _P("checkpoint"), "output_path": _P("ONNX file")},
+    ["model_path", "output_path"])
+
+TOOL_INTEGRATE_SLM = _slm(
+    "integrate_slm",
+    "Place an exported AUTON model in the kernel workspace at models/auton-slm.bin, where "
+    "`make iso-neural MODEL=models/auton-slm.bin` boots it as a module.",
+    {"model_path": _P("exported model .bin (export_auton)"),
+     "kernel_arch": _P("x86_64, aarch64 or riscv64")},
+    ["model_path", "kernel_arch"])
 
 # Tool sets by agent role
 # Planning as structured calls, not JSON in prose. w18 R1's manager invented
@@ -725,6 +626,8 @@ DATA_SCIENTIST_TOOLS = [
     TOOL_EDIT_FILE,
     TOOL_LIST_FILES,
     TOOL_ANALYZE_DATASET,
+    TOOL_BUILD_CORPUS,
+    TOOL_CHECK_VOCAB_BUDGET,
     TOOL_TOKENIZE_DATA,
     TOOL_SHELL,
 ]
@@ -745,6 +648,9 @@ TRAINING_TOOLS = [
     TOOL_TRAIN_MODEL,
     TOOL_EVALUATE_MODEL,
     TOOL_QUANTIZE_MODEL,
+    TOOL_EXPORT_AUTON,
+    TOOL_RUN_PARITY,
+    TOOL_RUN_CHAT_EVAL,
     TOOL_EXPORT_GGUF,
     TOOL_EXPORT_ONNX,
     TOOL_SHELL,

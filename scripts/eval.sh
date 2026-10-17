@@ -69,7 +69,7 @@ if [ "$MODEL" = "rule" ]; then
 	# disagree on "how much memory" for reasons unrelated to the model.
 	MEM="${MEM:-256M}"
 	make -C "$KTREE" iso >/dev/null 2>&1 || { echo "iso build failed in $KTREE" >&2; exit 1; }
-	FINGERPRINT="rule:$(shasum -a 256 "$ROOT/kernels/x86_64/build/kernel.bin" | cut -c1-16)"
+	FINGERPRINT="rule:$(shasum -a 256 "$KTREE/build/kernel.bin" | cut -c1-16)"
 else
 	case "$MODEL" in /*) ;; *) MODEL="$PWD/$MODEL";; esac
 	[ -f "$MODEL" ] || { echo "no such model: $MODEL" >&2; exit 2; }

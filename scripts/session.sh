@@ -39,17 +39,19 @@ while [ $# -gt 0 ]; do
 	esac
 done
 
+# The tree is a parameter, as in eval.sh: a generated kernel lives in a testing area.
+KTREE="${KERNEL_TREE:-$ROOT/kernels/x86_64}"
 if [ "$MODEL" = "rule" ]; then
-	ISO="$ROOT/kernels/x86_64/build/auton.iso"
+	ISO="$KTREE/build/auton.iso"
 	MEM="${MEM:-256M}"
-	make -C "$ROOT/kernels/x86_64" iso >/dev/null 2>&1 || { echo "build failed" >&2; exit 1; }
-	FINGERPRINT="rule:$(shasum -a 256 "$ROOT/kernels/x86_64/build/kernel.bin" | cut -c1-16)"
+	make -C "$KTREE" iso >/dev/null 2>&1 || { echo "build failed" >&2; exit 1; }
+	FINGERPRINT="rule:$(shasum -a 256 "$KTREE/build/kernel.bin" | cut -c1-16)"
 else
 	case "$MODEL" in /*) ;; *) MODEL="$PWD/$MODEL";; esac
 	[ -f "$MODEL" ] || { echo "no such model: $MODEL" >&2; exit 2; }
-	ISO="$ROOT/kernels/x86_64/build/auton-neural.iso"
+	ISO="$KTREE/build/auton-neural.iso"
 	MEM="${MEM:-256M}"
-	make -C "$ROOT/kernels/x86_64" iso-neural MODEL="$MODEL" >/dev/null 2>&1 \
+	make -C "$KTREE" iso-neural MODEL="$MODEL" >/dev/null 2>&1 \
 		|| { echo "neural iso build failed" >&2; exit 1; }
 	FINGERPRINT="neural:$(shasum -a 256 "$MODEL" | cut -c1-16)"
 fi

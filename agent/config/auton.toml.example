@@ -123,3 +123,13 @@ max_iterations = 50
 research = false
 # Extra hosts a scout may fetch from, beyond vendor_research.DEFAULT_HOSTS
 fetch_hosts = []
+
+[workflow]
+# kernel_build (default) | slm_training | dual (kernel and SLM together).
+# scripts/slm_run.py sets slm_training in its own testing-area workspace.
+mode = "kernel_build"
+
+[slm]
+# The kernel tree run_parity and run_chat_eval build and boot the model in. Empty in
+# dual mode (the run's own tree is used); scripts/slm_run.py materialises a base here.
+kernel_tree = ""

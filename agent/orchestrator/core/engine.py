@@ -374,6 +374,15 @@ class OrchestrationEngine:
                 self._agents[f"training-{i+1:02d}"] = agent
                 self.scheduler.register_agent("training", agent)
 
+            # The kernel tree parity and the chat eval run against: the run's own
+            # tree when it also builds a kernel (dual), else [slm] kernel_tree, a
+            # materialised base in a testing area (scripts/kernel-base.sh).
+            tree = self.config.get("slm", {}).get("kernel_tree") or (
+                str(self.workspace.path) if self.workflow_mode == WorkflowMode.DUAL else None)
+            for a in self._agents.values():
+                if isinstance(a, TrainingAgent):
+                    a.kernel_tree = tree
+
             logger.info(
                 "Initialized SLM agents: 1 data scientist, 1 model architect, %d training",
                 training_count,

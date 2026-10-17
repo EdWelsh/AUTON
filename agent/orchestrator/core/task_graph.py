@@ -252,84 +252,57 @@ class TaskGraph:
         node.state = TaskState.READY
 
     def create_slm_training_tasks(self, goal: str) -> list[dict[str, Any]]:
-        """Create task graph for SLM training workflow."""
-        tasks = []
+        """The SLM pipeline the kernel actually ships (SLM/DATA.md), as tasks.
 
-        # 1. Data Preparation
-        tasks.append({
-            "task_id": "slm-data-prep",
-            "title": "Prepare SLM training dataset",
-            "description": "Clean, tokenize, and split dataset",
-            "subsystem": "slm",
-            "assigned_to": "data_scientist",
-            "dependencies": [],
-            "priority": 1,
-        })
+        Ground-truth corpora within the kernel tokenizer's budget -> config ->
+        train -> evaluate, export to the AUTON format, parity with the in-kernel
+        forward pass and the chat eval -> int8 only if it holds -> placed where
+        the kernel build boots it. Every task names what it produces.
+        """
+        def task(task_id, title, assigned_to, deps, priority, produces, description, criteria):
+            return {"task_id": task_id, "title": title, "subsystem": "slm",
+                    "assigned_to": assigned_to, "dependencies": deps, "priority": priority,
+                    "produces": produces, "description": description,
+                    "acceptance_criteria": criteria, "spec_reference": "SLM/DATA.md"}
 
-        # 2. Architecture Design
-        tasks.append({
-            "task_id": "slm-arch-design",
-            "title": "Design SLM architecture",
-            "description": "Create model config YAML, estimate FLOPs",
-            "subsystem": "slm",
-            "assigned_to": "model_architect",
-            "dependencies": [],
-            "priority": 1,
-        })
-
-        # 3. Training
-        tasks.append({
-            "task_id": "slm-training",
-            "title": "Train SLM model",
-            "description": "Execute training loop, save checkpoints",
-            "subsystem": "slm",
-            "assigned_to": "training",
-            "dependencies": ["slm-data-prep", "slm-arch-design"],
-            "priority": 2,
-        })
-
-        # 4. Evaluation
-        tasks.append({
-            "task_id": "slm-evaluation",
-            "title": "Evaluate trained model",
-            "description": "Run benchmarks, select best checkpoint",
-            "subsystem": "slm",
-            "assigned_to": "training",
-            "dependencies": ["slm-training"],
-            "priority": 3,
-        })
-
-        # 5. Quantization
-        tasks.append({
-            "task_id": "slm-quantization",
-            "title": "Quantize SLM to INT4",
-            "description": "Compress model using GPTQ",
-            "subsystem": "slm",
-            "assigned_to": "training",
-            "dependencies": ["slm-evaluation"],
-            "priority": 4,
-        })
-
-        # 6. Export
-        tasks.append({
-            "task_id": "slm-export",
-            "title": "Export SLM to GGUF",
-            "description": "Convert to GGUF format, validate",
-            "subsystem": "slm",
-            "assigned_to": "training",
-            "dependencies": ["slm-quantization"],
-            "priority": 5,
-        })
-
-        # 7. Integration
-        tasks.append({
-            "task_id": "slm-integration",
-            "title": "Integrate SLM into kernel",
-            "description": "Copy to kernel workspace, update Makefile, test",
-            "subsystem": "slm",
-            "assigned_to": "integrator",
-            "dependencies": ["slm-export"],
-            "priority": 6,
-        })
-
-        return tasks
+        return [
+            task("slm-data-prep", "Build the kernel training set from ground truth",
+                 "data_scientist", [], 1,
+                 ["slm/data/os_chat.jsonl", "slm/data/hardware_kernel.jsonl",
+                  "slm/work/vocab.json", "slm/work/tokens.jsonl"],
+                 f"Goal: {goal}. build_corpus into slm/data; check_vocab_budget on both files "
+                 "as one set; tokenize_data with vocab_size 1024 to slm/work/vocab.json and "
+                 "slm/work/tokens.jsonl.",
+                 ["check_vocab_budget reports 0% answer <unk>", "no answer written by hand"]),
+            task("slm-arch-design", "Choose the model configuration", "model_architect", [], 1,
+                 ["slm/config.yaml"],
+                 "Start from SLM/configs/chat_tiny.yaml; copy it to slm/config.yaml, changing it "
+                 "only for a measured reason. validate_architecture and estimate_flops.",
+                 ["vocab_size <= 1024", "fits the boot memory budget, or int8 is planned"]),
+            task("slm-training", "Train the model", "training",
+                 ["slm-data-prep", "slm-arch-design"], 2, ["slm/work/final.pt"],
+                 "train_model with slm/config.yaml on slm/work/tokens.jsonl, output slm/work.",
+                 ["training loss decreases", "a final checkpoint exists"]),
+            task("slm-evaluation", "Evaluate: parity and the chat eval", "training",
+                 ["slm-training"], 3, ["slm/work/auton-slm-fp32.bin", "slm/eval/fp32.json"],
+                 "evaluate_model for held-out loss; export_auton (fp32) to "
+                 "slm/work/auton-slm-fp32.bin; run_parity; run_chat_eval with json_path "
+                 "slm/eval/fp32.json.",
+                 ["run_parity exits 0", "chat eval >= 70% correct-or-honest and < 10% garbage, "
+                  "or the shortfall reported as measured"]),
+            task("slm-quantization", "Try int8, keep it only if it holds", "training",
+                 ["slm-evaluation"], 4, ["slm/work/auton-slm-int8.bin", "slm/eval/int8.json"],
+                 "export_auton with quant int8; run_parity; run_chat_eval. Keep int8 only if parity "
+                 "passes and the chat score does not fall.",
+                 ["the choice between fp32 and int8 is stated with both scores"]),
+            task("slm-export", "Export the chosen model", "training", ["slm-quantization"], 5,
+                 ["slm/export/auton-slm.bin"],
+                 "Copy the chosen AUTON-format model and its manifest to slm/export/. GGUF/ONNX "
+                 "only if asked for host tools.",
+                 ["the file loads as MODEL_FORMAT_AUTON"]),
+            task("slm-integration", "Place the model where the kernel boots it", "integrator",
+                 ["slm-export"], 6, ["models/auton-slm.bin"],
+                 "integrate_slm with slm/export/auton-slm.bin; the kernel boots it with "
+                 "`make iso-neural MODEL=models/auton-slm.bin`.",
+                 ["the boot log shows [SLM] Backend: neural"]),
+        ]
