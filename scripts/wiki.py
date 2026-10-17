@@ -99,12 +99,22 @@ def numbers_block() -> str:
 """
 
 
+NUMBERS = ("<!-- numbers -->", "<!-- /numbers -->")
+
+
+def numbers_span(home: str) -> tuple[int, int] | None:
+    """Where the generated numbers sit in Home.md's text, or None without the markers."""
+    start, end = NUMBERS
+    if start not in home or end not in home:
+        return None
+    return home.index(start) + len(start), home.index(end)
+
+
 def build() -> None:
     (WIKI / "Specialists.md").write_text(specialists_page())
     home = (WIKI / "Home.md").read_text()
-    start, end = "<!-- numbers -->", "<!-- /numbers -->"
-    if start in home:
-        a, b = home.index(start) + len(start), home.index(end)
+    if span := numbers_span(home):
+        a, b = span
         home = home[:a] + "\n" + numbers_block() + home[b:]
         (WIKI / "Home.md").write_text(home)
     print(f"built {WIKI.relative_to(ROOT)}: Specialists.md, Home.md numbers")
@@ -129,6 +139,9 @@ def check() -> int:
     stale = []
     if (WIKI / "Specialists.md").read_text() != specialists_page():
         stale.append("Specialists.md")
+    home = (WIKI / "Home.md").read_text()
+    if (span := numbers_span(home)) and home[span[0]:span[1]] != "\n" + numbers_block():
+        stale.append("Home.md")
     for b in bad:
         print(b)
     for s in stale:

@@ -18,31 +18,83 @@ from __future__ import annotations
 
 import argparse
 import os
+import signal
 import subprocess
 import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / ".artifacts" / "slm"
-TEMPLATE = ROOT / "agent" / "config" / "auton.toml.example"
+TEMPLATES = (ROOT / "agent" / "config" / "auton.toml",
+             ROOT / "agent" / "config" / "auton.toml.example")
+GRACE = 60                  # seconds between SIGTERM (pause) and SIGKILL
+
+
+def config_template() -> Path:
+    """The operator's agent/config/auton.toml (its keys and endpoints), else the example."""
+    return next(p for p in TEMPLATES if p.exists())
+
+
+def run_bounded(cmd: list[str], cwd: Path, log, seconds: int) -> int:
+    """Run ``cmd`` for at most ``seconds``, as `timeout -k GRACE` did, without needing it.
+
+    At the limit, or on Ctrl-C, the child's process group gets SIGTERM, which the
+    engine takes as "pause": it commits the work in flight. SIGKILL follows after
+    GRACE seconds, or at a second Ctrl-C. The child has its own session, so the
+    terminal's Ctrl-C reaches it only this way; with `timeout` it did not reach
+    it at all, and the run outlived the launcher with no limit."""
+    p = subprocess.Popen(cmd, cwd=cwd, stdout=log, stderr=subprocess.STDOUT,
+                         start_new_session=True)
+    try:
+        return p.wait(timeout=seconds)
+    except subprocess.TimeoutExpired:
+        rc = 124                                    # timeout(1)'s "timed out"
+    except KeyboardInterrupt:
+        rc = 130
+    _signal_group(p, signal.SIGTERM)
+    try:
+        p.wait(timeout=GRACE)
+    except (subprocess.TimeoutExpired, KeyboardInterrupt):
+        _signal_group(p, signal.SIGKILL)
+        p.wait()
+    return rc
+
+
+def _signal_group(p: subprocess.Popen, sig: int) -> None:
+    try:
+        os.killpg(p.pid, sig)
+    except ProcessLookupError:
+        pass
+
+
+def patched(template: Path, patches: dict[str, str]) -> str:
+    """``template`` with every line that starts with a key replaced by its value.
+
+    Every key must be found: an operator's auton.toml older than the example
+    could lack one, and a run that silently kept e.g. kernel_build mode would
+    write kernel code where it should train."""
+    lines, found = [], set()
+    for line in template.read_text().splitlines():
+        key = next((k for k in patches if line.startswith(k)), None)
+        if key is not None:
+            line = patches[key]
+            found.add(key)
+        lines.append(line)
+    if missing := [k for k in patches if k not in found]:
+        raise SystemExit(f"{template}: no line starting {', '.join(map(repr, missing))}; "
+                         f"add them from auton.toml.example")
+    return "\n".join(lines) + "\n"
 
 
 def config(run: Path, model: str, base: str) -> Path:
-    lines = []
-    for line in TEMPLATE.read_text().splitlines():
-        if line.startswith("model ="):
-            line = f'model = "{model}"'
-        elif line.startswith("path ="):
-            line = f'path = "{run / "ws"}"'
-        elif line.startswith("specialists ="):
-            line = "specialists = false"              # an SLM run writes no kernel code
-        elif line.startswith('mode = "kernel_build"'):
-            line = 'mode = "slm_training"'
-        elif line.startswith("kernel_tree ="):
-            line = f'kernel_tree = "{run / "kernel"}"'
-        lines.append(line)
     cfg = run / "auton.toml"
-    cfg.write_text("\n".join(lines) + "\n")
+    cfg.write_text(patched(config_template(), {
+        "model =": f'model = "{model}"',
+        "path =": f'path = "{run / "ws"}"',
+        "specialists =": "specialists = false",          # an SLM run writes no kernel code
+        'mode = "kernel_build"': 'mode = "slm_training"',
+        "kernel_tree =": f'kernel_tree = "{run / "kernel"}"',
+    }))
     return cfg
 
 
@@ -57,13 +109,12 @@ def start(args) -> int:
                         "--rev", args.base], check=True)
     cfg = config(run, args.model, args.base)
     py = os.environ.get("PYTHON") or str(ROOT / ".venv/bin/python")
-    cmd = ["timeout", "-k", "60", str(args.timeout), py, "-m", "orchestrator.cli",
+    cmd = [py, "-m", "orchestrator.cli",
            "--config", str(cfg), "run", "--workspace", str(run / "ws"),
            "--specs", str(ROOT / "agent" / "kernel_spec")]
     cmd += ["--resume"] if args.resume else [args.goal]
     with open(run / "run.log", "a") as log:
-        return subprocess.run(cmd, cwd=ROOT / "agent", stdout=log,
-                              stderr=subprocess.STDOUT).returncode
+        return run_bounded(cmd, ROOT / "agent", log, args.timeout)
 
 
 def status(args) -> int:

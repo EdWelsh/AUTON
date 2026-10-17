@@ -13,6 +13,8 @@ between runs:
 - **Stop rules** (docs/CAMPAIGN.md): at most two attempts per phase. Attempt 2
   runs automatically, identical except for its label; then the phase is
   recorded as failed and the ladder continues.
+- **Skips.** `skip: <why>` (a dated amendment) leaves a run out of this
+  experiment: its verdict stands from elsewhere.
 - **Resumable.** A run directory with a finished RESULT.json is not re-run; one
   without resumes where it stopped. Killing this script loses nothing.
 
@@ -108,6 +110,38 @@ def generated_something(result: dict | None) -> bool:
     return any(g.get("rc") != 2 for g in gates)
 
 
+BASE_AUTHORS = {"base@auton", "auton@local"}     # kernel-base.sh's commit; generation_run's seed
+
+
+def tree_changed(ws: Path, result: dict | None) -> bool:
+    """True when the workspace's main differs from the base it started on.
+
+    A gate can pass on the untouched base (R1's boot marker is printed by
+    kernel-base-v5 itself), so "not every gate said not generated" does not show
+    that the run wrote anything. The start is the newest base commit on main
+    (the seed, or kernel-base.sh's); on a run built from an earlier run's tree
+    without seeds, that tree's main."""
+    git = ["git", "-C", str(ws)]
+    base = (result or {}).get("base") or ""
+    start = None
+    if (Path(base) / ".git").exists():
+        start = subprocess.run(["git", "-C", base, "rev-parse", "main"],
+                               capture_output=True, text=True).stdout.strip() or None
+    rng = ["main"] + ([f"^{start}"] if start else [])
+    log = subprocess.run(git + ["log", "--first-parent", "--format=%H %ae", *rng],
+                         capture_output=True, text=True)
+    if log.returncode != 0:
+        return False
+    for line in log.stdout.splitlines():
+        sha, _, email = line.partition(" ")
+        if email in BASE_AUTHORS:
+            start = sha
+            break
+    if start is None:
+        return False
+    return subprocess.run(git + ["diff", "--quiet", start, "main"]).returncode == 1
+
+
 def base_for(run: dict, runs: dict[str, dict]) -> tuple[list[str], str]:
     """generation_run arguments for the run's base, and a note on how chosen."""
     base = run["base"]
@@ -123,7 +157,8 @@ def base_for(run: dict, runs: dict[str, dict]) -> tuple[list[str], str]:
         # their goals assume exists. Here the replacement is the phase's own
         # attempt whose end-to-end gate passed (amended 2026-10-06), labelled.
         tree = OUT / fallback[5:] / "ws"
-        if tree.is_dir() and generated_something(result_of(OUT / fallback[5:])):
+        fb = result_of(OUT / fallback[5:])
+        if tree.is_dir() and generated_something(fb) and tree_changed(tree, fb):
             return ["--base-tree", str(tree)], (f"{dep['name']} fallback {fallback[5:]} "
                                                 f"(failed its suites, passed end to end)")
     args, note = base_for(dep, runs)
@@ -195,6 +230,9 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.status:
         for r in spec["runs"]:
+            if r.get("skip"):
+                print(f"{r['name']:20} {'skipped':13} {'-':28} {r['skip']}")
+                continue
             d, res = final(r)
             state = ("PASSED" if passed(res) else "failed" if res else "not finished")
             gates = [g["rc"] for g in res.get("gates", [])] if res else []
@@ -211,6 +249,10 @@ def main(argv: list[str] | None = None) -> int:
         # (stop rule 5) takes effect without stopping the run in progress.
         spec = yaml.safe_load(SPEC.read_text())
         runs = {r["name"]: r for r in spec["runs"]}
+        if runs[name].get("skip"):
+            # A dated amendment settled this run's verdict elsewhere (w25: R8 passed on the Mac).
+            log(f"{name}: skipped — {runs[name]['skip']}")
+            continue
         run_one(runs[name], runs, spec)
     log("campaign: every run has a verdict")
     return 0

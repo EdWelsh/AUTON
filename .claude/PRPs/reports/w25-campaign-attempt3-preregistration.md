@@ -46,3 +46,10 @@ This experiment runs on a **Linux x86_64 cloud container** (4 cores, 15 GB), not
   (gitignored). Nothing generated enters the tracked tree.
 - `runs.yaml`: `r1-mm` attempts restart at 1 (dated amendment there). R8's pass stands from the
   Mac and is not re-run.
+
+**Amendment 2026-10-17, before R1 starts: R8 and R1's fallback, as data.** The line above was prose
+only, and `scripts/campaign.py` would have run R8 after R1. `runs.yaml` now marks R8
+`skip: passed on the Mac (2026-10-10)`, which the campaign honours. R1's fallback
+`tree:r1-mm-attempt2` named campaign 2's tree (on the Mac); after the attempt reset it named this
+experiment's attempt 2, and the boot gate passes on the untouched base. It is now `none`, and the
+campaign takes no fallback tree whose main does not differ from its base.

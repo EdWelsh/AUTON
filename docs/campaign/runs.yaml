@@ -16,6 +16,8 @@
 #           failed its suites but passed its end-to-end gate, is the base its
 #           dependants build on. `none` left R3 on a tree with no fs.h, which its
 #           goal says exists: neither R3 attempt tested what was pre-registered.
+#   skip:   (amended 2026-10-17) the run is not run in this experiment; its
+#           verdict stands from elsewhere, as the text says.
 
 # Amended 2026-10-02 (owner's decision): every run moves to Claude Sonnet 5.5 through the
 # owner's subscription (claude -p; agent/orchestrator/llm/claude_cli.py), qualified 4/4 by
@@ -48,9 +50,17 @@ runs:
       # Amended 2026-10-03 (stop rule 5): e2e.sh trains and checks SLM parity before it boots,
       # and parity fails on the untouched base tree, so this gate never booted anything.
       - scripts/boot-marker.sh "$KERNEL_TREE" '^\[MM\] PMM initialized'
-    fallback: tree:r1-mm-attempt2      # boot gate passed: [MM] PMM initialized
+    # Amended 2026-10-17 (w25 attempt 3): was `tree:r1-mm-attempt2`, campaign 2's attempt whose boot
+    # gate passed. That tree is on the Mac; with attempts restarted the name meant this experiment's
+    # attempt 2, unjudged, and the boot marker passes on the untouched base. No fallback here: a
+    # failed R1 leaves its dependants on kernel-base-v5, and campaign.py takes no tree as a base
+    # that does not differ from the one it started on.
+    fallback: none
 
   - name: r8-virtio-console
+    # Amended 2026-10-17 (w25 attempt 3): R8's pass stands from the Mac and is not re-run here
+    # (reports/w25-campaign-attempt3-preregistration.md); campaign.py honours `skip`.
+    skip: passed on the Mac (2026-10-10); not re-run in w25 attempt 3
     base: kernel-base-v5
     sessions: 2
     goal: goals/r8-virtio-console.txt
@@ -78,7 +88,9 @@ runs:
     # normative, so a later run that seeds the header can make this suite a gate.
     advisory:
       - tests/kernel/run_virtio_blk_test.sh
-    fallback: tree:r2-storage-attempt2 # storage acceptance passed end to end
+    # Amended 2026-10-17 (w26 review): that attempt was campaign 2's; attempts restart in this
+    # experiment, so the name would point at this experiment's own unjudged attempt 2.
+    fallback: none                     # was tree:r2-storage-attempt2 (campaign 2)
 
   - name: r3-fileserver
     base: run:r2-storage
