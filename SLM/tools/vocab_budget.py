@@ -7,7 +7,7 @@ word. So the vocabulary is a hard budget (chat_tiny and chat_small: 1024), and
 every word outside it becomes <unk>, at training time and at the prompt.
 
 A corpus can look large and still be useless here: the hardware reference
-corpus has 13,401 distinct words, and the 15% of its tokens a 1024-word
+corpus has 13,718 distinct words, and the 15% of its tokens a 1024-word
 vocabulary drops are precisely the ids and names that carry its facts. This
 measures that before anyone spends a training run on it.
 

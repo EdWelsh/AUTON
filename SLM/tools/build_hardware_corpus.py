@@ -28,7 +28,7 @@ be measured with eval_scope.py, not a default.
 
 Two profiles, because the kernel's tokenizer decides what can be learned:
 
-- **reference** (default): every vendor, processor and CPUID bit. 13,401 distinct
+- **reference** (default): every vendor, processor and CPUID bit. 13,718 distinct
   words; it does NOT fit the in-kernel model's 1,024-word vocabulary
   (vocab_budget.py), so it is for a host-side model.
 - **kernel**: questions about *this machine's* CPU, answered from what QEMU's
@@ -63,7 +63,7 @@ NOTABLE = {
     "riscv": ["m", "a", "f", "d", "c", "v", "zba", "zbb", "zbs", "zicsr", "zifencei", "h",
               "zfh", "zicbom"],
     "powerpc": ["altivec", "vsx", "power8-vector", "power9-vector", "power10-vector",
-                "htm", "crypto", "mma", "64bit"],
+                "htm", "crypto", "mma", "64bit-support"],
     "systemz": ["vector", "vector-enhancements-1", "vector-enhancements-2", "transactional-execution",
                 "nnp-assist", "message-security-assist-extension9", "guarded-storage"],
 }
@@ -94,9 +94,10 @@ def _row(text, response, fact, caps=("hardware-reference",)):
 def vendor_rows(reg: dict) -> list[dict]:
     rows = []
     for e in reg["vendors"]:
-        name = e["names"][0]
         for i in e["ids"]:
-            scheme, ident = i["scheme"], i["id"]
+            # The name this id's own source gives: a merged entry's first spelling
+            # can be another source's ("AuthenticAMD" is not "AMD/ATI").
+            scheme, ident, name = i["scheme"], i["id"], i.get("name") or e["names"][0]
             for tmpl in VENDOR_Q.get(scheme, []):
                 q = tmpl.format(i=ident, q=f'"{ident}"')
                 if scheme == "x86-cpuid-vendor":
@@ -113,7 +114,11 @@ def feature_rows(arch: str, table: dict, exceptions: list[dict]) -> list[dict]:
     import isa_tables
 
     rows = []
-    notable = [f for f in NOTABLE.get(arch, []) if f in table["features"]]
+    # Only features the table lists on some processor. One listed on none (x86 rtm,
+    # avx10.1-512) is a feature LLVM does not record per part: asking about it
+    # would answer "No" for every part, including the ones that ship it.
+    notable = [f for f in NOTABLE.get(arch, []) if f in table["features"]
+               and any(f in v for v in table["processors"].values())]
     for proc in table["processors"]:
         if proc in ("generic",):
             continue

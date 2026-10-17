@@ -12,7 +12,7 @@ answer here comes from a source of truth, and each row's `fact` field names it.
 |---|---|---|---|
 | `datasets/os_chat.jsonl` | 944 | `tools/build_corpus.py` | what the kernel itself prints: its roles, device knowledge base and system queries |
 | `datasets/hardware_kernel.jsonl` | 628 | `tools/build_hardware_corpus.py --profile kernel` | this machine's CPU: QEMU's default `qemu64` model (`agent/hardware/isa/qemu.json`) |
-| `datasets/hardware_reference.jsonl` | 31,181 | `tools/build_hardware_corpus.py` | `agent/hardware/`: the vendor registry, instruction-set tables, CPUID bits and silicon exceptions. **Host-side only**: it does not fit the kernel tokenizer |
+| `datasets/hardware_reference.jsonl` | 30,848 | `tools/build_hardware_corpus.py` | `agent/hardware/`: the vendor registry, instruction-set tables, CPUID bits and silicon exceptions. **Host-side only**: it does not fit the kernel tokenizer |
 | `datasets/os_tasks.jsonl` | 12 | by hand (legacy; the e2e spine's pipeline proof) | — |
 | domain text, `.cache/slm/domain/` | 2.8M words | `tools/fetch_domain_text.py` (sources and licences in `data/sources.yaml`) | Linux docs, man-pages, QEMU docs; statistics only in `datasets/domain_text.stats.json` |
 
@@ -23,12 +23,14 @@ measures that. The kernel training set is `os_chat` + `hardware_kernel` (929 wor
 
 `os_chat.jsonl` and `hardware_kernel.jsonl` are about *this machine*.
 `hardware_reference.jsonl` is reference knowledge: who holds PCI vendor id `1d17`, whether
-`znver1` has FMA4. It has 13,401 distinct words, so at the kernel's vocabulary 15% of its
+`znver1` has FMA4. It has 13,718 distinct words, so at the kernel's vocabulary 15% of its
 answer tokens, exactly the ids and names that carry its facts, would be `<unk>`; it is for a
 host-side model.
 
-Regenerate after the tables change; the tests fail if a committed dataset differs
-from what its generator produces:
+Regenerate after the tables change. The SLM tests fail if any of the three generated
+datasets differs from what its generator produces now (`tests/test_chat_corpus.py`,
+`tests/test_kernel_data.py`, `tests/test_hardware_corpus.py`); `os_tasks.jsonl` is
+hand-written and domain text is a cache, so neither is checked:
 
 ```bash
 python SLM/tools/build_corpus.py --output SLM/datasets/os_chat.jsonl

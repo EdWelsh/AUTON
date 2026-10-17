@@ -30,7 +30,7 @@ And one corpus for a different model:
 
 | | | | |
 |---|---|---|---|
-| **Reference pairs** | every vendor id, processor, CPUID bit and silicon exception | `datasets/hardware_reference.jsonl` (31,181 rows) | **No.** 13,401 distinct words; 15% of answer tokens, exactly the ids and names that carry the facts, would be `<unk>`. Mixing it into the kernel set pushes the chat corpus to 15% `<unk>` too. For a host-side model |
+| **Reference pairs** | every vendor id, processor, CPUID bit and silicon exception | `datasets/hardware_reference.jsonl` (30,848 rows) | **No.** 13,718 distinct words; 15% of answer tokens, exactly the ids and names that carry the facts, would be `<unk>`. Mixing it into the kernel set pushes the chat corpus to 15% `<unk>` too. For a host-side model |
 
 ## Rules
 
@@ -41,15 +41,16 @@ And one corpus for a different model:
 2. **Every answer is generated from a source of truth**, and each row's `fact` names it.
 3. **The eval prompts are held out** of every kernel corpus (`build_corpus.py` and
    `build_hardware_corpus.py --profile kernel` share the collision filter).
-4. **The kernel set must fit the vocabulary with 0% answer `<unk>`.** Today 929 of 1,024
-   words are used; 95 remain. Growth beyond that is a decision (below), not an accident.
+4. **The kernel set must fit the vocabulary with 0% answer `<unk>`.** Today 929 of the 1,019
+   word slots are used (5 of the 1,024 ids are the special tokens `<pad> <unk> <bos> <eos>
+   <sep>`, which `vocab_budget.py` and `tokenizer.py` both reserve); 90 remain. Growth beyond that is a decision (below), not an accident.
 
 ## What a full kernel SLM still needs
 
 | Gap | Why it matters | Next step |
 |---|---|---|
 | Garbage rate | The chat eval's best model is 78% correct-or-honest, **22% garbage**; the bar is under 10% (`.claude/PRPs/reports/e2e-rung3b-training-attempts.md`) | More grounded phrasings of the intents the eval fails, within the vocabulary budget |
-| Vocabulary headroom | 95 words left | Choose: keep word-level and spend words deliberately, or move the kernel to a subword tokenizer (below) |
+| Vocabulary headroom | 90 words left (1,024 − 5 special tokens − 929 in use) | Choose: keep word-level and spend words deliberately, or move the kernel to a subword tokenizer (below) |
 | CPU answers | `hardware_kernel.jsonl` assumes a kernel that implements `subsystems/cpu.md` | Generate and gate the `cpu` subsystem; then the deterministic handler and the model agree |
 | e2e spine | `scripts/e2e.sh` still trains on the 12-row `os_tasks.jsonl` with `tiny_10M` (rung 3a, pipeline proof only) | Point it at the kernel set with `chat_tiny` once parity passes on it |
 

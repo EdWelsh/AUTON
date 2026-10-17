@@ -74,6 +74,40 @@ def test_qemu_group_macros_expand_across_continuation_lines(tmp_path):
     assert m["features"] == ["64bit", "de", "fpu", "mtrr", "nx", "sse", "sse2"]
 
 
+CPU_C_LEAVES = r'''
+static const X86CPUDefinition builtin_x86_defs[] = {
+    {
+        .name = "tiny-atom",
+        .vendor = CPUID_VENDOR_INTEL,
+        .features[FEAT_1_EDX] =
+            /* missing: CPUID_PN CPUID_IA64 */
+            /* missing: CPUID_DTS, CPUID_HT,
+               CPUID_TM, CPUID_PBE */
+            CPUID_FP87 | CPUID_SSE2,
+        .features[FEAT_1_ECX] =
+            CPUID_EXT_SSE41 | CPUID_EXT_SSE42, // CPUID_EXT_AVX is not here
+        .features[FEAT_8000_0008_EBX] =
+            CPUID_8000_0008_EBX_CLZERO | CPUID_8000_0008_EBX_WBNOINVD,
+        .features[FEAT_C000_0001_EDX] =
+            CPUID_C000_0001_EDX_XSTORE,
+        .features[FEAT_7_0_EBX] =
+            CPUID_7_0_EBX_AVX2,
+        .features[FEAT_1E_1_EAX] =
+            CPUID_1E_1_EAX_AMX_FP8,
+    },
+};
+'''
+
+
+def test_qemu_bits_named_in_comments_are_not_the_models(tmp_path):
+    """Snowridge's definition lists what it lacks in comments; leaf-named words
+    (8000_0008, C000_0001, 1E_1) lose their prefix like the EXT words do."""
+    (tmp_path / "cpu.c").write_text(CPU_C_LEAVES)
+    m = qemu_cpu.model("tiny-atom", tmp_path)
+    assert m["features"] == ["amx_fp8", "avx2", "clzero", "fpu", "sse2", "sse4.1", "sse4.2",
+                             "wbnoinvd", "xstore"]
+
+
 def test_domain_text_markup_is_stripped():
     roff = '.TH OPEN 2\n.SH NAME\nopen \\- open and possibly create a file\n.\\" comment\n'
     assert "comment" not in fdt.strip_markup(roff, "man2/open.2")

@@ -39,6 +39,21 @@ def test_known_silicon_answers():
     assert by_q["does znver1 support fma4"].startswith("No")
     assert by_q["does bdver1 support fma4"].startswith("Yes")
     assert by_q["does alderlake support avx512f"].startswith("Maybe")
+    assert by_q["does pwr9 support 64bit-support"].startswith("Yes")
+    assert by_q["does tt-ascalon-x support h"].startswith("Yes")
+    assert by_q["does sifive-u74 support m"].startswith("Yes")
+
+
+def test_no_feature_is_asked_that_no_processor_is_listed_with():
+    """A feature on no processor (POWER's '64bit' mode flag, x86 rtm) would answer
+    "No" for every part, including the ones that ship it."""
+    import isa_tables
+
+    tables = isa_tables.load_tables()
+    asked = {tuple(r["fact"].split(":")[1:4:2]) for r in _rows() if r["fact"].startswith("isa:")}
+    for arch, f in asked:
+        assert any(f in v for v in tables[arch]["processors"].values()), (arch, f)
+    assert ("powerpc", "64bit") not in asked and ("x86", "rtm") not in asked
 
 
 def test_questions_are_unique_and_rows_are_kept_apart_from_chat():
