@@ -1,0 +1,49 @@
+{
+ "sources": [
+  {
+   "id": "linux-docs",
+   "title": "Linux kernel Documentation (selected subsystems)",
+   "licence": "GPL-2.0-only (some files dual-licensed CC-BY-4.0; see each file's SPDX line)",
+   "use": [
+    "pretraining",
+    "vocabulary"
+   ],
+   "repo": "https://github.com/torvalds/linux.git",
+   "commit": "58161ead29e50d70a317ea26b472e0c7508e69da",
+   "files": 1399,
+   "words": 2043437,
+   "distinct_words": 165228,
+   "kernel_vocab_coverage": 0.6393
+  },
+  {
+   "id": "man-pages",
+   "title": "Linux man-pages, sections 2 (system calls), 4 (devices), 5 (files), 7 (overviews), 8 (admin)",
+   "licence": "per page (Linux man-pages verbatim, GPL-2.0+, BSD; see each file's SPDX line)",
+   "use": [
+    "pretraining",
+    "vocabulary"
+   ],
+   "repo": "https://github.com/mkerrisk/man-pages.git",
+   "commit": "ae6b221882ce71ba82fcdbe02419a225111502f0",
+   "files": 469,
+   "words": 640723,
+   "distinct_words": 48354,
+   "kernel_vocab_coverage": 0.7007
+  },
+  {
+   "id": "qemu-docs",
+   "title": "QEMU system emulation documentation",
+   "licence": "GPL-2.0-or-later",
+   "use": [
+    "pretraining",
+    "vocabulary"
+   ],
+   "repo": "https://github.com/qemu/qemu.git",
+   "commit": "a19f59a72d96056d9a8f48cf6c77f5787491e414",
+   "files": 152,
+   "words": 89550,
+   "distinct_words": 14805,
+   "kernel_vocab_coverage": 0.6936
+  }
+ ]
+}

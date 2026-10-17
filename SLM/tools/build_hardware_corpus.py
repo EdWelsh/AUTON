@@ -23,6 +23,19 @@ mixing this corpus into chat training is a decision for the training config, to
 be measured with eval_scope.py, not a default.
 
     python SLM/tools/build_hardware_corpus.py --output SLM/datasets/hardware_reference.jsonl
+    python SLM/tools/build_hardware_corpus.py --profile kernel \
+        --output SLM/datasets/hardware_kernel.jsonl
+
+Two profiles, because the kernel's tokenizer decides what can be learned:
+
+- **reference** (default): every vendor, processor and CPUID bit. 13,401 distinct
+  words; it does NOT fit the in-kernel model's 1,024-word vocabulary
+  (vocab_budget.py), so it is for a host-side model.
+- **kernel**: questions about *this machine's* CPU, answered from what QEMU's
+  default CPU model (qemu64, agent/hardware/isa/qemu.json) reports, the CPU every
+  gate boots on. Vocabulary-bounded, and worded as a kernel implementing
+  subsystems/cpu.md answers. A kernel's deterministic `cpu_has()` handler answers
+  these first; the model learns the phrasings so the fallback agrees with it.
 """
 
 from __future__ import annotations
@@ -35,6 +48,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "agent" / "tools"))
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 REGISTRY = ROOT / "agent" / "hardware" / "registry" / "vendors.json"
 ISA = ROOT / "agent" / "hardware" / "isa"
@@ -153,6 +167,64 @@ def exception_rows(exceptions: list[dict]) -> list[dict]:
     return rows
 
 
+CPU_WHAT_Q = ["what cpu is this", "which cpu do i have", "what processor is this", "cpu info",
+              "show cpu", "what cpu", "which processor", "identify the cpu"]
+CPU_LIST_Q = ["what features does this cpu have", "list cpu features", "cpu flags",
+              "show cpu features", "what instructions does this cpu support", "cpu capabilities"]
+CPU_HAS_Q = ["does this cpu support {f}", "does this machine have {f}", "can i use {f}",
+             "is {f} available", "does this cpu have {f}", "{f} support"]
+
+
+def kernel_rows(qemu: dict) -> list[dict]:
+    """This machine's CPU, as QEMU's default model reports it."""
+    name = qemu["default"]
+    m = qemu["models"][name]
+    who = (f"{m['vendor']} family {m['family']} model {m['model_number']} "
+           f"stepping {m['stepping']} (QEMU {name})")
+    have = set(m["features"])
+    caps = ("cpu-features",)
+    rows = []
+    for q in CPU_WHAT_Q:
+        for t in (q, q + "?"):
+            rows.append(_row(t, f"This CPU is {who}.", f"qemu:{name}:identity", caps))
+    listing = "This CPU reports: " + " ".join(sorted(have)) + "."
+    for q in CPU_LIST_Q:
+        for t in (q, q + "?"):
+            rows.append(_row(t, listing, f"qemu:{name}:features", caps))
+    for f in sorted(have | set(NOTABLE["x86"])):
+        a = (f"Yes. This CPU reports {f}." if f in have
+             else f"No. This CPU does not report {f}.")
+        for tmpl in CPU_HAS_Q:
+            q = tmpl.format(f=f)
+            for t in (q, q + "?"):
+                rows.append(_row(t, a, f"qemu:{name}:{f}", caps))
+    return rows
+
+
+def build_kernel(seed: int = 0) -> list[dict]:
+    import qemu_cpu
+
+    rows = [r for r in kernel_rows(qemu_cpu.load()) if not _is_eval_prompt(r["text"])]
+    random.Random(seed).shuffle(rows)
+    return rows
+
+
+def _is_eval_prompt(text: str) -> bool:
+    """The chat eval's prompts are held out of every corpus a kernel model trains
+    on (build_corpus.py applies the same rule, with the same index)."""
+    import build_corpus
+
+    global _EVAL
+    if "_EVAL" not in globals():
+        _EVAL = build_corpus._eval_prompt_index()
+    exact, token_sets = _EVAL
+    norm = build_corpus._normalize(text)
+    if norm in exact:
+        return True
+    mine = set(norm.split())
+    return bool(mine) and any(len(mine & t) / len(mine | t) >= 0.9 for t in token_sets)
+
+
 def build(seed: int = 0) -> list[dict]:
     import isa_tables
 
@@ -178,8 +250,11 @@ def main(argv=None) -> int:
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--output", default=str(ROOT / "SLM/datasets/hardware_reference.jsonl"))
     ap.add_argument("--seed", type=int, default=0)
+    ap.add_argument("--profile", choices=["reference", "kernel"], default="reference")
     args = ap.parse_args(argv)
-    rows = build(args.seed)
+    if args.profile == "kernel" and args.output.endswith("hardware_reference.jsonl"):
+        args.output = str(ROOT / "SLM/datasets/hardware_kernel.jsonl")
+    rows = build_kernel(args.seed) if args.profile == "kernel" else build(args.seed)
     with open(args.output, "w", encoding="utf-8") as fh:
         for r in rows:
             fh.write(json.dumps(r, ensure_ascii=False) + "\n")

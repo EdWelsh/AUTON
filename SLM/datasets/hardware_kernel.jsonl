@@ -1,0 +1,628 @@
+{"text": "can i use aes", "response": "No. This CPU does not report aes.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:aes", "caps": ["cpu-features"]}
+{"text": "does this cpu have fma4", "response": "No. This CPU does not report fma4.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:fma4", "caps": ["cpu-features"]}
+{"text": "can i use sse", "response": "Yes. This CPU reports sse.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:sse", "caps": ["cpu-features"]}
+{"text": "is xsave available?", "response": "No. This CPU does not report xsave.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:xsave", "caps": ["cpu-features"]}
+{"text": "does this cpu support 64bit", "response": "Yes. This CPU reports 64bit.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:64bit", "caps": ["cpu-features"]}
+{"text": "can i use aes?", "response": "No. This CPU does not report aes.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:aes", "caps": ["cpu-features"]}
+{"text": "does this machine have syscall?", "response": "Yes. This CPU reports syscall.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:syscall", "caps": ["cpu-features"]}
+{"text": "what features does this cpu have?", "response": "This CPU reports: 64bit apic clflush cmov cx16 cx8 de fpu fxsr lahf_lm mca mce mmx msr mtrr nx pae pat pge pse pse36 sep sse sse2 sse3 svm syscall tsc.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:features", "caps": ["cpu-features"]}
+{"text": "does this cpu have nx?", "response": "Yes. This CPU reports nx.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:nx", "caps": ["cpu-features"]}
+{"text": "does this machine have avx10.1-512", "response": "No. This CPU does not report avx10.1-512.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:avx10.1-512", "caps": ["cpu-features"]}
+{"text": "does this cpu support msr", "response": "Yes. This CPU reports msr.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:msr", "caps": ["cpu-features"]}
+{"text": "is sse available?", "response": "Yes. This CPU reports sse.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:sse", "caps": ["cpu-features"]}
+{"text": "is cx8 available", "response": "Yes. This CPU reports cx8.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:cx8", "caps": ["cpu-features"]}
+{"text": "what processor is this?", "response": "This CPU is AuthenticAMD family 15 model 107 stepping 1 (QEMU qemu64).", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:identity", "caps": ["cpu-features"]}
+{"text": "does this cpu support mce", "response": "Yes. This CPU reports mce.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:mce", "caps": ["cpu-features"]}
+{"text": "does this machine have aes?", "response": "No. This CPU does not report aes.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:aes", "caps": ["cpu-features"]}
+{"text": "is rtm available", "response": "No. This CPU does not report rtm.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:rtm", "caps": ["cpu-features"]}
+{"text": "does this cpu have tbm?", "response": "No. This CPU does not report tbm.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:tbm", "caps": ["cpu-features"]}
+{"text": "is 64bit available", "response": "Yes. This CPU reports 64bit.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:64bit", "caps": ["cpu-features"]}
+{"text": "does this machine have cx16", "response": "Yes. This CPU reports cx16.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:cx16", "caps": ["cpu-features"]}
+{"text": "is apic available?", "response": "Yes. This CPU reports apic.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:apic", "caps": ["cpu-features"]}
+{"text": "pse support", "response": "Yes. This CPU reports pse.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:pse", "caps": ["cpu-features"]}
+{"text": "is cmov available?", "response": "Yes. This CPU reports cmov.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:cmov", "caps": ["cpu-features"]}
+{"text": "does this cpu support fma", "response": "No. This CPU does not report fma.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:fma", "caps": ["cpu-features"]}
+{"text": "can i use sha?", "response": "No. This CPU does not report sha.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:sha", "caps": ["cpu-features"]}
+{"text": "lahf_lm support?", "response": "Yes. This CPU reports lahf_lm.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:lahf_lm", "caps": ["cpu-features"]}
+{"text": "rdrnd support", "response": "No. This CPU does not report rdrnd.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:rdrnd", "caps": ["cpu-features"]}
+{"text": "is sha available?", "response": "No. This CPU does not report sha.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:sha", "caps": ["cpu-features"]}
+{"text": "does this cpu support popcnt?", "response": "No. This CPU does not report popcnt.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:popcnt", "caps": ["cpu-features"]}
+{"text": "does this cpu support sse2", "response": "Yes. This CPU reports sse2.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:sse2", "caps": ["cpu-features"]}
+{"text": "is msr available", "response": "Yes. This CPU reports msr.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:msr", "caps": ["cpu-features"]}
+{"text": "can i use fsgsbase?", "response": "No. This CPU does not report fsgsbase.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:fsgsbase", "caps": ["cpu-features"]}
+{"text": "does this cpu support avx512f", "response": "No. This CPU does not report avx512f.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:avx512f", "caps": ["cpu-features"]}
+{"text": "fxsr support?", "response": "Yes. This CPU reports fxsr.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:fxsr", "caps": ["cpu-features"]}
+{"text": "can i use cx8", "response": "Yes. This CPU reports cx8.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:cx8", "caps": ["cpu-features"]}
+{"text": "can i use rdrnd?", "response": "No. This CPU does not report rdrnd.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:rdrnd", "caps": ["cpu-features"]}
+{"text": "does this machine have mca?", "response": "Yes. This CPU reports mca.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:mca", "caps": ["cpu-features"]}
+{"text": "fsgsbase support", "response": "No. This CPU does not report fsgsbase.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:fsgsbase", "caps": ["cpu-features"]}
+{"text": "can i use cx16?", "response": "Yes. This CPU reports cx16.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:cx16", "caps": ["cpu-features"]}
+{"text": "which processor", "response": "This CPU is AuthenticAMD family 15 model 107 stepping 1 (QEMU qemu64).", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:identity", "caps": ["cpu-features"]}
+{"text": "does this machine have mtrr", "response": "Yes. This CPU reports mtrr.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:mtrr", "caps": ["cpu-features"]}
+{"text": "is rtm available?", "response": "No. This CPU does not report rtm.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:rtm", "caps": ["cpu-features"]}
+{"text": "does this cpu support pat?", "response": "Yes. This CPU reports pat.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:pat", "caps": ["cpu-features"]}
+{"text": "does this machine have fma?", "response": "No. This CPU does not report fma.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:fma", "caps": ["cpu-features"]}
+{"text": "is popcnt available?", "response": "No. This CPU does not report popcnt.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:popcnt", "caps": ["cpu-features"]}
+{"text": "does this cpu support nx", "response": "Yes. This CPU reports nx.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:nx", "caps": ["cpu-features"]}
+{"text": "does this cpu support pse36", "response": "Yes. This CPU reports pse36.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:pse36", "caps": ["cpu-features"]}
+{"text": "does this machine have nx?", "response": "Yes. This CPU reports nx.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:nx", "caps": ["cpu-features"]}
+{"text": "is tsc available", "response": "Yes. This CPU reports tsc.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:tsc", "caps": ["cpu-features"]}
+{"text": "does this cpu support msr?", "response": "Yes. This CPU reports msr.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:msr", "caps": ["cpu-features"]}
+{"text": "fxsr support", "response": "Yes. This CPU reports fxsr.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:fxsr", "caps": ["cpu-features"]}
+{"text": "does this cpu have mce", "response": "Yes. This CPU reports mce.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:mce", "caps": ["cpu-features"]}
+{"text": "can i use bmi2?", "response": "No. This CPU does not report bmi2.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:bmi2", "caps": ["cpu-features"]}
+{"text": "popcnt support", "response": "No. This CPU does not report popcnt.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:popcnt", "caps": ["cpu-features"]}
+{"text": "is bmi2 available", "response": "No. This CPU does not report bmi2.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:bmi2", "caps": ["cpu-features"]}
+{"text": "clflush support", "response": "Yes. This CPU reports clflush.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:clflush", "caps": ["cpu-features"]}
+{"text": "is invpcid available", "response": "No. This CPU does not report invpcid.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:invpcid", "caps": ["cpu-features"]}
+{"text": "does this machine have movbe?", "response": "No. This CPU does not report movbe.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:movbe", "caps": ["cpu-features"]}
+{"text": "is fxsr available?", "response": "Yes. This CPU reports fxsr.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:fxsr", "caps": ["cpu-features"]}
+{"text": "does this cpu have cx16?", "response": "Yes. This CPU reports cx16.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:cx16", "caps": ["cpu-features"]}
+{"text": "pat support?", "response": "Yes. This CPU reports pat.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:pat", "caps": ["cpu-features"]}
+{"text": "does this cpu support sse4.2", "response": "No. This CPU does not report sse4.2.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:sse4.2", "caps": ["cpu-features"]}
+{"text": "does this machine have invpcid", "response": "No. This CPU does not report invpcid.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:invpcid", "caps": ["cpu-features"]}
+{"text": "does this cpu have invpcid", "response": "No. This CPU does not report invpcid.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:invpcid", "caps": ["cpu-features"]}
+{"text": "does this cpu support clflush?", "response": "Yes. This CPU reports clflush.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:clflush", "caps": ["cpu-features"]}
+{"text": "amx-tile support", "response": "No. This CPU does not report amx-tile.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:amx-tile", "caps": ["cpu-features"]}
+{"text": "does this cpu have mca?", "response": "Yes. This CPU reports mca.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:mca", "caps": ["cpu-features"]}
+{"text": "pge support", "response": "Yes. This CPU reports pge.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:pge", "caps": ["cpu-features"]}
+{"text": "does this cpu have pge", "response": "Yes. This CPU reports pge.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:pge", "caps": ["cpu-features"]}
+{"text": "is sse3 available?", "response": "Yes. This CPU reports sse3.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:sse3", "caps": ["cpu-features"]}
+{"text": "does this cpu support sha", "response": "No. This CPU does not report sha.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:sha", "caps": ["cpu-features"]}
+{"text": "is mca available", "response": "Yes. This CPU reports mca.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:mca", "caps": ["cpu-features"]}
+{"text": "does this machine have invpcid?", "response": "No. This CPU does not report invpcid.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:invpcid", "caps": ["cpu-features"]}
+{"text": "can i use pge?", "response": "Yes. This CPU reports pge.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:pge", "caps": ["cpu-features"]}
+{"text": "bmi2 support?", "response": "No. This CPU does not report bmi2.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:bmi2", "caps": ["cpu-features"]}
+{"text": "does this cpu have mce?", "response": "Yes. This CPU reports mce.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:mce", "caps": ["cpu-features"]}
+{"text": "does this cpu support fsgsbase?", "response": "No. This CPU does not report fsgsbase.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:fsgsbase", "caps": ["cpu-features"]}
+{"text": "does this cpu support pse?", "response": "Yes. This CPU reports pse.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:pse", "caps": ["cpu-features"]}
+{"text": "can i use sse3", "response": "Yes. This CPU reports sse3.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:sse3", "caps": ["cpu-features"]}
+{"text": "does this cpu support amx-tile", "response": "No. This CPU does not report amx-tile.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:amx-tile", "caps": ["cpu-features"]}
+{"text": "does this cpu support avx10.1-512", "response": "No. This CPU does not report avx10.1-512.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:avx10.1-512", "caps": ["cpu-features"]}
+{"text": "is fxsr available", "response": "Yes. This CPU reports fxsr.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:fxsr", "caps": ["cpu-features"]}
+{"text": "does this cpu have sep?", "response": "Yes. This CPU reports sep.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:sep", "caps": ["cpu-features"]}
+{"text": "show cpu", "response": "This CPU is AuthenticAMD family 15 model 107 stepping 1 (QEMU qemu64).", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:identity", "caps": ["cpu-features"]}
+{"text": "does this cpu support tbm", "response": "No. This CPU does not report tbm.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:tbm", "caps": ["cpu-features"]}
+{"text": "can i use popcnt?", "response": "No. This CPU does not report popcnt.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:popcnt", "caps": ["cpu-features"]}
+{"text": "does this cpu have apic", "response": "Yes. This CPU reports apic.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:apic", "caps": ["cpu-features"]}
+{"text": "can i use avx512f", "response": "No. This CPU does not report avx512f.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:avx512f", "caps": ["cpu-features"]}
+{"text": "is cx16 available?", "response": "Yes. This CPU reports cx16.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:cx16", "caps": ["cpu-features"]}
+{"text": "does this cpu have nx", "response": "Yes. This CPU reports nx.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:nx", "caps": ["cpu-features"]}
+{"text": "does this cpu have mtrr?", "response": "Yes. This CPU reports mtrr.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:mtrr", "caps": ["cpu-features"]}
+{"text": "can i use xsave?", "response": "No. This CPU does not report xsave.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:xsave", "caps": ["cpu-features"]}
+{"text": "does this machine have cmov?", "response": "Yes. This CPU reports cmov.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:cmov", "caps": ["cpu-features"]}
+{"text": "fma4 support", "response": "No. This CPU does not report fma4.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:fma4", "caps": ["cpu-features"]}
+{"text": "can i use clflush?", "response": "Yes. This CPU reports clflush.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:clflush", "caps": ["cpu-features"]}
+{"text": "does this machine have fsgsbase?", "response": "No. This CPU does not report fsgsbase.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:fsgsbase", "caps": ["cpu-features"]}
+{"text": "is pae available?", "response": "Yes. This CPU reports pae.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:pae", "caps": ["cpu-features"]}
+{"text": "does this cpu have sha?", "response": "No. This CPU does not report sha.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:sha", "caps": ["cpu-features"]}
+{"text": "is sha available", "response": "No. This CPU does not report sha.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:sha", "caps": ["cpu-features"]}
+{"text": "can i use tbm?", "response": "No. This CPU does not report tbm.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:tbm", "caps": ["cpu-features"]}
+{"text": "mtrr support", "response": "Yes. This CPU reports mtrr.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:mtrr", "caps": ["cpu-features"]}
+{"text": "does this cpu have syscall?", "response": "Yes. This CPU reports syscall.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:syscall", "caps": ["cpu-features"]}
+{"text": "does this cpu support rdrnd?", "response": "No. This CPU does not report rdrnd.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:rdrnd", "caps": ["cpu-features"]}
+{"text": "does this cpu have rtm?", "response": "No. This CPU does not report rtm.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:rtm", "caps": ["cpu-features"]}
+{"text": "does this machine have amx-tile", "response": "No. This CPU does not report amx-tile.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:amx-tile", "caps": ["cpu-features"]}
+{"text": "does this cpu have tbm", "response": "No. This CPU does not report tbm.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:tbm", "caps": ["cpu-features"]}
+{"text": "is pge available?", "response": "Yes. This CPU reports pge.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:pge", "caps": ["cpu-features"]}
+{"text": "does this machine have sha", "response": "No. This CPU does not report sha.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:sha", "caps": ["cpu-features"]}
+{"text": "does this machine have fma4?", "response": "No. This CPU does not report fma4.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:fma4", "caps": ["cpu-features"]}
+{"text": "does this cpu support fma?", "response": "No. This CPU does not report fma.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:fma", "caps": ["cpu-features"]}
+{"text": "is svm available", "response": "Yes. This CPU reports svm.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:svm", "caps": ["cpu-features"]}
+{"text": "does this cpu have cx8?", "response": "Yes. This CPU reports cx8.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:cx8", "caps": ["cpu-features"]}
+{"text": "sse4a support", "response": "No. This CPU does not report sse4a.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:sse4a", "caps": ["cpu-features"]}
+{"text": "mmx support", "response": "Yes. This CPU reports mmx.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:mmx", "caps": ["cpu-features"]}
+{"text": "does this cpu have apic?", "response": "Yes. This CPU reports apic.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:apic", "caps": ["cpu-features"]}
+{"text": "can i use mca", "response": "Yes. This CPU reports mca.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:mca", "caps": ["cpu-features"]}
+{"text": "can i use syscall", "response": "Yes. This CPU reports syscall.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:syscall", "caps": ["cpu-features"]}
+{"text": "does this cpu support pge?", "response": "Yes. This CPU reports pge.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:pge", "caps": ["cpu-features"]}
+{"text": "does this machine have de", "response": "Yes. This CPU reports de.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:de", "caps": ["cpu-features"]}
+{"text": "does this cpu have aes", "response": "No. This CPU does not report aes.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:aes", "caps": ["cpu-features"]}
+{"text": "does this cpu support tbm?", "response": "No. This CPU does not report tbm.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:tbm", "caps": ["cpu-features"]}
+{"text": "does this cpu support sse3?", "response": "Yes. This CPU reports sse3.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:sse3", "caps": ["cpu-features"]}
+{"text": "does this cpu have xsave", "response": "No. This CPU does not report xsave.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:xsave", "caps": ["cpu-features"]}
+{"text": "can i use lahf_lm", "response": "Yes. This CPU reports lahf_lm.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:lahf_lm", "caps": ["cpu-features"]}
+{"text": "does this cpu support syscall?", "response": "Yes. This CPU reports syscall.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:syscall", "caps": ["cpu-features"]}
+{"text": "pse support?", "response": "Yes. This CPU reports pse.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:pse", "caps": ["cpu-features"]}
+{"text": "does this machine have rdseed?", "response": "No. This CPU does not report rdseed.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:rdseed", "caps": ["cpu-features"]}
+{"text": "mmx support?", "response": "Yes. This CPU reports mmx.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:mmx", "caps": ["cpu-features"]}
+{"text": "does this cpu support pae", "response": "Yes. This CPU reports pae.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:pae", "caps": ["cpu-features"]}
+{"text": "tbm support", "response": "No. This CPU does not report tbm.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:tbm", "caps": ["cpu-features"]}
+{"text": "which cpu do i have?", "response": "This CPU is AuthenticAMD family 15 model 107 stepping 1 (QEMU qemu64).", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:identity", "caps": ["cpu-features"]}
+{"text": "pse36 support?", "response": "Yes. This CPU reports pse36.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:pse36", "caps": ["cpu-features"]}
+{"text": "does this cpu support clflush", "response": "Yes. This CPU reports clflush.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:clflush", "caps": ["cpu-features"]}
+{"text": "can i use sse4a?", "response": "No. This CPU does not report sse4a.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:sse4a", "caps": ["cpu-features"]}
+{"text": "can i use amx-tile?", "response": "No. This CPU does not report amx-tile.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:amx-tile", "caps": ["cpu-features"]}
+{"text": "is xop available", "response": "No. This CPU does not report xop.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:xop", "caps": ["cpu-features"]}
+{"text": "does this machine have mmx?", "response": "Yes. This CPU reports mmx.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:mmx", "caps": ["cpu-features"]}
+{"text": "does this machine have fma4", "response": "No. This CPU does not report fma4.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:fma4", "caps": ["cpu-features"]}
+{"text": "can i use rdseed", "response": "No. This CPU does not report rdseed.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:rdseed", "caps": ["cpu-features"]}
+{"text": "does this machine have mce?", "response": "Yes. This CPU reports mce.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:mce", "caps": ["cpu-features"]}
+{"text": "does this cpu have avx512f", "response": "No. This CPU does not report avx512f.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:avx512f", "caps": ["cpu-features"]}
+{"text": "does this cpu support xop?", "response": "No. This CPU does not report xop.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:xop", "caps": ["cpu-features"]}
+{"text": "is sse3 available", "response": "Yes. This CPU reports sse3.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:sse3", "caps": ["cpu-features"]}
+{"text": "fpu support", "response": "Yes. This CPU reports fpu.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:fpu", "caps": ["cpu-features"]}
+{"text": "does this cpu have pge?", "response": "Yes. This CPU reports pge.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:pge", "caps": ["cpu-features"]}
+{"text": "does this machine have sse2?", "response": "Yes. This CPU reports sse2.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:sse2", "caps": ["cpu-features"]}
+{"text": "can i use mce", "response": "Yes. This CPU reports mce.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:mce", "caps": ["cpu-features"]}
+{"text": "can i use fsgsbase", "response": "No. This CPU does not report fsgsbase.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:fsgsbase", "caps": ["cpu-features"]}
+{"text": "can i use invpcid?", "response": "No. This CPU does not report invpcid.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:invpcid", "caps": ["cpu-features"]}
+{"text": "does this cpu support pat", "response": "Yes. This CPU reports pat.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:pat", "caps": ["cpu-features"]}
+{"text": "pge support?", "response": "Yes. This CPU reports pge.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:pge", "caps": ["cpu-features"]}
+{"text": "does this cpu have tsc", "response": "Yes. This CPU reports tsc.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:tsc", "caps": ["cpu-features"]}
+{"text": "pat support", "response": "Yes. This CPU reports pat.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:pat", "caps": ["cpu-features"]}
+{"text": "sse3 support?", "response": "Yes. This CPU reports sse3.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:sse3", "caps": ["cpu-features"]}
+{"text": "does this cpu support lahf_lm?", "response": "Yes. This CPU reports lahf_lm.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:lahf_lm", "caps": ["cpu-features"]}
+{"text": "does this cpu have cmov", "response": "Yes. This CPU reports cmov.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:cmov", "caps": ["cpu-features"]}
+{"text": "does this cpu have sep", "response": "Yes. This CPU reports sep.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:sep", "caps": ["cpu-features"]}
+{"text": "pse36 support", "response": "Yes. This CPU reports pse36.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:pse36", "caps": ["cpu-features"]}
+{"text": "does this machine have bmi2", "response": "No. This CPU does not report bmi2.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:bmi2", "caps": ["cpu-features"]}
+{"text": "does this machine have rdseed", "response": "No. This CPU does not report rdseed.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:rdseed", "caps": ["cpu-features"]}
+{"text": "does this cpu support fpu?", "response": "Yes. This CPU reports fpu.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:fpu", "caps": ["cpu-features"]}
+{"text": "can i use sse2?", "response": "Yes. This CPU reports sse2.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:sse2", "caps": ["cpu-features"]}
+{"text": "syscall support?", "response": "Yes. This CPU reports syscall.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:syscall", "caps": ["cpu-features"]}
+{"text": "does this cpu have sse2?", "response": "Yes. This CPU reports sse2.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:sse2", "caps": ["cpu-features"]}
+{"text": "does this cpu support bmi2", "response": "No. This CPU does not report bmi2.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:bmi2", "caps": ["cpu-features"]}
+{"text": "can i use cmov", "response": "Yes. This CPU reports cmov.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:cmov", "caps": ["cpu-features"]}
+{"text": "does this cpu support de?", "response": "Yes. This CPU reports de.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:de", "caps": ["cpu-features"]}
+{"text": "64bit support", "response": "Yes. This CPU reports 64bit.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:64bit", "caps": ["cpu-features"]}
+{"text": "does this machine have clflush?", "response": "Yes. This CPU reports clflush.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:clflush", "caps": ["cpu-features"]}
+{"text": "does this cpu support rtm", "response": "No. This CPU does not report rtm.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:rtm", "caps": ["cpu-features"]}
+{"text": "can i use pse36", "response": "Yes. This CPU reports pse36.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:pse36", "caps": ["cpu-features"]}
+{"text": "can i use avx512f?", "response": "No. This CPU does not report avx512f.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:avx512f", "caps": ["cpu-features"]}
+{"text": "fma4 support?", "response": "No. This CPU does not report fma4.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:fma4", "caps": ["cpu-features"]}
+{"text": "cpu capabilities", "response": "This CPU reports: 64bit apic clflush cmov cx16 cx8 de fpu fxsr lahf_lm mca mce mmx msr mtrr nx pae pat pge pse pse36 sep sse sse2 sse3 svm syscall tsc.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:features", "caps": ["cpu-features"]}
+{"text": "does this machine have syscall", "response": "Yes. This CPU reports syscall.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:syscall", "caps": ["cpu-features"]}
+{"text": "can i use mtrr?", "response": "Yes. This CPU reports mtrr.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:mtrr", "caps": ["cpu-features"]}
+{"text": "does this cpu support lahf_lm", "response": "Yes. This CPU reports lahf_lm.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:lahf_lm", "caps": ["cpu-features"]}
+{"text": "what cpu", "response": "This CPU is AuthenticAMD family 15 model 107 stepping 1 (QEMU qemu64).", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:identity", "caps": ["cpu-features"]}
+{"text": "can i use cx16", "response": "Yes. This CPU reports cx16.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:cx16", "caps": ["cpu-features"]}
+{"text": "does this cpu support amx-tile?", "response": "No. This CPU does not report amx-tile.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:amx-tile", "caps": ["cpu-features"]}
+{"text": "does this cpu support apic?", "response": "Yes. This CPU reports apic.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:apic", "caps": ["cpu-features"]}
+{"text": "is movbe available", "response": "No. This CPU does not report movbe.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:movbe", "caps": ["cpu-features"]}
+{"text": "is fsgsbase available", "response": "No. This CPU does not report fsgsbase.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:fsgsbase", "caps": ["cpu-features"]}
+{"text": "does this machine have 64bit", "response": "Yes. This CPU reports 64bit.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:64bit", "caps": ["cpu-features"]}
+{"text": "does this machine have movbe", "response": "No. This CPU does not report movbe.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:movbe", "caps": ["cpu-features"]}
+{"text": "does this cpu support movbe", "response": "No. This CPU does not report movbe.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:movbe", "caps": ["cpu-features"]}
+{"text": "does this machine have avx512f?", "response": "No. This CPU does not report avx512f.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:avx512f", "caps": ["cpu-features"]}
+{"text": "bmi2 support", "response": "No. This CPU does not report bmi2.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:bmi2", "caps": ["cpu-features"]}
+{"text": "does this machine have msr", "response": "Yes. This CPU reports msr.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:msr", "caps": ["cpu-features"]}
+{"text": "can i use pae?", "response": "Yes. This CPU reports pae.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:pae", "caps": ["cpu-features"]}
+{"text": "does this cpu have pse?", "response": "Yes. This CPU reports pse.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:pse", "caps": ["cpu-features"]}
+{"text": "rdrnd support?", "response": "No. This CPU does not report rdrnd.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:rdrnd", "caps": ["cpu-features"]}
+{"text": "does this cpu have pse", "response": "Yes. This CPU reports pse.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:pse", "caps": ["cpu-features"]}
+{"text": "does this cpu have aes?", "response": "No. This CPU does not report aes.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:aes", "caps": ["cpu-features"]}
+{"text": "avx2 support", "response": "No. This CPU does not report avx2.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:avx2", "caps": ["cpu-features"]}
+{"text": "is sep available", "response": "Yes. This CPU reports sep.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:sep", "caps": ["cpu-features"]}
+{"text": "is msr available?", "response": "Yes. This CPU reports msr.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:msr", "caps": ["cpu-features"]}
+{"text": "invpcid support?", "response": "No. This CPU does not report invpcid.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:invpcid", "caps": ["cpu-features"]}
+{"text": "does this cpu support sep", "response": "Yes. This CPU reports sep.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:sep", "caps": ["cpu-features"]}
+{"text": "tsc support?", "response": "Yes. This CPU reports tsc.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:tsc", "caps": ["cpu-features"]}
+{"text": "does this machine have sse4.2?", "response": "No. This CPU does not report sse4.2.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:sse4.2", "caps": ["cpu-features"]}
+{"text": "does this cpu have avx2", "response": "No. This CPU does not report avx2.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:avx2", "caps": ["cpu-features"]}
+{"text": "does this machine have amx-tile?", "response": "No. This CPU does not report amx-tile.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:amx-tile", "caps": ["cpu-features"]}
+{"text": "does this cpu have lahf_lm", "response": "Yes. This CPU reports lahf_lm.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:lahf_lm", "caps": ["cpu-features"]}
+{"text": "can i use pse?", "response": "Yes. This CPU reports pse.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:pse", "caps": ["cpu-features"]}
+{"text": "svm support", "response": "Yes. This CPU reports svm.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:svm", "caps": ["cpu-features"]}
+{"text": "can i use fma?", "response": "No. This CPU does not report fma.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:fma", "caps": ["cpu-features"]}
+{"text": "does this cpu support bmi2?", "response": "No. This CPU does not report bmi2.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:bmi2", "caps": ["cpu-features"]}
+{"text": "does this cpu support rdseed", "response": "No. This CPU does not report rdseed.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:rdseed", "caps": ["cpu-features"]}
+{"text": "apic support", "response": "Yes. This CPU reports apic.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:apic", "caps": ["cpu-features"]}
+{"text": "is mce available?", "response": "Yes. This CPU reports mce.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:mce", "caps": ["cpu-features"]}
+{"text": "sse2 support", "response": "Yes. This CPU reports sse2.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:sse2", "caps": ["cpu-features"]}
+{"text": "does this cpu support avx2", "response": "No. This CPU does not report avx2.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:avx2", "caps": ["cpu-features"]}
+{"text": "does this cpu have fxsr", "response": "Yes. This CPU reports fxsr.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:fxsr", "caps": ["cpu-features"]}
+{"text": "which cpu do i have", "response": "This CPU is AuthenticAMD family 15 model 107 stepping 1 (QEMU qemu64).", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:identity", "caps": ["cpu-features"]}
+{"text": "is tbm available?", "response": "No. This CPU does not report tbm.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:tbm", "caps": ["cpu-features"]}
+{"text": "identify the cpu?", "response": "This CPU is AuthenticAMD family 15 model 107 stepping 1 (QEMU qemu64).", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:identity", "caps": ["cpu-features"]}
+{"text": "can i use amx-tile", "response": "No. This CPU does not report amx-tile.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:amx-tile", "caps": ["cpu-features"]}
+{"text": "is sse4a available", "response": "No. This CPU does not report sse4a.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:sse4a", "caps": ["cpu-features"]}
+{"text": "does this cpu have pae?", "response": "Yes. This CPU reports pae.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:pae", "caps": ["cpu-features"]}
+{"text": "is lahf_lm available", "response": "Yes. This CPU reports lahf_lm.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:lahf_lm", "caps": ["cpu-features"]}
+{"text": "sse2 support?", "response": "Yes. This CPU reports sse2.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:sse2", "caps": ["cpu-features"]}
+{"text": "does this cpu support pge", "response": "Yes. This CPU reports pge.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:pge", "caps": ["cpu-features"]}
+{"text": "show cpu features", "response": "This CPU reports: 64bit apic clflush cmov cx16 cx8 de fpu fxsr lahf_lm mca mce mmx msr mtrr nx pae pat pge pse pse36 sep sse sse2 sse3 svm syscall tsc.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:features", "caps": ["cpu-features"]}
+{"text": "does this machine have cx16?", "response": "Yes. This CPU reports cx16.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:cx16", "caps": ["cpu-features"]}
+{"text": "is syscall available?", "response": "Yes. This CPU reports syscall.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:syscall", "caps": ["cpu-features"]}
+{"text": "can i use tbm", "response": "No. This CPU does not report tbm.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:tbm", "caps": ["cpu-features"]}
+{"text": "does this cpu have clflush", "response": "Yes. This CPU reports clflush.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:clflush", "caps": ["cpu-features"]}
+{"text": "does this cpu support cx16", "response": "Yes. This CPU reports cx16.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:cx16", "caps": ["cpu-features"]}
+{"text": "does this cpu support xop", "response": "No. This CPU does not report xop.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:xop", "caps": ["cpu-features"]}
+{"text": "sse4.2 support", "response": "No. This CPU does not report sse4.2.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:sse4.2", "caps": ["cpu-features"]}
+{"text": "does this machine have nx", "response": "Yes. This CPU reports nx.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:nx", "caps": ["cpu-features"]}
+{"text": "does this cpu have pse36?", "response": "Yes. This CPU reports pse36.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:pse36", "caps": ["cpu-features"]}
+{"text": "does this machine have rdrnd", "response": "No. This CPU does not report rdrnd.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:rdrnd", "caps": ["cpu-features"]}
+{"text": "does this cpu have avx?", "response": "No. This CPU does not report avx.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:avx", "caps": ["cpu-features"]}
+{"text": "is sse4.2 available", "response": "No. This CPU does not report sse4.2.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:sse4.2", "caps": ["cpu-features"]}
+{"text": "mce support?", "response": "Yes. This CPU reports mce.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:mce", "caps": ["cpu-features"]}
+{"text": "can i use rtm", "response": "No. This CPU does not report rtm.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:rtm", "caps": ["cpu-features"]}
+{"text": "can i use tsc", "response": "Yes. This CPU reports tsc.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:tsc", "caps": ["cpu-features"]}
+{"text": "does this machine have rtm", "response": "No. This CPU does not report rtm.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:rtm", "caps": ["cpu-features"]}
+{"text": "does this machine have rdrnd?", "response": "No. This CPU does not report rdrnd.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:rdrnd", "caps": ["cpu-features"]}
+{"text": "is invpcid available?", "response": "No. This CPU does not report invpcid.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:invpcid", "caps": ["cpu-features"]}
+{"text": "rdseed support?", "response": "No. This CPU does not report rdseed.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:rdseed", "caps": ["cpu-features"]}
+{"text": "avx support?", "response": "No. This CPU does not report avx.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:avx", "caps": ["cpu-features"]}
+{"text": "fma support?", "response": "No. This CPU does not report fma.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:fma", "caps": ["cpu-features"]}
+{"text": "does this cpu have fma", "response": "No. This CPU does not report fma.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:fma", "caps": ["cpu-features"]}
+{"text": "is fma4 available?", "response": "No. This CPU does not report fma4.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:fma4", "caps": ["cpu-features"]}
+{"text": "is tsc available?", "response": "Yes. This CPU reports tsc.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:tsc", "caps": ["cpu-features"]}
+{"text": "does this cpu have avx512f?", "response": "No. This CPU does not report avx512f.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:avx512f", "caps": ["cpu-features"]}
+{"text": "avx512f support?", "response": "No. This CPU does not report avx512f.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:avx512f", "caps": ["cpu-features"]}
+{"text": "does this cpu support fsgsbase", "response": "No. This CPU does not report fsgsbase.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:fsgsbase", "caps": ["cpu-features"]}
+{"text": "can i use movbe", "response": "No. This CPU does not report movbe.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:movbe", "caps": ["cpu-features"]}
+{"text": "can i use sse3?", "response": "Yes. This CPU reports sse3.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:sse3", "caps": ["cpu-features"]}
+{"text": "cpu capabilities?", "response": "This CPU reports: 64bit apic clflush cmov cx16 cx8 de fpu fxsr lahf_lm mca mce mmx msr mtrr nx pae pat pge pse pse36 sep sse sse2 sse3 svm syscall tsc.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:features", "caps": ["cpu-features"]}
+{"text": "mtrr support?", "response": "Yes. This CPU reports mtrr.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:mtrr", "caps": ["cpu-features"]}
+{"text": "sse4.2 support?", "response": "No. This CPU does not report sse4.2.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:sse4.2", "caps": ["cpu-features"]}
+{"text": "does this cpu have cx16", "response": "Yes. This CPU reports cx16.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:cx16", "caps": ["cpu-features"]}
+{"text": "fma support", "response": "No. This CPU does not report fma.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:fma", "caps": ["cpu-features"]}
+{"text": "can i use movbe?", "response": "No. This CPU does not report movbe.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:movbe", "caps": ["cpu-features"]}
+{"text": "sse support", "response": "Yes. This CPU reports sse.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:sse", "caps": ["cpu-features"]}
+{"text": "does this cpu have xop?", "response": "No. This CPU does not report xop.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:xop", "caps": ["cpu-features"]}
+{"text": "does this cpu have cmov?", "response": "Yes. This CPU reports cmov.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:cmov", "caps": ["cpu-features"]}
+{"text": "what instructions does this cpu support", "response": "This CPU reports: 64bit apic clflush cmov cx16 cx8 de fpu fxsr lahf_lm mca mce mmx msr mtrr nx pae pat pge pse pse36 sep sse sse2 sse3 svm syscall tsc.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:features", "caps": ["cpu-features"]}
+{"text": "pae support?", "response": "Yes. This CPU reports pae.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:pae", "caps": ["cpu-features"]}
+{"text": "syscall support", "response": "Yes. This CPU reports syscall.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:syscall", "caps": ["cpu-features"]}
+{"text": "does this machine have mmx", "response": "Yes. This CPU reports mmx.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:mmx", "caps": ["cpu-features"]}
+{"text": "can i use xop", "response": "No. This CPU does not report xop.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:xop", "caps": ["cpu-features"]}
+{"text": "does this cpu have msr?", "response": "Yes. This CPU reports msr.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:msr", "caps": ["cpu-features"]}
+{"text": "is fma available", "response": "No. This CPU does not report fma.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:fma", "caps": ["cpu-features"]}
+{"text": "does this cpu support de", "response": "Yes. This CPU reports de.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:de", "caps": ["cpu-features"]}
+{"text": "does this cpu support cmov", "response": "Yes. This CPU reports cmov.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:cmov", "caps": ["cpu-features"]}
+{"text": "does this cpu support avx", "response": "No. This CPU does not report avx.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:avx", "caps": ["cpu-features"]}
+{"text": "is avx available?", "response": "No. This CPU does not report avx.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:avx", "caps": ["cpu-features"]}
+{"text": "does this cpu support tsc?", "response": "Yes. This CPU reports tsc.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:tsc", "caps": ["cpu-features"]}
+{"text": "sha support", "response": "No. This CPU does not report sha.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:sha", "caps": ["cpu-features"]}
+{"text": "does this machine have sse4a?", "response": "No. This CPU does not report sse4a.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:sse4a", "caps": ["cpu-features"]}
+{"text": "does this cpu support cx8?", "response": "Yes. This CPU reports cx8.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:cx8", "caps": ["cpu-features"]}
+{"text": "is aes available?", "response": "No. This CPU does not report aes.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:aes", "caps": ["cpu-features"]}
+{"text": "does this cpu have sse4a", "response": "No. This CPU does not report sse4a.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:sse4a", "caps": ["cpu-features"]}
+{"text": "does this cpu support cx8", "response": "Yes. This CPU reports cx8.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:cx8", "caps": ["cpu-features"]}
+{"text": "cx16 support", "response": "Yes. This CPU reports cx16.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:cx16", "caps": ["cpu-features"]}
+{"text": "does this machine have clflush", "response": "Yes. This CPU reports clflush.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:clflush", "caps": ["cpu-features"]}
+{"text": "does this cpu support avx?", "response": "No. This CPU does not report avx.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:avx", "caps": ["cpu-features"]}
+{"text": "does this machine have sse4a", "response": "No. This CPU does not report sse4a.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:sse4a", "caps": ["cpu-features"]}
+{"text": "what processor is this", "response": "This CPU is AuthenticAMD family 15 model 107 stepping 1 (QEMU qemu64).", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:identity", "caps": ["cpu-features"]}
+{"text": "can i use sse2", "response": "Yes. This CPU reports sse2.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:sse2", "caps": ["cpu-features"]}
+{"text": "does this cpu have de", "response": "Yes. This CPU reports de.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:de", "caps": ["cpu-features"]}
+{"text": "is avx2 available", "response": "No. This CPU does not report avx2.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:avx2", "caps": ["cpu-features"]}
+{"text": "can i use xop?", "response": "No. This CPU does not report xop.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:xop", "caps": ["cpu-features"]}
+{"text": "is lahf_lm available?", "response": "Yes. This CPU reports lahf_lm.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:lahf_lm", "caps": ["cpu-features"]}
+{"text": "is de available", "response": "Yes. This CPU reports de.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:de", "caps": ["cpu-features"]}
+{"text": "does this machine have fpu", "response": "Yes. This CPU reports fpu.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:fpu", "caps": ["cpu-features"]}
+{"text": "can i use sep?", "response": "Yes. This CPU reports sep.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:sep", "caps": ["cpu-features"]}
+{"text": "does this machine have sep?", "response": "Yes. This CPU reports sep.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:sep", "caps": ["cpu-features"]}
+{"text": "can i use rdrnd", "response": "No. This CPU does not report rdrnd.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:rdrnd", "caps": ["cpu-features"]}
+{"text": "is pae available", "response": "Yes. This CPU reports pae.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:pae", "caps": ["cpu-features"]}
+{"text": "does this machine have de?", "response": "Yes. This CPU reports de.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:de", "caps": ["cpu-features"]}
+{"text": "does this cpu have pat?", "response": "Yes. This CPU reports pat.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:pat", "caps": ["cpu-features"]}
+{"text": "can i use mca?", "response": "Yes. This CPU reports mca.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:mca", "caps": ["cpu-features"]}
+{"text": "can i use nx", "response": "Yes. This CPU reports nx.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:nx", "caps": ["cpu-features"]}
+{"text": "can i use avx2?", "response": "No. This CPU does not report avx2.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:avx2", "caps": ["cpu-features"]}
+{"text": "does this cpu have rdseed", "response": "No. This CPU does not report rdseed.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:rdseed", "caps": ["cpu-features"]}
+{"text": "cpu flags?", "response": "This CPU reports: 64bit apic clflush cmov cx16 cx8 de fpu fxsr lahf_lm mca mce mmx msr mtrr nx pae pat pge pse pse36 sep sse sse2 sse3 svm syscall tsc.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:features", "caps": ["cpu-features"]}
+{"text": "show cpu?", "response": "This CPU is AuthenticAMD family 15 model 107 stepping 1 (QEMU qemu64).", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:identity", "caps": ["cpu-features"]}
+{"text": "xop support", "response": "No. This CPU does not report xop.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:xop", "caps": ["cpu-features"]}
+{"text": "does this machine have avx?", "response": "No. This CPU does not report avx.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:avx", "caps": ["cpu-features"]}
+{"text": "is amx-tile available", "response": "No. This CPU does not report amx-tile.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:amx-tile", "caps": ["cpu-features"]}
+{"text": "can i use cx8?", "response": "Yes. This CPU reports cx8.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:cx8", "caps": ["cpu-features"]}
+{"text": "can i use sse4a", "response": "No. This CPU does not report sse4a.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:sse4a", "caps": ["cpu-features"]}
+{"text": "can i use apic", "response": "Yes. This CPU reports apic.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:apic", "caps": ["cpu-features"]}
+{"text": "is bmi2 available?", "response": "No. This CPU does not report bmi2.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:bmi2", "caps": ["cpu-features"]}
+{"text": "does this machine have tsc?", "response": "Yes. This CPU reports tsc.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:tsc", "caps": ["cpu-features"]}
+{"text": "fpu support?", "response": "Yes. This CPU reports fpu.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:fpu", "caps": ["cpu-features"]}
+{"text": "can i use clflush", "response": "Yes. This CPU reports clflush.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:clflush", "caps": ["cpu-features"]}
+{"text": "does this machine have sep", "response": "Yes. This CPU reports sep.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:sep", "caps": ["cpu-features"]}
+{"text": "is pat available", "response": "Yes. This CPU reports pat.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:pat", "caps": ["cpu-features"]}
+{"text": "is fma available?", "response": "No. This CPU does not report fma.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:fma", "caps": ["cpu-features"]}
+{"text": "fsgsbase support?", "response": "No. This CPU does not report fsgsbase.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:fsgsbase", "caps": ["cpu-features"]}
+{"text": "is rdseed available", "response": "No. This CPU does not report rdseed.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:rdseed", "caps": ["cpu-features"]}
+{"text": "does this cpu support svm?", "response": "Yes. This CPU reports svm.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:svm", "caps": ["cpu-features"]}
+{"text": "does this machine have popcnt", "response": "No. This CPU does not report popcnt.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:popcnt", "caps": ["cpu-features"]}
+{"text": "does this machine have rtm?", "response": "No. This CPU does not report rtm.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:rtm", "caps": ["cpu-features"]}
+{"text": "does this machine have xop", "response": "No. This CPU does not report xop.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:xop", "caps": ["cpu-features"]}
+{"text": "is mmx available?", "response": "Yes. This CPU reports mmx.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:mmx", "caps": ["cpu-features"]}
+{"text": "xsave support", "response": "No. This CPU does not report xsave.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:xsave", "caps": ["cpu-features"]}
+{"text": "is xop available?", "response": "No. This CPU does not report xop.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:xop", "caps": ["cpu-features"]}
+{"text": "aes support", "response": "No. This CPU does not report aes.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:aes", "caps": ["cpu-features"]}
+{"text": "does this cpu have mmx?", "response": "Yes. This CPU reports mmx.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:mmx", "caps": ["cpu-features"]}
+{"text": "popcnt support?", "response": "No. This CPU does not report popcnt.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:popcnt", "caps": ["cpu-features"]}
+{"text": "does this cpu support sse2?", "response": "Yes. This CPU reports sse2.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:sse2", "caps": ["cpu-features"]}
+{"text": "does this machine have pse?", "response": "Yes. This CPU reports pse.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:pse", "caps": ["cpu-features"]}
+{"text": "does this cpu have avx2?", "response": "No. This CPU does not report avx2.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:avx2", "caps": ["cpu-features"]}
+{"text": "is tbm available", "response": "No. This CPU does not report tbm.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:tbm", "caps": ["cpu-features"]}
+{"text": "does this cpu support cx16?", "response": "Yes. This CPU reports cx16.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:cx16", "caps": ["cpu-features"]}
+{"text": "can i use fma4?", "response": "No. This CPU does not report fma4.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:fma4", "caps": ["cpu-features"]}
+{"text": "sse3 support", "response": "Yes. This CPU reports sse3.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:sse3", "caps": ["cpu-features"]}
+{"text": "cpu info?", "response": "This CPU is AuthenticAMD family 15 model 107 stepping 1 (QEMU qemu64).", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:identity", "caps": ["cpu-features"]}
+{"text": "does this machine have apic", "response": "Yes. This CPU reports apic.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:apic", "caps": ["cpu-features"]}
+{"text": "does this machine have aes", "response": "No. This CPU does not report aes.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:aes", "caps": ["cpu-features"]}
+{"text": "does this machine have pge?", "response": "Yes. This CPU reports pge.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:pge", "caps": ["cpu-features"]}
+{"text": "does this cpu support mca", "response": "Yes. This CPU reports mca.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:mca", "caps": ["cpu-features"]}
+{"text": "is xsave available", "response": "No. This CPU does not report xsave.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:xsave", "caps": ["cpu-features"]}
+{"text": "sep support", "response": "Yes. This CPU reports sep.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:sep", "caps": ["cpu-features"]}
+{"text": "what instructions does this cpu support?", "response": "This CPU reports: 64bit apic clflush cmov cx16 cx8 de fpu fxsr lahf_lm mca mce mmx msr mtrr nx pae pat pge pse pse36 sep sse sse2 sse3 svm syscall tsc.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:features", "caps": ["cpu-features"]}
+{"text": "does this cpu have rdseed?", "response": "No. This CPU does not report rdseed.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:rdseed", "caps": ["cpu-features"]}
+{"text": "is pse available?", "response": "Yes. This CPU reports pse.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:pse", "caps": ["cpu-features"]}
+{"text": "is cx16 available", "response": "Yes. This CPU reports cx16.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:cx16", "caps": ["cpu-features"]}
+{"text": "does this cpu have fxsr?", "response": "Yes. This CPU reports fxsr.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:fxsr", "caps": ["cpu-features"]}
+{"text": "list cpu features?", "response": "This CPU reports: 64bit apic clflush cmov cx16 cx8 de fpu fxsr lahf_lm mca mce mmx msr mtrr nx pae pat pge pse pse36 sep sse sse2 sse3 svm syscall tsc.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:features", "caps": ["cpu-features"]}
+{"text": "can i use pat?", "response": "Yes. This CPU reports pat.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:pat", "caps": ["cpu-features"]}
+{"text": "can i use mmx?", "response": "Yes. This CPU reports mmx.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:mmx", "caps": ["cpu-features"]}
+{"text": "does this cpu support pse", "response": "Yes. This CPU reports pse.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:pse", "caps": ["cpu-features"]}
+{"text": "does this machine have tbm?", "response": "No. This CPU does not report tbm.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:tbm", "caps": ["cpu-features"]}
+{"text": "does this machine have lahf_lm", "response": "Yes. This CPU reports lahf_lm.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:lahf_lm", "caps": ["cpu-features"]}
+{"text": "does this machine have tsc", "response": "Yes. This CPU reports tsc.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:tsc", "caps": ["cpu-features"]}
+{"text": "can i use avx", "response": "No. This CPU does not report avx.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:avx", "caps": ["cpu-features"]}
+{"text": "does this cpu have bmi2", "response": "No. This CPU does not report bmi2.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:bmi2", "caps": ["cpu-features"]}
+{"text": "can i use 64bit", "response": "Yes. This CPU reports 64bit.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:64bit", "caps": ["cpu-features"]}
+{"text": "does this cpu have fpu", "response": "Yes. This CPU reports fpu.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:fpu", "caps": ["cpu-features"]}
+{"text": "does this cpu have sse3?", "response": "Yes. This CPU reports sse3.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:sse3", "caps": ["cpu-features"]}
+{"text": "can i use popcnt", "response": "No. This CPU does not report popcnt.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:popcnt", "caps": ["cpu-features"]}
+{"text": "msr support?", "response": "Yes. This CPU reports msr.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:msr", "caps": ["cpu-features"]}
+{"text": "is fma4 available", "response": "No. This CPU does not report fma4.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:fma4", "caps": ["cpu-features"]}
+{"text": "can i use pae", "response": "Yes. This CPU reports pae.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:pae", "caps": ["cpu-features"]}
+{"text": "is nx available?", "response": "Yes. This CPU reports nx.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:nx", "caps": ["cpu-features"]}
+{"text": "does this cpu have fma?", "response": "No. This CPU does not report fma.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:fma", "caps": ["cpu-features"]}
+{"text": "does this machine have sse3", "response": "Yes. This CPU reports sse3.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:sse3", "caps": ["cpu-features"]}
+{"text": "does this cpu have pat", "response": "Yes. This CPU reports pat.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:pat", "caps": ["cpu-features"]}
+{"text": "mca support", "response": "Yes. This CPU reports mca.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:mca", "caps": ["cpu-features"]}
+{"text": "does this cpu have syscall", "response": "Yes. This CPU reports syscall.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:syscall", "caps": ["cpu-features"]}
+{"text": "nx support?", "response": "Yes. This CPU reports nx.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:nx", "caps": ["cpu-features"]}
+{"text": "is sse4a available?", "response": "No. This CPU does not report sse4a.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:sse4a", "caps": ["cpu-features"]}
+{"text": "does this cpu have fpu?", "response": "Yes. This CPU reports fpu.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:fpu", "caps": ["cpu-features"]}
+{"text": "movbe support", "response": "No. This CPU does not report movbe.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:movbe", "caps": ["cpu-features"]}
+{"text": "does this machine have avx512f", "response": "No. This CPU does not report avx512f.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:avx512f", "caps": ["cpu-features"]}
+{"text": "does this cpu have sse4.2", "response": "No. This CPU does not report sse4.2.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:sse4.2", "caps": ["cpu-features"]}
+{"text": "is sse2 available?", "response": "Yes. This CPU reports sse2.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:sse2", "caps": ["cpu-features"]}
+{"text": "is popcnt available", "response": "No. This CPU does not report popcnt.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:popcnt", "caps": ["cpu-features"]}
+{"text": "is rdrnd available?", "response": "No. This CPU does not report rdrnd.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:rdrnd", "caps": ["cpu-features"]}
+{"text": "avx10.1-512 support", "response": "No. This CPU does not report avx10.1-512.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:avx10.1-512", "caps": ["cpu-features"]}
+{"text": "does this cpu support mmx", "response": "Yes. This CPU reports mmx.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:mmx", "caps": ["cpu-features"]}
+{"text": "what cpu is this", "response": "This CPU is AuthenticAMD family 15 model 107 stepping 1 (QEMU qemu64).", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:identity", "caps": ["cpu-features"]}
+{"text": "does this cpu have xsave?", "response": "No. This CPU does not report xsave.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:xsave", "caps": ["cpu-features"]}
+{"text": "does this machine have tbm", "response": "No. This CPU does not report tbm.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:tbm", "caps": ["cpu-features"]}
+{"text": "can i use fma4", "response": "No. This CPU does not report fma4.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:fma4", "caps": ["cpu-features"]}
+{"text": "is pat available?", "response": "Yes. This CPU reports pat.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:pat", "caps": ["cpu-features"]}
+{"text": "can i use pse", "response": "Yes. This CPU reports pse.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:pse", "caps": ["cpu-features"]}
+{"text": "cmov support", "response": "Yes. This CPU reports cmov.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:cmov", "caps": ["cpu-features"]}
+{"text": "does this machine have xsave", "response": "No. This CPU does not report xsave.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:xsave", "caps": ["cpu-features"]}
+{"text": "does this machine have apic?", "response": "Yes. This CPU reports apic.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:apic", "caps": ["cpu-features"]}
+{"text": "rtm support?", "response": "No. This CPU does not report rtm.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:rtm", "caps": ["cpu-features"]}
+{"text": "sse support?", "response": "Yes. This CPU reports sse.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:sse", "caps": ["cpu-features"]}
+{"text": "mce support", "response": "Yes. This CPU reports mce.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:mce", "caps": ["cpu-features"]}
+{"text": "does this cpu support rdseed?", "response": "No. This CPU does not report rdseed.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:rdseed", "caps": ["cpu-features"]}
+{"text": "is rdrnd available", "response": "No. This CPU does not report rdrnd.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:rdrnd", "caps": ["cpu-features"]}
+{"text": "clflush support?", "response": "Yes. This CPU reports clflush.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:clflush", "caps": ["cpu-features"]}
+{"text": "does this cpu have mmx", "response": "Yes. This CPU reports mmx.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:mmx", "caps": ["cpu-features"]}
+{"text": "does this cpu have cx8", "response": "Yes. This CPU reports cx8.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:cx8", "caps": ["cpu-features"]}
+{"text": "does this machine have fxsr", "response": "Yes. This CPU reports fxsr.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:fxsr", "caps": ["cpu-features"]}
+{"text": "does this machine have pge", "response": "Yes. This CPU reports pge.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:pge", "caps": ["cpu-features"]}
+{"text": "avx512f support", "response": "No. This CPU does not report avx512f.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:avx512f", "caps": ["cpu-features"]}
+{"text": "can i use apic?", "response": "Yes. This CPU reports apic.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:apic", "caps": ["cpu-features"]}
+{"text": "does this cpu have xop", "response": "No. This CPU does not report xop.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:xop", "caps": ["cpu-features"]}
+{"text": "does this cpu support sep?", "response": "Yes. This CPU reports sep.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:sep", "caps": ["cpu-features"]}
+{"text": "does this machine have sse2", "response": "Yes. This CPU reports sse2.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:sse2", "caps": ["cpu-features"]}
+{"text": "does this machine have pat", "response": "Yes. This CPU reports pat.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:pat", "caps": ["cpu-features"]}
+{"text": "cx16 support?", "response": "Yes. This CPU reports cx16.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:cx16", "caps": ["cpu-features"]}
+{"text": "does this cpu support aes", "response": "No. This CPU does not report aes.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:aes", "caps": ["cpu-features"]}
+{"text": "does this machine have pat?", "response": "Yes. This CPU reports pat.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:pat", "caps": ["cpu-features"]}
+{"text": "does this machine have fsgsbase", "response": "No. This CPU does not report fsgsbase.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:fsgsbase", "caps": ["cpu-features"]}
+{"text": "sha support?", "response": "No. This CPU does not report sha.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:sha", "caps": ["cpu-features"]}
+{"text": "does this cpu support nx?", "response": "Yes. This CPU reports nx.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:nx", "caps": ["cpu-features"]}
+{"text": "is mca available?", "response": "Yes. This CPU reports mca.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:mca", "caps": ["cpu-features"]}
+{"text": "does this machine have avx", "response": "No. This CPU does not report avx.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:avx", "caps": ["cpu-features"]}
+{"text": "is pse36 available?", "response": "Yes. This CPU reports pse36.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:pse36", "caps": ["cpu-features"]}
+{"text": "does this cpu have msr", "response": "Yes. This CPU reports msr.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:msr", "caps": ["cpu-features"]}
+{"text": "does this machine have fma", "response": "No. This CPU does not report fma.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:fma", "caps": ["cpu-features"]}
+{"text": "cx8 support", "response": "Yes. This CPU reports cx8.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:cx8", "caps": ["cpu-features"]}
+{"text": "does this cpu have sse3", "response": "Yes. This CPU reports sse3.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:sse3", "caps": ["cpu-features"]}
+{"text": "cmov support?", "response": "Yes. This CPU reports cmov.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:cmov", "caps": ["cpu-features"]}
+{"text": "can i use invpcid", "response": "No. This CPU does not report invpcid.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:invpcid", "caps": ["cpu-features"]}
+{"text": "does this cpu have rdrnd?", "response": "No. This CPU does not report rdrnd.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:rdrnd", "caps": ["cpu-features"]}
+{"text": "does this cpu support xsave?", "response": "No. This CPU does not report xsave.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:xsave", "caps": ["cpu-features"]}
+{"text": "is sse available", "response": "Yes. This CPU reports sse.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:sse", "caps": ["cpu-features"]}
+{"text": "can i use sse4.2", "response": "No. This CPU does not report sse4.2.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:sse4.2", "caps": ["cpu-features"]}
+{"text": "cpu info", "response": "This CPU is AuthenticAMD family 15 model 107 stepping 1 (QEMU qemu64).", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:identity", "caps": ["cpu-features"]}
+{"text": "does this cpu support avx10.1-512?", "response": "No. This CPU does not report avx10.1-512.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:avx10.1-512", "caps": ["cpu-features"]}
+{"text": "xop support?", "response": "No. This CPU does not report xop.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:xop", "caps": ["cpu-features"]}
+{"text": "is fpu available", "response": "Yes. This CPU reports fpu.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:fpu", "caps": ["cpu-features"]}
+{"text": "does this machine have svm", "response": "Yes. This CPU reports svm.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:svm", "caps": ["cpu-features"]}
+{"text": "does this cpu have amx-tile", "response": "No. This CPU does not report amx-tile.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:amx-tile", "caps": ["cpu-features"]}
+{"text": "can i use bmi2", "response": "No. This CPU does not report bmi2.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:bmi2", "caps": ["cpu-features"]}
+{"text": "does this machine have lahf_lm?", "response": "Yes. This CPU reports lahf_lm.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:lahf_lm", "caps": ["cpu-features"]}
+{"text": "does this machine have cx8?", "response": "Yes. This CPU reports cx8.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:cx8", "caps": ["cpu-features"]}
+{"text": "does this cpu have sse4.2?", "response": "No. This CPU does not report sse4.2.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:sse4.2", "caps": ["cpu-features"]}
+{"text": "does this cpu have pse36", "response": "Yes. This CPU reports pse36.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:pse36", "caps": ["cpu-features"]}
+{"text": "can i use avx?", "response": "No. This CPU does not report avx.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:avx", "caps": ["cpu-features"]}
+{"text": "is mtrr available", "response": "Yes. This CPU reports mtrr.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:mtrr", "caps": ["cpu-features"]}
+{"text": "does this machine have popcnt?", "response": "No. This CPU does not report popcnt.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:popcnt", "caps": ["cpu-features"]}
+{"text": "does this cpu support 64bit?", "response": "Yes. This CPU reports 64bit.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:64bit", "caps": ["cpu-features"]}
+{"text": "can i use pge", "response": "Yes. This CPU reports pge.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:pge", "caps": ["cpu-features"]}
+{"text": "can i use avx2", "response": "No. This CPU does not report avx2.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:avx2", "caps": ["cpu-features"]}
+{"text": "can i use mtrr", "response": "Yes. This CPU reports mtrr.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:mtrr", "caps": ["cpu-features"]}
+{"text": "can i use nx?", "response": "Yes. This CPU reports nx.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:nx", "caps": ["cpu-features"]}
+{"text": "avx support", "response": "No. This CPU does not report avx.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:avx", "caps": ["cpu-features"]}
+{"text": "mca support?", "response": "Yes. This CPU reports mca.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:mca", "caps": ["cpu-features"]}
+{"text": "is sse4.2 available?", "response": "No. This CPU does not report sse4.2.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:sse4.2", "caps": ["cpu-features"]}
+{"text": "does this cpu have fsgsbase", "response": "No. This CPU does not report fsgsbase.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:fsgsbase", "caps": ["cpu-features"]}
+{"text": "pae support", "response": "Yes. This CPU reports pae.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:pae", "caps": ["cpu-features"]}
+{"text": "cx8 support?", "response": "Yes. This CPU reports cx8.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:cx8", "caps": ["cpu-features"]}
+{"text": "does this cpu have rtm", "response": "No. This CPU does not report rtm.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:rtm", "caps": ["cpu-features"]}
+{"text": "does this machine have avx2", "response": "No. This CPU does not report avx2.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:avx2", "caps": ["cpu-features"]}
+{"text": "does this cpu have sha", "response": "No. This CPU does not report sha.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:sha", "caps": ["cpu-features"]}
+{"text": "is nx available", "response": "Yes. This CPU reports nx.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:nx", "caps": ["cpu-features"]}
+{"text": "rtm support", "response": "No. This CPU does not report rtm.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:rtm", "caps": ["cpu-features"]}
+{"text": "does this cpu support mmx?", "response": "Yes. This CPU reports mmx.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:mmx", "caps": ["cpu-features"]}
+{"text": "cpu flags", "response": "This CPU reports: 64bit apic clflush cmov cx16 cx8 de fpu fxsr lahf_lm mca mce mmx msr mtrr nx pae pat pge pse pse36 sep sse sse2 sse3 svm syscall tsc.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:features", "caps": ["cpu-features"]}
+{"text": "is fsgsbase available?", "response": "No. This CPU does not report fsgsbase.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:fsgsbase", "caps": ["cpu-features"]}
+{"text": "does this cpu support invpcid?", "response": "No. This CPU does not report invpcid.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:invpcid", "caps": ["cpu-features"]}
+{"text": "can i use sep", "response": "Yes. This CPU reports sep.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:sep", "caps": ["cpu-features"]}
+{"text": "can i use avx10.1-512", "response": "No. This CPU does not report avx10.1-512.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:avx10.1-512", "caps": ["cpu-features"]}
+{"text": "does this cpu support xsave", "response": "No. This CPU does not report xsave.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:xsave", "caps": ["cpu-features"]}
+{"text": "is cx8 available?", "response": "Yes. This CPU reports cx8.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:cx8", "caps": ["cpu-features"]}
+{"text": "is cmov available", "response": "Yes. This CPU reports cmov.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:cmov", "caps": ["cpu-features"]}
+{"text": "does this machine have msr?", "response": "Yes. This CPU reports msr.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:msr", "caps": ["cpu-features"]}
+{"text": "does this cpu have 64bit", "response": "Yes. This CPU reports 64bit.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:64bit", "caps": ["cpu-features"]}
+{"text": "does this cpu support avx512f?", "response": "No. This CPU does not report avx512f.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:avx512f", "caps": ["cpu-features"]}
+{"text": "is 64bit available?", "response": "Yes. This CPU reports 64bit.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:64bit", "caps": ["cpu-features"]}
+{"text": "does this cpu support sse4a", "response": "No. This CPU does not report sse4a.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:sse4a", "caps": ["cpu-features"]}
+{"text": "does this machine have pse36?", "response": "Yes. This CPU reports pse36.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:pse36", "caps": ["cpu-features"]}
+{"text": "aes support?", "response": "No. This CPU does not report aes.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:aes", "caps": ["cpu-features"]}
+{"text": "does this machine have xop?", "response": "No. This CPU does not report xop.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:xop", "caps": ["cpu-features"]}
+{"text": "does this cpu have fma4?", "response": "No. This CPU does not report fma4.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:fma4", "caps": ["cpu-features"]}
+{"text": "lahf_lm support", "response": "Yes. This CPU reports lahf_lm.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:lahf_lm", "caps": ["cpu-features"]}
+{"text": "does this cpu support sha?", "response": "No. This CPU does not report sha.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:sha", "caps": ["cpu-features"]}
+{"text": "is mtrr available?", "response": "Yes. This CPU reports mtrr.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:mtrr", "caps": ["cpu-features"]}
+{"text": "does this machine have 64bit?", "response": "Yes. This CPU reports 64bit.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:64bit", "caps": ["cpu-features"]}
+{"text": "does this cpu have popcnt?", "response": "No. This CPU does not report popcnt.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:popcnt", "caps": ["cpu-features"]}
+{"text": "does this cpu have pae", "response": "Yes. This CPU reports pae.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:pae", "caps": ["cpu-features"]}
+{"text": "is avx2 available?", "response": "No. This CPU does not report avx2.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:avx2", "caps": ["cpu-features"]}
+{"text": "does this cpu support fxsr?", "response": "Yes. This CPU reports fxsr.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:fxsr", "caps": ["cpu-features"]}
+{"text": "does this machine have sse?", "response": "Yes. This CPU reports sse.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:sse", "caps": ["cpu-features"]}
+{"text": "does this machine have pae?", "response": "Yes. This CPU reports pae.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:pae", "caps": ["cpu-features"]}
+{"text": "is avx10.1-512 available", "response": "No. This CPU does not report avx10.1-512.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:avx10.1-512", "caps": ["cpu-features"]}
+{"text": "avx10.1-512 support?", "response": "No. This CPU does not report avx10.1-512.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:avx10.1-512", "caps": ["cpu-features"]}
+{"text": "what cpu?", "response": "This CPU is AuthenticAMD family 15 model 107 stepping 1 (QEMU qemu64).", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:identity", "caps": ["cpu-features"]}
+{"text": "does this cpu support sse", "response": "Yes. This CPU reports sse.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:sse", "caps": ["cpu-features"]}
+{"text": "list cpu features", "response": "This CPU reports: 64bit apic clflush cmov cx16 cx8 de fpu fxsr lahf_lm mca mce mmx msr mtrr nx pae pat pge pse pse36 sep sse sse2 sse3 svm syscall tsc.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:features", "caps": ["cpu-features"]}
+{"text": "is amx-tile available?", "response": "No. This CPU does not report amx-tile.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:amx-tile", "caps": ["cpu-features"]}
+{"text": "does this machine have pse36", "response": "Yes. This CPU reports pse36.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:pse36", "caps": ["cpu-features"]}
+{"text": "can i use de?", "response": "Yes. This CPU reports de.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:de", "caps": ["cpu-features"]}
+{"text": "is aes available", "response": "No. This CPU does not report aes.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:aes", "caps": ["cpu-features"]}
+{"text": "can i use fma", "response": "No. This CPU does not report fma.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:fma", "caps": ["cpu-features"]}
+{"text": "does this cpu have amx-tile?", "response": "No. This CPU does not report amx-tile.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:amx-tile", "caps": ["cpu-features"]}
+{"text": "does this machine have svm?", "response": "Yes. This CPU reports svm.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:svm", "caps": ["cpu-features"]}
+{"text": "does this cpu support pse36?", "response": "Yes. This CPU reports pse36.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:pse36", "caps": ["cpu-features"]}
+{"text": "can i use xsave", "response": "No. This CPU does not report xsave.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:xsave", "caps": ["cpu-features"]}
+{"text": "does this cpu have avx10.1-512", "response": "No. This CPU does not report avx10.1-512.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:avx10.1-512", "caps": ["cpu-features"]}
+{"text": "does this cpu have movbe?", "response": "No. This CPU does not report movbe.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:movbe", "caps": ["cpu-features"]}
+{"text": "is sse2 available", "response": "Yes. This CPU reports sse2.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:sse2", "caps": ["cpu-features"]}
+{"text": "which processor?", "response": "This CPU is AuthenticAMD family 15 model 107 stepping 1 (QEMU qemu64).", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:identity", "caps": ["cpu-features"]}
+{"text": "does this cpu have 64bit?", "response": "Yes. This CPU reports 64bit.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:64bit", "caps": ["cpu-features"]}
+{"text": "does this cpu have mtrr", "response": "Yes. This CPU reports mtrr.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:mtrr", "caps": ["cpu-features"]}
+{"text": "does this cpu support syscall", "response": "Yes. This CPU reports syscall.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:syscall", "caps": ["cpu-features"]}
+{"text": "can i use lahf_lm?", "response": "Yes. This CPU reports lahf_lm.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:lahf_lm", "caps": ["cpu-features"]}
+{"text": "is sep available?", "response": "Yes. This CPU reports sep.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:sep", "caps": ["cpu-features"]}
+{"text": "can i use rtm?", "response": "No. This CPU does not report rtm.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:rtm", "caps": ["cpu-features"]}
+{"text": "sse4a support?", "response": "No. This CPU does not report sse4a.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:sse4a", "caps": ["cpu-features"]}
+{"text": "does this cpu support mce?", "response": "Yes. This CPU reports mce.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:mce", "caps": ["cpu-features"]}
+{"text": "is pse available", "response": "Yes. This CPU reports pse.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:pse", "caps": ["cpu-features"]}
+{"text": "show cpu features?", "response": "This CPU reports: 64bit apic clflush cmov cx16 cx8 de fpu fxsr lahf_lm mca mce mmx msr mtrr nx pae pat pge pse pse36 sep sse sse2 sse3 svm syscall tsc.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:features", "caps": ["cpu-features"]}
+{"text": "can i use fpu", "response": "Yes. This CPU reports fpu.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:fpu", "caps": ["cpu-features"]}
+{"text": "does this cpu support cmov?", "response": "Yes. This CPU reports cmov.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:cmov", "caps": ["cpu-features"]}
+{"text": "does this cpu have tsc?", "response": "Yes. This CPU reports tsc.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:tsc", "caps": ["cpu-features"]}
+{"text": "tbm support?", "response": "No. This CPU does not report tbm.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:tbm", "caps": ["cpu-features"]}
+{"text": "does this cpu support rdrnd", "response": "No. This CPU does not report rdrnd.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:rdrnd", "caps": ["cpu-features"]}
+{"text": "is svm available?", "response": "Yes. This CPU reports svm.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:svm", "caps": ["cpu-features"]}
+{"text": "does this machine have cx8", "response": "Yes. This CPU reports cx8.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:cx8", "caps": ["cpu-features"]}
+{"text": "can i use pat", "response": "Yes. This CPU reports pat.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:pat", "caps": ["cpu-features"]}
+{"text": "can i use fpu?", "response": "Yes. This CPU reports fpu.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:fpu", "caps": ["cpu-features"]}
+{"text": "is avx512f available?", "response": "No. This CPU does not report avx512f.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:avx512f", "caps": ["cpu-features"]}
+{"text": "does this cpu have lahf_lm?", "response": "Yes. This CPU reports lahf_lm.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:lahf_lm", "caps": ["cpu-features"]}
+{"text": "what features does this cpu have", "response": "This CPU reports: 64bit apic clflush cmov cx16 cx8 de fpu fxsr lahf_lm mca mce mmx msr mtrr nx pae pat pge pse pse36 sep sse sse2 sse3 svm syscall tsc.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:features", "caps": ["cpu-features"]}
+{"text": "can i use fxsr", "response": "Yes. This CPU reports fxsr.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:fxsr", "caps": ["cpu-features"]}
+{"text": "de support", "response": "Yes. This CPU reports de.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:de", "caps": ["cpu-features"]}
+{"text": "does this machine have mtrr?", "response": "Yes. This CPU reports mtrr.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:mtrr", "caps": ["cpu-features"]}
+{"text": "does this machine have sse", "response": "Yes. This CPU reports sse.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:sse", "caps": ["cpu-features"]}
+{"text": "is avx512f available", "response": "No. This CPU does not report avx512f.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:avx512f", "caps": ["cpu-features"]}
+{"text": "can i use msr", "response": "Yes. This CPU reports msr.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:msr", "caps": ["cpu-features"]}
+{"text": "does this cpu have avx", "response": "No. This CPU does not report avx.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:avx", "caps": ["cpu-features"]}
+{"text": "does this cpu support pae?", "response": "Yes. This CPU reports pae.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:pae", "caps": ["cpu-features"]}
+{"text": "does this cpu have sse", "response": "Yes. This CPU reports sse.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:sse", "caps": ["cpu-features"]}
+{"text": "does this cpu support rtm?", "response": "No. This CPU does not report rtm.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:rtm", "caps": ["cpu-features"]}
+{"text": "does this cpu support mca?", "response": "Yes. This CPU reports mca.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:mca", "caps": ["cpu-features"]}
+{"text": "can i use pse36?", "response": "Yes. This CPU reports pse36.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:pse36", "caps": ["cpu-features"]}
+{"text": "does this cpu support fpu", "response": "Yes. This CPU reports fpu.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:fpu", "caps": ["cpu-features"]}
+{"text": "does this cpu have fsgsbase?", "response": "No. This CPU does not report fsgsbase.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:fsgsbase", "caps": ["cpu-features"]}
+{"text": "does this machine have sse4.2", "response": "No. This CPU does not report sse4.2.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:sse4.2", "caps": ["cpu-features"]}
+{"text": "does this machine have mca", "response": "Yes. This CPU reports mca.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:mca", "caps": ["cpu-features"]}
+{"text": "can i use sse4.2?", "response": "No. This CPU does not report sse4.2.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:sse4.2", "caps": ["cpu-features"]}
+{"text": "does this cpu support popcnt", "response": "No. This CPU does not report popcnt.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:popcnt", "caps": ["cpu-features"]}
+{"text": "tsc support", "response": "Yes. This CPU reports tsc.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:tsc", "caps": ["cpu-features"]}
+{"text": "64bit support?", "response": "Yes. This CPU reports 64bit.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:64bit", "caps": ["cpu-features"]}
+{"text": "can i use cmov?", "response": "Yes. This CPU reports cmov.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:cmov", "caps": ["cpu-features"]}
+{"text": "does this cpu have bmi2?", "response": "No. This CPU does not report bmi2.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:bmi2", "caps": ["cpu-features"]}
+{"text": "does this machine have avx10.1-512?", "response": "No. This CPU does not report avx10.1-512.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:avx10.1-512", "caps": ["cpu-features"]}
+{"text": "is apic available", "response": "Yes. This CPU reports apic.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:apic", "caps": ["cpu-features"]}
+{"text": "does this machine have sha?", "response": "No. This CPU does not report sha.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:sha", "caps": ["cpu-features"]}
+{"text": "does this cpu support tsc", "response": "Yes. This CPU reports tsc.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:tsc", "caps": ["cpu-features"]}
+{"text": "can i use 64bit?", "response": "Yes. This CPU reports 64bit.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:64bit", "caps": ["cpu-features"]}
+{"text": "is de available?", "response": "Yes. This CPU reports de.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:de", "caps": ["cpu-features"]}
+{"text": "does this cpu have de?", "response": "Yes. This CPU reports de.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:de", "caps": ["cpu-features"]}
+{"text": "can i use de", "response": "Yes. This CPU reports de.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:de", "caps": ["cpu-features"]}
+{"text": "can i use mce?", "response": "Yes. This CPU reports mce.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:mce", "caps": ["cpu-features"]}
+{"text": "does this machine have fxsr?", "response": "Yes. This CPU reports fxsr.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:fxsr", "caps": ["cpu-features"]}
+{"text": "does this cpu have movbe", "response": "No. This CPU does not report movbe.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:movbe", "caps": ["cpu-features"]}
+{"text": "xsave support?", "response": "No. This CPU does not report xsave.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:xsave", "caps": ["cpu-features"]}
+{"text": "is syscall available", "response": "Yes. This CPU reports syscall.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:syscall", "caps": ["cpu-features"]}
+{"text": "is rdseed available?", "response": "No. This CPU does not report rdseed.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:rdseed", "caps": ["cpu-features"]}
+{"text": "does this machine have mce", "response": "Yes. This CPU reports mce.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:mce", "caps": ["cpu-features"]}
+{"text": "svm support?", "response": "Yes. This CPU reports svm.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:svm", "caps": ["cpu-features"]}
+{"text": "does this cpu support fma4", "response": "No. This CPU does not report fma4.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:fma4", "caps": ["cpu-features"]}
+{"text": "does this cpu have sse4a?", "response": "No. This CPU does not report sse4a.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:sse4a", "caps": ["cpu-features"]}
+{"text": "does this cpu support mtrr", "response": "Yes. This CPU reports mtrr.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:mtrr", "caps": ["cpu-features"]}
+{"text": "can i use svm", "response": "Yes. This CPU reports svm.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:svm", "caps": ["cpu-features"]}
+{"text": "does this machine have bmi2?", "response": "No. This CPU does not report bmi2.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:bmi2", "caps": ["cpu-features"]}
+{"text": "is mce available", "response": "Yes. This CPU reports mce.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:mce", "caps": ["cpu-features"]}
+{"text": "does this cpu have svm", "response": "Yes. This CPU reports svm.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:svm", "caps": ["cpu-features"]}
+{"text": "can i use mmx", "response": "Yes. This CPU reports mmx.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:mmx", "caps": ["cpu-features"]}
+{"text": "avx2 support?", "response": "No. This CPU does not report avx2.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:avx2", "caps": ["cpu-features"]}
+{"text": "can i use sse?", "response": "Yes. This CPU reports sse.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:sse", "caps": ["cpu-features"]}
+{"text": "does this cpu support sse3", "response": "Yes. This CPU reports sse3.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:sse3", "caps": ["cpu-features"]}
+{"text": "movbe support?", "response": "No. This CPU does not report movbe.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:movbe", "caps": ["cpu-features"]}
+{"text": "is avx available", "response": "No. This CPU does not report avx.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:avx", "caps": ["cpu-features"]}
+{"text": "can i use avx10.1-512?", "response": "No. This CPU does not report avx10.1-512.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:avx10.1-512", "caps": ["cpu-features"]}
+{"text": "rdseed support", "response": "No. This CPU does not report rdseed.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:rdseed", "caps": ["cpu-features"]}
+{"text": "does this cpu support svm", "response": "Yes. This CPU reports svm.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:svm", "caps": ["cpu-features"]}
+{"text": "does this cpu have clflush?", "response": "Yes. This CPU reports clflush.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:clflush", "caps": ["cpu-features"]}
+{"text": "does this cpu support fxsr", "response": "Yes. This CPU reports fxsr.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:fxsr", "caps": ["cpu-features"]}
+{"text": "is fpu available?", "response": "Yes. This CPU reports fpu.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:fpu", "caps": ["cpu-features"]}
+{"text": "de support?", "response": "Yes. This CPU reports de.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:de", "caps": ["cpu-features"]}
+{"text": "does this cpu support apic", "response": "Yes. This CPU reports apic.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:apic", "caps": ["cpu-features"]}
+{"text": "can i use msr?", "response": "Yes. This CPU reports msr.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:msr", "caps": ["cpu-features"]}
+{"text": "can i use fxsr?", "response": "Yes. This CPU reports fxsr.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:fxsr", "caps": ["cpu-features"]}
+{"text": "does this cpu support mtrr?", "response": "Yes. This CPU reports mtrr.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:mtrr", "caps": ["cpu-features"]}
+{"text": "does this cpu have sse?", "response": "Yes. This CPU reports sse.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:sse", "caps": ["cpu-features"]}
+{"text": "what cpu is this?", "response": "This CPU is AuthenticAMD family 15 model 107 stepping 1 (QEMU qemu64).", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:identity", "caps": ["cpu-features"]}
+{"text": "does this cpu have popcnt", "response": "No. This CPU does not report popcnt.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:popcnt", "caps": ["cpu-features"]}
+{"text": "is avx10.1-512 available?", "response": "No. This CPU does not report avx10.1-512.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:avx10.1-512", "caps": ["cpu-features"]}
+{"text": "identify the cpu", "response": "This CPU is AuthenticAMD family 15 model 107 stepping 1 (QEMU qemu64).", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:identity", "caps": ["cpu-features"]}
+{"text": "can i use svm?", "response": "Yes. This CPU reports svm.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:svm", "caps": ["cpu-features"]}
+{"text": "amx-tile support?", "response": "No. This CPU does not report amx-tile.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:amx-tile", "caps": ["cpu-features"]}
+{"text": "invpcid support", "response": "No. This CPU does not report invpcid.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:invpcid", "caps": ["cpu-features"]}
+{"text": "does this cpu support sse4.2?", "response": "No. This CPU does not report sse4.2.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:sse4.2", "caps": ["cpu-features"]}
+{"text": "can i use rdseed?", "response": "No. This CPU does not report rdseed.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:rdseed", "caps": ["cpu-features"]}
+{"text": "does this machine have xsave?", "response": "No. This CPU does not report xsave.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:xsave", "caps": ["cpu-features"]}
+{"text": "does this cpu have svm?", "response": "Yes. This CPU reports svm.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:svm", "caps": ["cpu-features"]}
+{"text": "does this cpu support fma4?", "response": "No. This CPU does not report fma4.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:fma4", "caps": ["cpu-features"]}
+{"text": "is movbe available?", "response": "No. This CPU does not report movbe.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:movbe", "caps": ["cpu-features"]}
+{"text": "does this cpu have rdrnd", "response": "No. This CPU does not report rdrnd.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:rdrnd", "caps": ["cpu-features"]}
+{"text": "nx support", "response": "Yes. This CPU reports nx.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:nx", "caps": ["cpu-features"]}
+{"text": "does this machine have avx2?", "response": "No. This CPU does not report avx2.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:avx2", "caps": ["cpu-features"]}
+{"text": "can i use syscall?", "response": "Yes. This CPU reports syscall.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:syscall", "caps": ["cpu-features"]}
+{"text": "sep support?", "response": "Yes. This CPU reports sep.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:sep", "caps": ["cpu-features"]}
+{"text": "msr support", "response": "Yes. This CPU reports msr.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:msr", "caps": ["cpu-features"]}
+{"text": "apic support?", "response": "Yes. This CPU reports apic.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:apic", "caps": ["cpu-features"]}
+{"text": "does this cpu support avx2?", "response": "No. This CPU does not report avx2.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:avx2", "caps": ["cpu-features"]}
+{"text": "does this cpu support movbe?", "response": "No. This CPU does not report movbe.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:movbe", "caps": ["cpu-features"]}
+{"text": "does this machine have cmov", "response": "Yes. This CPU reports cmov.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:cmov", "caps": ["cpu-features"]}
+{"text": "does this cpu support sse4a?", "response": "No. This CPU does not report sse4a.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:sse4a", "caps": ["cpu-features"]}
+{"text": "does this cpu support invpcid", "response": "No. This CPU does not report invpcid.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:invpcid", "caps": ["cpu-features"]}
+{"text": "does this cpu have avx10.1-512?", "response": "No. This CPU does not report avx10.1-512.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:avx10.1-512", "caps": ["cpu-features"]}
+{"text": "is clflush available?", "response": "Yes. This CPU reports clflush.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:clflush", "caps": ["cpu-features"]}
+{"text": "does this cpu have mca", "response": "Yes. This CPU reports mca.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:mca", "caps": ["cpu-features"]}
+{"text": "is clflush available", "response": "Yes. This CPU reports clflush.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:clflush", "caps": ["cpu-features"]}
+{"text": "does this cpu have sse2", "response": "Yes. This CPU reports sse2.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:sse2", "caps": ["cpu-features"]}
+{"text": "does this machine have fpu?", "response": "Yes. This CPU reports fpu.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:fpu", "caps": ["cpu-features"]}
+{"text": "can i use tsc?", "response": "Yes. This CPU reports tsc.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:tsc", "caps": ["cpu-features"]}
+{"text": "does this machine have pae", "response": "Yes. This CPU reports pae.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:pae", "caps": ["cpu-features"]}
+{"text": "can i use sha", "response": "No. This CPU does not report sha.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:sha", "caps": ["cpu-features"]}
+{"text": "is mmx available", "response": "Yes. This CPU reports mmx.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:mmx", "caps": ["cpu-features"]}
+{"text": "does this machine have pse", "response": "Yes. This CPU reports pse.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:pse", "caps": ["cpu-features"]}
+{"text": "does this cpu support sse?", "response": "Yes. This CPU reports sse.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:sse", "caps": ["cpu-features"]}
+{"text": "does this machine have sse3?", "response": "Yes. This CPU reports sse3.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:sse3", "caps": ["cpu-features"]}
+{"text": "does this cpu have invpcid?", "response": "No. This CPU does not report invpcid.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:invpcid", "caps": ["cpu-features"]}
+{"text": "does this cpu support aes?", "response": "No. This CPU does not report aes.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:aes", "caps": ["cpu-features"]}
+{"text": "is pse36 available", "response": "Yes. This CPU reports pse36.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:pse36", "caps": ["cpu-features"]}
+{"text": "is pge available", "response": "Yes. This CPU reports pge.", "intent": "HARDWARE_IDENTIFY", "fact": "qemu:qemu64:pge", "caps": ["cpu-features"]}

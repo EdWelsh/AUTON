@@ -1,0 +1,45 @@
+# Domain text for SLM training: what it is, where it comes from, under what licence,
+# and what it may be used for. Read by SLM/tools/fetch_domain_text.py, which fetches
+# into .cache/slm/domain/ (gitignored) and commits only statistics
+# (SLM/datasets/domain_text.stats.json). The text itself is never committed.
+#
+#   use   pretraining  language-model text for a model with a subword tokenizer
+#                      (a host-side model, or a kernel once its tokenizer changes)
+#         vocabulary   word-frequency evidence for choosing the kernel's word budget
+#   The in-kernel model today is word-level with a 1,024-word vocabulary
+#   (SLM/DATA.md): raw domain text cannot train it directly.
+#
+#   fetch git-sparse   shallow, blob-filtered clone of only `paths`
+#         raw          a list of single files
+version: 1
+sources:
+  - id: linux-docs
+    title: Linux kernel Documentation (selected subsystems)
+    licence: GPL-2.0-only (some files dual-licensed CC-BY-4.0; see each file's SPDX line)
+    use: [pretraining, vocabulary]
+    fetch: git-sparse
+    repo: https://github.com/torvalds/linux.git
+    paths: [Documentation/admin-guide, Documentation/arch/x86, Documentation/arch/arm64,
+            Documentation/arch/riscv, Documentation/core-api, Documentation/driver-api,
+            Documentation/mm, Documentation/scheduler, Documentation/locking,
+            Documentation/filesystems, Documentation/networking, Documentation/virt,
+            Documentation/PCI, Documentation/firmware-guide, Documentation/power]
+    globs: ["*.rst", "*.txt"]
+
+  - id: man-pages
+    title: Linux man-pages, sections 2 (system calls), 4 (devices), 5 (files), 7 (overviews), 8 (admin)
+    licence: per page (Linux man-pages verbatim, GPL-2.0+, BSD; see each file's SPDX line)
+    use: [pretraining, vocabulary]
+    fetch: git-sparse
+    repo: https://github.com/mkerrisk/man-pages.git
+    paths: [man2, man4, man5, man7, man8]
+    globs: ["*.[0-9]"]
+
+  - id: qemu-docs
+    title: QEMU system emulation documentation
+    licence: GPL-2.0-or-later
+    use: [pretraining, vocabulary]
+    fetch: git-sparse
+    repo: https://github.com/qemu/qemu.git
+    paths: [docs/system]
+    globs: ["*.rst"]

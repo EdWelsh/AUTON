@@ -984,3 +984,20 @@ vendors:
         form: c-headers
         cadence: continuous
         fetch_url: https://raw.githubusercontent.com/torvalds/linux/master/arch/x86/kernel/cpu/vortex.c
+
+  # The CPU every gate boots on. QEMU with no -cpu option emulates its "qemu64"
+  # model, so what that model reports is ground truth for "this machine" in every
+  # test and acceptance run. Derived from QEMU's own definition table.
+  - vendor: qemu
+    category: isa-source
+    identity_keys: [cpu_model]
+    documents:
+      - id: qemu-target-i386-cpu-c
+        title: "QEMU target/i386/cpu.c: built-in x86 CPU model definitions"
+        kind: register-reference
+        access: public-source
+        redistributable: true
+        licence: GPL-2.0-or-later
+        form: c-headers
+        cadence: per-release
+        fetch_url: https://raw.githubusercontent.com/qemu/qemu/master/target/i386/cpu.c
