@@ -64,6 +64,10 @@ developer_count = 4
 reviewer_count = 1
 # Number of parallel tester agents
 tester_count = 1
+# Specialist agents, one per aspect of kernel creation (kernel_spec/specialists.yaml):
+# "all", a list of ids (["memory", "cpu"]), or false. Each is an implementer the
+# manager can assign to, and reviewers get each one's checklist for the files it covers.
+specialists = "all"
 
 [agents.models]
 # Override models per agent role (defaults to llm.model)
@@ -112,3 +116,10 @@ orchestrator_log = "logs/orchestrator.log"
 # well-formed tool calls will otherwise spend all fifty iterations discovering
 # that. Keep this small when pointing the loop at a local model.
 max_iterations = 50
+
+[hardware]
+# The vendor spec agents (Vendor Scout, Spec Reader). Off for kernel runs; scripts/
+# vendor_research.py turns them on in its own testing-area workspace.
+research = false
+# Extra hosts a scout may fetch from, beyond vendor_research.DEFAULT_HOSTS
+fetch_hosts = []

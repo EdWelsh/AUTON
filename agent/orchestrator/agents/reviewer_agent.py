@@ -63,6 +63,9 @@ class ReviewerAgent(Agent):
             tools=REVIEWER_TOOLS,
             **kwargs,
         )
+        # Specialist checklists (kernel_spec/specialists.yaml), set by the engine
+        # when the run enables specialists; each review gets the ones its files hit.
+        self.specialties: tuple = ()
 
     async def review_branch(self, task_id: str, branch: str,
                             task_brief: str = "") -> dict[str, Any]:
@@ -97,7 +100,7 @@ Files changed: {", ".join(changed) or "(none)"}
 ```diff
 {diff_text}
 ```
-
+{self._specialist_checklists(changed)}
 ## Instructions
 1. Review ONLY the change above. Do not describe code that is not in it.
 2. Read the full changed files if you need their context
@@ -148,6 +151,13 @@ Approve with nits if issues are minor.""",
             logger.warning("Could not update task metadata: %s", e)
 
         return review
+
+    def _specialist_checklists(self, changed: list[str]) -> str:
+        specialties = getattr(self, "specialties", ())
+        if not specialties:
+            return ""
+        from orchestrator.agents.specialists import checklists_for
+        return checklists_for(changed, specialties)
 
     def _parse_review(self, text: str) -> dict[str, Any]:
         """Parse a structured review from the agent's text output."""

@@ -40,9 +40,11 @@ def config(run: Path, model: str, scouts: int, readers: int) -> Path:
             line = f'path = "{run / "ws"}"'
         elif line.startswith("developer_count"):
             line = "developer_count = 0"
+        elif line.startswith("specialists ="):
+            line = "specialists = false"          # a research run writes no kernel code
+        elif line.startswith("research ="):
+            line = f"research = true\nscout_count = {scouts}\nreader_count = {readers}"
         lines.append(line)
-    lines += ["", "[hardware]", "research = true", f"scout_count = {scouts}",
-              f"reader_count = {readers}"]
     cfg = run / "auton.toml"
     cfg.write_text("\n".join(lines) + "\n")
     return cfg

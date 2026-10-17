@@ -1,0 +1,289 @@
+# The specialist agents: one per aspect of kernel creation, read by
+# agent/orchestrator/agents/specialists.py.
+#
+# A specialist is an implementer with one area's knowledge in its prompt, and a
+# reviewer's checklist for that area. When a change touches a specialist's
+# files, its checklist is added to the review, so an allocator is reviewed by
+# someone told what an allocator gets wrong, not only "check correctness".
+#
+#   id        the pool name the manager assigns to: "<id>_specialist"
+#   specs     read_spec names it owns (validated: each must exist)
+#   files     globs of the generated tree it covers
+#   focus     what it knows, in its prompt
+#   checklist what it insists on in review; each line is checkable in a diff
+#
+# Checklists say what to look for, not how this kernel happens to do it today:
+# the spec is the authority for that, and the specialist reads it.
+version: 1
+specialists:
+  - id: boot
+    title: Boot and early initialisation
+    specs: [boot, architecture, arch/x86_64]
+    files: ["kernel/boot/**", "kernel/arch/*/boot/**", "linker.ld", "kernel/arch/*/linker.ld"]
+    focus: >-
+      Multiboot2 and UEFI handoff, the boot information structure, early console, the
+      order subsystems initialise in, and what is and is not usable before memory
+      management exists.
+    checklist:
+      - Nothing allocates before the memory manager is initialised.
+      - The boot information is copied or reserved before the memory it lives in can be reused.
+      - Every init step that can fail reports which step failed on the serial console.
+      - The entry point sets up a stack and clears BSS before calling C.
+
+  - id: cpu
+    title: CPU features and instruction use
+    specs: [cpu, arch/x86_64, arch/aarch64, arch/riscv64]
+    files: ["kernel/arch/*/cpu*", "kernel/cpu/**", "kernel/include/cpu*.h"]
+    focus: >-
+      CPUID / ID registers / ISA strings, the baseline instruction set per architecture,
+      XSAVE and XCR0, and the instruction-availability tables in agent/hardware/isa/:
+      which parts shipped an extension, which lost it, which have it fused off.
+    checklist:
+      - Every instruction outside the architecture baseline is behind cpu_has().
+      - No feature is inferred from the vendor string or family/model alone.
+      - CPUID leaves above the reported maximum are never read.
+      - AVX/AVX-512 count as present only after CR4.OSXSAVE and XCR0 enable them.
+
+  - id: memory
+    title: Physical and virtual memory
+    specs: [mm, arch/x86_64]
+    files: ["kernel/mm/**", "kernel/include/mm.h", "kernel/lib/phys.c"]
+    focus: >-
+      Physical frame allocation, page tables and their flags, huge pages, the kernel
+      heap, DMA-safe memory, TLB invalidation and out-of-memory paths.
+    checklist:
+      - Reserved regions (kernel image, boot modules, firmware) are never handed out.
+      - A failed allocation partway through a multi-step operation releases what it took.
+      - Page-table changes are followed by the TLB invalidation they need.
+      - A physical address is dereferenced only through phys_to_virt().
+      - Portable memory code contains no inline assembly.
+
+  - id: interrupts
+    title: Interrupts and exceptions
+    specs: [arch/x86_64, hal]
+    files: ["kernel/arch/*/idt*", "kernel/arch/*/irq*", "kernel/arch/*/apic*", "kernel/arch/*/gic*",
+            "kernel/arch/*/exceptions*", "kernel/irq/**"]
+    focus: >-
+      IDT/vector tables, exception frames, the PIC/APIC/IOAPIC/GIC, interrupt routing,
+      end-of-interrupt, and what a handler may and may not do.
+    checklist:
+      - Every exception that pushes an error code is handled with the matching frame layout.
+      - Interrupt handlers do not sleep, allocate with a blocking allocator, or take a lock held with interrupts enabled.
+      - End-of-interrupt is sent exactly once per interrupt.
+      - A fault during a fault (double fault) has its own stack.
+
+  - id: timers
+    title: Time and timers
+    specs: [arch/x86_64, sched]
+    files: ["kernel/arch/*/timer*", "kernel/arch/*/tsc*", "kernel/time/**"]
+    focus: >-
+      PIT, HPET, the local APIC timer, the TSC and when it is invariant, the Arm generic
+      timer, calibration, and monotonic versus wall-clock time.
+    checklist:
+      - The TSC is used as a clock only when the CPU reports it invariant.
+      - Calibration has a bounded loop and a fallback when the reference timer is absent.
+      - Tick arithmetic cannot overflow within the uptime the spec promises.
+
+  - id: scheduler
+    title: Scheduling and context switching
+    specs: [sched, arch/x86_64]
+    files: ["kernel/sched/**", "kernel/arch/*/context*", "kernel/arch/*/switch*"]
+    focus: >-
+      Tasks, run queues, preemption, context switch, idle, and what state a switch must
+      save (callee-saved registers, FPU/SIMD state when used).
+    checklist:
+      - A context switch saves and restores exactly the state the ABI requires.
+      - FPU/SIMD state is saved when a task used it, or kernel SIMD is fenced.
+      - No task can be on two run queues, or freed while on one.
+
+  - id: smp
+    title: Multiprocessor bring-up
+    specs: [sched, arch/x86_64, hal]
+    files: ["kernel/arch/*/smp*", "kernel/arch/*/ap_*", "kernel/smp/**"]
+    focus: >-
+      Application processor start-up, per-CPU data, inter-processor interrupts, TLB
+      shootdown, and per-core feature differences on hybrid parts.
+    checklist:
+      - Per-CPU data is reached through the per-CPU base, never a global indexed by a racy id.
+      - A TLB change visible to other CPUs is followed by a shootdown.
+      - Each AP checks its own CPU features; the kernel uses the intersection.
+
+  - id: concurrency
+    title: Locking and memory ordering
+    specs: [sched, ipc]
+    files: ["kernel/**/lock*", "kernel/**/spin*", "kernel/**/atomic*", "kernel/include/sync*.h"]
+    focus: >-
+      Spinlocks, interrupt-safe locking, atomics and memory barriers, lock ordering, and
+      the bugs these produce only under load.
+    checklist:
+      - A lock taken in interrupt context is taken with interrupts disabled everywhere.
+      - Locks are acquired in one documented order.
+      - Shared data read without a lock is read with an atomic or a barrier that makes it safe.
+
+  - id: ipc
+    title: Inter-process communication
+    specs: [ipc]
+    files: ["kernel/ipc/**"]
+    focus: Message passing, shared buffers, and their bounds and lifetimes.
+    checklist:
+      - Every buffer copy is bounded by the destination's size.
+      - A message cannot outlive the endpoint it was sent to.
+
+  - id: syscalls
+    title: The user/kernel boundary
+    specs: [sys, arch/x86_64]
+    files: ["kernel/syscall/**", "kernel/arch/*/syscall*", "kernel/arch/*/usermode*"]
+    focus: >-
+      SYSCALL/SYSRET or SVC, SWAPGS, user pointers, argument validation, and returning
+      to user mode with no kernel state leaked.
+    checklist:
+      - Every user pointer is checked to be in user space before it is dereferenced.
+      - SWAPGS (or its equivalent) is executed on every entry and exit path, including faults.
+      - No kernel register or stack content is returned to user mode.
+
+  - id: devices
+    title: Device model and bus enumeration
+    specs: [dev, drivers]
+    files: ["kernel/dev/**", "kernel/drivers/pci*", "kernel/bus/**"]
+    focus: >-
+      PCI/PCIe configuration space, BARs, MSI/MSI-X, device identification through the
+      vendor registry and device tables, and binding drivers to devices.
+    checklist:
+      - A device is identified by vendor:device (and class), never by bus position.
+      - BAR sizes are probed before a BAR is mapped.
+      - An unknown device is reported as unknown, not guessed.
+
+  - id: network-drivers
+    title: Network drivers
+    specs: [drivers, drivers/e1000, drivers/virtio-net]
+    files: ["kernel/drivers/net/**", "kernel/drivers/e1000*", "kernel/drivers/virtio_net*"]
+    focus: Descriptor rings, DMA, interrupts and link state for network devices.
+    checklist:
+      - Descriptor ownership is handed to the device only after the descriptor is fully written, with a barrier.
+      - Receive buffers are replenished; a full ring drops, it does not overwrite.
+      - Errata recorded for the device in the driver record are handled.
+
+  - id: storage-drivers
+    title: Storage drivers
+    specs: [drivers, drivers/virtio-blk]
+    files: ["kernel/drivers/block/**", "kernel/drivers/virtio_blk*", "kernel/drivers/ahci*",
+            "kernel/drivers/nvme*"]
+    focus: VirtIO block, AHCI and NVMe queues, request completion, and error paths.
+    checklist:
+      - A request's buffer stays valid until the device completes it.
+      - Every device error status is propagated to the caller.
+
+  - id: console-drivers
+    title: Console, display and input
+    specs: [drivers, drivers/framebuffer, drivers/ps2-keyboard]
+    files: ["kernel/drivers/serial*", "kernel/drivers/fb*", "kernel/drivers/framebuffer*",
+            "kernel/drivers/ps2*", "kernel/drivers/kbd*", "kernel/drivers/virtio_console*"]
+    focus: UART, framebuffer, PS/2 and VirtIO console, and their scancode and pixel formats.
+    checklist:
+      - Framebuffer writes respect pitch, not width times bytes per pixel.
+      - Input is queued in a bounded buffer and overflow is counted, not silent.
+
+  - id: filesystems
+    title: Filesystems
+    specs: [fs]
+    files: ["kernel/fs/**"]
+    focus: VFS, FAT32, paths, caching, and on-disk structure validation.
+    checklist:
+      - On-disk values are validated before they are used as sizes, offsets or cluster numbers.
+      - Path handling rejects .. escapes and bounds every component.
+      - A write that fails partway leaves the filesystem consistent.
+
+  - id: networking
+    title: Network stack
+    specs: [net]
+    files: ["kernel/net/**"]
+    focus: Ethernet, ARP, IPv4, UDP, TCP, DHCP and the protocol state machines.
+    checklist:
+      - Every length field from the wire is checked against the bytes actually received.
+      - Checksums are verified on receive and computed on send.
+      - Protocol state machines have a timeout for every waiting state.
+
+  - id: security
+    title: Hardening and mitigations
+    specs: [architecture, arch/x86_64, mitigations/f00f-idt-remap]
+    files: ["kernel/**/mitigation*", "kernel/security/**", "kernel/arch/*/cr4*"]
+    focus: >-
+      NX/W^X, SMEP/SMAP/UMIP, speculative-execution mitigations, and CPU-specific
+      mitigations from the mitigation registry.
+    checklist:
+      - No mapping is both writable and executable.
+      - SMEP/SMAP/UMIP are enabled when the CPU has them.
+      - A mitigation is applied only on the parts its record names.
+
+  - id: hardware-errata
+    title: Silicon errata and conformance
+    specs: [mitigations/f00f-idt-remap, mitigations/fdiv-reference-check]
+    files: ["kernel/conformance/**", "kernel/errata/**"]
+    focus: >-
+      The errata tables (agent/hardware/), matching errata to the running CPU by family,
+      model, stepping and microcode, and the conformance checks that test silicon.
+    checklist:
+      - An erratum workaround is keyed on the identity its record names, not on the vendor.
+      - Conformance results are reported, never used to silently change behaviour.
+
+  - id: power
+    title: ACPI and power management
+    specs: [dev, arch/x86_64]
+    files: ["kernel/acpi/**", "kernel/power/**"]
+    focus: ACPI table discovery (RSDP, XSDT, MADT, FADT), checksums, shutdown and reboot.
+    checklist:
+      - Every ACPI table's signature, length and checksum are validated before use.
+      - Table lengths from firmware are bounded before they are mapped or copied.
+
+  - id: portability
+    title: Architecture portability
+    specs: [hal, arch/aarch64, arch/riscv64]
+    files: ["kernel/arch/**", "kernel/include/hal*.h"]
+    focus: >-
+      The HAL contract, what belongs in arch/ versus portable code, and the differences
+      that break ports: endianness assumptions, page sizes, memory ordering, atomics.
+    checklist:
+      - Portable code calls the HAL; it contains no architecture-specific instructions.
+      - Page size and address width come from the HAL, not literals.
+
+  - id: toolchain
+    title: Build, linking and freestanding C
+    specs: [architecture, pkg]
+    files: ["Makefile", "**/Makefile", "**/*.ld", "kernel/lib/**"]
+    focus: >-
+      Freestanding compilation, the red zone, -mno-sse in kernel code, linker scripts and
+      section placement, libgcc/compiler-rt needs, and reproducible builds.
+    checklist:
+      - Kernel code is built with the red zone disabled and no SIMD unless fenced.
+      - Every section the code relies on is placed by the linker script.
+      - No hosted libc header is included in kernel code.
+
+  - id: observability
+    title: Logging, panics and debugging
+    specs: [sys]
+    files: ["kernel/lib/klog*", "kernel/lib/panic*", "kernel/lib/printf*", "kernel/debug/**"]
+    focus: The kernel log, serial output, panic paths and boot markers the gates read.
+    checklist:
+      - A panic prints what failed before it halts, through arch_halt().
+      - Boot markers the gates grep for are printed exactly as the spec spells them.
+
+  - id: slm
+    title: The on-device language model
+    specs: [slm]
+    files: ["kernel/slm/**"]
+    focus: >-
+      The kernel's natural-language interface: the inference runtime, the rule engine
+      fallback, the device knowledge base, and what the model is allowed to claim.
+    checklist:
+      - Every answer about the machine comes from a fact the kernel holds, not from the model.
+      - A missing or degenerate model falls back to the rule engine and says so.
+
+  - id: services
+    title: Network services
+    specs: [services/dhcp, services/tftp, services/fileserver, services/kvstore, services/smtp,
+            services/ssh, services/host-repo]
+    files: ["kernel/services/**"]
+    focus: The services AUTON images run, each from its service spec and frozen interface.
+    checklist:
+      - The service implements its frozen interface header exactly.
+      - Every request is bounded and every error path answers the client.

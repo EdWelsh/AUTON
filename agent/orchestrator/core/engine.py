@@ -297,6 +297,29 @@ class OrchestrationEngine:
                 "ONE task, assigned_to \"packager\", producing package/Dockerfile and "
                 "package/PROVENANCE.json.")
 
+        # Specialists, one per aspect of kernel creation (kernel_spec/specialists.yaml),
+        # when the run asks for them (agents.specialists = "all" or a list of ids).
+        # Each is an implementer the manager can assign to; every reviewer gets the
+        # checklists, applied to the files each change touches.
+        wanted = agent_config.get("specialists")
+        if wanted:
+            import functools
+
+            from orchestrator.agents import specialists as sp
+            own = Path(self.kernel_spec_path) / "specialists.yaml"
+            chosen = sp.select(sp.load(own if own.exists() else sp.SPECIALISTS), wanted)
+            for spec in chosen:
+                agent = self._create_agent(f"{spec.id}-specialist-01", AgentRole.DEVELOPER,
+                                           functools.partial(sp.SpecialistAgent, spec))
+                self._agents[spec.pool] = agent
+                self.scheduler.register_agent(spec.pool, agent)
+                self._agents["manager"].advertise_role(
+                    spec.pool, f"- {spec.title}: assigned_to \"{spec.pool}\" for work in "
+                               f"{', '.join(spec.files[:3])} (specs: {', '.join(spec.specs)}).")
+            for a in self._agents.values():
+                if isinstance(a, ReviewerAgent):
+                    a.specialties = chosen
+
         # Vendor spec research, only when the run asks for it ([hardware] research =
         # true): advertising roles changes every planner prompt, so a kernel run's
         # experiment is unchanged unless the operator opts in.
