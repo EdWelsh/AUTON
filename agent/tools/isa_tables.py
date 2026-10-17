@@ -337,8 +337,10 @@ def has(tables: dict, arch: str, processor: str, feature: str,
     notes = [e for e in (exceptions or []) if e["arch"] == arch and e["feature"] == feature
              and _applies(e, arch, proc, processor)]
     return {"processor": proc, "feature": feature, "nominal": nominal, "exceptions": notes,
-            "verdict": (("absent: " if not nominal and all(n["kind"] in ("never-shipped", "removed")
-                                                           for n in notes) else "check at runtime: ")
+            # Undocumented behaviour is not a feature: the bit is clear, so it is absent.
+            "verdict": (("absent: " if not nominal and all(
+                n["kind"] in ("never-shipped", "removed", "undocumented") for n in notes)
+                else "check at runtime: ")
                         + "; ".join(n["kind"] for n in notes)) if notes
             else ("listed: still check at runtime" if nominal else "not listed for this part")}
 
