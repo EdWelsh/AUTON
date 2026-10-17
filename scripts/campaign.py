@@ -24,6 +24,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import subprocess
 import sys
 from datetime import datetime, timezone
@@ -129,6 +130,20 @@ def base_for(run: dict, runs: dict[str, dict]) -> tuple[list[str], str]:
     return args, f"{note} — {dep['name']} did not pass, so its own base"
 
 
+def preflight() -> str | None:
+    """Why no session could start, or None. On a fresh clone with no .venv every session
+    exited 127 in seconds while the boot gate passed on the untouched base, so
+    harness_suspect did not fire and both R1 attempts were spent (2026-10-17)."""
+    py = os.environ.get("PYTHON") or str(ROOT / ".venv/bin/python")
+    if not Path(py).is_absolute():
+        py = str(ROOT / py)
+    if not os.access(py, os.X_OK):
+        return f"no interpreter at {py} (orchestrate-native.sh runs sessions with it)"
+    if not (ROOT / "agent/config/auton.toml").exists():
+        return "no agent/config/auton.toml (copy agent/config/auton.toml.example)"
+    return None
+
+
 def run_one(run: dict, runs: dict[str, dict], spec: dict) -> None:
     for d in attempts(run):
         r = result_of(d)
@@ -186,6 +201,9 @@ def main(argv: list[str] | None = None) -> int:
             print(f"{r['name']:20} {state:13} {d.name if d else '-':28} gates {gates}")
         return 0
 
+    if why := preflight():
+        log(f"campaign: not started — {why}")
+        return 2
     for name in [r["name"] for r in spec["runs"]]:
         if args.only and name != args.only:
             continue
