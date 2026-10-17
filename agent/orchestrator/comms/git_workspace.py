@@ -259,7 +259,9 @@ class GitWorkspace:
             logger.info("Opened existing workspace at %s", self.path)
         except (InvalidGitRepositoryError, NoSuchPathError):
             self.path.mkdir(parents=True, exist_ok=True)
-            self._repo = Repo.init(self.path)
+            # `main` whatever the host's init.defaultBranch says; kernel-base.sh
+            # and the campaign's gates name it.
+            self._repo = Repo.init(self.path, initial_branch="main")
             created = True
 
         # Before any commit, and on both paths. An adopted workspace is as

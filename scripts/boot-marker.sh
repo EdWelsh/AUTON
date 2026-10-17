@@ -38,8 +38,9 @@ if ! make -C "$TREE" iso >"$BUILD_LOG" 2>&1; then
 fi
 [ -f "$ISO" ] || { echo "boot-marker: the build made no $ISO"; exit 1; }
 
-LOG="$(mktemp -t boot-marker)"
-trap 'rm -f "$LOG"' EXIT
+# GNU mktemp needs the X's that BSD's -t supplies; this form works on both.
+LOG="$(mktemp "${TMPDIR:-/tmp}/boot-marker-serial.XXXXXX")"
+trap 'rm -f "$BUILD_LOG" "$LOG"' EXIT
 "$QEMU" -accel "$AUTON_ACCEL" -cdrom "$ISO" -serial stdio -display none \
 	-no-reboot -m "${MEM:-256M}" > "$LOG" 2>/dev/null &
 qemu_pid=$!

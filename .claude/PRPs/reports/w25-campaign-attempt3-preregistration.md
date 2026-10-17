@@ -27,3 +27,22 @@ fix and record, do not count the attempt).
 base run's gates are green (R8 stays passed). **Not predicted:** that all pass. A pass is a result; a
 failure at a later gate than before is progress; I will not re-run a run on a changed harness without
 a new pre-registration.
+
+## Amendment 2026-10-17, before R1 starts: the host
+
+This experiment runs on a **Linux x86_64 cloud container** (4 cores, 15 GB), not the Mac.
+
+- **Model:** `claude-cli/claude-sonnet-5-5` only, qualified 4/4 here by `scripts/model-probe.py`
+  (slowest call 21 s). No Ollama on this host, so the fallback disables itself: a usage limit is
+  a wait, never a model switch, and every run is single-model.
+- **Gates checked here first** against the references: `run_mm_test.sh --self-test` passes,
+  `--inject` 9/9; `run_vmm_test.sh --self-test` passes; `boot-marker.sh` builds and boots
+  `kernel-base-v5` in QEMU (TCG). One harness defect was found and fixed before any run:
+  `boot-marker.sh` used BSD `mktemp -t`, which fails on GNU and would have scored every boot
+  gate "not generated".
+- **Different from the Mac:** the host suites compile with x86_64 clang, so inline assembly in
+  portable code compiles here; `portable_asm_check.sh` still names it. QEMU runs without KVM.
+- **Where kernels go:** every generated tree lives under `.artifacts/campaign/<run>-attempt<k>/ws`
+  (gitignored). Nothing generated enters the tracked tree.
+- `runs.yaml`: `r1-mm` attempts restart at 1 (dated amendment there). R8's pass stands from the
+  Mac and is not re-run.

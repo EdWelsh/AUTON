@@ -32,7 +32,9 @@ context: 200000
 # tests/kernel/<x>_reference/include, and its goal names it as the interface to match.
 runs:
   - name: r1-mm
-    attempt: 2                       # attempt 1 was w15; this is the last
+    # Amended 2026-10-17 (w25 attempt 3): attempts count from this experiment
+    # (reports/w25-campaign-attempt3-preregistration.md), so both are available again.
+    attempt: 1                       # was 2: attempt 1 was w15
     base: kernel-base-v5
     sessions: 4
     goal: goals/r1-mm.txt
