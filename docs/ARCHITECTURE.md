@@ -59,28 +59,26 @@ does not live in this repository — see
 │  └──────────────────────────────────────────────────────────┘     │
 │                                                                    │
 │  ┌──────────────────────────────────────────────────────────┐     │
-│  │              SLM Training Workflow                        │     │
-│  │                                                           │     │
+│  │              SLM Training Workflow                       │     │
+│  │                                                          │     │
 │  │  Data Scientist → Model Architect                        │     │
-│  │        ↓               ↓                                  │     │
-│  │  [Dataset Prep]  [Architecture Design]                   │     │
-│  │        ↓               ↓                                  │     │
-│  │  Training Agents (4x parallel) → Evaluation Agent        │     │
-│  │        ↓                              ↓                   │     │
-│  │  Quantization Agent → Export Agent                       │     │
-│  │        ↓                   ↓                              │     │
-│  │    [INT4/INT8]      [GGUF/ONNX]                          │     │
-│  │        └───────────────┬───────────┘                     │     │
-│  │                        ↓                                  │     │
-│  │              SLM/models/auton-slm                        │     │
+│  │        ↓               ↓                                 │     │
+│  │  [corpus + vocab]  [config: chat_tiny]                   │     │
+│  │        ↓               ↓                                 │     │
+│  │  Training ×2: train → export_auton → run_parity          │     │
+│  │              → run_chat_eval → int8                      │     │
+│  │        ↓                                                 │     │
+│  │  Integrator: integrate_slm                               │     │
+│  │        ↓                                                 │     │
+│  │  <kernel tree>/models/auton-slm.bin (AUTON format)       │     │
 │  └──────────────────────────────────────────────────────────┘     │
 │                                                                    │
 │  ┌──────────────────────────────────────────────────────────┐     │
 │  │              Integration & Deployment                     │     │
 │  │                                                           │     │
-│  │  kernel.bin + auton-slm.gguf                             │     │
+│  │  kernel.bin + models/auton-slm.bin (AUTON)               │     │
 │  │         ↓                                                 │     │
-│  │  [SLM Integration Agent]                                 │     │
+│  │  [make -C <tree> iso-neural MODEL=models/auton-slm.bin]  │     │
 │  │         ↓                                                 │     │
 │  │  Bootable SLM-Driven Kernel                              │     │
 │  │         ↓                                                 │     │
@@ -88,38 +86,38 @@ does not live in this repository — see
 │  │         ↓                                                 │     │
 │  │  ✓ Boot  ✓ Hardware Discovery  ✓ Driver Loading         │     │
 │  │         ↓                                                 │     │
-│  │  [Release Builder] → ISO/IMG/QCOW2 Generation            │     │
-│  │         ↓                                                 │     │
-│  │  GitHub Release (auton-{arch}-{version}.iso)             │     │
+│  │  scripts/build-iso.sh → dist/auton-{arch}-{ver}.iso      │     │
+│  │  (x86_64 only; no IMG/QCOW2, no release automation)      │     │
+│  │                                                           │     │
 │  └──────────────────────────────────────────────────────────┘     │
 │                                                                    │
 │  ┌──────────────────────────────────────────────────────────┐     │
 │  │              Test Coverage & Validation                   │     │
 │  │                                                           │     │
-│  │  Unit Tests (79 files)                                   │     │
-│  │    ├─ Agents (12)      ├─ LLM (6)                        │     │
-│  │    ├─ Orchestrator (8) ├─ Validation (3)                 │     │
-│  │    └─ Comms (4)        └─ Top level (46)                 │     │
-│  │                                                           │     │
-│  │  Integration Tests (5 files)                             │     │
+│  │  Unit tests (agent/tests/unit)                           │     │
+│  │    ├─ Agents          ├─ LLM                             │     │
+│  │    ├─ Orchestrator    ├─ Validation                      │     │
+│  │    └─ Comms           └─ Top level (tools, scripts)      │     │
+│  │                                                          │     │
+│  │  Integration tests (agent/tests/integration)             │     │
 │  │    ├─ Kernel Workflow  ├─ SLM Workflow                   │     │
 │  │    └─ Dual Workflow    └─ Agent Collaboration            │     │
-│  │                                                           │     │
-│  │  Rust Tests (10 files)                                   │     │
+│  │                                                          │     │
+│  │  Rust tests (agent/tools/*/tests)                        │     │
 │  │    ├─ Diff Validator      ├─ Kernel Builder              │     │
 │  │    └─ Test Runner                                        │     │
 │  │                                                           │     │
-│  │  SLM Tests (16 files)                                    │     │
+│  │  SLM tests (SLM/tests)                                   │     │
 │  │    ├─ Dataset/Tokenizer  ├─ Train/Evaluate               │     │
-│  │    └─ Quantize/Export                                    │     │
+│  │    └─ Quantize/Export   └─ Datasets == generators        │     │
 │  │                                                           │     │
 │  │  Acceptance Tests (kernel_spec/tests/)                   │     │
 │  │    └─ Full QEMU validation per architecture              │     │
 │  │                                                           │     │
-│  │  Host gate suites (tests/kernel/run_*.sh, 22)            │     │
+│  │  Host gate suites (tests/kernel/run_*_test.sh, 22)       │     │
 │  │    ├─ Frozen before a generation run                     │     │
 │  │    ├─ exit 2 = not generated, 1 = wrong, 0 = pass        │     │
-│  │    └─ 10 scored by injected bugs                         │     │
+│  │    └─ 2 self-score by injected bugs (--inject)           │     │
 │  └──────────────────────────────────────────────────────────┘     │
 │                                                                    │
 │  ┌──────────────────────────────────────────────────────────┐     │
@@ -172,11 +170,15 @@ in `.artifacts/hardware/<run>/`.
 
 | Agent | Role | Tools |
 |-------|------|-------|
-| **Vendor Scout** | For a vendor in the registry with no coverage, finds what it publishes and proposes `vendors.yaml` entries (or a recorded gap) | `vendor_lookup`, `vendor_queue`, `fetch_url` (https, allowed hosts, into `.cache/`), `read_document`, `check_hardware_record` |
-| **Spec Reader** | Reads a fetched document and derives records citing their page: errata, instruction exceptions, verifications | `fetch_document`, `read_document`, `check_hardware_record` |
+| **Vendor Scout** | For a vendor in the registry with no coverage, finds what it publishes and proposes `vendors.yaml` entries (or a recorded gap) | `vendor_lookup`, `vendor_queue`, `fetch_url` (https, allowed hosts on every redirect, 128 MiB cap, into `.cache/`), `read_document`, `check_hardware_record` |
+| **Spec Reader** | Reads a fetched document and derives records citing their page: errata, instruction exceptions, verifications | `unverified_exceptions` (its queue, and which documents are cached), `fetch_document`, `read_document`, `check_hardware_record` |
 
 `check_hardware_record` is the gate: a proposal must load as an inventory entry, and a
-derived record's quote must be on the page it cites in the bytes whose sha256 it names.
+derived record must cite a cached `<vendor>/<doc_id>` whose payload hashes to its recorded
+sha256, with each quote on the integer page it cites. The syntax gate runs the same checks
+on changed `hardware/proposals/` and `hardware/derived/` files before review. Both agents
+write through the workspace's file tools, which keep writes inside the run's workspace;
+nothing yet confines each to its own output directory.
 See [`agent/hardware/README.md`](../agent/hardware/README.md).
 
 ### SLM agents
@@ -189,7 +191,7 @@ Created in the `slm_training` and `dual` workflow modes; `scripts/slm_run.py` ru
 | **Data Scientist** | Generates the kernel training set from ground truth and proves it fits the kernel tokenizer's 1,024-word budget | `build_corpus`, `check_vocab_budget`, `tokenize_data`, `analyze_dataset` |
 | **Model Architect** | Chooses the config (start from `chat_tiny`, 6M), checked against the vocabulary and boot-memory budgets | `validate_architecture`, `estimate_flops` |
 | **Training Agent** ×`training_agent_count` (2) | Trains, exports to the AUTON format, proves parity with the in-kernel forward pass, scores the chat eval, tries int8 | `train_model`, `evaluate_model`, `export_auton`, `run_parity`, `run_chat_eval`, `quantize_model` |
-| **Integrator** | Places the model where `make iso-neural` boots it | `integrate_slm` |
+| **Integrator** | Copies the AUTON-format model to `models/auton-slm.bin` in the run's kernel tree (`[slm] kernel_tree` in an `slm_training` run, the workspace in a `dual` run), refuses a tree with no Makefile or a file without the AUTON magic, and replies with the `make -C <tree> iso-neural MODEL=models/auton-slm.bin` command that boots it | `integrate_slm` |
 
 The pipeline and its bars are in [`SLM/DATA.md`](../SLM/DATA.md): ground-truth data only,
 0% `<unk>` at the kernel's vocabulary, parity exit 0, then the chat eval (>=70%

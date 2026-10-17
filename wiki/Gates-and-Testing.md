@@ -42,7 +42,7 @@ harness, CPU identity, capability leakage, and the degenerate-model guard.
 | `scripts/run-acceptance.sh` | 14 boot markers, a real DHCP lease, a real HTTP 200 |
 | `scripts/e2e.sh` | train → export → parity → ISO → boot → transcript |
 | `tests/kernel/neural_parity.sh` | the kernel's forward pass generates the same tokens as PyTorch |
-| `scripts/eval.sh` | the chat eval: 50 frozen prompts, bar ≥70% correct-or-honest and <10% garbage |
+| `scripts/eval.sh` | the chat eval: 65 frozen prompts (the published baselines scored the original 50), bar ≥70% correct-or-honest and <10% garbage |
 | `scripts/run-intent-probe.sh` | a scenario probe outside the image (Doom frame changes on Escape; `git clone` of the served repo) |
 
 ## Agent-output gates
@@ -57,7 +57,7 @@ harness, CPU identity, capability leakage, and the degenerate-model guard.
 
 ## Unit and integration tests
 
-About 2,100 Python tests (`agent/tests/unit`, `agent/tests/integration`), 160 SLM tests
+About 2,200 Python tests (`agent/tests/unit`, `agent/tests/integration`), 166 SLM tests
 (`SLM/tests`), the control plane's own suite, and Rust tests in `agent/tools/`. Tests that
 need a live model or Docker skip, and say so, when it is unreachable.
 

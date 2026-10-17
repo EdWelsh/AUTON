@@ -37,8 +37,8 @@ subscription usage before it produced a result.
 | Generation runs passing every gate | TFTP (w14), **R8 VirtIO console** (campaign); 11 campaign runs failed |
 | Host gate suites | **22** in [`tests/kernel/`](tests/kernel/); `run_mm_test.sh` and `run_play_doom_test.sh` also score themselves against injected bugs (`--inject`) |
 | Agent roles | 13 roles, plus **24 specialists** (one per area of kernel creation) |
-| Hardware knowledge | **5,077 vendors**, **284 processor models** across 5 architectures, 46 QEMU CPU models, every x86 CPUID feature bit |
-| SLM data | kernel set **1,572 rows**, 929 of 1,024 words; 31,181 host-side reference rows; 2.8M words of fetched domain text |
+| Hardware knowledge | **5,164 vendors**, **284 processor models** across 5 architectures, 46 QEMU CPU models, every x86 CPUID feature bit in Linux's `cpufeatures.h` |
+| SLM data | kernel set **1,572 rows**, 929 words (90 of the 1,019 word slots left); 30,848 host-side reference rows; 2.8M words of fetched domain text |
 | Architectures with a full end-to-end spine | **1** (x86_64); aarch64 boots; riscv64 is specified only |
 | CI | 2 workflows, 5 matrix legs: [see below](#continuous-integration) |
 
@@ -306,7 +306,7 @@ manager assigns work to `<id>_specialist`; `agents.specialists` turns them on
 A kernel has to know what it is running on, and a manual is not proof:
 
 - **Vendor registry**, every vendor that has held a PCI, USB, x86 CPUID or Arm
-  MIDR identity: 5,077, derived from `pci.ids`, `usb.ids` and the Linux kernel's
+  MIDR identity: 5,164, derived from `pci.ids`, `usb.ids` and the Linux kernel's
   identity tables ([`vendor_registry.py`](agent/tools/vendor_registry.py)).
 - **Instruction-set tables**, which of 284 processor models implement which
   extensions, from LLVM's target definitions, plus each x86 feature's CPUID bit

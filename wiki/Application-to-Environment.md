@@ -29,8 +29,12 @@ Substrates: containers first; a QEMU `virt` microVM substrate also exists (`--su
 ## Run it
 
 ```bash
-.venv/bin/python scripts/app_to_env.py --subject <app dir> --probe <probe.yaml>
+.venv/bin/python scripts/app_to_env.py --subject <app dir> --probe <probe.yaml> --out <dir>
 ```
+
+`--out` is required: each stage records its verdict in `<dir>/STAGES.json`. Optional:
+`--config`, `--exercise`, `--timeout`, `--record` (skip the Analyst), `--recipe` (a
+human-written Dockerfile, labelled human), `--substrate docker|vm`.
 
 ## Results so far
 

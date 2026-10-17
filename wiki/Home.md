@@ -20,10 +20,10 @@ they draw on, and the data the on-device model learns from.
 |---|---|
 | Host gate suites | **22** in `tests/kernel/` |
 | Specialist agents | **24** |
-| Hardware vendors in the registry | **5,077** (17 with document coverage) |
+| Hardware vendors in the registry | **5,164** (18 with document coverage) |
 | Processor models with instruction tables | **284** across 5 architectures, plus 46 QEMU CPU models |
 | Kernel SLM training set | **1,572 rows** (chat 944, CPU 628) |
-| Host-side hardware reference corpus | **31,181 rows** |
+| Host-side hardware reference corpus | **30,848 rows** |
 <!-- /numbers -->
 
 ## Where to start

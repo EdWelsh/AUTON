@@ -36,20 +36,23 @@ Nothing here is blocked on something unnamed. Three kinds of blocker:
   attempt needs its own pre-registration saying so.
 
 **Drift audit (w26):** [`w26-drift-and-slm-readiness`](../.claude/PRPs/plans/w26-drift-and-slm-readiness.plan.md)
-lists 19 places where docs, specs and code disagreed, with evidence; 11 are fixed, the rest
+lists 20 places where docs, specs and code disagreed, with evidence; 10 are fixed, the rest
 have a next step. The SLM swarm could not have run a single tool before it.
+Its Part D reviews the w26 changes themselves: 51 confirmed findings, the fixes, and what is
+still open (the corpus's per-id vendor names, `vendor_fetch.py`'s redirects, per-role write
+roots for the vendor agents, the SLM roles' `shell`, `auton run`'s exit code).
 
 New work, none of it blocked:
 
 | What | Next step | Where |
 |---|---|---|
-| Vendor coverage | 5,060 of 5,077 registry vendors have no inventory record. Run the Vendor Scout, CPU vendors first (`vendor_queue`) | `scripts/vendor_research.py start` |
+| Vendor coverage | 5,146 of 5,164 registry vendors have no inventory record. Run the Vendor Scout, CPU vendors first (`vendor_queue`) | `scripts/vendor_research.py start` |
 | Verify the instruction exceptions | 9 rows in `exceptions.yaml` are `verified: false`; each names the vendor document to check. Spec Reader | `agent/hardware/isa/exceptions.yaml` |
 | IBM | POWER is in the inventory (`ibm-openpower`, Power ISA); IBM Z has instruction tables (LLVM) but no inventory record. Scout both | `vendors.yaml` |
 | `cpu` subsystem | Specified (`subsystems/cpu.md`): baseline ISA only, everything else behind `cpu_has()`. Needs a frozen host suite (fake `cpuid()`), then a generation run | `tests/kernel/` |
-| SLM chat quality | Best kernel model: 78% correct-or-honest, 22% garbage (bar: <10%). Train on the kernel set (`os_chat` + `hardware_kernel`, 929 of 1,024 words) with `scripts/slm_run.py`; add phrasings for what the eval fails | `SLM/DATA.md` |
+| SLM chat quality | Best kernel model: 78% correct-or-honest, 22% garbage (bar: <10%). Train on the kernel set (`os_chat` + `hardware_kernel`, 929 words; 90 of the 1,019 word slots left) with `scripts/slm_run.py`; add phrasings for what the eval fails | `SLM/DATA.md` |
 | Kernel tokenizer | Word-level, 1,024 words. Subword would let the 2.8M words of fetched domain text help; it is a kernel change. **Owner decision** | `SLM/DATA.md` |
-| Hardware reference corpus | 31,181 rows; does **not** fit the kernel tokenizer (15% `<unk>`). For a host-side model only | `SLM/datasets/hardware_reference.jsonl` |
+| Hardware reference corpus | 30,848 rows; does **not** fit the kernel tokenizer (15% `<unk>`). For a host-side model only | `SLM/datasets/hardware_reference.jsonl` |
 
 ## run
 

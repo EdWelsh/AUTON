@@ -21,18 +21,21 @@ python SLM/tools/vocab_budget.py --together SLM/datasets/os_chat.jsonl SLM/datas
 |---|---|---|---|
 | `os_chat.jsonl` | 944 | what the kernel prints: system queries, roles, the device knowledge base, refusals | **yes** |
 | `hardware_kernel.jsonl` | 628 | this machine's CPU, as QEMU's default `qemu64` model reports it (parsed from QEMU's source) | **yes** |
-| `hardware_reference.jsonl` | 31,181 | every vendor id, processor, CPUID bit and silicon exception | **no**: 13,401 words, 15% answer `<unk>`. Host-side model |
+| `hardware_reference.jsonl` | 30,848 | every vendor id, processor, CPUID bit and silicon exception | **no**: 13,718 words, 15% answer `<unk>`. Host-side model |
 | domain text (cache only) | 2.8M words | Linux docs, man-pages, QEMU docs, licences recorded | **no**: a 1,024-word vocabulary covers 64–70% of it |
 | device and errata tables | 21,662 PCI + 20,537 USB devices | `pci.ids`, `usb.ids`, ingested errata | not trained: packed into the model file and looked up |
 
 ## Rules
 
 1. **Every answer is generated from a source of truth.** Each row's `fact` names it; a wrong
-   answer is fixed in the generator or its source, never by editing the dataset. Tests fail
-   if a committed dataset differs from what its generator produces.
+   answer is fixed in the generator or its source, never by editing the dataset. The SLM tests
+   fail if `os_chat.jsonl`, `hardware_kernel.jsonl` or `hardware_reference.jsonl` differs
+   from what its generator produces (`test_chat_corpus.py`, `test_kernel_data.py`,
+   `test_hardware_corpus.py`). The hand-written `os_tasks.jsonl` is not checked.
 2. **Facts come from lookups.** The model learns phrasing; ids come from tables.
 3. **The eval prompts are held out** of every kernel corpus by a shared collision filter.
-4. **0% answer `<unk>`** for the kernel set. 929 of 1,024 words are used; 95 remain.
+4. **0% answer `<unk>`** for the kernel set. 929 of the 1,019 word slots are used
+   (5 of the 1,024 ids are special tokens); 90 remain.
 
 ## Getting more
 

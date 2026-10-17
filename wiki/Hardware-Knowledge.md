@@ -8,8 +8,8 @@ of it is in [`agent/hardware/`](https://github.com/EdWelsh/AUTON/tree/HEAD/agent
 | Table | What | Built from |
 |---|---|---|
 | `vendors.yaml` (inventory) | per vendor: which documents exist, where, licence, form, the key errata are indexed by | by hand and by the Vendor Scout |
-| `registry/vendors.json` | **every vendor that has held a PCI, USB, x86 CPUID or Arm MIDR identity: 5,077** | `pci.ids`, `usb.ids`, Linux's identity tables (`vendor_registry.py`) |
-| `isa/<arch>.json` | **284 processor models** (x86, AArch64, RISC-V, POWER, IBM Z), feature lists closed under implication; every x86 feature's CPUID leaf, register and bit | LLVM's target definitions, Linux's `cpufeatures.h` (`isa_tables.py`) |
+| `registry/vendors.json` | **every vendor that has held a PCI, USB, x86 CPUID or Arm MIDR identity: 5,164** | `pci.ids`, `usb.ids`, Linux's identity tables (`vendor_registry.py`) |
+| `isa/<arch>.json` | **284 processor models** (x86, AArch64, RISC-V, POWER, IBM Z), feature lists closed under implication (RISC-V parts include their RVA/RVB profile base); for x86, Linux's 437 feature bits, with CPUID leaf, register and bit for every one that has a CPUID location (132 are Linux-defined synthetic flags) | LLVM's target definitions and RISC-V profiles, Linux's `cpufeatures.h` (`isa_tables.py`) |
 | `isa/qemu.json` | QEMU's 46 built-in x86 CPU models, including `qemu64`, the CPU every gate boots on | QEMU's `target/i386/cpu.c` (`qemu_cpu.py`) |
 | `isa/exceptions.yaml` | where silicon disagrees with documents | by hand and by the Spec Reader; every row cited |
 | errata, lineage, mitigations | Intel specification updates per generation, erratum classes, OS mitigations | ingested documents |
@@ -48,7 +48,7 @@ come in with `--from-file`.
 
 ## Coverage
 
-Inventoried is not ingested. 36 vendors and 74 documents are inventoried; the device
+Inventoried is not ingested. 37 vendors and 76 documents are inventoried; the device
 registries, LLVM's and Linux's tables, QEMU's definitions and one Intel specification update
-(Alder Lake, 94 errata) are derived. 5,060 registry vendors have no inventory record: the
+(Alder Lake, 94 errata) are derived. 5,146 registry vendors have no inventory record: the
 [Vendor Spec Agents](Vendor-Spec-Agents)' queue.

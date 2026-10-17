@@ -60,10 +60,15 @@ bool cpu_has(cpu_feature_t f);                 /* after cpu_detect */
 const cpu_info_t *cpu_info(void);
 ```
 
-- **x86_64:** each feature is the CPUID bit recorded for it in
+- **x86_64:** each feature except `INVARIANT_TSC` is the CPUID bit recorded for it in
   `agent/hardware/isa/x86.json` → `cpuid` (leaf, subleaf, register, bit, from Linux's
-  `cpufeatures.h`). Leaves above the maximum reported by leaf 0 (or `0x80000000` for the
-  extended range) are not read: their contents are undefined.
+  `cpufeatures.h`), under the table's key: `PAGE1GB` is `gbpages`, `TSC_DEADLINE` is
+  `tsc_deadline_timer`, the rest are the lower-case name. `INVARIANT_TSC` has no entry
+  there: Linux records it only as the synthetic flags `constant_tsc` and `nonstop_tsc`
+  (no leaf, no register), and the table has no leaf `0x80000007` entries. It is CPUID
+  `0x80000007` EDX bit 8, read only when `0x80000000` reports a maximum of `0x80000007`
+  or more. Leaves above the maximum reported by leaf 0 (or `0x80000000` for the extended
+  range) are not read: their contents are undefined.
 - **OS support is part of "has".** AVX and AVX-512 also need `CR4.OSXSAVE` set and the
   matching `XCR0` bits enabled; `cpu_has(CPU_FEAT_AVX)` is false until the kernel has done
   that.

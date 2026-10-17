@@ -33,7 +33,7 @@ Docker alternative (no host toolchain): `scripts/kernel-base.sh kernels/x86_64` 
 ## Run the tests
 
 ```bash
-cd agent && ../.venv/bin/python -m pytest tests/unit tests/integration -q    # ~2,100 tests
+cd agent && ../.venv/bin/python -m pytest tests/unit tests/integration -q    # ~2,200 tests
 cd .. && PYTHONPATH=SLM .venv/bin/python -m pytest SLM/tests -q              # SLM pipeline
 tests/kernel/run_mm_test.sh --self-test        # a host gate against its reference
 tests/kernel/run_mm_test.sh --inject           # the suite scored by injected bugs (9/9)

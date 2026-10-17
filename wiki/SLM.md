@@ -37,10 +37,14 @@ CPU features come from `cpu_has()`.
 
 1. **Parity.** `tests/kernel/neural_parity.sh` builds the kernel's forward pass on the host
    and checks it generates exactly the tokens PyTorch does on the same checkpoint.
-2. **The chat eval.** `scripts/eval.sh` boots the kernel with the model and asks 50 frozen
-   prompts. The bar: **≥70% correct-or-honest and <10% garbage**. Deterministic prompts are
+2. **The chat eval.** `scripts/eval.sh` boots the kernel with the model and asks the 65 frozen
+   prompts in `tests/eval/prompts.jsonl`, all of them by default. The bar: **≥70% correct-or-honest and <10% garbage**. Deterministic prompts are
    graded automatically; free-form answers are queued for a person, and the verdict cached by
    model fingerprint.
+
+The scores below were measured on the original 50 prompts (`baseline-rule`, `-rung3a`,
+`-rung3b`, `-rung3c-int8.json` in `tests/eval/`). One later baseline,
+`baseline-deterministic-dispatch.json`, covers all 65.
 
 | Model | Correct-or-honest | Garbage |
 |---|---|---|

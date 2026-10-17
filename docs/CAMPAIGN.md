@@ -24,6 +24,11 @@ Plan: [`w18-generation-campaign`](../.claude/PRPs/plans/w18-generation-campaign.
 | 11 | R10 F00F | winner | 1 | the mitigation's `verify`, steps 1–2 (step 3 needs a family-5 Pentium) | — |
 | 12 | R9 aarch64 | winner | 3 | `run_dtb_test.sh` tree mode → `[gate: hal]` → `e2e.sh --arch aarch64` | — |
 
+The gates that decide each run are the ones in [`campaign/runs.yaml`](campaign/runs.yaml);
+where this table differs, `runs.yaml` holds. In particular `run_virtio_blk_test.sh` is
+recorded for R2 as advisory, not deciding, and R8 is skipped in w25 attempt 3 (its 2026-10-10
+pass stands).
+
 **Model (amended 2026-10-02, owner's decision).** Every run uses **Claude Sonnet 5.5 through the owner's Claude subscription** (`claude-cli/claude-sonnet-5-5`: `claude -p` as a pure model, every Claude Code tool disabled, the orchestrator's own tools, sandbox and gates unchanged). Qualified 4/4, slowest call 21 s against qwen q8_0's 602 s. The rows above that name a qwen model are superseded by this line. The q8_0 R1 run was abandoned at the owner's request, unscored.
 
 **Model (amended 2026-09-30).** Every run uses `qwen3.5:27b-q8_0`; the reasoning below is kept for the record. **Why 9b first (superseded).** R1 attempt 1 on 27b closed one task of six in five hours. Throughput, not
@@ -60,6 +65,12 @@ A failed phase whose **end-to-end gate passed** is now its dependants' base, lab
 | R1 | `r1-mm-attempt2` | boots: `[MM] PMM initialized: 65504 pages total…`; fails the mm/vmm interface suites |
 | R2 | `r2-storage-attempt2` | storage acceptance passes (mount, read, write, host read-back); fails the FAT32 interface suite |
 
+**Amended 2026-10-17 (w25 attempt 3):** R1's fallback is now `none`. `r1-mm-attempt2` named
+campaign 2's tree, which is on the Mac; with attempts restarted the name meant this
+experiment's own unjudged attempt 2. `scripts/campaign.py` also takes a fallback tree only if
+that attempt generated something and its tree differs from the one it started on. R2 still
+names `r2-storage-attempt2`.
+
 **This departs from the rule's "human-authored" fallback:** these trees are agent-written. That
 is stated here and in each dependant's report. R2's own attempts ran on `kernel-base-v5`, as its
 goal (`dma_alloc` from `phys.h`) assumed, and stand.
@@ -89,13 +100,14 @@ its injected-bug score if it did.
 
 | Run | State | Report |
 |---|---|---|
+| *Campaign 1* | the rows below | |
 | R1 attempt 1 | cut off at 5 h: mm exit 1, vmm exit 2 | [w15-mm-qwen](../.claude/PRPs/reports/w15-mm-qwen-report.md) |
 | R1 attempt 2 | **generated wrong (1, 1, 0)**: all 6 tasks merged, boots with a working PMM; suites fail on an inline `phys_to_virt` and x86 asm in portable code. Phase failed (rule 3) | [report](../.claude/PRPs/reports/w18-r1-mm-report.md) |
-| R8 VirtIO console | **PASSED** (0): one 575 s session | `.artifacts/campaign/r8-virtio-console-attempt1` |
+| R8 VirtIO console | **PASSED** (0) on 2026-10-10, campaign 2 (listed here with the campaign-1 rows it ran beside): one 575 s session | `.artifacts/campaign/r8-virtio-console-attempt1` |
 | R2 storage | **generated wrong**: attempt 2 passes storage acceptance end to end; both fail the FAT32 interface suite. Phase failed | [report](../.claude/PRPs/reports/w18-r2-storage-report.md) |
-| R3 file server | attempt 1: generated wrong (1, 2); attempt 2 running | — |
-| R4–R7, R9–R12 | queued, on `kernel-base-v5` | — |
-| *Campaign 2 (2026-10-10)* | **1 of 12 passed** (R8); every failure investigated | [w24](../.claude/PRPs/plans/w24-campaign-failure-investigations.plan.md) |
+| R3 file server | attempt 1: generated wrong (1, 2); attempt 2 also ran. Both **void**: they ran on `kernel-base-v5`, which has no `fs.h` (see Fallback trees) | — |
+| R4–R7, R9–R12 | not run in campaign 1 | — |
+| *Campaign 2 (2026-10-10)* | **1 of 12 passed** (R8). The other eleven failed their gates, mostly at suite compile (R1–R6, R9, R11); R7 was not generated; R10's marker was absent; R12's image never built. Every failure investigated | [w24](../.claude/PRPs/plans/w24-campaign-failure-investigations.plan.md) |
 | R1 attempt 3 (2026-10-17) | started on a Linux x86_64 host, **stopped by the owner** before a result; not counted | [pre-registration](../.claude/PRPs/reports/w25-campaign-attempt3-preregistration.md) |
 
 **Before the next run:** the example config now enables the 24 specialist agents

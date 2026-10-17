@@ -5,14 +5,14 @@ What AUTON knows about the machines a kernel will run on, and where each fact ca
 | File | What | Built by |
 |---|---|---|
 | [`vendors.yaml`](vendors.yaml) | the **inventory**: per vendor, which documents exist, where, under what licence, in what form, indexed by what key | by hand and by the Vendor Scout; validated by [`vendor_inventory.py`](../tools/vendor_inventory.py) |
-| [`registry/vendors.json`](registry/vendors.json) | the **registry**: every vendor that has held a PCI, USB, x86 CPUID or Arm MIDR identity (5,077), and whether the inventory covers it | derived by [`vendor_registry.py`](../tools/vendor_registry.py) from `pci.ids`, `usb.ids` and Linux's identity tables |
-| [`isa/<arch>.json`](isa/) | **instruction availability**: 284 processor models across x86, AArch64, RISC-V, POWER and IBM Z, each with its feature list closed under implication; for x86 also every feature's CPUID leaf, register and bit | derived by [`isa_tables.py`](../tools/isa_tables.py) from LLVM's target definitions and Linux's `cpufeatures.h` |
+| [`registry/vendors.json`](registry/vendors.json) | the **registry**: every vendor that has held a PCI, USB, x86 CPUID or Arm MIDR identity (5,164), and whether the inventory covers it | derived by [`vendor_registry.py`](../tools/vendor_registry.py) from `pci.ids`, `usb.ids` and Linux's identity tables |
+| [`isa/<arch>.json`](isa/) | **instruction availability**: 284 processor models across x86, AArch64, RISC-V, POWER and IBM Z, each with its feature list closed under implication; for x86 also each of Linux's 437 feature bits: CPUID leaf, register and bit where it has one (132 are Linux-defined synthetic flags with no CPUID location) | derived by [`isa_tables.py`](../tools/isa_tables.py) from LLVM's target definitions (for RISC-V also `RISCVProfiles.td`, the profile base each part builds on) and Linux's `cpufeatures.h` |
 | [`isa/exceptions.yaml`](isa/exceptions.yaml) | where **silicon disagrees with the documents**: never shipped, removed, fused off, disabled by microcode, undocumented | by hand and by the Spec Reader; every row cited, `verified: false` until checked against the vendor document |
 | `erratum-classes.yaml`, `lineage.yaml`, `os-mitigations.yaml` | errata classes, the per-generation Intel specification updates, OS mitigations | |
 
 ```bash
 python agent/tools/vendor_registry.py --lookup 1d17         # Zhaoxin; no documents yet
-python agent/tools/vendor_registry.py --coverage            # 5,077 vendors, how many covered
+python agent/tools/vendor_registry.py --coverage            # 5,164 vendors, how many covered
 python agent/tools/isa_tables.py --has haswell fma4         # absent: never-shipped
 python agent/tools/isa_tables.py --has alderlake avx512f    # check at runtime: fused-off
 python agent/tools/isa_tables.py --cpuid avx512f            # leaf 0x7 subleaf 0, EBX bit 16
@@ -40,8 +40,14 @@ Two agents grow this directory, each in a testing-area workspace
   it cites.
 
 Their checks are mechanical (`check_hardware_record`): a proposal must load as an inventory
-entry and add only new vendors and documents; a derived record's quote must be on the page
-it cites, in the bytes whose sha256 it names. Fetched text is presented as untrusted data.
+entry and add only new vendors and documents; a derived record must cite a cached
+document as `<vendor>/<doc_id>` (no absolute paths, no `..`, nothing outside `.cache/vendor/`)
+whose payload hashes to the sha256 in its `provenance.json`, and each quote must be on the
+integer page it cites. The syntax gate runs the same checks on every changed proposal and
+derived file before a reviewer sees it. Fetched text is presented as untrusted data.
+The Spec Reader cannot fetch a document with no `fetch_url` (Intel's): an operator caches it
+first with `vendor_fetch.py --vendor <v> --id <doc_id> --from-file <path>`, and until then the
+Reader reports that row as blocked.
 `scripts/vendor_research.py collect <run>` lists what passed; a person merges it.
 
 ## Fetching
@@ -65,10 +71,7 @@ path when any of the vendor's documents is non-redistributable:
 
 ```
 $ vendor_inventory.py --fetch-plan intel --into agent/hardware/docs
-INVALID: refusing to plan a fetch into 'agent/hardware/docs': it is tracked, and
-4 of intel's documents are not redistributable (intel-sdm, intel-spec-update,
-intel-sa). Ingest and derive; never vendor the source. Use an untracked cache
-such as .cache/vendor/.
+INVALID: refusing to plan a fetch into 'agent/hardware/docs': it is tracked, and 10 of intel's documents are not redistributable (intel-sdm, intel-spec-update, intel-spec-update-6). Ingest and derive; never vendor the source. Use an untracked cache such as .cache/vendor/.
 ```
 
 The check is on the destination rather than on intent, because a repo full of vendor PDFs is a
@@ -122,14 +125,15 @@ a vendor that has neither. Silence would read as coverage:
         be stated with the confidence of one from a vendor document.
 ```
 
-Three vendors have nothing available: Qualcomm, Apple, MIPI. Six more publish documents but no
-errata. A coverage report that omitted them would overstate what AUTON can check.
+Three vendors have nothing available: Qualcomm, Apple, MIPI. Of the other 34, 27 list documents
+but no errata document (many are sources such as `llvm-project` or `qemu`, which have none to
+publish). A coverage report that omitted them would overstate what AUTON can check.
 
 ## Inventoried is not ingested
 
 Every inventory record says a document *exists and is reachable*; it does not say the
 document has been fetched and turned into facts. `vendor_inventory.py --coverage` prints
-the inventory (36 vendors, 74 documents). What is actually derived today:
+the inventory (37 vendors, 76 documents). What is actually derived today:
 
 - `pci.ids` and `usb.ids`: fetched and ingested (`vendor_ingest.py`, about 42,000 device
   records) and the source of the registry;

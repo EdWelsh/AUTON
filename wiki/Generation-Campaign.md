@@ -6,24 +6,29 @@ and `scripts/campaign.py` runs it unattended.
 
 ## The runs
 
-| Run | What | Gate |
-|---|---|---|
-| R1 | memory manager (PMM + VMM) | `run_mm_test.sh`, `run_vmm_test.sh`, `[MM]` boot line |
-| R2 | storage: VirtIO block + FAT32 | `run_virtio_blk_test.sh`, `run_fat32_test.sh`, storage acceptance |
-| R3 | file server | `run_fileserver_test.sh`, `--service fileserver` |
-| R4 | KV store | `run_kvstore_test.sh`, two boots and redis-cli |
-| R5 | email (SMTP) | `run_smtp_test.sh`, two boots and smtplib |
-| R6 | repo server | `run_host_repo_test.sh --clone`, `git clone` probe |
-| R7 | SSH | `run_ssh_test.sh` (28 checks), crypto gate GO |
-| R8 | VirtIO console | `run_virtio_console_gate_test.sh` (29) — **passed** |
-| R9 | aarch64 arch layer | `run_dtb_test.sh`, HAL gate |
-| R10 | F00F mitigation | the mitigation's own verify |
-| R11 | conformance in every image | `conformance_select.py` |
-| R12 | Doom | `run_play_doom_test.sh`, the QMP frame probe |
+In the order `scripts/campaign.py` runs them, which is the order of
+`docs/campaign/runs.yaml`. A gate decides the run; an advisory suite is recorded and does not.
 
-Order: R1 → R2 → R3–R7 → R9 → R10–R12. A dependant runs on its base run's tree only if that
-run passed (or its pre-registered fallback tree), and never on a tree with no source for what
-it extends.
+| Run | What | Base | Gates |
+|---|---|---|---|
+| R1 | memory manager (PMM + VMM) | `kernel-base-v5` | `run_mm_test.sh`, `run_vmm_test.sh`, the `[MM] PMM initialized` boot line |
+| R8 | VirtIO console | `kernel-base-v5` | `run_virtio_console_gate_test.sh`. **Passed** on 2026-10-10; `skip` in this experiment, its verdict stands |
+| R2 | storage: VirtIO block + FAT32 | R1 | `run_fat32_test.sh`, `run-storage-acceptance.sh`; advisory: `run_virtio_blk_test.sh` |
+| R3 | file server | R2 | `run_fileserver_test.sh`, storage acceptance `--service fileserver` |
+| R6 | repo server | R2 | `run_host_repo_test.sh`, then with `--clone` |
+| R5 | email (SMTP) | R2 | `run_smtp_test.sh`, storage acceptance `--service smtp` |
+| R4 | KV store | R2 | `run_kvstore_test.sh`, storage acceptance `--service kvstore` |
+| R7 | SSH | R2 | `run_ssh_test.sh` |
+| R12 | Doom | R1 | `run_play_doom_test.sh`, `make iso`, the doom intent probe |
+| R11 | conformance in every image | R1 | `run_fault_harness_test.sh` |
+| R10 | F00F mitigation | R1 | the boot line `F00F … applied` or `verified` |
+| R9 | aarch64 arch layer | `kernel-base-v5` | `run_dtb_test.sh` |
+
+Order: R1 → R8 → R2 → R3 → R6 → R5 → R4 → R7 → R12 → R11 → R10 → R9. A dependant builds on
+its base run's tree if that run passed. If it failed, the base run's pre-registered
+`tree:<attempt>` fallback is used only when that attempt generated something and its tree
+differs from the one it started on (only R2 still names one); otherwise the dependant builds
+on the failed run's own base, down to `kernel-base-v5`.
 
 ## Running it
 

@@ -1,8 +1,15 @@
 # Agents and Swarms
 
-Four swarms share one engine. Each role is **constructed, registered and advertised**
-together: a role the manager is told about but nobody registered sends its tasks to an empty
-pool, which happened once (w12) and is now tested for every role.
+Four swarms share one engine. A role the manager is told about but nobody registered sends
+its tasks to an empty pool, which happened once (w12). So the roles the manager assigns
+work to are **constructed, registered and advertised** together, and tested for it: the
+Analyst (`test_analyst_loop.py`), the Packager (`test_packager_wiring.py`), the Vendor Scout
+and Spec Reader (`test_vendor_research.py`; a count of 0 advertises nothing,
+`test_swarm_wiring.py`) and the specialists (`test_specialists.py`). The fixed kernel roles
+(architect, developer, tester) are checked for registration (`test_scheduler_dispatch.py`).
+The SLM roles are constructed and registered (`test_dual_workflow.py`, and an `slm_training`
+run end to end in `test_swarm_wiring.py`) but not advertised: their tasks come from the
+fixed SLM task graph, not from the manager.
 
 ## Kernel build swarm
 
@@ -14,7 +21,7 @@ pool, which happened once (w12) and is now tested for every role.
 | **Specialists** | 24 | developers with one area's specs, knowledge and checklist; pool `<id>_specialist` | as Developer. See [[Specialists]] |
 | Reviewer | `reviewer_count` (1) | reviews the full diff, with each matching specialist checklist | `run_gate`, read files, `git_diff`, `read_spec` |
 | Tester | `tester_count` (1) | runs gates and QEMU validation | `run_gate`, `run_ablation`, `build_kernel`, `run_test` |
-| Integrator | 1 | merges approved branches; places an SLM model | `integrate_slm`, build and test |
+| Integrator | 1 | merges approved branches; in a `dual` run places the SLM model in the workspace | `integrate_slm`, build and test |
 
 Launched by `scripts/campaign.py` (the pre-registered campaign, see
 [Generation Campaign](Generation-Campaign)) or `auton run "<goal>"`.
@@ -28,10 +35,15 @@ Created in `slm_training` and `dual` modes. Follows [`SLM/DATA.md`](https://gith
 | Data Scientist | generates the kernel training set from ground truth; proves it fits the 1,024-word tokenizer | `build_corpus`, `check_vocab_budget`, `tokenize_data`, `analyze_dataset` |
 | Model Architect | chooses the config, starting from `chat_tiny` (6M); checks vocabulary and boot-memory budgets | `validate_architecture`, `estimate_flops` |
 | Training ×2 | trains; exports the AUTON format; proves parity with the kernel's forward pass; scores the chat eval; tries int8 | `train_model`, `evaluate_model`, `export_auton`, `run_parity`, `run_chat_eval`, `quantize_model` |
-| Integrator | places `models/auton-slm.bin` where `make iso-neural` boots it | `integrate_slm` (refuses GGUF/ONNX) |
+| Integrator | copies the model to `models/auton-slm.bin` in the run's kernel tree (`[slm] kernel_tree`; in `dual` mode, the workspace) and replies with `make -C <tree> iso-neural MODEL=models/auton-slm.bin` | `integrate_slm` (refuses a file without the AUTON magic, e.g. GGUF, and a tree with no Makefile) |
 
 Seven tasks, each naming what it produces: data → config → train → evaluate (parity + eval)
-→ int8 if it holds → export → integrate. Launched by `scripts/slm_run.py`. See [The SLM](SLM).
+→ int8 if it holds → export → integrate. A task counts as done only when every file it
+`produces` exists and its gates ran (evaluation: `run_parity` exited 0 and `run_chat_eval`
+ran); otherwise it goes back to its agent. The swarm reads `SLM/DATA.md` and `SLM/configs/`
+from read-only copies seeded into the workspace under `slm/`. An `slm_training` run ends on
+its own tasks: no kernel build or boot of the workspace. Launched by `scripts/slm_run.py`.
+See [The SLM](SLM).
 
 ## Hardware research swarm
 
