@@ -1,0 +1,1 @@
+Source: [`wiki/`](https://github.com/EdWelsh/AUTON/tree/HEAD/wiki) in the AUTON repository · published with `python scripts/wiki.py publish` · licence: see [LICENSE.md](https://github.com/EdWelsh/AUTON/blob/HEAD/LICENSE.md)

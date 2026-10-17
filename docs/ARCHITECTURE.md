@@ -12,44 +12,31 @@ does not live in this repository — see
 ## Orchestration flow
 
 ```
-┌─────────────────────────────────────────────────────┐
-│                  Orchestration Engine                │
-│         (VibeTensor-style iterative loop)            │
-│                                                     │
-│   specify goals → decompose → agents generate diffs │
-│   → validate (build + test) → accept/reject → loop  │
-└──────────────┬──────────────────────────┬───────────┘
-               │                          │
-    ┌──────────▼──────────┐    ┌──────────▼──────────┐
-    │   Kernel Agents     │    │    SLM Agents       │
-    │                     │    │                     │
-    │  Manager (1x)       │    │  Data Scientist (1x)│
-    │  Architect (1x)     │    │  Model Arch (1x)    │
-    │  Developer (4x)     │    │  Training (4x)      │
-    │  Reviewer (1x)      │    │  Evaluation (1x)    │
-    │  Tester (1x)        │    │  Quantization (1x)  │
-    │  Integrator (1x)    │    │  Export (1x)        │
-    └──────────┬──────────┘    └──────────┬──────────┘
-               │                          │
-    ┌──────────▼──────────┐    ┌──────────▼──────────┐
-    │   Git Workspace     │    │   Git Workspace     │
-    │  (kernels/{arch})   │    │     (SLM/)          │
-    │                     │    │                     │
-    │  Agents collaborate │    │  Agents collaborate │
-    │  via branches +     │    │  via branches +     │
-    │  structured diffs   │    │  structured diffs   │
-    └──────────┬──────────┘    └──────────┬──────────┘
-               │                          │
-               └──────────┬───────────────┘
-                          │
-               ┌──────────▼──────────┐
-               │   Validation Layer   │
-               │                      │
-               │  Build Validator     │
-               │  Test Validator      │
-               │  Composition Check   │
-               │  (Frankenstein Fx)   │
-               └──────────────────────┘
+┌───────────────────────────────────────────────────────────────────┐
+│                       Orchestration Engine                         │
+│              (VibeTensor-style loop; git is the bus)               │
+│  plan → design → develop → syntax gate → review → test → integrate │
+└───────┬──────────────────┬──────────────────┬──────────────┬──────┘
+        │                  │                  │              │
+┌───────▼────────┐ ┌───────▼────────┐ ┌───────▼───────┐ ┌────▼──────────┐
+│ Kernel swarm   │ │ SLM swarm      │ │ Hardware      │ │ App → env     │
+│ Manager        │ │ Data Scientist │ │ research      │ │ Analyst       │
+│ Architect      │ │ Model Architect│ │ Vendor Scout  │ │ Packager      │
+│ Developers ×4  │ │ Training ×2    │ │ Spec Reader   │ │               │
+│ 24 specialists │ │ Integrator     │ │               │ │               │
+│ Reviewer       │ │                │ │               │ │               │
+│ Tester         │ │                │ │               │ │               │
+│ Integrator     │ │                │ │               │ │               │
+└───────┬────────┘ └───────┬────────┘ └───────┬───────┘ └────┬──────────┘
+        │                  │                  │              │
+        ▼                  ▼                  ▼              ▼
+ .artifacts/campaign  .artifacts/slm    .artifacts/hardware  run workspace
+   /<run>/ws            /<run>/ws         /<run>/ws        (testing areas, gitignored)
+        │                  │                  │              │
+        └──────────────────┴────────┬─────────┴──────────────┘
+                                    ▼
+                 Gates, frozen before the run (tests/kernel/, eval.sh,
+                 neural_parity.sh, check_record, check_hardware_record)
 ```
 
 ## Complete system
