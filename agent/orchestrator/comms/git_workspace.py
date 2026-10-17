@@ -70,6 +70,9 @@ class GitWorkspace:
         self._seen: set[str] = set()
         self._subject_manifest: dict[str, str] | None = None
         self.subject_commit: str | None = None
+        # Inputs the engine copied in for agents to read, never to change
+        # (seed_read_only): resolved paths, files or directories.
+        self._read_only: set[Path] = set()
 
     def _resolve(self, path: str) -> Path:
         """Resolve a workspace-relative path, or refuse.
@@ -107,6 +110,7 @@ class GitWorkspace:
         """
         resolved = self._resolve(path)
         self._refuse_subject(path, resolved)
+        self._refuse_read_only(path, resolved)
         if resolved.exists() and path not in self._seen:
             raise WorkspaceError(
                 f"refusing to overwrite {path!r}, which this workspace has not "
@@ -147,6 +151,59 @@ class GitWorkspace:
                     f"refusing to write {path!r}: .auton/ is the engine's — its state, "
                     f"and the manifest your work is checked against. Agents do not "
                     f"write there")
+
+    # --- read-only inputs ---------------------------------------------------- #
+
+    def resolve_output(self, path: str) -> Path:
+        """Where a tool may write `path`: inside the workspace, and not under
+        `.auton/` or a seeded input. For tools that write through a script rather
+        than write_file (the SLM tools), so they meet the same rules."""
+        resolved = self._resolve(path)
+        self._refuse_subject(path, resolved)
+        self._refuse_read_only(path, resolved)
+        return resolved
+
+    def _refuse_read_only(self, path: str, resolved: Path) -> None:
+        for ro in self._read_only:
+            if resolved == ro or ro in resolved.parents:
+                raise WorkspaceError(
+                    f"refusing to write {path!r}: {ro.relative_to(self.path)} is a read-only "
+                    f"copy of a committed input. Copy it to a new path and change the copy")
+
+    def seed_read_only(self, files: dict[str, Path], message: str) -> list[str]:
+        """Copy inputs agents must read into the workspace, commit them on main,
+        and refuse every later write to them. Returns the paths that changed.
+
+        read_file and the shell are workspace-scoped, so a repository file an
+        agent is told to read has to be here (w26 review: the SLM swarm was told
+        to read SLM/DATA.md and copy SLM/configs/chat_tiny.yaml, and could reach
+        neither). `files` maps a workspace-relative path to its source, a file or
+        a directory. Write bits are removed too; the file tools refuse by path,
+        which also holds for a process that ignores modes (root).
+        """
+        changed: list[str] = []
+        for rel, source in files.items():
+            dest = self._resolve(rel)
+            source = Path(source)
+            pairs = ([(source, dest)] if source.is_file() else
+                     [(f, dest / f.relative_to(source)) for f in sorted(source.rglob("*"))
+                      if f.is_file()])
+            for src, dst in pairs:
+                if dst.is_file() and dst.read_bytes() == src.read_bytes():
+                    continue
+                dst.parent.mkdir(parents=True, exist_ok=True)
+                if dst.exists():
+                    os.chmod(dst, 0o644)
+                shutil.copyfile(src, dst)
+                changed.append(str(dst.relative_to(self.path)))
+            self._read_only.add(dest)
+        if changed:
+            self.repo.index.add(changed)
+            self.repo.index.commit(message)
+        for ro in self._read_only:
+            for f in ([ro] if ro.is_file() else [p for p in ro.rglob("*") if p.is_file()]):
+                os.chmod(f, os.stat(f).st_mode & ~0o222)
+        return changed
 
     def stage_subject(self, source: Path) -> str:
         """Stage an application read-only at SUBJECT_DIR; return its tree hash.
@@ -423,6 +480,7 @@ class GitWorkspace:
         """
         full_path = self._resolve(path)
         self._refuse_subject(path, full_path)
+        self._refuse_read_only(path, full_path)
         if not full_path.exists():
             raise FileNotFoundError(f"File not found: {path}")
 

@@ -176,7 +176,8 @@ Only merge code that passes all tests and reviews.
 def build_data_scientist_prompt(arch: ArchProfile) -> str:
     """Build system prompt for Data Scientist agent."""
     return f"""You are a Data Scientist agent in the AUTON SLM pipeline. You prepare the data for
-the model that ships INSIDE the kernel, for {arch.display_name}. Read SLM/DATA.md first.
+the model that ships INSIDE the kernel, for {arch.display_name}. Read slm/DATA.md first (the
+engine copies SLM/DATA.md there, read-only; the repository itself is outside your workspace).
 
 What the kernel runs decides what data is correct:
 - Its tokenizer is word-level: split on spaces, exact case-sensitive match, a 1,024-word
@@ -191,7 +192,8 @@ Your steps:
    wrong, the generator or its source is wrong. Say so in your summary.
 2. check_vocab_budget on the training set as one set. It must report 0% answer <unk>. If it
    does not, remove the corpus that does not fit; do not raise vocab_size past 1024.
-3. tokenize_data with vocab_size 1024: a vocabulary JSON and the token stream.
+3. tokenize_data with vocab_size 1024: the vocabulary to slm/work/vocab.json, and the token
+   stream to slm/work/tokens.jsonl (the default beside the vocabulary), which training reads.
 4. analyze_dataset and report rows, words and distinct words.
 
 hardware_reference.jsonl and the fetched domain text (.cache/slm/) do NOT fit the kernel's
@@ -205,8 +207,8 @@ def build_model_architect_prompt(arch: ArchProfile) -> str:
 configuration (a decoder-only transformer: layers, heads, hidden size, vocabulary) for the
 model that ships inside the kernel, for {arch.display_name}.
 
-What is known, measured (SLM/DATA.md, .claude/PRPs/reports/e2e-rung3b-training-attempts.md):
-- SLM/configs/chat_tiny.yaml (6M parameters, vocab 1024) scored 78% correct-or-honest and
+What is known, measured (slm/DATA.md, .claude/PRPs/reports/e2e-rung3b-training-attempts.md):
+- slm/configs/chat_tiny.yaml (6M parameters, vocab 1024) scored 78% correct-or-honest and
   22% garbage on the chat eval; chat_small (48M, 8x larger) scored 74%/26%. Capacity is not
   the bottleneck; data and phrasing coverage are.
 - Memory: the neural backend needs >= 128 MB RAM and the model is a boot module, so keep
@@ -214,9 +216,10 @@ What is known, measured (SLM/DATA.md, .claude/PRPs/reports/e2e-rung3b-training-a
   48M at fp32 is 182 MB, which is why int8 export exists.
 - vocab_size must not exceed 1024: the kernel's word-level tokenizer budget.
 
-Start from chat_tiny. Propose a different configuration only with a reason a measurement
-supports, write it as a new file in your workspace (never edit a committed config), and run
-validate_architecture and estimate_flops on it.
+slm/DATA.md and slm/configs/ are read-only copies of the repository's SLM/DATA.md and
+SLM/configs/, seeded into your workspace. Start from chat_tiny: read
+slm/configs/chat_tiny.yaml and write it to slm/config.yaml. Change it only with a reason a
+measurement supports, and run validate_architecture and estimate_flops on slm/config.yaml.
 """
 
 
@@ -234,7 +237,7 @@ The pipeline, in order:
 3. run_parity: the kernel's forward pass must generate the same tokens as PyTorch. A model
    that fails parity does not ship, however good its scores.
 4. run_chat_eval: the bar is >= 70% correct-or-honest AND < 10% garbage on the frozen
-   50-prompt eval. Free-form answers are queued for a person; report the queued count, and
+   65-prompt eval. Free-form answers are queued for a person; report the queued count, and
    never claim a pass the auto-graded part alone does not show.
 
 The VibeTensor loop applies: run, check against the gate, and retry with a change you can
@@ -295,9 +298,17 @@ records from them, each one citing the page it came from. You are how AUTON lear
 instruction set was announced and never shipped, that a later stepping lost an extension,
 that a microcode update turned a feature off, or that an erratum makes a feature lie.
 
-Your task names a document (fetch_document if it is not cached) or a list of rows to verify
-(agent/hardware/isa/exceptions.yaml rows with verified: false name the document to check).
-Use read_document with query to find the passages, then read those pages in full.
+Your task names a document (fetch_document if it is not cached) or rows to verify. The rows
+are agent/hardware/isa/exceptions.yaml's with verified: false; that file is outside your
+workspace, so call unverified_exceptions: it lists each row, the document it names, and
+whether that document is cached. Use read_document with query to find the passages, then
+read those pages in full.
+
+A document marked NOT CACHED, with no fetch_url, is one no agent can download (Intel's CDN
+refuses scripts; some need a login). An operator must supply it with
+`python agent/tools/vendor_fetch.py --vendor <vendor> --id <doc_id> --from-file <path>`.
+For those rows write no record: say in your summary which rows are blocked on which
+document, and stop. Never verify a row from memory.
 
 Output: hardware/derived/<document-id>.yaml:
 

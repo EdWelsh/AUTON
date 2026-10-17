@@ -13,7 +13,11 @@ includes) fails here, which is the point: the next file to include it would.
 
 Driver decision records get the same treatment for the same reason (w13 V8:
 the reviewer approved a record with no front matter): every changed
-`drivers/<name>.md` must pass `agent/tools/driver_spec.py`'s loader.
+`drivers/<name>.md` must pass `agent/tools/driver_spec.py`'s loader. So do
+the vendor research records (w26 review: "every output passes a check before a
+reviewer sees it" held only when an agent chose to call check_hardware_record):
+every changed `hardware/proposals/*.yaml` and `hardware/derived/*.yaml` must
+pass `agent/tools/vendor_research.py`'s check_proposal or check_derived.
 """
 
 from __future__ import annotations
@@ -147,11 +151,37 @@ def package_errors(tree: Path, changed: list[str], manifest: dict | None = None,
     return [f"package/Dockerfile: {p}" for p in problems]
 
 
+def hardware_errors(tree: Path, changed: list[str]) -> list[str]:
+    """vendor_research's refusals for each changed Vendor Scout proposal and
+    Spec Reader derived-records file: the same checks check_hardware_record
+    offers, run whether or not the agent called it."""
+    paths = [p for p in changed
+             if p.startswith(("hardware/proposals/", "hardware/derived/"))
+             and p.endswith((".yaml", ".yml")) and (tree / p).is_file()]
+    if not paths:
+        return []
+    if str(TOOLS) not in sys.path:
+        sys.path.insert(0, str(TOOLS))
+    import vendor_research as vr
+
+    errors = []
+    for rel in paths:
+        text = (tree / rel).read_text(encoding="utf-8", errors="replace")
+        try:
+            problems = (vr.check_proposal(text) if rel.startswith("hardware/proposals/")
+                        else vr.check_derived(text))
+        except Exception as exc:  # noqa: BLE001 — a record the checker cannot read fails, it does not crash the review
+            problems = [f"the check could not run: {exc}"]
+        errors += [f"{rel}: {problem}" for problem in problems]
+    return errors
+
+
 def check(tree: Path, changed: list[str], cc: str | None = None,
           manifest: dict | None = None, probe: Path | None = None) -> str | None:
-    """None when every changed C file compiles and every changed driver or
-    artifact record validates; otherwise the errors, trimmed."""
+    """None when every changed C file compiles and every changed driver,
+    artifact or hardware record validates; otherwise the errors, trimmed."""
     rec_errors = (record_errors(tree, changed) + artifact_errors(tree, changed)
+                  + hardware_errors(tree, changed)
                   + package_errors(tree, changed, manifest, probe))
     c_errors = _c_errors(tree, changed, cc)
     errors = rec_errors + c_errors

@@ -371,7 +371,8 @@ TOOL_TOKENIZE_DATA = _slm(
     "<bos> question <sep> answer <eos> token stream train_model reads.",
     {"input_path": _P("a JSONL corpus or a directory of them"),
      "output_path": _P("vocabulary JSON to write"),
-     "tokens_path": _P("token stream JSONL to write (default: <output_path>.tokens.jsonl)"),
+     "tokens_path": _P("token stream JSONL to write (default: tokens.jsonl beside "
+                       "output_path, e.g. slm/work/tokens.jsonl)"),
      "vocab_size": {"type": "integer", "description": "default 1024: the kernel budget"}},
     ["input_path", "output_path"])
 
@@ -379,7 +380,7 @@ TOOL_VALIDATE_ARCHITECTURE = _slm(
     "validate_architecture",
     "Validate a model config YAML, and check it against what the kernel can run "
     "(vocab within the tokenizer budget, model within the boot memory budget).",
-    {"config_path": _P("e.g. SLM/configs/chat_tiny.yaml")}, ["config_path"])
+    {"config_path": _P("e.g. slm/config.yaml, or slm/configs/chat_tiny.yaml")}, ["config_path"])
 
 TOOL_ESTIMATE_FLOPS = _slm(
     "estimate_flops", "Parameters, FLOPs per token, and model size at fp32 and int8.",
@@ -387,7 +388,7 @@ TOOL_ESTIMATE_FLOPS = _slm(
 
 TOOL_TRAIN_MODEL = _slm(
     "train_model", "Train with SLM/scripts/train.py on a token stream; writes checkpoints.",
-    {"config_path": _P("e.g. SLM/configs/chat_tiny.yaml"),
+    {"config_path": _P("e.g. slm/config.yaml"),
      "dataset_path": _P("token stream JSONL from tokenize_data"),
      "output_dir": _P("checkpoint directory (default slm/work)"),
      "max_steps": {"type": "integer", "description": "default 10000"}},
@@ -427,7 +428,7 @@ TOOL_RUN_PARITY = _slm(
 
 TOOL_RUN_CHAT_EVAL = _slm(
     "run_chat_eval",
-    "Boot the kernel with this model and score its chat on the frozen 50-prompt eval "
+    "Boot the kernel with this model and score its chat on the frozen 65-prompt eval "
     "(scripts/eval.sh). The bar: >=70% correct-or-honest and <10% garbage. Free-form answers "
     "are queued for a person; the report says how many.",
     {"model_path": _P("model .bin"), "json_path": _P("where to write the scored results")},
@@ -447,8 +448,9 @@ TOOL_EXPORT_ONNX = _slm(
 
 TOOL_INTEGRATE_SLM = _slm(
     "integrate_slm",
-    "Place an exported AUTON model in the kernel workspace at models/auton-slm.bin, where "
-    "`make iso-neural MODEL=models/auton-slm.bin` boots it as a module.",
+    "Place an exported AUTON model at models/auton-slm.bin in the run's kernel tree, and "
+    "reply with the exact `make -C <tree> iso-neural MODEL=models/auton-slm.bin` that boots "
+    "it as a module.",
     {"model_path": _P("exported model .bin (export_auton)"),
      "kernel_arch": _P("x86_64, aarch64 or riscv64")},
     ["model_path", "kernel_arch"])
@@ -531,6 +533,13 @@ TOOL_CHECK_HARDWARE_RECORD = _fn(
     "file (hardware/derived/*.yaml: every quote must be on the page it cites) exactly as the "
     "gate will. Returns OK or the problems to fix.",
     {"path": {"type": "string"}}, ["path"])
+
+TOOL_UNVERIFIED_EXCEPTIONS = _fn(
+    "unverified_exceptions",
+    "The Spec Reader's queue: every agent/hardware/isa/exceptions.yaml row with verified: "
+    "false, the vendors.yaml document it names (verify_with), and whether that document is "
+    "cached for read_document. A document marked NOT CACHED needs an operator to supply it.",
+    {}, [])
 
 MANAGER_TOOLS = [TOOL_READ_SPEC, TOOL_LIST_FILES, TOOL_READ_FILE, TOOL_SEARCH_CODE,
                  TOOL_CREATE_TASK]
@@ -666,8 +675,8 @@ VENDOR_SCOUT_TOOLS = [
 
 # Reads fetched documents and derives cited records from them.
 SPEC_READER_TOOLS = [
-    TOOL_VENDOR_LOOKUP, TOOL_FETCH_DOCUMENT, TOOL_READ_DOCUMENT, TOOL_CHECK_HARDWARE_RECORD,
-    TOOL_READ_FILE, TOOL_WRITE_FILE, TOOL_EDIT_FILE, TOOL_LIST_FILES, TOOL_SEARCH_CODE,
+    TOOL_VENDOR_LOOKUP, TOOL_UNVERIFIED_EXCEPTIONS, TOOL_FETCH_DOCUMENT, TOOL_READ_DOCUMENT,
+    TOOL_CHECK_HARDWARE_RECORD, TOOL_READ_FILE, TOOL_WRITE_FILE, TOOL_EDIT_FILE, TOOL_LIST_FILES, TOOL_SEARCH_CODE,
     TOOL_GIT_COMMIT,
 ]
 

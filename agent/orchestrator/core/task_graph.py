@@ -257,27 +257,41 @@ class TaskGraph:
         Ground-truth corpora within the kernel tokenizer's budget -> config ->
         train -> evaluate, export to the AUTON format, parity with the in-kernel
         forward pass and the chat eval -> int8 only if it holds -> placed where
-        the kernel build boots it. Every task names what it produces.
+        the kernel build boots it. Every task names what it produces, and the
+        engine checks those files exist, and that `must_pass` tools exited 0 and
+        `must_run` tools ran, before a task counts as done.
+
+        The repository inputs are named at their workspace copies: the engine
+        seeds slm/DATA.md and slm/configs/ read-only, because read_file and the
+        shell cannot reach the repository.
         """
-        def task(task_id, title, assigned_to, deps, priority, produces, description, criteria):
-            return {"task_id": task_id, "title": title, "subsystem": "slm",
-                    "assigned_to": assigned_to, "dependencies": deps, "priority": priority,
-                    "produces": produces, "description": description,
-                    "acceptance_criteria": criteria, "spec_reference": "SLM/DATA.md"}
+        def task(task_id, title, assigned_to, deps, priority, produces, description, criteria,
+                 must_pass=(), must_run=()):
+            t = {"task_id": task_id, "title": title, "subsystem": "slm",
+                 "assigned_to": assigned_to, "dependencies": deps, "priority": priority,
+                 "produces": produces, "description": description,
+                 "acceptance_criteria": criteria,
+                 "spec_reference": "slm/DATA.md (a read-only copy of SLM/DATA.md)"}
+            if must_pass:
+                t["must_pass"] = list(must_pass)
+            if must_run:
+                t["must_run"] = list(must_run)
+            return t
 
         return [
             task("slm-data-prep", "Build the kernel training set from ground truth",
                  "data_scientist", [], 1,
                  ["slm/data/os_chat.jsonl", "slm/data/hardware_kernel.jsonl",
                   "slm/work/vocab.json", "slm/work/tokens.jsonl"],
-                 f"Goal: {goal}. build_corpus into slm/data; check_vocab_budget on both files "
+                 f"Goal: {goal}. Read slm/DATA.md first. build_corpus into slm/data; check_vocab_budget on both files "
                  "as one set; tokenize_data with vocab_size 1024 to slm/work/vocab.json and "
                  "slm/work/tokens.jsonl.",
                  ["check_vocab_budget reports 0% answer <unk>", "no answer written by hand"]),
             task("slm-arch-design", "Choose the model configuration", "model_architect", [], 1,
                  ["slm/config.yaml"],
-                 "Start from SLM/configs/chat_tiny.yaml; copy it to slm/config.yaml, changing it "
-                 "only for a measured reason. validate_architecture and estimate_flops.",
+                 "Start from slm/configs/chat_tiny.yaml (read-only copies of SLM/configs/): read it "
+                 "and write it to slm/config.yaml, changing it only for a measured reason. "
+                 "validate_architecture and estimate_flops on slm/config.yaml.",
                  ["vocab_size <= 1024", "fits the boot memory budget, or int8 is planned"]),
             task("slm-training", "Train the model", "training",
                  ["slm-data-prep", "slm-arch-design"], 2, ["slm/work/final.pt"],
@@ -289,12 +303,14 @@ class TaskGraph:
                  "slm/work/auton-slm-fp32.bin; run_parity; run_chat_eval with json_path "
                  "slm/eval/fp32.json.",
                  ["run_parity exits 0", "chat eval >= 70% correct-or-honest and < 10% garbage, "
-                  "or the shortfall reported as measured"]),
+                  "or the shortfall reported as measured"],
+                 must_pass=["run_parity"], must_run=["run_chat_eval"]),
             task("slm-quantization", "Try int8, keep it only if it holds", "training",
                  ["slm-evaluation"], 4, ["slm/work/auton-slm-int8.bin", "slm/eval/int8.json"],
                  "export_auton with quant int8; run_parity; run_chat_eval. Keep int8 only if parity "
                  "passes and the chat score does not fall.",
-                 ["the choice between fp32 and int8 is stated with both scores"]),
+                 ["the choice between fp32 and int8 is stated with both scores"],
+                 must_run=["run_parity", "run_chat_eval"]),
             task("slm-export", "Export the chosen model", "training", ["slm-quantization"], 5,
                  ["slm/export/auton-slm.bin"],
                  "Copy the chosen AUTON-format model and its manifest to slm/export/. GGUF/ONNX "
@@ -302,7 +318,9 @@ class TaskGraph:
                  ["the file loads as MODEL_FORMAT_AUTON"]),
             task("slm-integration", "Place the model where the kernel boots it", "integrator",
                  ["slm-export"], 6, ["models/auton-slm.bin"],
-                 "integrate_slm with slm/export/auton-slm.bin; the kernel boots it with "
-                 "`make iso-neural MODEL=models/auton-slm.bin`.",
+                 "integrate_slm with slm/export/auton-slm.bin. It places the model in the run's "
+                 "kernel tree and replies with the exact command that boots it "
+                 "(`make -C <kernel tree> iso-neural MODEL=models/auton-slm.bin`); run that "
+                 "command, not one in this workspace.",
                  ["the boot log shows [SLM] Backend: neural"]),
         ]

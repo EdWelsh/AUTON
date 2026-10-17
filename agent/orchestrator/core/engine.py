@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import logging
 import signal
+import sys
 import uuid
 from enum import Enum
 from pathlib import Path
@@ -13,7 +14,7 @@ from typing import Any
 from orchestrator.agents.analyst_agent import AnalystAgent
 from orchestrator.agents.vendor_research_agents import SpecReaderAgent, VendorScoutAgent
 from orchestrator.agents.architect_agent import ArchitectAgent
-from orchestrator.agents.base_agent import AgentRole, TaskResult
+from orchestrator.agents.base_agent import REPO, AgentRole, TaskResult
 from orchestrator.agents.data_scientist_agent import DataScientistAgent
 from orchestrator.agents.developer_agent import DeveloperAgent
 from orchestrator.agents.integrator_agent import IntegratorAgent
@@ -51,7 +52,18 @@ logger = logging.getLogger(__name__)
 
 
 # Roles whose tasks change the kernel tree, and so need its interfaces designed.
+# The engine adds every specialist pool it registers (`_kernel_pools`): a
+# specialist is a developer for one area, and its subsystem needs a design too.
 KERNEL_ROLES = ("developer", "tester", "architect")
+
+# Repository inputs the SLM swarm is told to read, copied read-only into its
+# workspace (read_file and the shell cannot reach the repository).
+SLM_SEEDS = {"slm/DATA.md": REPO / "SLM" / "DATA.md",
+             "slm/configs": REPO / "SLM" / "configs"}
+
+
+# Pools whose branchless tasks must leave what they say they produce (_unmet_outputs).
+SLM_POOLS = frozenset({"data_scientist", "model_architect", "training", "integrator"})
 
 
 class WorkflowMode(str, Enum):
@@ -221,6 +233,7 @@ class OrchestrationEngine:
     def _init_agents(self) -> None:
         """Create all agent instances and register them with the scheduler."""
         agent_config = self.config.get("agents", {})
+        self._kernel_pools = set(KERNEL_ROLES)
 
         # Single-instance agents
         self._agents["manager"] = self._create_agent(
@@ -313,6 +326,7 @@ class OrchestrationEngine:
                                            functools.partial(sp.SpecialistAgent, spec))
                 self._agents[spec.pool] = agent
                 self.scheduler.register_agent(spec.pool, agent)
+                self._kernel_pools.add(spec.pool)
                 self._agents["manager"].advertise_role(
                     spec.pool, f"- {spec.title}: assigned_to \"{spec.pool}\" for work in "
                                f"{', '.join(spec.files[:3])} (specs: {', '.join(spec.specs)}).")
@@ -343,7 +357,12 @@ class OrchestrationEngine:
                         agent.fetch_hosts = hosts
                     self._agents[f"{key}-{i+1:02d}"] = agent
                     self.scheduler.register_agent(key, agent)
-                self._agents["manager"].advertise_role(key, blurb)
+                # A role with no agents is not advertised: a task the manager
+                # gave it would sit READY in an empty pool until max_iterations.
+                if n > 0:
+                    if key == "spec_reader":
+                        blurb += self._reader_queue_note()
+                    self._agents["manager"].advertise_role(key, blurb)
 
         logger.info(
             "Initialized %d agents: 1 manager, 1 architect, %d devs, "
@@ -377,16 +396,47 @@ class OrchestrationEngine:
             # The kernel tree parity and the chat eval run against: the run's own
             # tree when it also builds a kernel (dual), else [slm] kernel_tree, a
             # materialised base in a testing area (scripts/kernel-base.sh).
+            # The integrator gets the same tree: integrate_slm places the model
+            # where that kernel boots it, not in an slm_training workspace that
+            # holds no kernel.
             tree = self.config.get("slm", {}).get("kernel_tree") or (
                 str(self.workspace.path) if self.workflow_mode == WorkflowMode.DUAL else None)
+            self._slm_kernel_tree = tree
             for a in self._agents.values():
-                if isinstance(a, TrainingAgent):
+                if isinstance(a, (TrainingAgent, IntegratorAgent)):
                     a.kernel_tree = tree
 
             logger.info(
                 "Initialized SLM agents: 1 data scientist, 1 model architect, %d training",
                 training_count,
             )
+
+    @staticmethod
+    def _reader_queue_note() -> str:
+        """The Spec Reader's queue, for the manager, which cannot read
+        exceptions.yaml either: which rows are open and which of their documents
+        an operator still has to supply."""
+        tools = str(REPO / "agent" / "tools")
+        if tools not in sys.path:
+            sys.path.insert(0, tools)
+        try:
+            import vendor_research as vr
+            rows = vr.unverified()
+        except Exception as exc:  # noqa: BLE001 — a missing table must not stop the run
+            logger.warning("exceptions.yaml queue unavailable: %s", exc)
+            return ""
+        if not rows:
+            return ""
+        ready = sorted({r["ref"] for r in rows if r["cached"]})
+        blocked = sorted({r["ref"] or r["verify_with"] for r in rows
+                          if not r["cached"] and not r["fetchable"]})
+        note = (f" exceptions.yaml has {len(rows)} row(s) with verified: false (the reader's "
+                f"unverified_exceptions tool lists them). Cached: {', '.join(ready) or 'none'}.")
+        if blocked:
+            note += (f" Not cached, so an operator must supply them first (vendor_fetch.py "
+                     f"--from-file): {', '.join(blocked)}. Plan no verification task for a row "
+                     f"whose document is not cached.")
+        return note
 
     async def run(self, goal: str, resume: bool = False) -> dict[str, Any]:
         """Run the full orchestration loop for a goal.
@@ -435,6 +485,9 @@ class OrchestrationEngine:
             target = self.workspace_path / ".auton" / "manifest.json"
             target.parent.mkdir(parents=True, exist_ok=True)
             target.write_text(_json.dumps(self.manifest, indent=2) + "\n")
+
+        if self.workflow_mode in (WorkflowMode.SLM_TRAINING, WorkflowMode.DUAL):
+            self._seed_slm_inputs()
 
         logger.info("=== AUTON Orchestration Run %s%s ===", self.state.run_id,
                     f" (resumed, session {self.state.resume_count + 1})" if resume else "")
@@ -546,12 +599,14 @@ class OrchestrationEngine:
             self._checkpoint(state_path)
             logger.info("--- Phase 4: Final Integration ---")
 
-            if self._is_application_run():
+            no_kernel = self._builds_no_kernel(tasks)
+            if no_kernel:
                 # There is no kernel to build or boot. The integrator's task
                 # reads "build the kernel", and in w22 it spent its turns on
-                # `git log` looking for one. The application's own gates (the
-                # evidence and package gates) ran per task; completion is theirs.
-                return self._application_result(run_id)
+                # `git log` looking for one. The run's own gates (the evidence
+                # and package gates, the produces and SLM gate checks in
+                # _handle_result) ran per task; completion is theirs.
+                return self._application_result(run_id, no_kernel)
 
             integrator = self._agents["integrator"]
             final_check = await integrator.full_integration_check()
@@ -622,18 +677,45 @@ class OrchestrationEngine:
         return self.subject_path is not None or bool(
             (getattr(self, "manifest", None) or {}).get("application"))
 
-    def _application_result(self, run_id: str) -> dict[str, Any]:
+    def _writes_kernel(self, task: dict[str, Any]) -> bool:
+        """Whether a task is assigned to a pool that writes the kernel tree."""
+        pools = getattr(self, "_kernel_pools", None) or set(KERNEL_ROLES)
+        return (task.get("assigned_to") or "developer") in pools
+
+    def _builds_no_kernel(self, tasks: list[dict[str, Any]]) -> str | None:
+        """Why this run has no kernel to build and boot at the end, or None.
+
+        An application run; an slm_training run (its workspace holds the model's
+        files, and the kernel it boots in is [slm] kernel_tree, which the
+        parity and eval tools already ran); and a run whose plan gives no task to
+        a kernel-writing pool (vendor research). Each used to end in an
+        integrator model turn and a build of a workspace with no Makefile, and
+        report failure whatever its tasks did (w26 review).
+        """
+        if self._is_application_run():
+            return "application run: no kernel"
+        if self.workflow_mode is WorkflowMode.SLM_TRAINING:
+            return "slm_training run: the kernel is [slm] kernel_tree, not this workspace"
+        if self.workflow_mode is WorkflowMode.KERNEL_BUILD and not any(
+                self._writes_kernel(t) for t in tasks):
+            return "no task writes the kernel (a research run)"
+        return None
+
+    def _application_result(self, run_id: str,
+                            skipped: str = "application run: no kernel") -> dict[str, Any]:
         self.state.phase = "done"
         self._checkpoint(self.workspace_path / ".auton" / "state.json")
-        success = self.task_graph.is_complete
+        # Terminal includes FAILED: a run whose every task failed is not a success.
+        success = (self.task_graph.is_complete
+                   and not self.task_graph.get_tasks_by_state(TaskState.FAILED))
         return {
             "success": success,
-            "error": None if success else "the task graph did not complete",
+            "error": None if success else self._graph_failure(),
             "run_id": run_id,
             "progress": self.task_graph.progress,
             "total_cost_usd": self.cost_tracker.total_cost_usd,
             "iterations": self.state.iteration,
-            "final_check": {"success": success, "skipped": "application run: no kernel"},
+            "final_check": {"success": success, "skipped": skipped},
             "build_ok": None,
             "test_ok": None,
             "composition_ok": None,
@@ -713,9 +795,10 @@ class OrchestrationEngine:
         # Only subsystems someone will write kernel code for. On the w18 live
         # Analyst run the manager labelled analysis tasks `sys` and `pkg`, and
         # the architect spent the run designing kernel headers nobody needed.
+        # Specialist pools count (_writes_kernel): with specialists = "all" the
+        # manager routes mm, sched and ipc to them, and those went undesigned.
         subsystems = sorted(set(t.get("subsystem", "") for t in tasks
-                                if t.get("subsystem")
-                                and (t.get("assigned_to") or "developer") in KERNEL_ROLES))
+                                if t.get("subsystem") and self._writes_kernel(t)))
         for subsystem in subsystems:
             # Checkpointed per subsystem: a design takes hours on a local model,
             # and with only the whole phase recorded, every resume restarted it
@@ -890,10 +973,7 @@ class OrchestrationEngine:
         else:
             return await agent.execute_task(task_node.data)
 
-    def _failure_summary(self, final_check, build_result, test_result,
-                         composition_result) -> str:
-        """Why a run did not succeed, in one line. Both w11 runs printed
-        `Orchestration failed: unknown`, which told nobody anything."""
+    def _task_failures(self) -> list[str]:
         reasons = []
         for node in self.task_graph.all_tasks:
             if node.state is TaskState.FAILED:
@@ -901,6 +981,17 @@ class OrchestrationEngine:
                 reasons.append(f"{node.task_id} failed ({why})")
             elif node.state is not TaskState.MERGED:
                 reasons.append(f"{node.task_id} ended {node.state.value}")
+        return reasons
+
+    def _graph_failure(self) -> str:
+        return ("the task graph did not complete: "
+                + ("; ".join(self._task_failures()) or "no task reached a terminal state"))
+
+    def _failure_summary(self, final_check, build_result, test_result,
+                         composition_result) -> str:
+        """Why a run did not succeed, in one line. Both w11 runs printed
+        `Orchestration failed: unknown`, which told nobody anything."""
+        reasons = self._task_failures()
         if not final_check.get("success", False):
             reasons.append("integration check failed")
         if not build_result.success:
@@ -930,8 +1021,24 @@ class OrchestrationEngine:
 
         if not result.branch:
             # No branch: the agent was not asked to produce a change (a design
-            # or read task). There is nothing to review, and reviewing nothing
-            # is what made the model hallucinate a diff.
+            # or read task, or an SLM step, which writes into the workspace
+            # through its tools). There is nothing to review, and reviewing
+            # nothing is what made the model hallucinate a diff. It is still
+            # checked before it counts as done: see _unmet_outputs.
+            unmet = self._unmet_outputs(task_node, result)
+            if unmet:
+                limit = int(getattr(self, "config", {}).get("orchestrator", {})
+                            .get("max_review_rounds", 3))
+                node = self.task_graph.requeue(task_id, {
+                    "verdict": "request_changes",
+                    "summary": "you reported done, but " + "; ".join(unmet)})
+                logger.info("Task %s not done (round %d/%d): %s", task_id,
+                            node.review_rounds, limit, "; ".join(unmet))
+                if node.review_rounds >= limit:
+                    self.task_graph.fail(task_id, "; ".join(unmet)
+                                         + f" after {node.review_rounds} attempt(s)")
+                    self.state.tasks_failed += 1
+                return
             logger.info("Task %s produced no branch; merged without review", task_id)
             self.task_graph.update_state(task_id, TaskState.MERGED)
             return
@@ -966,6 +1073,61 @@ class OrchestrationEngine:
         task_node.data["branch"] = result.branch
         self.task_graph.update_state(task_id, TaskState.REVIEW)
         await self._trigger_review(task_node, result)
+
+    def _unmet_outputs(self, task_node: Any, result: TaskResult) -> list[str]:
+        """What a branchless task said it would leave and did not, or [].
+
+        The check is mechanical and deliberately small:
+        - every path in the task's `produces` must exist, in the workspace or
+          (for the model the integrator places) in the run's SLM kernel tree.
+          Existence only: what a file holds is the next task's input and its
+          tools' business, not this check's;
+        - every tool in the task's `must_pass` must have been run during the
+          task, and its last run must have exited 0 (the SLM graph's parity);
+        - every tool in `must_run` must have been run (the chat eval, whose
+          shortfall may be reported rather than passed).
+        Before this, an SLM task was MERGED whenever its model replied: with a
+        stub that called no tool, all seven merged (w26 review).
+        """
+        data = task_node.data
+        # SLM pools only. Kernel runs' branchless tester/architect tasks merge
+        # unchecked as they did when the campaign was pre-registered; widening
+        # this would change those experiments (w26 review, verify:code).
+        role = data.get("assigned_to")
+        if role not in SLM_POOLS or (role == "integrator"
+                                     and self.workflow_mode is WorkflowMode.KERNEL_BUILD):
+            return []
+        roots = [Path(self.workspace.path)]
+        tree = getattr(self, "_slm_kernel_tree", None)
+        if tree:
+            roots.append(Path(tree))
+        unmet = []
+        missing = [p for p in data.get("produces") or []
+                   if not any((r / p).exists() for r in roots)]
+        if missing:
+            unmet.append(f"the task must produce {', '.join(missing)}, and "
+                         f"{'it does' if len(missing) == 1 else 'they do'} not exist")
+        exits = getattr(result, "tool_exits", None) or {}
+        for tool in data.get("must_pass") or []:
+            if tool not in exits:
+                unmet.append(f"{tool} was never run, and this task needs it to pass")
+            elif exits[tool] != 0:
+                unmet.append(f"{tool} exited {exits[tool]}; this task needs exit 0")
+        for tool in data.get("must_run") or []:
+            if tool not in exits:
+                unmet.append(f"{tool} was never run, and this task must report its result")
+        return unmet
+
+    def _seed_slm_inputs(self) -> None:
+        """SLM/DATA.md and SLM/configs/, read-only at slm/ in the workspace: the
+        data contract every SLM agent is told to read first, and the configs the
+        model architect starts from. Committed on main, so every branch has them."""
+        self.workspace.checkout_main()
+        changed = self.workspace.seed_read_only(
+            {rel: src for rel, src in SLM_SEEDS.items() if src.exists()},
+            "Seed the SLM inputs (read-only copies of SLM/DATA.md and SLM/configs/)")
+        if changed:
+            logger.info("Seeded %d SLM input(s) read-only under slm/", len(changed))
 
     def _merge_approved(self) -> None:
         """Merge every approved branch into main, and mark the graph.

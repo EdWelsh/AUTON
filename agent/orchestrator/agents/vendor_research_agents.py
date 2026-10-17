@@ -9,6 +9,7 @@ nothing reaches agent/hardware/ until a person merges a checked record.
 
 from __future__ import annotations
 
+import re
 from typing import Any
 
 from orchestrator.agents.base_agent import Agent, AgentRole, TaskResult
@@ -30,7 +31,11 @@ class _BranchingAgent(Agent):
     area = "hardware"
 
     async def implement_task(self, task: dict[str, Any]) -> TaskResult:
-        component = task["task_id"].split("-")[-1] if "-" in task["task_id"] else task["task_id"]
+        # The whole task id, not its last segment: intel-001 and amd-001 both
+        # became hardware-001, so a scout's second vendor continued on the
+        # first's branch, rejected work and all (w26 review).
+        component = re.sub(r"\.\.+", ".", re.sub(r"[^A-Za-z0-9._-]", "-",
+                                                  str(task["task_id"]))).strip(".-") or "task"
         earlier = task.get("resume_branch")
         if earlier and self.workspace.branch_exists(earlier):
             self.workspace.checkout(earlier)

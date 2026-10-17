@@ -47,7 +47,13 @@ async def test_the_data_scientist_builds_checks_and_tokenizes_a_kernel_set(ws):
     assert "[exit code: 0]" in out, out
     vocab = json.loads((Path(ws.path) / "slm/work/vocab.json").read_text())
     assert len(vocab.get("vocab", vocab)) <= 1024
-    assert (Path(ws.path) / "slm/work/vocab.json.tokens.jsonl").exists()
+    # The default stream is the path the graph's training task reads (w26 review:
+    # it was vocab.json.tokens.jsonl, and slm-training looked for tokens.jsonl).
+    from orchestrator.core.task_graph import TaskGraph
+    training = next(t for t in TaskGraph().create_slm_training_tasks("g")
+                    if t["task_id"] == "slm-training")
+    assert "slm/work/tokens.jsonl" in training["description"]
+    assert (Path(ws.path) / "slm/work/tokens.jsonl").exists()
 
 
 async def test_a_corpus_that_does_not_fit_is_reported(ws):
@@ -59,9 +65,36 @@ async def test_a_corpus_that_does_not_fit_is_reported(ws):
 
 def test_committed_configs_resolve_from_the_repository(ws):
     a = _agent(TrainingAgent, ws)
-    assert a._slm_path("SLM/configs/chat_tiny.yaml").endswith("SLM/configs/chat_tiny.yaml")
-    assert Path(a._slm_path("SLM/configs/chat_tiny.yaml")).exists()
-    assert a._slm_path("slm/work/x.pt").startswith(str(ws.path))       # outputs stay put
+    assert a._slm_in("SLM/configs/chat_tiny.yaml").endswith("SLM/configs/chat_tiny.yaml")
+    assert Path(a._slm_in("SLM/configs/chat_tiny.yaml")).exists()
+    assert a._slm_out("slm/work/x.pt").startswith(str(ws.path))       # outputs stay put
+
+
+def test_outputs_never_leave_the_workspace(ws):
+    """The repository fallback is for reading committed inputs under SLM/ only
+    (w26 review: build_corpus(output_dir="SLM/datasets") wrote over the tracked
+    corpora, and absolute or `..` paths went anywhere)."""
+    from orchestrator.comms.git_workspace import WorkspaceError
+    a = _agent(TrainingAgent, ws)
+    assert a._slm_out("SLM/datasets") == str(Path(ws.path) / "SLM" / "datasets")
+    for bad in ("/root/.ssh/id_rsa", "/tmp/x", "../../../../etc/cron.d", "slm/../../x"):
+        with pytest.raises(WorkspaceError):
+            a._slm_out(bad)
+        with pytest.raises(WorkspaceError):
+            a._slm_in(bad)
+    # Inputs: only committed files under SLM/ fall back to the repository.
+    assert not a._slm_in("agent/config/auton.toml.example").startswith(str(a._slm_script("")))
+    assert a._slm_in("agent/config/auton.toml.example").startswith(str(ws.path))
+
+
+async def test_build_corpus_into_slm_datasets_writes_the_workspace_not_the_repo(ws):
+    a = _agent(DataScientistAgent, ws)
+    repo_copy = Path(a._slm_script("SLM/datasets/os_chat.jsonl"))
+    before = repo_copy.stat().st_mtime_ns
+    out = await a._execute_tool("build_corpus", {"output_dir": "SLM/datasets"})
+    assert "[exit code: 0]" in out, out
+    assert (Path(ws.path) / "SLM/datasets/os_chat.jsonl").exists()
+    assert repo_copy.stat().st_mtime_ns == before
 
 
 def test_validation_names_the_kernel_budgets(ws):
@@ -80,16 +113,46 @@ async def test_parity_and_eval_need_a_kernel_tree(ws):
         assert (await a._execute_tool(tool, args)).startswith("Refused")
 
 
-async def test_integration_refuses_gguf_and_stays_in_the_workspace(ws, tmp_path):
+AUTON = (0x4E4F5455).to_bytes(4, "little") + b"\x03\x00\x00\x00rest"
+
+
+async def test_integration_refuses_anything_but_the_auton_format(ws):
     a = _agent(IntegratorAgent, ws)
-    g = tmp_path / "m.gguf"
-    g.write_bytes(b"GGUF")
-    assert (await a._execute_tool("integrate_slm", {"model_path": str(g),
-                                                    "kernel_arch": "x86_64"})).startswith("Refused")
-    b = tmp_path / "auton-slm.bin"
-    b.write_bytes(b"AUTN")
-    out = await a._execute_tool("integrate_slm", {"model_path": str(b), "kernel_arch": "x86_64"})
-    assert (Path(ws.path) / "models" / "auton-slm.bin").read_bytes() == b"AUTN", out
+    (Path(ws.path) / "Makefile").write_text("iso-neural:\n")
+    exp = Path(ws.path) / "slm" / "export"
+    exp.mkdir(parents=True)
+    for name, data in (("m.gguf", b"GGUF...."), ("m.GGUF", b"GGUF...."),
+                       ("renamed.bin", b"GGUF...."), ("junk.bin", b"AUTN")):
+        (exp / name).write_bytes(data)
+        out = await a._execute_tool("integrate_slm", {"model_path": f"slm/export/{name}",
+                                                      "kernel_arch": "x86_64"})
+        assert out.startswith("Refused"), (name, out)
+    assert not (Path(ws.path) / "models").exists()
+    out = await a._execute_tool("integrate_slm", {"model_path": str(exp / "m.gguf"),
+                                                  "kernel_arch": "x86_64"})
+    assert "absolute" in out
+
+
+async def test_integration_places_the_model_in_the_runs_kernel_tree(ws, tmp_path):
+    """slm_training: the workspace holds no kernel; [slm] kernel_tree does (w26
+    review: the model landed in the workspace, where nothing boots it)."""
+    a = _agent(IntegratorAgent, ws)
+    tree = tmp_path / "kernel"
+    tree.mkdir()
+    (tree / "Makefile").write_text("iso-neural:\n")
+    a.kernel_tree = str(tree)
+    (Path(ws.path) / "slm" / "export").mkdir(parents=True)
+    (Path(ws.path) / "slm/export/auton-slm.bin").write_bytes(AUTON)
+    out = await a._execute_tool("integrate_slm", {"model_path": "slm/export/auton-slm.bin",
+                                                  "kernel_arch": "x86_64"})
+    assert (tree / "models" / "auton-slm.bin").read_bytes() == AUTON, out
+    assert not (Path(ws.path) / "models").exists()
+    assert f"make -C {tree} iso-neural MODEL=models/auton-slm.bin" in out
+
+    a.kernel_tree = None                     # no kernel tree, and no Makefile here
+    out = await a._execute_tool("integrate_slm", {"model_path": "slm/export/auton-slm.bin",
+                                                  "kernel_arch": "x86_64"})
+    assert out.startswith("Refused") and "Makefile" in out
 
 
 def test_every_slm_task_says_what_it_produces():

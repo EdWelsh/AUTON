@@ -47,6 +47,10 @@ REPO = Path(__file__).resolve().parents[3]
 # vocabulary, and the model's share of the 256 MB neural boot budget.
 KERNEL_VOCAB = 1024
 KERNEL_MODEL_BUDGET = 128 * 2**20
+# The first four bytes of every AUTON-format model: MAGIC in
+# SLM/tools/auton_format.py, packed little-endian. integrate_slm checks the bytes,
+# not the extension: `m.GGUF` or a renamed file is not a model the kernel loads.
+AUTON_MAGIC = (0x4E4F5455).to_bytes(4, "little")
 
 # A spec longer than this comes back as an outline plus its opening (w18 R1).
 SPEC_FULL_CHARS = 24000
@@ -111,6 +115,10 @@ class TaskResult:
     build_status: str = "unknown"
     test_status: str = "unknown"
     error: str | None = None
+    # The exit code of the last run of each gate tool during the task
+    # (run_parity, run_chat_eval), which the engine checks against the task's
+    # must_pass and must_run before it counts the task done.
+    tool_exits: dict[str, int] = field(default_factory=dict)
 
 
 class Agent:
@@ -160,6 +168,7 @@ class Agent:
         Claude iteratively calls tools until the task is complete.
         """
         self.state = AgentState.THINKING
+        self.tool_exits: dict[str, int] = {}
         logger.info("[%s] Starting task: %s", self.agent_id, task.get("title", "untitled"))
 
         # Build the initial message
@@ -195,6 +204,7 @@ class Agent:
                 summary=summary,
                 artifacts=artifacts,
                 branch=self._task_branch,
+                tool_exits=dict(self.tool_exits),
             )
 
         except Exception as e:
@@ -326,7 +336,7 @@ class Agent:
                     return await self._run_gate()
 
                 case ("vendor_lookup" | "vendor_queue" | "fetch_document" | "fetch_url"
-                      | "read_document" | "check_hardware_record"):
+                      | "read_document" | "check_hardware_record" | "unverified_exceptions"):
                     return self._hardware_tool(tool_name, tool_input)
 
                 case "shell":
@@ -533,6 +543,8 @@ class Agent:
                 hosts = tuple(vr.DEFAULT_HOSTS) + tuple(getattr(self, "fetch_hosts", ()) or ())
                 r = vr.fetch_url(args["url"], hosts)
                 return f"fetched {args['url']} -> ref {r['ref']} ({r['pages']} pages, sha256 {r['sha256']})"
+            if name == "unverified_exceptions":
+                return vr.unverified_report()
             if name == "read_document":
                 return vr.read_document(args["ref"], args.get("page"), args.get("query"))
             if name == "check_hardware_record":
@@ -769,22 +781,32 @@ class Agent:
             return None
 
     # SLM tool executors. Scripts live in the repository and run with this
-    # interpreter; the paths an agent gives are resolved against its workspace
-    # (where its outputs belong), falling back to the repository for inputs such
-    # as SLM/configs/chat_tiny.yaml. Before this, every tool ran `python
-    # SLM/...` from inside the workspace, where no SLM/ exists, and integrate_slm
-    # copied a GGUF the kernel cannot load into the repository's kernels/.
+    # interpreter. Before w26 every tool ran `python SLM/...` from inside the
+    # workspace, where no SLM/ exists, and integrate_slm copied a GGUF the kernel
+    # cannot load into the repository's kernels/.
+    #
+    # Paths an agent gives go through one of two resolvers. An OUTPUT is the
+    # workspace's (resolve_output: no absolute path, no `..` out of it, nothing
+    # under .auton/ or a seeded input). An INPUT is the workspace's when it is
+    # there, and otherwise, read-only, a file committed in the repository under
+    # SLM/ (SLM/configs/chat_tiny.yaml). The fallback used to apply to outputs
+    # as well, so build_corpus(output_dir="SLM/datasets") wrote over the tracked
+    # corpora, and an absolute path went anywhere (w26 review).
     def _slm_script(self, rel: str) -> str:
         return str(REPO / rel)
 
-    def _slm_path(self, p: str) -> str:
-        path = Path(p)
-        if path.is_absolute():
-            return str(path)
-        here = Path(self.workspace.path) / path
-        if here.exists() or not (REPO / path).exists():
+    def _slm_out(self, p: str) -> str:
+        return str(self.workspace.resolve_output(p))
+
+    def _slm_in(self, p: str) -> str:
+        here = self.workspace._resolve(p)
+        if here.exists():
             return str(here)
-        return str(REPO / path)
+        repo = (REPO / p).resolve()
+        slm = (REPO / "SLM").resolve()
+        if repo.exists() and slm in repo.parents and _committed(repo):
+            return str(repo)
+        return str(here)
 
     async def _slm_run(self, script: str, *args: str, timeout: int = 600) -> str:
         return await self._run_argv([sys.executable, self._slm_script(script), *args],
@@ -793,11 +815,11 @@ class Agent:
     async def _analyze_dataset(self, dataset_path: str) -> str:
         """Analyze dataset statistics."""
         return await self._slm_run("SLM/tools/dataset_builder.py", "analyze",
-                                   self._slm_path(dataset_path))
+                                   self._slm_in(dataset_path))
 
     async def _build_corpus(self, output_dir: str) -> str:
         """Regenerate the kernel corpora from ground truth into the workspace."""
-        out = Path(self._slm_path(output_dir))
+        out = Path(self._slm_out(output_dir))
         out.mkdir(parents=True, exist_ok=True)
         chat = await self._slm_run("SLM/tools/build_corpus.py", "--output",
                                    str(out / "os_chat.jsonl"))
@@ -808,22 +830,24 @@ class Agent:
     async def _check_vocab_budget(self, datasets: list[str], vocab_size: int) -> str:
         return await self._slm_run("SLM/tools/vocab_budget.py", "--together",
                                    "--vocab", str(vocab_size),
-                                   *[self._slm_path(d) for d in datasets])
+                                   *[self._slm_in(d) for d in datasets])
 
     async def _tokenize_data(self, input_path: str, output_path: str, vocab_size: int,
                              tokens_path: str | None = None) -> str:
-        """Word-level vocabulary plus the token stream train.py reads."""
-        out = self._slm_path(output_path)
+        """Word-level vocabulary plus the token stream train.py reads. The stream
+        defaults to tokens.jsonl beside the vocabulary: slm/work/vocab.json gives
+        slm/work/tokens.jsonl, the path the SLM graph's training task reads."""
+        out = self._slm_out(output_path)
+        tokens = self._slm_out(tokens_path) if tokens_path else str(Path(out).parent / "tokens.jsonl")
         return await self._slm_run(
-            "SLM/tools/tokenizer.py", "--input", self._slm_path(input_path), "--output", out,
-            "--vocab-size", str(vocab_size),
-            "--tokenize-to", self._slm_path(tokens_path) if tokens_path else out + ".tokens.jsonl")
+            "SLM/tools/tokenizer.py", "--input", self._slm_in(input_path), "--output", out,
+            "--vocab-size", str(vocab_size), "--tokenize-to", tokens)
 
     def _validate_architecture(self, config_path: str) -> str:
         """Validate model config YAML against what the kernel can run."""
         import yaml
         try:
-            with open(self._slm_path(config_path)) as f:
+            with open(self._slm_in(config_path)) as f:
                 config = yaml.safe_load(f)
             required = ["model", "architecture", "training"]
             missing = [k for k in required if k not in config]
@@ -847,7 +871,7 @@ class Agent:
         """Estimate model FLOPs and size."""
         import yaml
         try:
-            with open(self._slm_path(config_path)) as f:
+            with open(self._slm_in(config_path)) as f:
                 config = yaml.safe_load(f)
             params = config["model"]["parameters"]
             return (f"Estimated {params:,} parameters, ~{params * 2 / 1e6:.1f} MFLOPs per token "
@@ -859,30 +883,30 @@ class Agent:
                            output_dir: str = "slm/work") -> str:
         """Train SLM model."""
         return await self._slm_run(
-            "SLM/scripts/train.py", "--config", self._slm_path(config_path),
-            "--dataset", self._slm_path(dataset_path), "--output", self._slm_path(output_dir),
+            "SLM/scripts/train.py", "--config", self._slm_in(config_path),
+            "--dataset", self._slm_in(dataset_path), "--output", self._slm_out(output_dir),
             "--max-steps", str(max_steps), timeout=3600)
 
     async def _evaluate_model(self, checkpoint_path: str, test_dataset: str) -> str:
         """Held-out loss/perplexity of a checkpoint."""
         return await self._slm_run("SLM/scripts/evaluate.py",
-                                   "--checkpoint", self._slm_path(checkpoint_path),
-                                   "--dataset", self._slm_path(test_dataset))
+                                   "--checkpoint", self._slm_in(checkpoint_path),
+                                   "--dataset", self._slm_in(test_dataset))
 
     async def _quantize_model(self, checkpoint_path: str, output_path: str, bits: int) -> str:
         """Quantize model."""
         return await self._slm_run("SLM/scripts/quantize.py",
-                                   "--checkpoint", self._slm_path(checkpoint_path),
-                                   "--bits", str(bits), "--output", self._slm_path(output_path),
+                                   "--checkpoint", self._slm_in(checkpoint_path),
+                                   "--bits", str(bits), "--output", self._slm_out(output_path),
                                    timeout=1800)
 
     async def _export_auton(self, checkpoint_path: str, vocab_path: str, output_path: str,
                             quant: str = "fp32") -> str:
         """Export to the AUTON flat format the kernel loads."""
         return await self._slm_run("SLM/scripts/export_auton.py",
-                                   "--checkpoint", self._slm_path(checkpoint_path),
-                                   "--vocab", self._slm_path(vocab_path),
-                                   "--output", self._slm_path(output_path), "--quant", quant)
+                                   "--checkpoint", self._slm_in(checkpoint_path),
+                                   "--vocab", self._slm_in(vocab_path),
+                                   "--output", self._slm_out(output_path), "--quant", quant)
 
     async def _run_parity(self, model_path: str, checkpoint_path: str, vocab_path: str) -> str:
         """In-kernel forward pass vs PyTorch, against the run's kernel tree."""
@@ -890,10 +914,10 @@ class Agent:
         if not tree:
             return ("Refused: this run has no kernel tree to check parity against "
                     "(the engine sets one when the run builds or seeds a kernel)")
-        return await self._run_argv(
+        return self._record_exit("run_parity", await self._run_argv(
             ["env", f"KERNEL_TREE={tree}", "bash", str(REPO / "tests/kernel/neural_parity.sh"),
-             self._slm_path(model_path), self._slm_path(checkpoint_path),
-             self._slm_path(vocab_path)], timeout=1800)
+             self._slm_in(model_path), self._slm_in(checkpoint_path),
+             self._slm_in(vocab_path)], timeout=1800))
 
     async def _run_chat_eval(self, model_path: str, json_path: str | None = None) -> str:
         """Boot the kernel with the model and score the frozen chat eval."""
@@ -901,35 +925,75 @@ class Agent:
         if not tree:
             return "Refused: this run has no kernel tree to boot the model in"
         argv = ["env", f"KERNEL_TREE={tree}", "bash", str(REPO / "scripts/eval.sh"),
-                "--model", self._slm_path(model_path)]
+                "--model", self._slm_in(model_path)]
         if json_path:
-            argv += ["--json", self._slm_path(json_path)]
-        return await self._run_argv(argv, timeout=3600)
+            argv += ["--json", self._slm_out(json_path)]
+        return self._record_exit("run_chat_eval", await self._run_argv(argv, timeout=3600))
+
+    def _record_exit(self, tool: str, output: str) -> str:
+        """Note the exit code _run_argv printed (-1 when it printed none: a
+        timeout, or a program that could not start), and pass the output on."""
+        import re
+        m = re.search(r"\[exit code: (-?\d+)\]\s*$", output)
+        if not hasattr(self, "tool_exits"):
+            self.tool_exits = {}
+        self.tool_exits[tool] = int(m.group(1)) if m else -1
+        return output
 
     async def _export_gguf(self, model_path: str, output_path: str) -> str:
         """Export to GGUF format (host tools only)."""
         return await self._slm_run("SLM/scripts/export_gguf.py",
-                                   "--model", self._slm_path(model_path),
-                                   "--output", self._slm_path(output_path))
+                                   "--model", self._slm_in(model_path),
+                                   "--output", self._slm_out(output_path))
 
     async def _export_onnx(self, model_path: str, output_path: str) -> str:
         """Export to ONNX format (host tools only)."""
         return await self._slm_run("SLM/scripts/export_onnx.py",
-                                   "--model", self._slm_path(model_path),
-                                   "--output", self._slm_path(output_path))
+                                   "--model", self._slm_in(model_path),
+                                   "--output", self._slm_out(output_path))
 
     async def _integrate_slm(self, model_path: str, kernel_arch: str) -> str:
-        """Place the exported model in this workspace, where the kernel build boots it."""
+        """Place the exported model in the kernel tree this run boots.
+
+        That is the run's kernel_tree when the engine set one (an slm_training
+        run's [slm] kernel_tree, or a dual run's own workspace), else this
+        workspace. In slm_training the workspace holds no kernel: the model used
+        to land there, where no `make iso-neural` could ever boot it (w26 review).
+        The reply names the exact make command, with -C, so it runs from anywhere.
+        """
         import shutil
         try:
-            src = Path(self._slm_path(model_path))
-            if src.suffix in (".gguf", ".onnx"):
-                return (f"Refused: {src.name} is {src.suffix[1:].upper()}; the kernel loads the "
-                        f"AUTON format. Export it with export_auton first")
-            dst = Path(self.workspace.path) / "models" / "auton-slm.bin"
+            src = Path(self._slm_in(model_path))
+            if not src.is_file():
+                return f"Integration error: no model at {model_path}"
+            with src.open("rb") as f:
+                magic = f.read(4)
+            if magic != AUTON_MAGIC:
+                what = "GGUF" if magic == b"GGUF" else "not an AUTON-format model"
+                return (f"Refused: {src.name} is {what} "
+                        f"(it does not start with the AUTON magic); the kernel loads the AUTON "
+                        f"format. Export it with export_auton first")
+            tree = Path(getattr(self, "kernel_tree", None) or self.workspace.path)
+            if not (tree / "Makefile").is_file():
+                return (f"Refused: {tree} has no Makefile, so no kernel there can boot the "
+                        f"model. The run's kernel tree is [slm] kernel_tree "
+                        f"(scripts/kernel-base.sh materialises one)")
+            dst = tree / "models" / "auton-slm.bin"
             dst.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy(src, dst)
-            return (f"Placed {src.name} at models/auton-slm.bin for {kernel_arch}; boot it with "
-                    f"`make iso-neural MODEL=models/auton-slm.bin`")
+            return (f"Placed {src.name} at {dst} for {kernel_arch}; boot it with "
+                    f"`make -C {tree} iso-neural MODEL=models/auton-slm.bin`")
         except Exception as e:
             return f"Integration error: {e}"
+
+
+def _committed(path: Path) -> bool:
+    """Whether `path` (a file or a directory) is tracked in the repository: the
+    SLM input fallback reads committed inputs only, never generated output."""
+    try:
+        r = subprocess.run(["git", "-C", str(REPO), "ls-files", "--error-unmatch", "--",
+                            str(path.relative_to(REPO.resolve()))],
+                           capture_output=True, timeout=30)
+    except (OSError, ValueError, subprocess.SubprocessError):
+        return False
+    return r.returncode == 0
