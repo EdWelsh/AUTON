@@ -53,3 +53,22 @@ only, and `scripts/campaign.py` would have run R8 after R1. `runs.yaml` now mark
 `tree:r1-mm-attempt2` named campaign 2's tree (on the Mac); after the attempt reset it named this
 experiment's attempt 2, and the boot gate passes on the untouched base. It is now `none`, and the
 campaign takes no fallback tree whose main does not differ from its base.
+
+## Amendment 2026-10-19, before R1 starts: the model, and the host
+
+The owner withdrew the Claude subscription from this work (2026-10-19). **Model:**
+`ollama_chat/qwen3.6:35b-a3b`, run locally on the Mac (M4 Pro, 48 GB): Qwen3.6-35B-A3B,
+unsloth `UD-Q4_K_M`, 23 GB, a mixture of experts with 3B parameters active. Found by searching
+Hugging Face for the strongest coding/agent model that leaves room for context in 48 GB; the
+dense Qwen3.6-27B was passed over because throughput, not capability, bound the earlier local runs.
+Qualified 4/4 by `scripts/model-probe.py` (tool call 22 s, fidelity 4.5 s, 25k-character spec
+163 s, second turn 2.8 s). Context 65,536 (`runs.yaml`).
+
+**This is a different experiment again.** The model changes from the Claude subscription of the
+2026-10-17 amendment, and the host from the Linux container back to the Mac, where host suites
+compile with arm64 clang (so `portable_asm_check.sh` and the I/O shim matter). Attempts restart
+at 1. Stop rule unchanged (two attempts, then stop). The hypothesis is unchanged: R1's earlier
+failures were lost feedback, not capability; a null result on a local model says nothing about
+Claude.
+
+The earlier campaign's directory is kept as `.artifacts/campaign-superseded-2026-10-19/`.

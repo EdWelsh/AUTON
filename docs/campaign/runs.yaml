@@ -23,9 +23,15 @@
 # owner's subscription (claude -p; agent/orchestrator/llm/claude_cli.py), qualified 4/4 by
 # scripts/model-probe.py, slowest call 21 s. Was ollama_chat/qwen3.5:27b-q8_0 at context 32768.
 # Goals, bases, seeds, gates, sessions and stop rules are unchanged.
-model: claude-cli/claude-sonnet-5-5
+# Amended 2026-10-19 (owner's decision): no Claude subscription for the campaign. Every run uses
+# the local ollama_chat/qwen3.6:35b-a3b (Qwen3.6-35B-A3B, unsloth UD-Q4_K_M GGUF, 23 GB; a
+# mixture of experts with 3B active, chosen over the dense 27B because throughput, not capability,
+# bound the earlier local runs). Qualified 4/4 by scripts/model-probe.py, slowest call 163 s.
+# Context 65536. Goals, bases, seeds, gates, sessions and stop rules are unchanged. This is a
+# new experiment: see reports/w25-campaign-attempt3-preregistration.md (amendment 2026-10-19).
+model: ollama_chat/qwen3.6:35b-a3b
 session_seconds: 18000
-context: 200000
+context: 65536
 
 # Frozen interfaces (2026-10-10). Eleven of twelve runs failed because the frozen host suite
 # uses identifiers (KV_SHUTDOWN, smtp_reset, HR_PATH_MAX, conn.status, a second phys_to_virt)
