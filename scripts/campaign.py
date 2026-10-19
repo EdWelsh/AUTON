@@ -124,7 +124,7 @@ def tree_changed(ws: Path, result: dict | None) -> bool:
     git = ["git", "-C", str(ws)]
     base = (result or {}).get("base") or ""
     start = None
-    if (Path(base) / ".git").exists():
+    if base and (Path(base) / ".git").exists():
         start = subprocess.run(["git", "-C", base, "rev-parse", "main"],
                                capture_output=True, text=True).stdout.strip() or None
     rng = ["main"] + ([f"^{start}"] if start else [])
