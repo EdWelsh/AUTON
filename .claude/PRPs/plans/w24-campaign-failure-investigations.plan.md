@@ -207,6 +207,23 @@ Sessions of 3–16 hours show `memory_paused`. Probable causes: the local 27b re
 plus Docker/Rancher VMs plus my own test runs. **Change:** none yet. **OPEN:** record free
 memory with each guard firing; run no Docker work alongside a campaign.
 
+## F-12. A timeout on `make run` hung the orchestrator for good (R1, local-model attempt 1) — FIXED
+
+**Evidence.** 2026-10-19, 11 minutes with no model call; `ps` showed `qemu-system-x86_64 -cdrom
+build/auton.iso -serial stdio` at 100% CPU with PPID 1, and the orchestrator idle. The developer had called
+`build_kernel(target=run)`: `make run` starts QEMU in the foreground and never returns.
+
+**Cause.** `core/proc.py: communicate()` killed `make` on the timeout, then awaited `proc.wait()`. asyncio
+wakes `wait()` only after the child's pipes close, and QEMU, a grandchild, still held them. The wait never
+returned, so the run stopped making progress without an error. The earlier 27b-era campaigns would have had
+the same hole whenever an agent ran a foreground target; it was never seen because the agents rarely did.
+
+**Change (done).** Children start with `start_new_session=True` (four sites); `communicate()` kills the whole
+process group, and bounds the reap at 10 s. **Test:** `test_proc_grandchild.py` starts `sh -c "sleep 60 & wait"`,
+times out at 1 s and requires the call to return in under 8 s with nothing left running; against the old code
+it hangs. **Falsified if** a run again sits idle with an orphaned QEMU. The run was resumed from its saved
+state (`run --resume`): branches and commits intact, the first session's console transcript overwritten.
+
 ## F-11. What no run has yet tested
 
 Behaviour. No run got past the compile step of its frozen suite except R6 (clone over dumb-HTTP
