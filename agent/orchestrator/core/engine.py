@@ -175,6 +175,7 @@ class OrchestrationEngine:
             request_timeout=float(llm_config.get("request_timeout", DEFAULT_REQUEST_TIMEOUT)),
             max_tool_turns=int(llm_config.get("max_tool_turns", DEFAULT_MAX_TOOL_TURNS)),
             context_length=llm_config.get("context_length"),
+            think=llm_config.get("think"),
             fallback_model=llm_config.get("fallback_model", DEFAULT_FALLBACK_MODEL
                                           if str(llm_config.get("model", "")).startswith("claude-cli/")
                                           else None),

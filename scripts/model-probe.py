@@ -27,6 +27,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 import time
 from pathlib import Path
@@ -92,6 +93,10 @@ def call(model: str, messages: list[dict], tools: bool = True, timeout: int = 90
         return _claude_cli_call(model, messages, tools, timeout)
     kwargs: dict = {"model": model, "messages": messages, "temperature": 0,
                     "timeout": timeout, "api_base": OLLAMA}
+    if model.startswith(("ollama/", "ollama_chat/")):
+        kwargs["num_ctx"] = int(os.environ.get("PROBE_CTX", "65536"))   # as the campaign sets it
+    if os.environ.get("PROBE_THINK") == "0":      # the campaign runs with [llm] think = false
+        kwargs["reasoning_effort"] = "none"
     if tools:
         kwargs["tools"] = [WRITE_FILE]
         kwargs["tool_choice"] = "auto"

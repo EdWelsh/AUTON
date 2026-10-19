@@ -235,8 +235,13 @@ class LLMClient:
         context_length: int | None = None,
         fallback_model: str | None = None,
         fallback_context: int = DEFAULT_FALLBACK_CONTEXT,
+        think: bool | None = None,
     ):
         self.model = model
+        # False turns a reasoning model's thinking off (Ollama's `think`). Qwen3.6 spent
+        # up to 9,500 tokens (4 minutes) thinking before a single tool call. None leaves
+        # the model's default.
+        self.think = think
         # When the Claude subscription's limit is reached, calls go to this local
         # model until the limit resets, rather than the run waiting hours. Only
         # meaningful for a claude-cli primary; the switch is logged, never silent.
@@ -332,6 +337,8 @@ class LLMClient:
                 kwargs["tool_choice"] = "auto"
             if context_length and model.startswith(("ollama/", "ollama_chat/")):
                 kwargs["num_ctx"] = context_length
+            if self.think is False and model.startswith(("ollama/", "ollama_chat/")):
+                kwargs["reasoning_effort"] = "none"     # litellm maps this to think=false
 
             api_key = self.provider_config.get_api_key(model)
             if api_key:

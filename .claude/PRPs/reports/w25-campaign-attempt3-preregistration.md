@@ -57,12 +57,14 @@ campaign takes no fallback tree whose main does not differ from its base.
 ## Amendment 2026-10-19, before R1 starts: the model, and the host
 
 The owner withdrew the Claude subscription from this work (2026-10-19). **Model:**
-`ollama_chat/qwen3.6:35b-a3b`, run locally on the Mac (M4 Pro, 48 GB): Qwen3.6-35B-A3B,
-unsloth `UD-Q4_K_M`, 23 GB, a mixture of experts with 3B parameters active. Found by searching
-Hugging Face for the strongest coding/agent model that leaves room for context in 48 GB; the
-dense Qwen3.6-27B was passed over because throughput, not capability, bound the earlier local runs.
-Qualified 4/4 by `scripts/model-probe.py` (tool call 22 s, fidelity 4.5 s, 25k-character spec
-163 s, second turn 2.8 s). Context 65,536 (`runs.yaml`).
+`ollama_chat/qwen3-coder:30b`, run locally on the Mac (M4 Pro, 48 GB): Qwen3-Coder-30B-A3B-Instruct,
+Ollama's build, 18 GB, a non-thinking mixture of experts with 3B parameters active. Chosen by
+searching Hugging Face and then testing, not by reputation. Qualified 4/4 by `scripts/model-probe.py`
+(tool call 2.8 s, fidelity 1.3 s, 25k-character spec 24 s, second turn 1.3 s). Context 65,536.
+Passed over after measurement: Qwen3.6-35B-A3B (a first R1 started on it and was stopped after 20
+minutes and discarded: it thinks 3,000 to 14,000 tokens before a trivial reply, 4-minute calls, and with
+thinking off it called no tool on the 26k-character spec, 0 of 3); Laguna XS 2.1 (Ollama 0.40.6
+aborts every short prompt with "token repeat limit reached").
 
 **This is a different experiment again.** The model changes from the Claude subscription of the
 2026-10-17 amendment, and the host from the Linux container back to the Mac, where host suites
