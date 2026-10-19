@@ -210,3 +210,15 @@ runs:
     gates:
       - tests/kernel/run_dtb_test.sh
     fallback: none
+
+  # Added 2026-10-19 (w26 C4), after the host suite existed and scored 13/13 by injected bugs.
+  # Independent of R1: the subsystem reads the machine only through the cpu_raw_* seam.
+  - name: r13-cpu
+    base: kernel-base-v5
+    sessions: 1
+    goal: goals/r13-cpu.txt
+    seed:
+      tests/kernel/cpu_reference/include: tests/kernel/cpu_reference/include
+    gates:
+      - tests/kernel/run_cpu_test.sh
+    fallback: none

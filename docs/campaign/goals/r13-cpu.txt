@@ -1,0 +1,5 @@
+Implement the cpu feature-discovery subsystem for x86_64. Read it with read_spec cpu, and read arch/x86_64 for the CPUID folding rules. Write kernel/cpu/cpu.c and its header kernel/include/cpu.h exactly as the spec's interface and its "host-test seam" section declare.
+
+The interface the frozen host suite compiles against is in tests/kernel/cpu_reference/include (already in this workspace; do not change it). Your kernel/include/cpu.h must declare exactly what it declares, with the same names, types and enum order. Read the machine only through the cpu_raw_* functions: the suite supplies a fake CPU through them. Do not read a CPUID leaf above the maximum its range reports. A vendor string never adds a feature. AVX, AVX2, FMA and FMA4 need CR4.OSXSAVE and XCR0 mask 0x6; AVX512F needs mask 0xE6.
+
+Also provide the arch definitions of the cpu_raw_* functions for the real kernel in kernel/arch/x86_64/cpu/cpu_raw.c (cpuid, mov %cr4, xgetbv, the IA32_BIOS_SIGN_ID MSR guarded so a missing MSR gives 0, and a log line through kprintf). Do not link cpu_raw.c into the host suite.
