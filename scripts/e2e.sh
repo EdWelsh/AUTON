@@ -4,10 +4,12 @@
 #
 # Usage: scripts/e2e.sh [--rung 3a] [--skip-train] [--keep N] [--help]
 #
-#   --rung {3a,3b,3c}  training rung (default 3a: tiny model, existing corpus)
+#   --rung {3a,3b}     training rung (default 3a: tiny model, 12-row pipeline proof).
+#                      3b trains chat_tiny on the kernel set (os_chat + hardware_kernel,
+#                      SLM/DATA.md): the corpus the shipped model is meant to learn.
 #   --skip-train       reuse the last checkpoint in SLM/work (fast iteration)
 #   --eval             add the graded chat eval as a final stage
-#   --target DIR       kernel tree to validate (default: kernels/<arch>).
+#   --target DIR       kernel tree to validate (default: .artifacts/kernels/<arch>).
 #                      Point this at agent-generated output.
 #   --keep N           artifact dirs to retain (default 10)
 #   --accel NAME       QEMU accelerator (default: probed; AUTON_ACCEL also works).
@@ -38,7 +40,7 @@ ARCH="${ARCH:-x86_64}"
 # the tree is agent-generated output — `AUTON train "<intent>" --output ./Doom`
 # — so the spine must validate whatever was just produced. Defaults to the
 # in-repo reference tree when one exists.
-TARGET="${TARGET:-$ROOT/kernels/$ARCH}"
+TARGET="${TARGET:-$ROOT/.artifacts/kernels/$ARCH}"
 case "$TARGET" in /*) ;; *) TARGET="$ROOT/$TARGET";; esac
 
 RUNG="3a"
@@ -72,10 +74,10 @@ while [ $# -gt 0 ]; do
 done
 
 case "$RUNG" in
-	3a) ;;
-	3b|3c)
-		echo "rung $RUNG is not implemented yet (Phase $RUNG delivers it)." >&2
-		echo "Only --rung 3a runs today." >&2
+	3a|3b) ;;
+	3c)
+		echo "rung 3c is not implemented yet." >&2
+		echo "Only --rung 3a and 3b run today." >&2
 		exit 2 ;;
 	*) echo "unknown rung: $RUNG (expected 3a, 3b or 3c)" >&2; exit 2 ;;
 esac
@@ -92,7 +94,7 @@ if [ "$ARCH" != "x86_64" ]; then
 	export ARCH
 	# shellcheck source=lib/toolchain.sh
 	source "$ROOT/scripts/lib/toolchain.sh"
-	TARGET="${TARGET:-$ROOT/kernels/$ARCH}"
+	TARGET="${TARGET:-$ROOT/.artifacts/kernels/$ARCH}"
 	case "$TARGET" in /*) ;; *) TARGET="$ROOT/$TARGET";; esac
 	echo "arch: $ARCH (CC=$CC, QEMU=$QEMU)"
 	# The tree comes first: asking for a cross compiler to build a tree that
@@ -208,9 +210,21 @@ record_stage() {
 # train.py rejects the dataset. Chat quality is Phase 3b's job, not this one.
 CORPUS="$ROOT/SLM/datasets/os_tasks.jsonl"
 CONFIG="$ROOT/SLM/configs/tiny_10M.yaml"
-MAX_STEPS="${MAX_STEPS:-200}"
-SEQ_LEN="${SEQ_LEN:-16}"
-BATCH_SIZE="${BATCH_SIZE:-2}"
+if [ "$RUNG" = "3b" ]; then
+	# The kernel set: 1,572 rows that fit the kernel's 1,024-word vocabulary with 0% <unk>
+	# (SLM/DATA.md). s_train concatenates the two datasets into $WORK/kernel_set.jsonl.
+	CORPUS="$WORK/kernel_set.jsonl"
+	CONFIG="$ROOT/SLM/configs/chat_tiny.yaml"
+	MAX_STEPS="${MAX_STEPS:-4000}"
+	SEQ_LEN="${SEQ_LEN:-64}"
+	BATCH_SIZE="${BATCH_SIZE:-16}"
+	VOCAB_SIZE=1024
+else
+	MAX_STEPS="${MAX_STEPS:-200}"
+	SEQ_LEN="${SEQ_LEN:-16}"
+	BATCH_SIZE="${BATCH_SIZE:-2}"
+	VOCAB_SIZE=32000
+fi
 
 VOCAB="$WORK/vocab.json"
 TOKENS="$WORK/tokens.jsonl"
@@ -238,8 +252,13 @@ s_train() {
 		return 0
 	fi
 
+	if [ "$RUNG" = "3b" ]; then
+		"$PY" "$ROOT/SLM/tools/vocab_budget.py" --together \
+			"$ROOT/SLM/datasets/os_chat.jsonl" "$ROOT/SLM/datasets/hardware_kernel.jsonl" || return 1
+		cat "$ROOT/SLM/datasets/os_chat.jsonl" "$ROOT/SLM/datasets/hardware_kernel.jsonl" > "$CORPUS"
+	fi
 	"$PY" "$ROOT/SLM/tools/tokenizer.py" \
-		--input "$CORPUS" --output "$VOCAB" --tokenize-to "$TOKENS" || return 1
+		--input "$CORPUS" --output "$VOCAB" --vocab-size "$VOCAB_SIZE" --tokenize-to "$TOKENS" || return 1
 	"$PY" "$ROOT/SLM/scripts/train.py" \
 		--config "$CONFIG" --dataset "$TOKENS" --output "$WORK" \
 		--max-steps "$MAX_STEPS" --seq-len "$SEQ_LEN" --batch-size "$BATCH_SIZE"
