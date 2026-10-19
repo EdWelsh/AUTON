@@ -20,6 +20,18 @@ Nothing here is blocked on something unnamed. Three kinds of blocker:
 - **decide** — a person has to choose. The question is written down, with what it depends on.
 - **hardware** — a machine this project does not have.
 
+## State 2026-10-19
+
+- **The campaign restarted on a local model** (`ollama_chat/qwen3-coder:30b`; no subscription), attempts
+  counting from 1; its record is in `reports/w25-campaign-attempt3-preregistration.md` (amendment
+  2026-10-19). R13, the `cpu` subsystem, joined it: its frozen host suite scores 13/13 on injected
+  bugs (`tests/kernel/run_cpu_test.sh`).
+- **w26 closed in code:** the kernel-tree default is `.artifacts/kernels/x86_64` (C5); the `slm_spec`
+  bodies match what ships (C7); `scripts/e2e.sh --rung 3b` trains `chat_tiny` on the kernel set (C3);
+  the vendor agents have write roots, the SLM roles have no shell, `auton run` exits 1 on failure.
+  SLM chat quality (C1) has a first measurement and a decision (train on `os_chat` alone until
+  `cpu_has()` exists); the 10% garbage bar needs a person's `--review`.
+
 ## State 2026-10-17
 
 - **R1 attempt 3 stopped by the owner** before a result, to save subscription usage. It ran

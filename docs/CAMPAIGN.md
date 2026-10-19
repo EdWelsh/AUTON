@@ -29,7 +29,9 @@ where this table differs, `runs.yaml` holds. In particular `run_virtio_blk_test.
 recorded for R2 as advisory, not deciding, and R8 is skipped in w25 attempt 3 (its 2026-10-10
 pass stands).
 
-**Model (amended 2026-10-02, owner's decision).** Every run uses **Claude Sonnet 5.5 through the owner's Claude subscription** (`claude-cli/claude-sonnet-5-5`: `claude -p` as a pure model, every Claude Code tool disabled, the orchestrator's own tools, sandbox and gates unchanged). Qualified 4/4, slowest call 21 s against qwen q8_0's 602 s. The rows above that name a qwen model are superseded by this line. The q8_0 R1 run was abandoned at the owner's request, unscored.
+**Model (amended 2026-10-19, owner's decision).** No Claude subscription. Every run uses **`ollama_chat/qwen3-coder:30b`** locally (Qwen3-Coder-30B-A3B-Instruct, 18 GB, a non-thinking mixture of experts with 3B active; context 65,536), qualified 4/4 by `scripts/model-probe.py` (slowest call 24 s). Found by searching Hugging Face and then measuring: Qwen3.6-35B-A3B thinks 3,000 to 14,000 tokens before a trivial reply and calls no tool without thinking; Laguna XS 2.1 aborts every short prompt under Ollama 0.40.6. Attempts restart at 1 (`reports/w25-campaign-attempt3-preregistration.md`, amendment 2026-10-19). R13 (the `cpu` subsystem) is added, independent of R1.
+
+**Model (superseded 2026-10-19; amended 2026-10-02, owner's decision).** Every run uses **Claude Sonnet 5.5 through the owner's Claude subscription** (`claude-cli/claude-sonnet-5-5`: `claude -p` as a pure model, every Claude Code tool disabled, the orchestrator's own tools, sandbox and gates unchanged). Qualified 4/4, slowest call 21 s against qwen q8_0's 602 s. The rows above that name a qwen model are superseded by this line. The q8_0 R1 run was abandoned at the owner's request, unscored.
 
 **Model (amended 2026-09-30).** Every run uses `qwen3.5:27b-q8_0`; the reasoning below is kept for the record. **Why 9b first (superseded).** R1 attempt 1 on 27b closed one task of six in five hours. Throughput, not
 capability, was the binding constraint. 9b qualifies 4/4 at about twice the speed. If 9b's
