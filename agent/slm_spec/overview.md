@@ -1,126 +1,41 @@
-# SLM Training Pipeline Overview
+# AUTON SLM Specification: Overview
 
-> **Current state (2026-10-17): this spec predates what shipped.** The kernel loads the AUTON
-> flat format (not GGUF), tokenizes word-level with a 1,024-word vocabulary (not BPE), and its
-> model is the 6M-parameter `chat_tiny` trained on generated ground-truth pairs (not a web
-> corpus). [`SLM/DATA.md`](../../SLM/DATA.md) is authoritative where this file disagrees; the
-> drift is tracked in [`w26`](../../.claude/PRPs/plans/w26-drift-and-slm-readiness.plan.md) (A7).
+> **Rewritten 2026-10-19 (w26 C7) to match what ships.** Authoritative companions: [`SLM/DATA.md`](../../SLM/DATA.md) (the data), [`subsystems/slm.md`](../kernel_spec/subsystems/slm.md) (the kernel side). Earlier drafts of this file described GGUF, BPE and web-scale corpora; none of that is the kernel path.
 
-## Purpose
+## What the SLM is
 
-This specification defines the complete pipeline for training Small Language Models (SLMs) that will be integrated into the AUTON kernel. These SLMs power the kernel's natural language interface for hardware discovery, driver selection, package management, and system administration.
+The kernel's interface is a chat prompt (`auton>`). Deterministic handlers answer what can be
+looked up (system queries, roles, PCI ids; `cpu_has()` once `subsystems/cpu.md` exists). A small
+decoder-only language model, loaded from the AUTON flat format, phrases the rest. Facts come
+from lookups; phrasing comes from the model.
 
-## Pipeline Stages
+## The pieces
 
-The SLM training pipeline consists of 7 stages, each handled by specialized agents:
+| Piece | Where | Notes |
+|---|---|---|
+| Model definition | `SLM/model/` | decoder-only transformer: RoPE, grouped-query attention, SwiGLU |
+| Configs | `SLM/configs/` | `chat_tiny` (6M, the shipped one), `chat_small` (50M), `tiny_10M` (the rung-3a pipeline proof); `small_50M`, `medium_150M`, `large_500M` are host-side only and do not fit the kernel's vocabulary or boot budget |
+| Tokenizer | `SLM/tools/tokenizer.py` | **word-level**, splits on spaces only, 1,024 ids (5 special) |
+| Data | `SLM/datasets/`, `SLM/tools/build_*.py` | generated from ground truth; see `SLM/DATA.md` |
+| Training | `SLM/scripts/train.py` | AdamW, cosine decay, linear warmup; CPU is enough for `chat_tiny` |
+| Quantization | `SLM/scripts/quantize.py` | symmetric per-tensor INT8/INT4 for host evaluation; the kernel's int8 comes from `export_auton.py --quant int8` |
+| Export | `SLM/scripts/export_auton.py` | the AUTON flat format (`SLM/tools/auton_format.py`) plus a manifest. GGUF and ONNX exporters exist for host tools only |
+| Gates | `tests/kernel/neural_parity.sh`, `scripts/eval.sh` | parity with the kernel's forward pass; the chat eval |
 
-### 1. Data Preparation (DataScientistAgent)
-- Collect and clean training corpora
-- Tokenize text using BPE/WordPiece/SentencePiece
-- Create train/validation/test splits
-- Generate vocabulary files
-- **Output**: Tokenized datasets in `SLM/datasets/processed/`
+## The bar
 
-### 2. Architecture Design (ModelArchitectAgent)
-- Design transformer architecture configs
-- Select hyperparameters (layers, heads, embedding dims)
-- Estimate compute and memory requirements
-- Validate architecture feasibility
-- **Output**: YAML config files in `SLM/configs/`
+A model ships only if (1) **parity**: the kernel generates the same tokens as PyTorch, and (2)
+the frozen **65-prompt chat eval** shows at least 70% correct-or-honest and under 10% garbage.
+Free-form answers are queued for a person. A model that fails parity does not ship, however
+good its scores. The best model so far is 78% correct-or-honest with 22% garbage.
 
-### 3. Training (TrainingAgent)
-- Execute training loops with PyTorch
-- Monitor metrics (loss, perplexity)
-- Save checkpoints at regular intervals
-- Handle training failures and restarts
-- **Output**: Model checkpoints in `SLM/models/checkpoints/`
+## Budgets
 
-### 4. Review (ReviewerAgent)
-- Validate training scripts for correctness
-- Check config files for consistency
-- Review checkpoint quality
-- **Output**: Approval or rejection with feedback
+The model is at most 128 MiB of the kernel's 256 MiB neural boot budget; `chat_tiny` is a few
+tens of MiB. Context is the config's `max_position_embeddings` (2,048).
 
-### 5. Evaluation (TesterAgent as EvaluationAgent)
-- Run standard benchmarks (perplexity, accuracy)
-- Compare multiple trained models
-- Select best checkpoint for quantization
-- **Output**: Evaluation reports, best model selection
+## How it is built by agents
 
-### 6. Quantization (TrainingAgent)
-- Quantize models to INT4/INT8 using GPTQ/AWQ
-- Validate accuracy degradation < 2%
-- **Output**: Quantized models in `SLM/models/quantized/`
-
-### 7. Export (TrainingAgent)
-- Export to GGUF format (for llama.cpp)
-- Export to ONNX format (alternative)
-- Validate format compliance
-- Create deployment manifests
-- **Output**: Exportable models in `SLM/models/exports/`
-
-### 8. Integration (IntegratorAgent)
-- Copy GGUF model to kernel workspace
-- Update kernel Makefile to embed model
-- Test kernel boot with embedded model
-- Validate SLM runtime loads and inferences
-- **Output**: Kernel with integrated SLM
-
-## Model Size Tiers
-
-AUTON supports 4 SLM size tiers optimized for different hardware:
-
-| Tier | Parameters | RAM Required | Use Case | Target Hardware |
-|------|-----------|--------------|----------|-----------------|
-| Tiny | 10M-50M | 64-128 MB | Embedded systems | ARM Cortex-M, low-end RISC-V |
-| Small | 50M-150M | 128-256 MB | Resource-constrained | Entry-level x86_64, ARM SBCs |
-| Medium | 150M-500M | 256-512 MB | General-purpose | Standard desktops, servers |
-| Large | 500M-1B | 512MB-2GB | High-end systems | Workstations, data centers |
-
-## VibeTensor Validation Loop
-
-The SLM training follows the same VibeTensor-style iterative loop as kernel development:
-
-```
-Specify → Design → Implement → Validate → Accept/Reject → Iterate
-```
-
-**Key validation points:**
-- Training: Loss must decrease, no NaN/Inf, checkpoints save successfully
-- Evaluation: Perplexity must meet threshold (< 50 for tiny, < 20 for medium+)
-- Quantization: Accuracy drop must be < 2%
-- Export: Format validation must pass
-- Integration: Kernel must boot, SLM runtime must load model, inference must work
-
-## Architecture-Aware Training
-
-SLMs are trained with awareness of the target kernel architecture:
-
-- **x86_64**: Focus on PCI device descriptions, ACPI tables, Intel/AMD driver selection
-- **aarch64**: Focus on device tree parsing, ARM peripherals, SoC-specific drivers
-- **riscv64**: Focus on OpenSBI, RISC-V CSRs, minimal driver set
-
-The DataScientistAgent curates architecture-specific training data, and the ModelArchitectAgent designs models optimized for each architecture's memory and compute constraints.
-
-## Success Criteria
-
-An SLM training run is considered successful when:
-
-1. ✅ Training completes without NaN/Inf
-2. ✅ Validation perplexity meets threshold
-3. ✅ Quantization preserves accuracy (< 2% degradation)
-4. ✅ Export formats validate successfully
-5. ✅ Kernel boots with embedded model
-6. ✅ SLM runtime loads model without errors
-7. ✅ Inference produces coherent, relevant outputs
-8. ✅ Total cost within budget (< $25 USD per training run)
-
-## Related Specifications
-
-- [data_preparation.md](data_preparation.md) - Dataset curation and tokenization
-- [architecture.md](architecture.md) - Transformer design and hyperparameters
-- [training.md](training.md) - Training loop implementation
-- [evaluation.md](evaluation.md) - Benchmarks and metrics
-- [quantization.md](quantization.md) - INT4/INT8 quantization
-- [export.md](export.md) - GGUF/ONNX export formats
-- [integration.md](integration.md) - Kernel integration process
+The SLM swarm (`scripts/slm_run.py`: data scientist, model architect, two training agents,
+integrator) runs seven tasks in order: data, config, train, evaluate, int8 if it holds,
+export, integrate. See `wiki/SLM.md` and `wiki/Agents-and-Swarms.md`.
