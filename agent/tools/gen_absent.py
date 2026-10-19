@@ -16,8 +16,8 @@ That distinction is the whole point. A stub that silently returns success turns
 a missing capability into wrong behaviour at runtime; one that reports absence
 turns it into a legible message.
 
-    python agent/tools/gen_absent.py --tree kernels/x86_64 --service dhcp \
-        --output kernels/x86_64/kernel/boot/absent.c
+    python agent/tools/gen_absent.py --tree .artifacts/kernels/x86_64 --service dhcp \
+        --output .artifacts/kernels/x86_64/kernel/boot/absent.c
 """
 
 from __future__ import annotations

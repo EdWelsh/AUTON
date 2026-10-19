@@ -23,7 +23,7 @@ VALID_CONFIG = {
         "mode": "kernel_build",
     },
     "workspace": {
-        "path": "../kernels/x86_64",
+        "path": "../.artifacts/kernels/x86_64",
     },
 }
 

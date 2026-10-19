@@ -5,10 +5,10 @@
 # and there will be one tree per intent. Verification lives here so an agent
 # that generates an allocator cannot also generate the test that approves it.
 #
-# Usage: KERNEL_TREE=kernels/x86_64 tests/kernel/run_mm_test.sh
+# Usage: KERNEL_TREE=.artifacts/kernels/x86_64 tests/kernel/run_mm_test.sh
 set -uo pipefail
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
-KERNEL_TREE="${KERNEL_TREE:-$ROOT/kernels/x86_64}"
+KERNEL_TREE="${KERNEL_TREE:-$ROOT/.artifacts/kernels/x86_64}"
 case "$KERNEL_TREE" in /*) ;; *) KERNEL_TREE="$ROOT/$KERNEL_TREE";; esac
 
 HERE="$(cd "$(dirname "$0")" && pwd)"

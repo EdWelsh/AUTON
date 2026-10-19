@@ -40,7 +40,7 @@ while [ $# -gt 0 ]; do
 done
 
 # The tree is a parameter, as in eval.sh: a generated kernel lives in a testing area.
-KTREE="${KERNEL_TREE:-$ROOT/kernels/x86_64}"
+KTREE="${KERNEL_TREE:-$ROOT/.artifacts/kernels/x86_64}"
 if [ "$MODEL" = "rule" ]; then
 	ISO="$KTREE/build/auton.iso"
 	MEM="${MEM:-256M}"

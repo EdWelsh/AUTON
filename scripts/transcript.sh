@@ -16,7 +16,7 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 source "$ROOT/scripts/lib/toolchain.sh"
 
 EXPECT="${1:?expectations file}"
-ISO="${2:-$ROOT/kernels/x86_64/build/auton.iso}"
+ISO="${2:-$ROOT/.artifacts/kernels/x86_64/build/auton.iso}"
 SERIAL_OUT="${3:-}"
 
 [ -f "$EXPECT" ] || { echo "no such expectations file: $EXPECT" >&2; exit 2; }

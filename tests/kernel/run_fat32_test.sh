@@ -26,7 +26,7 @@ if [ "${1:-}" = "--self-test" ]; then
 	INC="$HERE/fat32_reference/include"
 	SRCS=("$HERE/fat32_reference/fat32.c" "$HERE/fat32_reference/fat32_write.c")
 else
-	KERNEL_TREE="${KERNEL_TREE:-$ROOT/kernels/x86_64}"
+	KERNEL_TREE="${KERNEL_TREE:-$ROOT/.artifacts/kernels/x86_64}"
 	case "$KERNEL_TREE" in /*) ;; *) KERNEL_TREE="$ROOT/$KERNEL_TREE";; esac
 	if [ ! -f "$KERNEL_TREE/kernel/fs/fat32.c" ]; then
 		echo "no kernel/fs/fat32.c in $KERNEL_TREE: FAT32 is specified in fs.md and" >&2

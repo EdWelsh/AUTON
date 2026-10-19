@@ -96,7 +96,7 @@ No host toolchain required; the image carries the cross toolchain, GRUB and QEMU
 ```bash
 git clone https://github.com/EdWelsh/AUTON.git
 cd AUTON
-scripts/kernel-base.sh kernels/x86_64     # the tree docker compose expects
+scripts/kernel-base.sh .artifacts/kernels/x86_64     # the tree docker compose expects
 docker compose run os                     # build + boot to the auton> prompt
 docker compose run acceptance             # boot + verify the serial markers
 ```
@@ -118,7 +118,7 @@ brew install qemu xorriso x86_64-elf-gcc x86_64-elf-binutils i686-elf-grub
 git clone https://github.com/EdWelsh/AUTON.git
 cd AUTON
 scripts/preflight.sh                      # tools present, enough free disk
-scripts/kernel-base.sh kernels/x86_64
+scripts/kernel-base.sh .artifacts/kernels/x86_64
 scripts/auton-boot-native.sh              # build the ISO and boot to auton>
 scripts/run-acceptance.sh                 # boot + verify the markers
 ```
@@ -240,14 +240,14 @@ still need instead of pretending. There is no shell.
 Try it with a forwarded port:
 
 ```bash
-scripts/kernel-base.sh kernels/x86_64
+scripts/kernel-base.sh .artifacts/kernels/x86_64
 
 # Resolve the cross toolchain for this host. A bare `make` picks the host cc,
 # which on macOS is arm64 clang and rejects the x86 flags outright.
 source scripts/lib/toolchain.sh
 
-make -C kernels/x86_64 CC="$CC" GRUB_MKRESCUE="$GRUB_MKRESCUE" iso
-"$QEMU" -cdrom kernels/x86_64/build/auton.iso -serial stdio -display none \
+make -C .artifacts/kernels/x86_64 CC="$CC" GRUB_MKRESCUE="$GRUB_MKRESCUE" iso
+"$QEMU" -cdrom .artifacts/kernels/x86_64/build/auton.iso -serial stdio -display none \
     -no-reboot -m 128M -nic user,model=e1000,hostfwd=tcp::8080-:80
 # then at the prompt: be a web server     (fetch http://localhost:8080)
 ```
@@ -265,7 +265,7 @@ rule engine otherwise:
 
 ```bash
 source scripts/lib/toolchain.sh
-make -C kernels/x86_64 CC="$CC" GRUB_MKRESCUE="$GRUB_MKRESCUE" \
+make -C .artifacts/kernels/x86_64 CC="$CC" GRUB_MKRESCUE="$GRUB_MKRESCUE" \
      run-neural MODEL=/path/to/auton-slm.bin        # boots with -m 256M
 # boot shows: [SLM] Loaded model ... / [SLM] Backend: neural
 ```

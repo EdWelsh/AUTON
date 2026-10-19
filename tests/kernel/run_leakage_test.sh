@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Assert that an excluded capability contributes no symbols to a built image.
 #
-#   KERNEL_TREE=kernels/x86_64 tests/kernel/run_leakage_test.sh --excludes net,fs
+#   KERNEL_TREE=.artifacts/kernels/x86_64 tests/kernel/run_leakage_test.sh --excludes net,fs
 #
 # Every other check in the factory is about inputs — a manifest, a source list,
 # a slice. This is the only one that inspects the artifact, which is the only
@@ -11,7 +11,7 @@
 # list comes from, so the two cannot disagree about what `net` means.
 set -uo pipefail
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
-KERNEL_TREE="${KERNEL_TREE:-$ROOT/kernels/x86_64}"
+KERNEL_TREE="${KERNEL_TREE:-$ROOT/.artifacts/kernels/x86_64}"
 case "$KERNEL_TREE" in /*) ;; *) KERNEL_TREE="$ROOT/$KERNEL_TREE";; esac
 PY="${PYTHON:-$ROOT/.venv/bin/python}"
 case "$PY" in /*) ;; *) PY="$ROOT/$PY";; esac

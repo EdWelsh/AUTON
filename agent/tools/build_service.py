@@ -8,8 +8,8 @@ stub list maintained separately from the check that reads it.
 
 A pipeline that derives each thing once cannot reproduce those.
 
-    python agent/tools/build_service.py dhcp --tree kernels/x86_64
-    python agent/tools/build_service.py dhcp --tree kernels/x86_64 --iso
+    python agent/tools/build_service.py dhcp --tree .artifacts/kernels/x86_64
+    python agent/tools/build_service.py dhcp --tree .artifacts/kernels/x86_64 --iso
 """
 
 from __future__ import annotations
@@ -304,7 +304,7 @@ def build(name: str, tree: Path, make_iso: bool = False, cc: str | None = None,
     result.gates.append("spec: valid, resolves, not a stub")
 
     # Sources before scaffolding: a refused build must leave the tree as it
-    # found it. Scaffolding first laid a Makefile into kernels/x86_64 on every
+    # found it. Scaffolding first laid a Makefile into .artifacts/kernels/x86_64 on every
     # refusal, and that half-tree then made tree-dependent tests stop skipping.
     if not (tree / "kernel").is_dir() or not any((tree / "kernel").rglob("*.c")):
         raise GateFailure(
@@ -445,7 +445,7 @@ def build(name: str, tree: Path, make_iso: bool = False, cc: str | None = None,
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("service")
-    ap.add_argument("--tree", default="kernels/x86_64")
+    ap.add_argument("--tree", default=".artifacts/kernels/x86_64")
     ap.add_argument("--iso", action="store_true")
     ap.add_argument("--scaffold-only", action="store_true",
                     help="lay the build files into --tree and stop")

@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
 # Compile and run the DHCP server tests on the host.
 #
-#   KERNEL_TREE=kernels/x86_64 tests/kernel/run_dhcp_test.sh
+#   KERNEL_TREE=.artifacts/kernels/x86_64 tests/kernel/run_dhcp_test.sh
 #
 # dhcp.md splits dhcp_handle from dhcp_serve so the packet path is reachable
 # without a NIC. The cases that matter most — a malformed option length, an
 # exhausted pool — are the ones a live client never produces.
 set -uo pipefail
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
-KERNEL_TREE="${KERNEL_TREE:-$ROOT/kernels/x86_64}"
+KERNEL_TREE="${KERNEL_TREE:-$ROOT/.artifacts/kernels/x86_64}"
 case "$KERNEL_TREE" in /*) ;; *) KERNEL_TREE="$ROOT/$KERNEL_TREE";; esac
 HERE="$(cd "$(dirname "$0")" && pwd)"
 OUT="${TMPDIR:-/tmp}/auton_dhcp_test"

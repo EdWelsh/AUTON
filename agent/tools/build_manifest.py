@@ -4,9 +4,9 @@ The build compiles every `.c` under `kernel/`, so a manifest that excludes `net`
 changes nothing about what is linked. This is the missing hop: manifest ->
 capability slice -> source files.
 
-    python agent/tools/build_manifest.py --service dhcp --tree kernels/x86_64
-    python agent/tools/build_manifest.py --all --tree kernels/x86_64   # the full glob
-    make -C kernels/x86_64 CSRC="$(build_manifest.py --service dhcp --tree ... --csrc)"
+    python agent/tools/build_manifest.py --service dhcp --tree .artifacts/kernels/x86_64
+    python agent/tools/build_manifest.py --all --tree .artifacts/kernels/x86_64   # the full glob
+    make -C .artifacts/kernels/x86_64 CSRC="$(build_manifest.py --service dhcp --tree ... --csrc)"
 
 `--all` exists to prove the resolver against the status quo: it must reproduce
 the glob byte-identically, because a refactor that changes the general image

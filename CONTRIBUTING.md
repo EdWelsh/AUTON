@@ -106,7 +106,7 @@ cd controlplane && pip install -e ".[dev,ui]" && cd ..
 
 # A kernel tree to build or point gates at — `kernels/` is generated output
 # and is not in the repository
-scripts/kernel-base.sh kernels/x86_64
+scripts/kernel-base.sh .artifacts/kernels/x86_64
 ```
 
 ### Running things

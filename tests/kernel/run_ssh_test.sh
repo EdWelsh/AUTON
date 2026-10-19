@@ -22,7 +22,7 @@ if [ "${1:-}" = "--self-test" ]; then
 	SOURCES=("$HERE/ssh_reference/ssh_wire.c")
 	INC=(-I"$HERE/ssh_reference/include")
 else
-	KERNEL_TREE="${KERNEL_TREE:-$ROOT/kernels/x86_64}"
+	KERNEL_TREE="${KERNEL_TREE:-$ROOT/.artifacts/kernels/x86_64}"
 	case "$KERNEL_TREE" in /*) ;; *) KERNEL_TREE="$ROOT/$KERNEL_TREE";; esac
 	if [ ! -d "$KERNEL_TREE/kernel" ]; then
 		echo "no kernel tree at $KERNEL_TREE — nothing to verify." >&2

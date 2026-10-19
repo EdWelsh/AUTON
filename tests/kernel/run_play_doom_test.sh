@@ -48,7 +48,7 @@ case "${1:-}" in
 	;;
 esac
 
-KERNEL_TREE="${KERNEL_TREE:-$ROOT/kernels/x86_64}"
+KERNEL_TREE="${KERNEL_TREE:-$ROOT/.artifacts/kernels/x86_64}"
 case "$KERNEL_TREE" in /*) ;; *) KERNEL_TREE="$ROOT/$KERNEL_TREE";; esac
 SRC="$KERNEL_TREE/kernel/services/play_doom/platform_pure.c"
 if [ ! -f "$SRC" ]; then

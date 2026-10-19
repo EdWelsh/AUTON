@@ -519,7 +519,7 @@ def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("sentence", nargs="+")
     ap.add_argument("--output", required=True)
-    ap.add_argument("--tree", default="kernels/x86_64")
+    ap.add_argument("--tree", default=".artifacts/kernels/x86_64")
     ap.add_argument("--service")
     ap.add_argument("--model", help="use this model instead of training one")
     ap.add_argument("--train", action="store_true",

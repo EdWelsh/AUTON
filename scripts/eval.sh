@@ -51,14 +51,14 @@ done
 # AUTON contains no kernel — the agents write it (README.md). Say that plainly
 # rather than letting `make` fail with a missing-Makefile error that reads like
 # a broken checkout.
-KTREE="${KERNEL_TREE:-$ROOT/kernels/x86_64}"
+KTREE="${KERNEL_TREE:-$ROOT/.artifacts/kernels/x86_64}"
 if [ ! -f "$KTREE/Makefile" ]; then
 	echo "no kernel tree at $KTREE — there is nothing to boot." >&2
 	echo "  AUTON does not contain a kernel; agents generate one against" >&2
 	echo "  agent/kernel_spec/. Scaffold and build a tree with:" >&2
 	echo "    agent/tools/build_service.py <service> --tree <dir> --iso" >&2
 	echo "  or restore the retired reference:" >&2
-	echo "    scripts/kernel-base.sh kernels/x86_64" >&2
+	echo "    scripts/kernel-base.sh .artifacts/kernels/x86_64" >&2
 	exit 2
 fi
 

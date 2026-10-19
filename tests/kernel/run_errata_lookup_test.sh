@@ -11,7 +11,7 @@ W="$(mktemp -d)"; trap 'rm -rf "$W"' EXIT
 if [ "${1:-}" = "--self-test" ]; then
 	INC="$HERE/errata_lookup_reference/include"; SRC="$HERE/errata_lookup_reference/errata_lookup.c"
 else
-	KERNEL_TREE="${KERNEL_TREE:-$ROOT/kernels/x86_64}"
+	KERNEL_TREE="${KERNEL_TREE:-$ROOT/.artifacts/kernels/x86_64}"
 	SRC="$KERNEL_TREE/kernel/slm/errata_lookup.c"; INC="$KERNEL_TREE/kernel/include"
 	[ -f "$SRC" ] || { echo "no kernel/slm/errata_lookup.c: specified in slm.md, not generated" >&2; exit 2; }
 fi

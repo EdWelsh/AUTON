@@ -12,7 +12,7 @@ if [ "${1:-}" = "--self-test" ]; then
 	echo "self-test: reference (tests/kernel/boot_info_reference/)"
 	INC="$HERE/boot_info_reference/include"; SRC="$HERE/boot_info_reference/boot_info.c"
 else
-	KERNEL_TREE="${KERNEL_TREE:-$ROOT/kernels/x86_64}"
+	KERNEL_TREE="${KERNEL_TREE:-$ROOT/.artifacts/kernels/x86_64}"
 	case "$KERNEL_TREE" in /*) ;; *) KERNEL_TREE="$ROOT/$KERNEL_TREE";; esac
 	SRC="$KERNEL_TREE/kernel/boot/boot_info.c"; INC="$KERNEL_TREE/kernel/include"
 	[ -f "$SRC" ] || { echo "no kernel/boot/boot_info.c in $KERNEL_TREE" >&2; exit 2; }

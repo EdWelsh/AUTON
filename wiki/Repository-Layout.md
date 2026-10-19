@@ -39,7 +39,7 @@ AUTON/
 | `.cache/vendor/<vendor>/<doc>/` | fetched vendor documents, each with `provenance.json` |
 | `.cache/slm/domain/<source>/` | fetched domain text |
 | `agent/workspace/` | agent workspaces; the default `--workspace` of `auton status`, `auton agents` and `auton tasks` (`workspace`, relative to the current directory, so `agent/workspace/` when run from `agent/`) |
-| `kernels/` | where an ad-hoc `auton run` writes unless `--workspace` says otherwise: `[workspace].path` (`../kernels/x86_64` from `agent/` in the example config), else `kernels/<arch>`; also a base tree for docker compose (`scripts/kernel-base.sh kernels/x86_64`) |
+| `.artifacts/kernels/` | the default kernel tree for scripts and gate suites (`scripts/kernel-base.sh .artifacts/kernels/x86_64` extracts the agreed base); where an ad-hoc `auton run` writes with the example config (`[workspace].path = "../.artifacts/kernels/x86_64"` from `agent/`). Gitignored, never tracked; the old `kernels/` default is gone (w26 C5) |
 | `SLM/work/`, `SLM/models/` | the e2e spine's checkpoints and exports |
 
 ## Where the record is

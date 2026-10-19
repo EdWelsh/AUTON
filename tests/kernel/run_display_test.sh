@@ -9,7 +9,7 @@
 # device, not the device.
 set -uo pipefail
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
-KERNEL_TREE="${KERNEL_TREE:-$ROOT/kernels/x86_64}"
+KERNEL_TREE="${KERNEL_TREE:-$ROOT/.artifacts/kernels/x86_64}"
 case "$KERNEL_TREE" in /*) ;; *) KERNEL_TREE="$ROOT/$KERNEL_TREE";; esac
 HERE="$(cd "$(dirname "$0")" && pwd)"
 OUT="${TMPDIR:-/tmp}/auton_display_test"

@@ -13,7 +13,7 @@ use tokio::process::Command;
 )]
 struct Cli {
     /// Path to the kernel source workspace (holds the Makefile).
-    #[arg(short, long, default_value = "kernels/x86_64")]
+    #[arg(short, long, default_value = ".artifacts/kernels/x86_64")]
     workspace: PathBuf,
 
     /// Target architecture.

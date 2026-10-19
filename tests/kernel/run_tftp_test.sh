@@ -13,7 +13,7 @@ if [ "${1:-}" = "--self-test" ]; then
 	echo "self-test: reference (tests/kernel/tftp_reference/)"
 	INC="$HERE/tftp_reference/include"; SRC="$HERE/tftp_reference/server.c"
 else
-	KERNEL_TREE="${KERNEL_TREE:-$ROOT/kernels/x86_64}"
+	KERNEL_TREE="${KERNEL_TREE:-$ROOT/.artifacts/kernels/x86_64}"
 	case "$KERNEL_TREE" in /*) ;; *) KERNEL_TREE="$ROOT/$KERNEL_TREE";; esac
 	SRC="$KERNEL_TREE/kernel/services/tftp/server.c"; INC="$KERNEL_TREE/kernel/include"
 	[ -f "$SRC" ] || { echo "no TFTP server at $SRC: specified in services/tftp.md, not generated here." >&2; exit 2; }

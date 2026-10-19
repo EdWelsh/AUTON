@@ -48,7 +48,7 @@ body:
         run was seeded from decides what a gate refusal means.
       placeholder: |
         git clone https://github.com/EdWelsh/AUTON.git && cd AUTON
-        scripts/kernel-base.sh kernels/x86_64
+        scripts/kernel-base.sh .artifacts/kernels/x86_64
         scripts/run-acceptance.sh
       render: shell
     validations:

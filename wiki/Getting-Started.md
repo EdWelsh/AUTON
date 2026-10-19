@@ -27,7 +27,7 @@ scripts/kernel-base.sh .artifacts/kernels/x86_64
 scripts/boot-marker.sh "$PWD/.artifacts/kernels/x86_64" '^\[NET\]'   # build the ISO, boot, wait for a line
 ```
 
-Docker alternative (no host toolchain): `scripts/kernel-base.sh kernels/x86_64` then
+Docker alternative (no host toolchain): `scripts/kernel-base.sh .artifacts/kernels/x86_64` then
 `docker compose run os` (build and boot) or `docker compose run acceptance`.
 
 ## Run the tests
