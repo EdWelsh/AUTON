@@ -518,7 +518,8 @@ class Agent:
             try:
                 proc = await asyncio.create_subprocess_exec(
                     "bash", "-c", cmd, cwd=str(repo), env=env,
-                    stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.STDOUT)
+                    stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.STDOUT,
+                    start_new_session=True)
                 out, _ = await communicate(proc, self.GATE_TIMEOUT)
             except asyncio.TimeoutError:
                 report.append(f"$ {cmd}\n[timed out after {self.GATE_TIMEOUT}s]")
@@ -670,6 +671,7 @@ class Agent:
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
                 cwd=str(self.workspace.path),
+                start_new_session=True,    # communicate() kills the whole group on a timeout
             )
             stdout, stderr = await communicate(proc, timeout)
             output = ""

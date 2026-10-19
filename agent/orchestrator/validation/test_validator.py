@@ -90,6 +90,7 @@ class TestValidator:
                 *qemu_cmd,
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
+                start_new_session=True,
             )
             stdout, stderr = await communicate(proc, self.timeout)
             duration = time.monotonic() - start

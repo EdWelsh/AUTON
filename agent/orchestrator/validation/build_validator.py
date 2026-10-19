@@ -68,6 +68,7 @@ class BuildValidator:
                 cwd=str(self.workspace_path),
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
+                start_new_session=True,
             )
             stdout, stderr = await communicate(proc, timeout)
             duration = time.monotonic() - start
