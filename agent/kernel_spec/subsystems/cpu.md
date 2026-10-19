@@ -76,6 +76,36 @@ const cpu_info_t *cpu_info(void);
 - **riscv64:** the ISA string from the device tree (`riscv,isa` / `riscv,isa-extensions`);
   `misa` is M-mode only.
 
+### REQUIRED: the host-test seam
+
+The subsystem reads the machine only through five functions, declared in
+`kernel/include/cpu.h` and defined by arch code in the kernel. The host suite
+(`tests/kernel/run_cpu_test.sh`) defines them with a fake CPU, so the subsystem must call
+nothing else for CPUID, CR4, XCR0, the microcode revision or the log line. The frozen
+interface is `tests/kernel/cpu_reference/include/cpu.h`; match it exactly.
+
+```c
+void     cpu_raw_cpuid(uint32_t leaf, uint32_t subleaf, uint32_t r[4]); /* eax ebx ecx edx */
+uint64_t cpu_raw_cr4(void);          /* bit 18 is OSXSAVE */
+uint64_t cpu_raw_xcr0(void);         /* read only when CR4.OSXSAVE is set */
+uint32_t cpu_raw_microcode(void);
+void     cpu_raw_log(const char *line);
+uint32_t cpu_report(const cpu_info_t *info, char *buf, uint32_t n);   /* snprintf-style */
+```
+
+- A leaf is read only when it is at or below the maximum its range reports: leaf 0's EAX for
+  the basic range, `0x80000000`'s EAX for the extended range (and the extended range exists
+  only when that EAX is `0x8000xxxx`). Leaf `0x80000000` itself is always read.
+- OS state: `AVX`, `AVX2`, `FMA` and `FMA4` need `CR4.OSXSAVE` and `XCR0` bits 1 and 2 (mask
+  `0x6`); `AVX512F` needs `CR4.OSXSAVE` and `XCR0` mask `0xE6`. `XSAVE` is only a CPUID bit.
+- Family and model fold as in `arch/x86_64.md`: family adds the extended family when the base
+  family is `0xF`; model takes the extended model as its high nibble when the base family is
+  `6` or `0xF`. Stepping is the low four bits.
+- `cpu_has` is false for any value outside `[0, CPU_FEAT__COUNT)`.
+- `cpu_report` writes `[CPU] <vendor> fam F model M step S ucode 0xU:` followed by the names of
+  the features that are on, in enum order, lower case (`tsc_deadline`, `invariant_tsc`, ...).
+  `cpu_detect` passes that line to `cpu_raw_log` once.
+
 ### REQUIRED: the vendor string never implies a feature
 
 `if vendor == "AuthenticAMD" then FMA4` is wrong on every Zen part. A family/model match
@@ -105,6 +135,6 @@ listed here that faults when used is a finding.
 
 ## Testing
 
-The host suite fakes `cpuid()` and checks: an unsupported leaf is not read; AVX is false
+`tests/kernel/run_cpu_test.sh`: `--self-test` runs it against `tests/kernel/cpu_reference/`; `--inject` scores it against 13 injected defects (13/13). The host suite fakes `cpuid()` and checks: an unsupported leaf is not read; AVX is false
 until `XCR0` enables it; a Zen 1 signature with the FMA4 bit clear reports no FMA4; an Alder
 Lake signature with the AVX-512 bit set reports AVX-512 (the CPU said so, and that wins).

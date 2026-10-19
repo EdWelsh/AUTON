@@ -74,6 +74,8 @@ jobs:
         run: |
           tests/kernel/run_mm_test.sh --self-test
           tests/kernel/run_mm_test.sh --inject
+          tests/kernel/run_cpu_test.sh --self-test
+          tests/kernel/run_cpu_test.sh --inject
 
       - name: VMM suite
         run: tests/kernel/run_vmm_test.sh --self-test
