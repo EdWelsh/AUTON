@@ -253,9 +253,12 @@ s_train() {
 	fi
 
 	if [ "$RUNG" = "3b" ]; then
-		"$PY" "$ROOT/SLM/tools/vocab_budget.py" --together \
-			"$ROOT/SLM/datasets/os_chat.jsonl" "$ROOT/SLM/datasets/hardware_kernel.jsonl" || return 1
-		cat "$ROOT/SLM/datasets/os_chat.jsonl" "$ROOT/SLM/datasets/hardware_kernel.jsonl" > "$CORPUS"
+		# KERNEL_SET names the datasets (default: both). A model that must answer CPU questions
+		# before the kernel has cpu_has() needs hardware_kernel; one that defers them does not.
+		local sets=() d
+		for d in ${KERNEL_SET:-os_chat hardware_kernel}; do sets+=("$ROOT/SLM/datasets/$d.jsonl"); done
+		"$PY" "$ROOT/SLM/tools/vocab_budget.py" --together "${sets[@]}" || return 1
+		cat "${sets[@]}" > "$CORPUS"
 	fi
 	"$PY" "$ROOT/SLM/tools/tokenizer.py" \
 		--input "$CORPUS" --output "$VOCAB" --vocab-size "$VOCAB_SIZE" --tokenize-to "$TOKENS" || return 1
