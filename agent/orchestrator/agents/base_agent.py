@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import os
 import json
 import logging
 import sys
@@ -154,6 +155,7 @@ class Agent:
         self.kernel_spec_path = kernel_spec_path
         self.model_override = model_override
         self.arch_profile = arch_profile
+        self.write_roots: tuple[str, ...] | None = None   # None: anywhere in the workspace
         self.state = AgentState.IDLE
         self._conversation: list[dict[str, Any]] = []
         # The branch this agent created for the current task, if any. Only an
@@ -238,6 +240,14 @@ class Agent:
         )
         self.message_bus.send(msg)
 
+    def _outside_write_roots(self, path: str) -> bool:
+        """Whether a write_file/edit_file path falls outside this role's write roots."""
+        if self.write_roots is None:
+            return False
+        norm = os.path.normpath(str(path))
+        return not any(norm == r.rstrip("/") or norm.startswith(r.rstrip("/") + "/")
+                       for r in self.write_roots)
+
     async def _execute_tool(self, tool_name: str, tool_input: dict) -> str:
         """Execute a tool call from Claude. Returns the result as a string."""
         logger.debug("[%s] Tool call: %s(%s)", self.agent_id, tool_name, tool_input)
@@ -266,6 +276,10 @@ class Agent:
             match tool_name:
                 case "read_file":
                     return self.workspace.read_file(tool_input["path"])
+
+                case "write_file" | "edit_file" if self._outside_write_roots(tool_input["path"]):
+                    return (f"Refused: {self.role.value} may write only under "
+                            f"{', '.join(self.write_roots)}; {tool_input['path']} is outside them.")
 
                 case "write_file":
                     self.workspace.write_file(tool_input["path"], tool_input["content"])

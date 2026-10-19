@@ -20,6 +20,12 @@ from pathlib import Path
 SPECIAL_TOKENS = ["<pad>", "<unk>", "<bos>", "<eos>", "<sep>"]
 
 
+def split_words(text: str) -> list[str]:
+    """Words as the kernel splits them: on spaces only, so a tab or newline stays inside a
+    word (`slm_neural_tokenize`). `str.split()` splits on any whitespace and disagreed."""
+    return [w for w in text.split(" ") if w]
+
+
 def _read_pairs(path: Path):
     """Yield (question, answer) from a JSONL dataset; answer may be "".
 
@@ -90,8 +96,8 @@ def train_tokenizer(input_path: str, vocab_size: int = 32000, output_path: str |
     """
     counter: Counter[str] = Counter()
     for question, answer in _read_pairs(Path(input_path)):
-        counter.update(question.split())
-        counter.update(answer.split())   # answer vocabulary, previously absent
+        counter.update(split_words(question))
+        counter.update(split_words(answer))   # answer vocabulary, previously absent
 
     # Reserve slots for special tokens; fill the rest by frequency.
     capacity = max(0, vocab_size - len(SPECIAL_TOKENS))
@@ -119,7 +125,7 @@ def _load_vocab(vocab_path: str) -> dict[str, int]:
 def encode(text: str, vocab: dict[str, int]) -> list[int]:
     """Encode text to token IDs, mapping unknown tokens to <unk>."""
     unk = vocab.get("<unk>", 1)
-    return [vocab.get(tok, unk) for tok in text.split()]
+    return [vocab.get(tok, unk) for tok in split_words(text)]
 
 
 def tokenize_dataset(input_path: str, output_path: str, vocab_path: str) -> None:

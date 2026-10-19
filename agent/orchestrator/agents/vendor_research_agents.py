@@ -56,6 +56,7 @@ class VendorScoutAgent(_BranchingAgent):
                          system_prompt=build_vendor_scout_prompt(_arch(kwargs)),
                          tools=VENDOR_SCOUT_TOOLS, **kwargs)
         self.fetch_hosts: tuple[str, ...] = ()
+        self.write_roots = ("hardware/proposals",)
 
 
 class SpecReaderAgent(_BranchingAgent):
@@ -63,3 +64,4 @@ class SpecReaderAgent(_BranchingAgent):
         super().__init__(role=AgentRole.SPEC_READER,
                          system_prompt=build_spec_reader_prompt(_arch(kwargs)),
                          tools=SPEC_READER_TOOLS, **kwargs)
+        self.write_roots = ("hardware/derived",)

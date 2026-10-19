@@ -54,3 +54,8 @@ class TestTokenizeDataset:
         """tokenize_dataset should return None."""
         result = tokenize_dataset("/fake/input", "/fake/output", "/fake/vocab")
         assert result is None
+
+
+def test_words_split_on_spaces_only_like_the_kernel():
+    from tools.tokenizer import split_words
+    assert split_words("a  b\tc\nd") == ["a", "b\tc\nd"]
