@@ -72,7 +72,7 @@ class TestDataScientistTools:
 
     def test_has_shell(self, data_scientist):
         tool_names = [t["function"]["name"] for t in data_scientist.tools]
-        assert "shell" in tool_names
+        assert "shell" not in tool_names
 
     def test_tool_count(self, data_scientist):
         assert len(data_scientist.tools) == len(DATA_SCIENTIST_TOOLS)

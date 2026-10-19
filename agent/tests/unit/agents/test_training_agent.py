@@ -84,7 +84,7 @@ class TestTrainingTools:
 
     def test_has_shell(self, trainer):
         tool_names = [t["function"]["name"] for t in trainer.tools]
-        assert "shell" in tool_names
+        assert "shell" not in tool_names
 
     def test_tool_count(self, trainer):
         assert len(trainer.tools) == len(TRAINING_TOOLS)

@@ -194,6 +194,8 @@ def fetch(
 def cached(cache: Path = CACHE) -> list[Provenance]:
     out = []
     for rec in sorted(cache.rglob("provenance.json")):
+        if "_scout" in rec.relative_to(cache).parts:
+            continue          # a Scout's fetch carries no vendor, title or form
         out.append(Provenance(**json.loads(rec.read_text())))
     return out
 

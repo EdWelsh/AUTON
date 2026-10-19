@@ -92,6 +92,7 @@ def has_api_key(provider: str, sources: dict) -> bool:
 
 # Exit statuses a caller can act on. 75 is EX_TEMPFAIL: the run paused at its
 # time budget with its work committed, and `run --resume` continues it.
+EXIT_FAILED = 1
 EXIT_PAUSED = 75
 EXIT_RESUME_REFUSED = 2
 
@@ -234,6 +235,8 @@ def run(ctx, goal: str | None, workspace: str | None, specs: str, resume: bool,
         console.print(f"\n[bold red]Orchestration failed: {result.get('error', 'unknown')}[/bold red]")
 
     _print_progress(result)
+    if not result.get("success"):
+        raise SystemExit(EXIT_FAILED)
 
 
 def _print_progress(result: dict) -> None:

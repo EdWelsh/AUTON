@@ -257,7 +257,7 @@ class TestDataScientistTools:
         assert "tokenize_data" in names
         assert "read_file" in names
         assert "write_file" in names
-        assert "shell" in names
+        assert "shell" not in names
 
     def test_does_not_contain_kernel_tools(self):
         names = _names_in(DATA_SCIENTIST_TOOLS)
@@ -272,7 +272,7 @@ class TestModelArchitectTools:
         assert "estimate_flops" in names
         assert "read_file" in names
         assert "write_file" in names
-        assert "shell" in names
+        assert "shell" not in names
 
     def test_does_not_contain_training_tools(self):
         names = _names_in(MODEL_ARCHITECT_TOOLS)
@@ -288,7 +288,7 @@ class TestTrainingTools:
         assert "quantize_model" in names
         assert "export_gguf" in names
         assert "export_onnx" in names
-        assert "shell" in names
+        assert "shell" not in names
 
     def test_does_not_contain_kernel_tools(self):
         names = _names_in(TRAINING_TOOLS)

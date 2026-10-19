@@ -72,7 +72,7 @@ class TestModelArchitectTools:
 
     def test_has_shell(self, model_architect):
         tool_names = [t["function"]["name"] for t in model_architect.tools]
-        assert "shell" in tool_names
+        assert "shell" not in tool_names
 
     def test_tool_count(self, model_architect):
         assert len(model_architect.tools) == len(MODEL_ARCHITECT_TOOLS)

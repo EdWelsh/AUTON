@@ -337,7 +337,8 @@ class Agent:
 
                 case ("vendor_lookup" | "vendor_queue" | "fetch_document" | "fetch_url"
                       | "read_document" | "check_hardware_record" | "unverified_exceptions"):
-                    return self._hardware_tool(tool_name, tool_input)
+                    # fetch_url blocks on the network: keep it off the event loop.
+                    return await asyncio.to_thread(self._hardware_tool, tool_name, tool_input)
 
                 case "shell":
                     return await self._run_allowlisted(
