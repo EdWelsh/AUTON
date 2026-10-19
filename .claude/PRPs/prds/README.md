@@ -5,6 +5,12 @@ system from a stated need. `README.md:11` — *"We don't write the kernel. The a
 
 Everything below is aligned to that. If a PRD contradicts it, the PRD is wrong.
 
+## Open: harness cleanup (2026-10-19)
+
+[`auton-harness-cleanup.prd.md`](./auton-harness-cleanup.prd.md): one definition per role and
+tool, a harness fingerprint in every result, `engine.py`/`base_agent.py` under 800 lines, and a
+gate-judged spike of what we take from Harness². Draft; H1–H3 need no model run.
+
 ## Start here (2026-10-12)
 
 **No PRD is open.** The last two, `auton-completion` and `auton-application-to-environment`, are fully
