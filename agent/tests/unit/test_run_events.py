@@ -95,3 +95,25 @@ def test_a_failed_model_call_is_recorded_and_still_raises(monkeypatch, tmp_path)
     assert raised
     row = _lines(dest)[0]
     assert row["kind"] == "llm_error" and "boom" in row["error"]
+
+
+def test_a_claude_cli_call_is_recorded(tmp_path, monkeypatch):
+    """The subscription path returned before the LiteLLM emit; Sonnet runs had no llm_call events."""
+    import asyncio
+    import json
+    from orchestrator.llm import claude_cli
+    from orchestrator.llm.client import LLMClient
+    from orchestrator.llm.response import LLMResponse
+
+    async def fake(model, system, messages, tools, timeout, agent_id="", raise_on_limit=False):
+        return LLMResponse(text="ok", model=model, raw={"input_tokens": 10,
+                           "cache_read_input_tokens": 90, "output_tokens": 7})
+
+    monkeypatch.setattr(claude_cli, "complete", fake)
+    ev = tmp_path / "events.jsonl"
+    monkeypatch.setenv("AUTON_EVENTS", str(ev))
+    client = LLMClient(model="claude-cli/claude-sonnet-5-5", preflight=False)
+    asyncio.run(client.send_message("dev-01", "sys", [{"role": "user", "content": "hi"}]))
+    row = json.loads(ev.read_text().splitlines()[-1])
+    assert row["kind"] == "llm_call" and row["agent"] == "dev-01"
+    assert row["prompt_tokens"] == 100 and row["completion_tokens"] == 7

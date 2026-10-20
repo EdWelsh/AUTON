@@ -308,6 +308,7 @@ async def complete(model: str, system: str, messages: list[dict[str, Any]],
                 continue
             raise RuntimeError(f"claude -p failed (exit {proc.returncode}): {result[:400]}")
         response = parse(result, name)
+        response.raw = data.get("usage")      # token counts, for the run's events
         if not response.tool_calls and attempted_call(result) and parse_retries < MAX_PARSE_RETRIES:
             parse_retries += 1
             logger.warning("[%s] unparseable tool call; retry %d/%d with a nudge",

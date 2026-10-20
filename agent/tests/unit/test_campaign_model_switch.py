@@ -27,7 +27,9 @@ def test_runs_yaml_names_sonnet_with_a_local_fallback():
 
 def test_generation_config_carries_the_fallback_model(tmp_path):
     gen = _load("generation_run_sw", "scripts/generation_run.py")
-    cfg = gen.config(ROOT / "agent/config/auton.toml", tmp_path, "claude-cli/claude-sonnet-5-5",
+    template = tmp_path / "auton.toml"
+    template.write_text('[llm]\nmodel = "x"\nrequest_timeout = 1.0\n[workspace]\npath = "w"\n')
+    cfg = gen.config(template, tmp_path, "claude-cli/claude-sonnet-5-5",
                      tmp_path / "ws", 30, 1800, 32768, "ollama_chat/qwen3-coder:30b")
     llm = tomllib.loads(cfg.read_text())["llm"]
     assert llm["model"] == "claude-cli/claude-sonnet-5-5"

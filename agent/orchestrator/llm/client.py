@@ -311,6 +311,34 @@ class LLMClient:
 
         return response
 
+    async def _claude_call(self, model: str, system: str, messages: list[dict[str, Any]],
+                           tools: list[dict[str, Any]] | None, agent_id: str,
+                           raise_on_limit: bool = False) -> LLMResponse:
+        """One subscription call, recorded in the run's events like a LiteLLM call."""
+        started = time.monotonic()
+        try:
+            response = await claude_cli.complete(model, system, messages, tools,
+                                                 self.request_timeout, agent_id,
+                                                 raise_on_limit=raise_on_limit)
+        except claude_cli.UsageLimit:
+            events.emit("llm_limit", agent=agent_id, model=model,
+                        seconds=round(time.monotonic() - started, 2))
+            raise
+        except Exception as exc:
+            events.emit("llm_error", agent=agent_id, model=model,
+                        seconds=round(time.monotonic() - started, 2),
+                        error=f"{type(exc).__name__}: {exc}")
+            raise
+        usage = response.raw if isinstance(response.raw, dict) else {}
+        prompt = sum(int(usage.get(k) or 0) for k in
+                     ("input_tokens", "cache_creation_input_tokens", "cache_read_input_tokens"))
+        events.emit("llm_call", agent=agent_id, model=model,
+                    seconds=round(time.monotonic() - started, 2), prompt_tokens=prompt,
+                    completion_tokens=int(usage.get("output_tokens") or 0),
+                    finish_reason=response.finish_reason,
+                    tool_calls=[tc.name for tc in response.tool_calls])
+        return response
+
     async def send_message(
         self,
         agent_id: str,
@@ -330,13 +358,11 @@ class LLMClient:
             # The owner's subscription through Claude Code headless; see
             # claude_cli.py. No LiteLLM, no API key, no per-call cost here.
             if not self.fallback_model:
-                return await claude_cli.complete(model, system, messages, tools,
-                                                 self.request_timeout, agent_id)
+                return await self._claude_call(model, system, messages, tools, agent_id)
             if time.time() >= self._claude_blocked_until:
                 try:
-                    return await claude_cli.complete(model, system, messages, tools,
-                                                     self.request_timeout, agent_id,
-                                                     raise_on_limit=True)
+                    return await self._claude_call(model, system, messages, tools, agent_id,
+                                                   raise_on_limit=True)
                 except claude_cli.UsageLimit as limit:
                     self._claude_blocked_until = time.time() + limit.wait
                     logger.warning("[%s] %s; continuing on %s until it resets", agent_id,
