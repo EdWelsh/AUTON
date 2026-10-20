@@ -205,6 +205,10 @@ def run_one(run: dict, runs: dict[str, dict], spec: dict) -> None:
                    "--model", spec["model"], "--sessions", str(run.get("sessions", 2)),
                    "--session-seconds", str(spec.get("session_seconds", 18000)),
                    "--context", str(spec.get("context", 32768)), *base_args]
+            if spec.get("fallback_model"):
+                cmd += ["--fallback-model", spec["fallback_model"]]
+            if spec.get("effort"):
+                cmd += ["--effort", str(spec["effort"])]
             for dest, src in (run.get("seed") or {}).items():
                 cmd += ["--seed", f"{dest}={src}"]
             for gate in run["gates"]:

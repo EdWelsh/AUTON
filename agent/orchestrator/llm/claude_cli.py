@@ -28,6 +28,7 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+import os
 import re
 import shutil
 import tempfile
@@ -262,6 +263,8 @@ async def complete(model: str, system: str, messages: list[dict[str, Any]],
     argv = ["claude", "-p", "--output-format", "json", "--model", name, "--tools", "",
             "--system-prompt", sys_prompt, "--no-session-persistence",
             "--setting-sources", "", "--strict-mcp-config"]
+    if effort := os.environ.get("AUTON_CLAUDE_EFFORT"):
+        argv += ["--effort", effort]
     parse_retries = transient_retries = 0
     for attempt in range(MAX_LIMIT_WAITS + MAX_PARSE_RETRIES + MAX_TRANSIENT_RETRIES + 1):
         proc = await asyncio.create_subprocess_exec(

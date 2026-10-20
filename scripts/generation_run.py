@@ -46,7 +46,7 @@ def now() -> str:
 
 
 def config(template: Path, out: Path, model: str, ws: Path, iterations: int,
-           request_timeout: int, context: int) -> Path:
+           request_timeout: int, context: int, fallback_model: str | None = None) -> Path:
     lines = []
     for line in template.read_text().splitlines():
         if line.startswith("model ="):
@@ -57,6 +57,8 @@ def config(template: Path, out: Path, model: str, ws: Path, iterations: int,
             line = f"max_iterations = {iterations}"
         elif line.startswith("request_timeout ="):
             line = f"request_timeout = {float(request_timeout)}\ncontext_length = {context}"
+            if fallback_model:      # the local model that takes over when the subscription is out
+                line += f'\nfallback_model = "{fallback_model}"\nfallback_context = {context}'
         lines.append(line)
     cfg = out / "auton.toml"
     cfg.write_text("\n".join(lines) + "\n")
@@ -227,6 +229,8 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--request-timeout", type=int, default=1800)
     ap.add_argument("--context", type=int, default=32768,
                     help="the local model's context window (Ollama num_ctx); its default can exhaust memory")
+    ap.add_argument("--fallback-model", help="local model used while a claude-cli primary is at its usage limit")
+    ap.add_argument("--effort", help="claude -p --effort level for a claude-cli primary (e.g. medium)")
     ap.add_argument("--base-rev", default="kernel-base-v5")
     ap.add_argument("--base-tree", help="start from this tree's main (an earlier run's workspace) "
                                         "instead of a kernel-base tag")
@@ -256,7 +260,9 @@ def main(argv: list[str] | None = None) -> int:
             result["base"] = args.base_tree or args.base_rev
             result["seed"] = args.seed
         cfg = config(ROOT / "agent/config/auton.toml", out, args.model, ws, args.iterations,
-                     args.request_timeout, args.context)
+                     args.request_timeout, args.context, args.fallback_model)
+        if args.effort:
+            os.environ["AUTON_CLAUDE_EFFORT"] = args.effort
         wrapper = pinned_wrapper(out)
         for old in result["sessions"]:      # recorded before waits were measured
             old.setdefault("limit_wait_seconds", limit_wait_seconds(out, old["session"], old["seconds"]))
