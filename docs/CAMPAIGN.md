@@ -92,6 +92,22 @@ goal (`dma_alloc` from `phys.h`) assumed, and stand.
    against its reference and injected bugs, and re-grade the same output. This is not an
    attempt.
 
+## Every run is observable (amended 2026-10-20)
+
+From the run after this amendment lands, each run directory holds `events.jsonl`: one JSON line
+per model call (agent, tokens, seconds, finish reason, tools asked for), tool call (name, seconds,
+result size), task start and result, review (who, verdict, why), merge and pause. The orchestrator
+writes it when `generation_run.py` sets `AUTON_EVENTS`; unset, nothing is written. It observes and
+never decides, so a failure to write cannot change a run.
+
+    .venv/bin/python scripts/run-status.py .artifacts/campaign/<run>      # live or finished
+    .venv/bin/python scripts/run-status.py .artifacts/campaign/<run> --json
+
+It shows the task in flight, seconds since the last event (a stall), each agent's tokens and
+speed, tools over 60 s, and every task's starts, review verdicts and state. A run's report cites
+these numbers rather than reconstructing them from the transcript. The change adds events only:
+no prompt, tool, gate or limit changes, so it does not alter what is being measured.
+
 ## What every report carries
 
 Sessions and wall-clock per session; turns used; tasks closed of tasks created; lines changed

@@ -26,6 +26,7 @@ from orchestrator.agents.tester_agent import TesterAgent
 from orchestrator.agents.training_agent import TrainingAgent
 from git.exc import GitCommandError
 
+from orchestrator.core import events
 from orchestrator.comms.git_workspace import GitWorkspace, WorkspaceError
 from orchestrator.comms.message_bus import MessageBus
 from orchestrator.core import syntax_gate
@@ -452,6 +453,7 @@ class OrchestrationEngine:
         """
         state_path = self.workspace_path / ".auton" / "state.json"
         model = str(self.config.get("llm", {}).get("model", ""))
+        events.emit("session_start", model=model, resume=resume, goal=goal)
 
         # Initialize workspace first: a resume is checked against main's HEAD.
         self.workspace.init()
@@ -891,6 +893,7 @@ class OrchestrationEngine:
         leaving, which is the same rule that stopped a checkout orphaning work.
         """
         warning = None
+        events.emit("pause", iteration=self.state.iteration)
         try:
             current = self.workspace.current_branch()
             message = f"WIP: paused at iteration {self.state.iteration}"
@@ -968,6 +971,9 @@ class OrchestrationEngine:
     async def _execute_agent_task(self, agent: Any, task_node: Any) -> TaskResult:
         """Execute a task with the appropriate agent method."""
         self.workspace.checkout_main()  # Start from a clean state
+        events.emit("task_start", task=task_node.task_id, title=task_node.title,
+                    agent=getattr(agent, "agent_id", "?"),
+                    review_round=getattr(task_node, "review_rounds", 0))
 
         if hasattr(agent, "implement_task"):
             return await agent.implement_task(task_node.data)
@@ -1013,6 +1019,10 @@ class OrchestrationEngine:
         """
         task_id = task_node.task_id
         task_node.data.pop("resumed", None)
+        events.emit("task_result", task=task_id,
+                    success=bool(isinstance(result, TaskResult) and result.success),
+                    branch=getattr(result, "branch", None),
+                    summary=getattr(result, "summary", "") or "")
         if not (isinstance(result, TaskResult) and result.success):
             summary = getattr(result, "summary", "") or "no summary"
             logger.info("Task %s did not succeed: %s", task_id, summary)
@@ -1140,7 +1150,9 @@ class OrchestrationEngine:
         """
         for node in self.task_graph.get_tasks_by_state(TaskState.APPROVED):
             branch = node.data.get("branch")
-            if branch and self.workspace.merge_branch(branch):
+            merged = bool(branch and self.workspace.merge_branch(branch))
+            events.emit("merge", task=node.task_id, branch=branch, ok=merged)
+            if merged:
                 self.task_graph.update_state(node.task_id, TaskState.MERGED)
                 self.state.tasks_completed += 1
                 continue
@@ -1219,6 +1231,7 @@ class OrchestrationEngine:
         # before a reviewer model is asked anything (syntax_gate.py).
         errors = self._syntax_errors(result.branch)
         if errors is not None:
+            reviewed_by = "syntax_gate"
             review_result = {"verdict": "request_changes",
                              "summary": f"the change fails its mechanical checks (compiler, record validators, package gate):\n{errors}"}
         else:
@@ -1228,12 +1241,16 @@ class OrchestrationEngine:
                             task_node.task_id)
                 return
 
+            reviewed_by = reviewer_slot.agent.agent_id
             reviewer_slot.busy = True
             brief = f"{task_node.title}\n{task_node.data.get('description', '')}".strip()
             review_result = await reviewer_slot.agent.review_branch(
                 task_node.task_id, result.branch, brief
             )
             reviewer_slot.busy = False
+            events.emit("review", task=task_node.task_id, by=reviewed_by,
+                        verdict=review_result.get("verdict"),
+                        summary=review_result.get("summary", ""))
 
             if review_result.get("verdict") == "approve":
                 self.task_graph.update_state(task_node.task_id, TaskState.APPROVED)
@@ -1242,6 +1259,9 @@ class OrchestrationEngine:
         limit = int(self.config.get("orchestrator", {}).get("max_review_rounds", 3))
         node = self.task_graph.requeue(task_node.task_id, review_result)
         summary = review_result.get("summary", "no summary")
+        if reviewed_by == "syntax_gate":
+            events.emit("review", task=task_node.task_id, by=reviewed_by,
+                        verdict="request_changes", summary=summary)
         logger.info("Review round %d/%d for %s: %s",
                     node.review_rounds, limit, task_node.task_id, summary)
         if node.review_rounds >= limit:
