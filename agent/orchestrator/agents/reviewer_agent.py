@@ -132,6 +132,15 @@ Return your review as a JSON object:
 
 Only block with "request_changes" for critical or warning issues, and every
 such issue must name a file from "Files changed" above.
+
+## Reading run_gate on one task
+`run_gate` reports the finished run's suites. Early in a run most of them exit 2
+("not generated") because other tasks have not produced their parts yet, and that
+is expected: do not reject a change for what another task is responsible for, and
+do not ask for implementations the task did not ask for. A header-only task is
+approved if the header is correct and complete. Reject on a gate result only when
+THIS change causes it: a compile error or a failed check in a file listed under
+"Files changed", or an exit 1 that the change itself introduced.
 Approve with nits if issues are minor.""",
         }
 

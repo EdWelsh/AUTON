@@ -50,6 +50,19 @@ def include_dirs(tree: Path) -> list[Path]:
     return [d for d in dirs if d.is_dir()]
 
 
+def fallback_dirs(tree: Path) -> list[Path]:
+    """Stand-in headers for subsystems this run does not produce.
+
+    A run seeds `tests/kernel/<x>_reference/include` into its workspace. `mm.h` includes
+    `boot.h`, which belongs to the boot subsystem an mm goal does not generate, so the
+    compiler refused every mm header ("boot.h: No such file", w18 R1 attempt 2, 2026-10-20).
+    These directories are searched LAST (`-idirafter`): the tree's own header always wins, and
+    a stand-in is used only for a header the tree does not have. The host suites make the
+    same substitution (run_mm_test.sh, the BOOT_INCLUDE note).
+    """
+    return sorted(d for d in tree.glob("tests/kernel/*_reference/include") if d.is_dir())
+
+
 TOOLS = Path(__file__).resolve().parents[2] / "tools"
 NOT_RECORDS = {"README.md", "STRATEGY.md"}
 
@@ -202,6 +215,7 @@ def _c_errors(tree: Path, changed: list[str], cc: str | None) -> list[str]:
         logger.warning("syntax gate skipped: no C compiler on PATH")
         return []
     incs = [f"-I{d}" for d in include_dirs(tree)]
+    incs += [f"-idirafter{d}" for d in fallback_dirs(tree)]
     errors: list[str] = []
     for rel in targets:
         r = subprocess.run([cc, *FLAGS, *incs, str(tree / rel)], cwd=tree,

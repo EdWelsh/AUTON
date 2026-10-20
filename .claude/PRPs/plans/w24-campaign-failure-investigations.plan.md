@@ -224,6 +224,31 @@ times out at 1 s and requires the call to return in under 8 s with nothing left 
 it hangs. **Falsified if** a run again sits idle with an orphaned QEMU. The run was resumed from its saved
 state (`run --resume`): branches and commits intact, the first session's console transcript overwritten.
 
+## F-13. Attempt 2 of R1 died on the engine's own header check and the reviewer's use of `run_gate` (local-model campaign) — FIXED
+
+**Evidence.** `r1-mm-attempt2` ended after 3 iterations and 43 minutes: `mm-001` (the headers) was rejected three
+times and its 12 dependants never started. Rounds 1 and 2: "change fails its mechanical checks ... `kernel/include/mm.h:7:10:
+fatal error: boot.h: No such file or directory`". Round 3: "the implementation files are missing. The test suites require
+actual implementations". Gates then read exit 2, 2, 0 and the campaign began R2 on the bare base.
+
+**Cause (two harness defects).** (1) `syntax_gate.py` compiled a header against the tree's own include directories only;
+`mm.md` has `mm.h` include `boot.h`, which belongs to a subsystem an mm goal does not produce. The host suites already
+substitute the seeded reference (`BOOT_INCLUDE` in `run_mm_test.sh`); the engine's gate did not: the "gate demands what it
+does not gate" class again. (2) The reviewer was told to run `run_gate` "before approving", and `run_gate` reports the finished
+run's suites; on a headers-only first task they are exit 2 by construction, and the model treated that as a reason to reject.
+
+**Change (done).** `syntax_gate.fallback_dirs`: seeded `tests/kernel/*_reference/include` are searched last (`-idirafter`), so
+the tree's own header always wins (`test_syntax_gate_fallback.py`: found, still fails when unseeded, the tree's header wins).
+The review prompt gains "Reading run_gate on one task": exit 2 for parts other tasks produce is expected; reject on a gate result
+only when this change causes it. **Not counted as an attempt** (the pre-registration's own rule for a harness defect); the
+directory is `.artifacts/campaign-invalid-2026-10-20/r1-mm-attempt2-harness-defects/`. Attempt 1 stays counted: its rejections were
+implementation faults (missing `PAGE_SIZE`, `pmm_free_page`), and it ran under the old reviewer text. The aborted
+`r2-storage-attempt1` (it started on a bare base after R1 "failed") is archived beside it.
+
+**Open.** `campaign.py` starts a dependant on the dependency's own base when the dependency fails with `fallback: none`; for R2 that
+is a base with no allocator, which its goal says exists. The pre-registration says a dependant runs only on a green base. Until
+this is decided (a labelled human R1, or skipping the dependants), a failed R1 will start R2 on nothing.
+
 ## F-11. What no run has yet tested
 
 Behaviour. No run got past the compile step of its frozen suite except R6 (clone over dumb-HTTP

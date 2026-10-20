@@ -81,3 +81,10 @@ climbed from 8 s to 18 s, and each history compaction re-read the window in 8 to
 `prompt eval time` 549 s for 64,462 tokens). The harness's spec truncation and 80% compaction were built for a
 32k window. The run was resumed with the same workspace; the change affects speed and what fits in a prompt, not
 the goal, gates or stop rule. The work done before the change (tasks mm-001..mm-007 merged) was produced at 65,536.
+
+**Amendment 2026-10-20 (after R1 attempt 1's verdict): the engine's syntax gate and the reviewer's reading of `run_gate` changed.** R1 attempt 1
+failed on its merits (see `w25-r1-attempt1-local-report.md`) and counts. Attempt 2 failed in 43 minutes on two harness defects (w24 F-13)
+and does not count; it is rerun under the fixed harness. The fix is to the engine's header check (seeded reference headers as a last-resort
+include path) and to the reviewer's instructions, not to the goal, the gates or the stop rule. Attempt 1 therefore ran under the old text and
+attempt 2 will run under the new one; the report on attempt 2 says so.
+
