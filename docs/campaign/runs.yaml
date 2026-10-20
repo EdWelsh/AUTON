@@ -67,6 +67,14 @@ runs:
     # failed R1 leaves its dependants on kernel-base-v5, and campaign.py takes no tree as a base
     # that does not differ from the one it started on.
     fallback: none
+    # Amended 2026-10-20 (stop rule 3; owner approved): R1 failed both attempts on the local model
+    # (attempt 1 gates -6/1/0, attempt 2 gates 1/1/0: the PMM header disagrees with mm.md and the VMM
+    # lacks its functions). Its dependants (R2-R7, R10-R12) need a working allocator and VMM, so they
+    # build on `r1-mm-operator-fallback`: kernel-base-v5 plus the PMM, slab and VMM in
+    # tests/kernel/mm_operator/, written by the campaign operator (Claude Code), NOT by the model
+    # under test. scripts/make-r1-fallback.sh builds it and judges it by R1's own gates: [0, 0, 0].
+    # R1's verdict stays "failed"; every dependant's report says it ran on this tree.
+    fallback: tree:r1-mm-operator-fallback
 
   - name: r8-virtio-console
     # Amended 2026-10-17 (w25 attempt 3): R8's pass stands from the Mac and is not re-run here

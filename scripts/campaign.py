@@ -163,8 +163,9 @@ def base_for(run: dict, runs: dict[str, dict]) -> tuple[list[str], str]:
         tree = OUT / fallback[5:] / "ws"
         fb = result_of(OUT / fallback[5:])
         if tree.is_dir() and generated_something(fb) and tree_changed(tree, fb):
-            return ["--base-tree", str(tree)], (f"{dep['name']} fallback {fallback[5:]} "
-                                                f"(failed its suites, passed end to end)")
+            why = ("operator-authored, not model output; passes every gate" if passed(fb)
+                   else "failed its suites, passed end to end")
+            return ["--base-tree", str(tree)], f"{dep['name']} fallback {fallback[5:]} ({why})"
     # w24 F-9: a dependant never starts on a base that lacks what its goal says exists. R2 started
     # on kernel-base-v5, with no allocator, after R1 failed (2026-10-20); the whole ladder would
     # have run on nothing. A labelled human fallback (`fallback: tree:<attempt>`) is the way on.

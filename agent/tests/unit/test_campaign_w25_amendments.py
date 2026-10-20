@@ -81,10 +81,11 @@ def test_a_fallback_that_passed_only_on_the_untouched_base_is_not_a_base(tmp_pat
     assert args == ["--base-tree", str(tmp_path / "r1-attempt2" / "ws")] and "fallback" in note
 
 
-def test_runs_yaml_skips_r8_and_names_no_r1_fallback_tree():
+def test_runs_yaml_skips_r8_and_falls_back_to_the_operator_authored_r1_tree():
+    """Amended 2026-10-20: R1 failed twice on the model; its dependants build on a labelled tree."""
     runs = {r["name"]: r for r in yaml.safe_load((ROOT / "docs/campaign/runs.yaml").read_text())["runs"]}
     assert runs["r8-virtio-console"].get("skip")
-    assert str(runs["r1-mm"].get("fallback")) == "none"
+    assert runs["r1-mm"]["fallback"] == "tree:r1-mm-operator-fallback"
 
 
 def test_the_campaign_does_not_start_a_skipped_run(monkeypatch, tmp_path):
