@@ -5,6 +5,8 @@ from __future__ import annotations
 import importlib.util
 import json
 import subprocess
+
+import pytest
 from pathlib import Path
 
 import yaml
@@ -72,7 +74,8 @@ def test_a_fallback_that_passed_only_on_the_untouched_base_is_not_a_base(tmp_pat
         _finished(tmp_path / f"r1-attempt{k}", [2, 2, 0])
     runs = {"r1": {"name": "r1", "base": "kernel-base-v5", "fallback": "tree:r1-attempt2"},
             "r2": {"name": "r2", "base": "run:r1"}}
-    assert campaign.base_for(runs["r2"], runs)[0] == ["--base-rev", "kernel-base-v5"]
+    with pytest.raises(campaign.Blocked):
+        campaign.base_for(runs["r2"], runs)
     _model_commit(tmp_path / "r1-attempt2" / "ws")
     args, note = campaign.base_for(runs["r2"], runs)
     assert args == ["--base-tree", str(tmp_path / "r1-attempt2" / "ws")] and "fallback" in note

@@ -142,6 +142,10 @@ def tree_changed(ws: Path, result: dict | None) -> bool:
     return subprocess.run(git + ["diff", "--quiet", start, "main"]).returncode == 1
 
 
+class Blocked(Exception):
+    """A dependant whose base run failed with nothing usable to build on."""
+
+
 def base_for(run: dict, runs: dict[str, dict]) -> tuple[list[str], str]:
     """generation_run arguments for the run's base, and a note on how chosen."""
     base = run["base"]
@@ -161,8 +165,10 @@ def base_for(run: dict, runs: dict[str, dict]) -> tuple[list[str], str]:
         if tree.is_dir() and generated_something(fb) and tree_changed(tree, fb):
             return ["--base-tree", str(tree)], (f"{dep['name']} fallback {fallback[5:]} "
                                                 f"(failed its suites, passed end to end)")
-    args, note = base_for(dep, runs)
-    return args, f"{note} — {dep['name']} did not pass, so its own base"
+    # w24 F-9: a dependant never starts on a base that lacks what its goal says exists. R2 started
+    # on kernel-base-v5, with no allocator, after R1 failed (2026-10-20); the whole ladder would
+    # have run on nothing. A labelled human fallback (`fallback: tree:<attempt>`) is the way on.
+    raise Blocked(f"{dep['name']} did not pass and has no usable fallback tree")
 
 
 def preflight() -> str | None:
@@ -183,7 +189,11 @@ def run_one(run: dict, runs: dict[str, dict], spec: dict) -> None:
     for d in attempts(run):
         r = result_of(d)
         if r is None:
-            base_args, note = base_for(run, runs)
+            try:
+                base_args, note = base_for(run, runs)
+            except Blocked as why:
+                log(f"{run['name']}: blocked — {why}")
+                return
             log(f"{run['name']}: {d.name} starting on {note}")
             if on_battery():
                 log(f"{run['name']}: WARNING on battery power — the Mac will sleep through "

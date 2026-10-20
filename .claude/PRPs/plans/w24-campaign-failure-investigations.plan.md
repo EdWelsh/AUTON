@@ -245,9 +245,10 @@ directory is `.artifacts/campaign-invalid-2026-10-20/r1-mm-attempt2-harness-defe
 implementation faults (missing `PAGE_SIZE`, `pmm_free_page`), and it ran under the old reviewer text. The aborted
 `r2-storage-attempt1` (it started on a bare base after R1 "failed") is archived beside it.
 
-**Open.** `campaign.py` starts a dependant on the dependency's own base when the dependency fails with `fallback: none`; for R2 that
-is a base with no allocator, which its goal says exists. The pre-registration says a dependant runs only on a green base. Until
-this is decided (a labelled human R1, or skipping the dependants), a failed R1 will start R2 on nothing.
+**Also fixed (F-9, finally enforced).** `campaign.py` started a dependant on the failed dependency's own base when it had
+`fallback: none`; for R2 that is a base with no allocator, which its goal says exists. `base_for` now raises `Blocked`, the
+campaign logs `blocked` and moves on to runs that do not depend on it; `test_campaign_fallback.py` covers it. The way past a
+failed R1 is a labelled human fallback tree (`fallback: tree:<attempt>`), a decision for after attempt 2.
 
 ## F-11. What no run has yet tested
 
