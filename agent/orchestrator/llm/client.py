@@ -17,6 +17,8 @@ import litellm
 from orchestrator.llm import claude_cli
 from orchestrator.llm.response import LLMResponse
 
+from orchestrator.core import events
+
 logger = logging.getLogger(__name__)
 
 
@@ -283,6 +285,32 @@ class LLMClient:
                 f"{kwargs.get('model')} did not answer {agent_id} within "
                 f"{limit:.0f}s") from e
 
+    async def _call_with_retries(self, kwargs: dict[str, Any], model: str, agent_id: str,
+                                 call_timeout: float | None) -> Any:
+        """One model call and the retries each known failure earns."""
+        try:
+            response = await self._complete(kwargs, agent_id, call_timeout)
+        except litellm.Timeout:
+            # w24 F-5: a timeout failed R5's and R7's tasks outright; the model may have been
+            # mid-answer, so try once more before giving up. (Timeout subclasses
+            # APIConnectionError, so it must be caught first.)
+            logger.warning("Call timed out after %.0fs for agent %s; retrying once",
+                           call_timeout, agent_id)
+            response = await self._complete(kwargs, agent_id, call_timeout)
+        except litellm.RateLimitError:
+            logger.warning("Rate limited, retrying in 30s for agent %s", agent_id)
+            await asyncio.sleep(30)
+            response = await self._complete(kwargs, agent_id, call_timeout)
+        except (litellm.APIConnectionError, json.JSONDecodeError) as e:
+            if "ollama" in model.lower():
+                logger.warning("Ollama JSON error, retrying with format=json: %s", e)
+                kwargs["format"] = "json"
+                response = await self._complete(kwargs, agent_id, call_timeout)
+            else:
+                raise
+
+        return response
+
     async def send_message(
         self,
         agent_id: str,
@@ -347,26 +375,15 @@ class LLMClient:
             if base_url:
                 kwargs["api_base"] = base_url
 
+            started = time.monotonic()
             try:
-                response = await self._complete(kwargs, agent_id, call_timeout)
-            except litellm.Timeout:
-                # w24 F-5: a timeout failed R5's and R7's tasks outright; the model may have been
-                # mid-answer, so try once more before giving up. (Timeout subclasses
-                # APIConnectionError, so it must be caught first.)
-                logger.warning("Call timed out after %.0fs for agent %s; retrying once",
-                               call_timeout, agent_id)
-                response = await self._complete(kwargs, agent_id, call_timeout)
-            except litellm.RateLimitError:
-                logger.warning("Rate limited, retrying in 30s for agent %s", agent_id)
-                await asyncio.sleep(30)
-                response = await self._complete(kwargs, agent_id, call_timeout)
-            except (litellm.APIConnectionError, json.JSONDecodeError) as e:
-                if "ollama" in model.lower():
-                    logger.warning("Ollama JSON error, retrying with format=json: %s", e)
-                    kwargs["format"] = "json"
-                    response = await self._complete(kwargs, agent_id, call_timeout)
-                else:
-                    raise
+                response = await self._call_with_retries(kwargs, model, agent_id, call_timeout)
+            except Exception as exc:
+                events.emit("llm_error", agent=agent_id, model=model,
+                            seconds=round(time.monotonic() - started, 2),
+                            error=f"{type(exc).__name__}: {exc}")
+                raise
+            seconds = time.monotonic() - started
 
             usage_tracker = self.cost_tracker.get_agent_usage(agent_id)
             if response.usage:
@@ -380,7 +397,14 @@ class LLMClient:
                 self.cost_tracker.total_cost_usd,
             )
 
-            return LLMResponse.from_litellm(response)
+            parsed = LLMResponse.from_litellm(response)
+            prompt = getattr(response.usage, "prompt_tokens", 0) or 0
+            done = getattr(response.usage, "completion_tokens", 0) or 0
+            events.emit("llm_call", agent=agent_id, model=model, seconds=round(seconds, 2),
+                        prompt_tokens=prompt, completion_tokens=done,
+                        finish_reason=getattr(response.choices[0], "finish_reason", None),
+                        tool_calls=[tc.name for tc in parsed.tool_calls])
+            return parsed
 
     async def send_with_tools(
         self,
@@ -423,7 +447,12 @@ class LLMClient:
                 break
 
             for tc in response.tool_calls:
+                tool_started = time.monotonic()
                 result = await tool_executor(tc.name, tc.arguments)
+                events.emit("tool_call", agent=agent_id, name=tc.name,
+                            args=_summarise_args(tc.arguments),
+                            result=_summarise_result(result), result_chars=len(str(result)),
+                            seconds=round(time.monotonic() - tool_started, 2))
                 # One line per call, at INFO, so an archived run can say what an
                 # agent did. w13's F6 run hit 20 turns and wrote nothing, and
                 # the transcript could not say what the 20 calls were.

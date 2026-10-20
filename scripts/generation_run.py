@@ -150,7 +150,8 @@ def run_session(n: int, out: Path, wrapper: Path, cfg: Path, goal: str, resume: 
     # same run rejects an argument it predates.
     env = {**os.environ, "ORCH_TIMEOUT": str(seconds), "ORCH_CONFIG": str(cfg),
            "ORCH_LOG": str(out / f"transcript-{n}.log"),
-           "AUTON_GATES": json.dumps(gates or [])}
+           "AUTON_GATES": json.dumps(gates or []),
+           "AUTON_EVENTS": str(out / "events.jsonl")}      # what happened, one line each
     args = ["bash", str(wrapper)] + (["--resume"] if resume else [goal])
     started, t0 = now(), time.monotonic()
     guard = MemoryGuard(cfg, floor)
