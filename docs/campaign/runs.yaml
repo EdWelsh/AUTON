@@ -34,7 +34,9 @@
 # stop rules are unchanged. A new experiment: see reports/w25-campaign-attempt3-preregistration.md.
 model: ollama_chat/qwen3-coder:30b
 session_seconds: 18000
-context: 65536
+# Context 32768 (amended 2026-10-19, after 2 h of R1): at 65536 each loop's prompt grew to about 60k tokens,
+# prompt processing fell from 400 to 120 tokens/s, and every compaction re-read the whole window in 8-9 minutes.
+context: 32768
 
 # Frozen interfaces (2026-10-10). Eleven of twelve runs failed because the frozen host suite
 # uses identifiers (KV_SHUTDOWN, smtp_reset, HR_PATH_MAX, conn.status, a second phys_to_virt)

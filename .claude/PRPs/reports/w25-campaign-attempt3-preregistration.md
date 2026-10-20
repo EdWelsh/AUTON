@@ -74,3 +74,10 @@ failures were lost feedback, not capability; a null result on a local model says
 Claude.
 
 The earlier campaign's directory is kept as `.artifacts/campaign-superseded-2026-10-19/`.
+
+**Amendment 2026-10-19 (2 h into R1 attempt 1): context 32,768, not 65,536.** At 65,536 a loop's prompt grew to
+about 60k tokens: prompt processing fell from 400 tokens/s (3.5k tokens) to about 120 tokens/s, per-turn latency
+climbed from 8 s to 18 s, and each history compaction re-read the window in 8 to 9 minutes (Ollama log,
+`prompt eval time` 549 s for 64,462 tokens). The harness's spec truncation and 80% compaction were built for a
+32k window. The run was resumed with the same workspace; the change affects speed and what fits in a prompt, not
+the goal, gates or stop rule. The work done before the change (tasks mm-001..mm-007 merged) was produced at 65,536.
