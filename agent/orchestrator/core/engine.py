@@ -26,7 +26,7 @@ from orchestrator.agents.tester_agent import TesterAgent
 from orchestrator.agents.training_agent import TrainingAgent
 from git.exc import GitCommandError
 
-from orchestrator.core import events
+from orchestrator.core import events, repair
 from orchestrator.comms.git_workspace import GitWorkspace, WorkspaceError
 from orchestrator.comms.message_bus import MessageBus
 from orchestrator.core import syntax_gate
@@ -511,6 +511,87 @@ class OrchestrationEngine:
         finally:
             restore_signals()
 
+    async def _development_loop(self, state_path: Path, first: int, max_iterations: int) -> None:
+        """Schedule, run, review and merge tasks until the graph is complete or the cap is reached."""
+        manager: ManagerAgent = self._agents["manager"]
+        for iteration in range(first, first + max_iterations):
+            if self._pause_requested:
+                # The cancellation normally lands first; this catches one
+                # that something below swallowed.
+                raise asyncio.CancelledError
+            self.state.iteration = iteration
+            self.state.total_cost_usd = self.cost_tracker.total_cost_usd
+            self._checkpoint(state_path)
+
+            if self.task_graph.is_complete:
+                logger.info("All tasks complete!")
+                break
+
+            progress = self.task_graph.progress
+            logger.info(
+                "Iteration %d | Progress: %s | Cost: $%.2f",
+                iteration, progress, self.cost_tracker.total_cost_usd,
+            )
+
+            # Get assignments and execute in parallel
+            assignments = self.scheduler.get_assignments()
+            if not assignments and self.scheduler.busy_count == 0:
+                # No tasks ready and no agents busy - might be blocked
+                logger.warning("No tasks schedulable and no agents busy. Checking for blocks.")
+                assessment = await manager.assess_progress()
+                logger.info("Manager assessment: %s", assessment)
+                if not self.task_graph.get_ready_tasks():
+                    break
+
+            # Execute assigned tasks in parallel
+            if assignments:
+                results = await asyncio.gather(
+                    *[
+                        self._execute_agent_task(slot.agent, task_node)
+                        for slot, task_node in assignments
+                    ],
+                    return_exceptions=True,
+                )
+
+                # Process results
+                for (slot, task_node), result in zip(assignments, results):
+                    self.scheduler.release_agent(slot.agent.agent_id)
+
+                    if isinstance(result, Exception):
+                        logger.error("Agent %s failed: %s", slot.agent.agent_id, result,
+                                     exc_info=result)
+                        self.task_graph.fail(task_node.task_id, f"agent error: {result}")
+                        self.state.tasks_failed += 1
+                    else:
+                        await self._handle_result(task_node, result)
+
+            # Check for approved tasks to merge
+            self._merge_approved()
+
+            # Small delay to avoid tight loops
+            await asyncio.sleep(1)
+
+    async def _repair_phase(self, state_path: Path, max_iterations: int) -> None:
+        """Run the operator's gates on the merged tree; a failure becomes a developer task.
+
+        Off when the run declares no gates, or [orchestrator].repair_rounds is 0."""
+        rounds = int(self.config.get("orchestrator", {}).get("repair_rounds", 3))
+        if not self.gate_commands or rounds <= 0 or self._pause_requested:
+            return
+        repo = Path(__file__).resolve().parents[3]
+        for round_no in range(1, rounds + 1):
+            reports = await repair.run_gates(self.gate_commands, self.workspace.path, repo)
+            repair.record(round_no, reports)
+            tasks = repair.repair_tasks(reports, round_no)
+            if not tasks:
+                logger.info("Repair: every gate passes")
+                return
+            logger.info("Repair round %d: %d gate(s) failing; adding %d task(s)",
+                        round_no, len(tasks), len(tasks))
+            self.task_graph.add_tasks(tasks)
+            await self._development_loop(
+                state_path, self.state.iteration + 1, min(max_iterations, 20))
+
     async def _run_phases(self, goal: str, state_path: Path, resume: bool) -> dict[str, Any]:
         run_id = self.state.run_id
         manager: ManagerAgent = self._agents["manager"]
@@ -540,62 +621,8 @@ class OrchestrationEngine:
             )
             # A resumed session numbers its iterations after the last one.
             first = self.state.iteration if resume else 0
-            for iteration in range(first, first + max_iterations):
-                if self._pause_requested:
-                    # The cancellation normally lands first; this catches one
-                    # that something below swallowed.
-                    raise asyncio.CancelledError
-                self.state.iteration = iteration
-                self.state.total_cost_usd = self.cost_tracker.total_cost_usd
-                self._checkpoint(state_path)
-
-                if self.task_graph.is_complete:
-                    logger.info("All tasks complete!")
-                    break
-
-                progress = self.task_graph.progress
-                logger.info(
-                    "Iteration %d | Progress: %s | Cost: $%.2f",
-                    iteration, progress, self.cost_tracker.total_cost_usd,
-                )
-
-                # Get assignments and execute in parallel
-                assignments = self.scheduler.get_assignments()
-                if not assignments and self.scheduler.busy_count == 0:
-                    # No tasks ready and no agents busy - might be blocked
-                    logger.warning("No tasks schedulable and no agents busy. Checking for blocks.")
-                    assessment = await manager.assess_progress()
-                    logger.info("Manager assessment: %s", assessment)
-                    if not self.task_graph.get_ready_tasks():
-                        break
-
-                # Execute assigned tasks in parallel
-                if assignments:
-                    results = await asyncio.gather(
-                        *[
-                            self._execute_agent_task(slot.agent, task_node)
-                            for slot, task_node in assignments
-                        ],
-                        return_exceptions=True,
-                    )
-
-                    # Process results
-                    for (slot, task_node), result in zip(assignments, results):
-                        self.scheduler.release_agent(slot.agent.agent_id)
-
-                        if isinstance(result, Exception):
-                            logger.error("Agent %s failed: %s", slot.agent.agent_id, result,
-                                         exc_info=result)
-                            self.task_graph.fail(task_node.task_id, f"agent error: {result}")
-                            self.state.tasks_failed += 1
-                        else:
-                            await self._handle_result(task_node, result)
-
-                # Check for approved tasks to merge
-                self._merge_approved()
-
-                # Small delay to avoid tight loops
-                await asyncio.sleep(1)
+            await self._development_loop(state_path, first, max_iterations)
+            await self._repair_phase(state_path, max_iterations)
 
             # Phase 4: Final integration check
             self.state.phase = "integrating"
