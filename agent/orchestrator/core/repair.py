@@ -95,3 +95,20 @@ def repair_tasks(reports: list[GateReport], round_no: int) -> list[dict[str, Any
 
 def record(round_no: int, reports: list[GateReport]) -> None:
     emit("gate_check", round=round_no, results=[{"cmd": r.cmd, "rc": r.rc} for r in reports])
+
+
+def hint_task(path: str | None, existing: set[str]) -> dict[str, Any] | None:
+    """The operator's diagnosis ($AUTON_REPAIR_HINT, a file) as the first task of a repair run.
+
+    A person read the boot output and found causes the agents had not; the fix stays theirs.
+    Added once: a resumed run finds it in its restored graph."""
+    task_id = "repair-hint"
+    if not path or task_id in existing or not Path(path).is_file():
+        return None
+    return {
+        "task_id": task_id, "title": "Fix the operator's diagnosed defects", "subsystem": "repair",
+        "assigned_to": "developer", "priority": 1, "dependencies": [],
+        "description": ("A person booted this tree and diagnosed these defects. Fix each one in "
+                        "the code; do not fake a marker.\n\n" + Path(path).read_text().strip()),
+        "acceptance_criteria": ["every defect named above is fixed in the code, and the kernel builds"],
+    }

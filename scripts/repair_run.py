@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -42,7 +43,7 @@ def gate_note(result: dict) -> str:
     return "\n".join(lines)
 
 
-def build(name: str, attempt: Path, k: int) -> tuple[list[str], Path]:
+def build(name: str, attempt: Path, k: int, hint: str = "", sessions: int = 1) -> tuple[list[str], Path]:
     spec = yaml.safe_load((ROOT / "docs/campaign/runs.yaml").read_text())
     run = {r["name"]: r for r in spec["runs"]}[name]
     result = json.loads((attempt / "RESULT.json").read_text())
@@ -51,9 +52,11 @@ def build(name: str, attempt: Path, k: int) -> tuple[list[str], Path]:
     goal = out / "goal-input.txt"
     goal.write_text((ROOT / "docs/campaign" / run["goal"]).read_text().rstrip()
                     + "\n\n" + gate_note(result))
+    if hint:     # a task, not goal text: the saved goal must match for a resume
+        (out / "hint.txt").write_text(hint + "\n")
     cmd = [sys.executable, str(ROOT / "scripts/generation_run.py"), "--run", out.name,
            "--out", str(out), "--goal", str(goal), "--model", spec["model"],
-           "--sessions", "1", "--session-seconds", str(spec.get("session_seconds", 18000)),
+           "--sessions", str(sessions), "--session-seconds", str(spec.get("session_seconds", 18000)),
            "--context", str(spec.get("context", 32768)), "--base-tree", str(attempt / "ws")]
     if spec.get("fallback_model"):
         cmd += ["--fallback-model", spec["fallback_model"]]
@@ -71,17 +74,29 @@ def main(argv: list[str] | None = None) -> int:
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("run")
     ap.add_argument("--dry-run", action="store_true")
+    ap.add_argument("--hint", help="file holding an operator diagnosis, appended to the goal")
+    ap.add_argument("--resume", action="store_true",
+                    help="continue the latest repair of this run for one more session, keeping its tree")
     args = ap.parse_args(argv)
     attempt = last_attempt(args.run)
+    hint = Path(args.hint).read_text().strip() if args.hint else ""
     k = 1
     while (OUT / f"{args.run}-repair{k}" / "RESULT.json").exists():
         k += 1
-    cmd, out = build(args.run, attempt, k)
+    sessions = 1
+    if args.resume:
+        k -= 1
+        if k < 1:
+            raise SystemExit(f"{args.run}: no repair to resume")
+        prior = json.loads((OUT / f"{args.run}-repair{k}" / "RESULT.json").read_text())
+        sessions = len(prior.get("sessions", [])) + 1
+    cmd, out = build(args.run, attempt, k, hint, sessions)
     print(f"repairing {attempt.name} -> {out}")
     if args.dry_run:
         print(" ".join(cmd))
         return 0
-    return subprocess.run(cmd, cwd=ROOT).returncode
+    env = {**os.environ, **({"AUTON_REPAIR_HINT": str(out / "hint.txt")} if hint else {})}
+    return subprocess.run(cmd, cwd=ROOT, env=env).returncode
 
 
 if __name__ == "__main__":

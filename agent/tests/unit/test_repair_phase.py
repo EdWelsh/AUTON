@@ -47,3 +47,14 @@ def test_run_gates_reports_exit_codes_with_the_tree_in_the_environment(tmp_path)
 def test_a_gate_that_cannot_run_is_not_generated_not_a_crash(tmp_path):
     got = asyncio.run(repair.run_gates(["true"], tmp_path / "missing" / "nowhere", tmp_path / "gone"))
     assert got[0].rc == 2 and "did not run" in got[0].tail[0]
+
+
+def test_a_hint_file_becomes_one_first_task_added_once(tmp_path):
+    f = tmp_path / "hint.txt"
+    f.write_text("zero the ring")
+    task = repair.hint_task(str(f), set())
+    assert task["task_id"] == "repair-hint" and "zero the ring" in task["description"]
+    assert task["priority"] == 1
+    assert repair.hint_task(str(f), {"repair-hint"}) is None
+    assert repair.hint_task(None, set()) is None
+    assert repair.hint_task(str(tmp_path / "missing"), set()) is None

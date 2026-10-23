@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import os
 import signal
 import sys
 import uuid
@@ -621,6 +622,10 @@ class OrchestrationEngine:
             )
             # A resumed session numbers its iterations after the last one.
             first = self.state.iteration if resume else 0
+            hinted = repair.hint_task(os.environ.get("AUTON_REPAIR_HINT"),
+                                      {n.task_id for n in self.task_graph._nodes.values()})
+            if hinted:
+                self.task_graph.add_task(hinted)
             await self._development_loop(state_path, first, max_iterations)
             await self._repair_phase(state_path, max_iterations)
 
